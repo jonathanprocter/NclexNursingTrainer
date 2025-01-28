@@ -6,6 +6,7 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import QuestionBank from "@/pages/QuestionBank";
 import StudyGuide from "@/pages/StudyGuide";
+import Modules from "@/pages/Modules";
 import NavBar from "@/components/layout/NavBar";
 
 function Router() {
@@ -15,6 +16,7 @@ function Router() {
       <main className="container mx-auto px-4 py-8">
         <Switch>
           <Route path="/" component={Home} />
+          <Route path="/modules" component={Modules} />
           <Route path="/questions" component={QuestionBank} />
           <Route path="/study-guide" component={StudyGuide} />
           <Route component={NotFound} />

@@ -1,13 +1,14 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Brain, Home } from "lucide-react";
+import { BookOpen, Brain, Home, Layout } from "lucide-react";
 
 export default function NavBar() {
   const [location] = useLocation();
 
   const navItems = [
     { href: "/", label: "Home", icon: Home },
+    { href: "/modules", label: "Modules", icon: Layout },
     { href: "/questions", label: "Question Bank", icon: Brain },
     { href: "/study-guide", label: "Study Guide", icon: BookOpen },
   ];
@@ -32,7 +33,7 @@ export default function NavBar() {
               ))}
             </div>
           </div>
-          
+
           <div className="md:hidden flex space-x-2">
             {navItems.map((item) => (
               <Link key={item.href} href={item.href}>
