@@ -4,6 +4,13 @@ import { Mic, StopCircle, History, Lightbulb } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useState, useRef, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { generateDetailedExplanation } from "@/lib/ai/anthropic";
+import OpenAI from "openai";
+
+const openai = new OpenAI({ 
+  apiKey: import.meta.env.VITE_OPENAI_API_KEY || '',
+  dangerouslyAllowBrowser: true
+});
 
 export default function AICompanion() {
   const [isRecording, setIsRecording] = useState(false);
@@ -12,6 +19,7 @@ export default function AICompanion() {
     answer: string;
     timestamp: Date;
   }>>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
   const mediaRecorder = useRef<MediaRecorder | null>(null);
   const audioChunks = useRef<Blob[]>([]);
   const { toast } = useToast();
@@ -27,10 +35,63 @@ export default function AICompanion() {
       };
 
       mediaRecorder.current.onstop = async () => {
-        const audioBlob = new Blob(audioChunks.current, { type: 'audio/wav' });
-        // Here you would typically send this blob to your AI service
-        // For now, let's simulate a response
-        simulateAIResponse("What are the symptoms of diabetes?");
+        setIsProcessing(true);
+        try {
+          const audioBlob = new Blob(audioChunks.current, { type: 'audio/webm' });
+          const formData = new FormData();
+          formData.append('file', audioBlob, 'audio.webm');
+
+          // Transcribe audio using Whisper
+          const transcription = await openai.audio.transcriptions.create({
+            model: "whisper-1",
+            file: new File([audioBlob], 'audio.webm', { type: 'audio/webm' })
+          });
+
+          if (!transcription.text) {
+            throw new Error("Failed to transcribe audio");
+          }
+
+          // Generate initial response using GPT-4
+          const completion = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [
+              {
+                role: "system",
+                content: "You are a knowledgeable nursing assistant helping students prepare for the NCLEX exam. Provide accurate, concise medical information."
+              },
+              {
+                role: "user",
+                content: transcription.text
+              }
+            ]
+          });
+
+          const initialResponse = completion.choices[0].message.content;
+
+          // Get detailed explanation from Claude
+          const detailedResponse = await generateDetailedExplanation({
+            topic: transcription.text,
+            concept: initialResponse || "",
+            difficulty: "medium",
+            learningStyle: "comprehensive"
+          });
+
+          setConversations(prev => [{
+            question: transcription.text,
+            answer: detailedResponse,
+            timestamp: new Date()
+          }, ...prev]);
+
+        } catch (error) {
+          console.error('Error processing audio:', error);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to process your question. Please try again."
+          });
+        } finally {
+          setIsProcessing(false);
+        }
       };
 
       mediaRecorder.current.start();
@@ -63,17 +124,6 @@ export default function AICompanion() {
     }
   }, [isRecording, toast]);
 
-  const simulateAIResponse = (question: string) => {
-    // In a real implementation, this would come from your AI service
-    const mockResponse = "Diabetes typically presents with symptoms including increased thirst (polydipsia), frequent urination (polyuria), unexplained weight loss, and fatigue. Other common symptoms include blurred vision, slow-healing wounds, and increased hunger. It's important to consult a healthcare provider if you experience these symptoms.";
-
-    setConversations(prev => [{
-      question,
-      answer: mockResponse,
-      timestamp: new Date()
-    }, ...prev]);
-  };
-
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
@@ -100,7 +150,7 @@ export default function AICompanion() {
                     size="lg" 
                     className={`w-16 h-16 rounded-full ${isRecording ? 'bg-red-500 hover:bg-red-600' : ''}`}
                     onClick={startRecording}
-                    disabled={isRecording}
+                    disabled={isRecording || isProcessing}
                   >
                     <Mic className="h-8 w-8" />
                   </Button>
@@ -109,7 +159,7 @@ export default function AICompanion() {
                     variant="outline" 
                     className="w-16 h-16 rounded-full"
                     onClick={stopRecording}
-                    disabled={!isRecording}
+                    disabled={!isRecording || isProcessing}
                   >
                     <StopCircle className="h-8 w-8" />
                   </Button>
@@ -139,7 +189,7 @@ export default function AICompanion() {
                         <span className="text-sm">{conv.question}</span>
                       </div>
                       <div className="bg-muted p-3 rounded-lg">
-                        <p className="text-sm">{conv.answer}</p>
+                        <p className="text-sm whitespace-pre-wrap">{conv.answer}</p>
                       </div>
                       <p className="text-xs text-muted-foreground">
                         {conv.timestamp.toLocaleString()}
@@ -168,7 +218,7 @@ export default function AICompanion() {
               <div className="space-y-2">
                 {conversations.length > 0 ? (
                   <div className="space-y-2">
-                    {[...new Set(conversations.slice(0, 5).map(c => c.question))].map((q, i) => (
+                    {Array.from(new Set(conversations.slice(0, 5).map(c => c.question))).map((q, i) => (
                       <p key={i} className="text-sm">{q}</p>
                     ))}
                   </div>
