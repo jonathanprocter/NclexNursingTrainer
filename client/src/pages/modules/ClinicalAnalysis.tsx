@@ -311,15 +311,27 @@ export default function ClinicalAnalysis() {
     };
 
     const handleNextQuestion = () => {
+      // Even if the answer was incorrect, we move to the next question
       setShowFeedback(false);
       if (currentCase && currentQuestionIndex < currentCase.questions.length - 1) {
         setCurrentQuestionIndex(prev => prev + 1);
       } else {
-        // Case completed, show summary
+        // Case completed, show summary and recommendations
+        const successRate = (performance.correctCount / performance.totalAttempted) * 100;
+
         toast({
           title: "Case Study Completed!",
-          description: `You got ${performance.correctCount} out of ${performance.totalAttempted} questions correct.`,
+          description: `You got ${performance.correctCount} out of ${performance.totalAttempted} questions correct (${successRate.toFixed(1)}%).`,
         });
+
+        // If performance is below 70%, suggest reviewing the case
+        if (successRate < 70) {
+          toast({
+            title: "Recommendation",
+            description: "Consider reviewing the topics in your 'Areas for Review' before moving to the next case.",
+            duration: 5000,
+          });
+        }
       }
     };
 
@@ -400,8 +412,8 @@ export default function ClinicalAnalysis() {
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-medium">Question {currentQuestionIndex + 1} of {currentCase.questions.length}</p>
-                        <Progress 
-                          value={(currentQuestionIndex + 1) / currentCase.questions.length * 100} 
+                        <Progress
+                          value={(currentQuestionIndex + 1) / currentCase.questions.length * 100}
                           className="w-[200px] mt-2"
                         />
                       </div>
@@ -467,8 +479,8 @@ export default function ClinicalAnalysis() {
                           </Button>
                           {showFeedback && (
                             <Button onClick={handleNextQuestion}>
-                              {currentQuestionIndex < currentCase.questions.length - 1 
-                                ? "Next Question" 
+                              {currentQuestionIndex < currentCase.questions.length - 1
+                                ? "Next Question"
                                 : "Complete Case"}
                             </Button>
                           )}

@@ -102,6 +102,99 @@ const preIntegratedCases = [
           }
         ],
         keyTopics: ["Heart Failure Pathophysiology", "Medication Management", "Clinical Reasoning"]
+      },
+      {
+        type: "planning",
+        question: "What is the most appropriate initial nursing intervention for this patient?",
+        options: [
+          {
+            text: "Administer scheduled medications and document vital signs",
+            correct: false,
+            explanation: "While medication administration is important, the patient's current condition requires more immediate interventions to address respiratory distress.",
+            topics: ["Medication Administration", "Documentation"]
+          },
+          {
+            text: "Position patient in high Fowler's position and administer oxygen therapy",
+            correct: true,
+            explanation: "This intervention directly addresses the patient's respiratory distress by optimizing breathing mechanics and oxygenation, which are immediate priorities.",
+            topics: ["Respiratory Management", "Patient Positioning", "Oxygen Therapy"]
+          },
+          {
+            text: "Draw blood for additional laboratory tests",
+            correct: false,
+            explanation: "While additional testing might be needed, it's not the priority when the patient is experiencing respiratory distress.",
+            topics: ["Laboratory Testing", "Clinical Priority Setting"]
+          },
+          {
+            text: "Begin patient education about medication compliance",
+            correct: false,
+            explanation: "Education is important but should be delayed until the acute symptoms are stabilized.",
+            topics: ["Patient Education", "Medication Compliance"]
+          }
+        ],
+        keyTopics: ["Clinical Prioritization", "Acute Intervention", "Respiratory Support"]
+      },
+      {
+        type: "evaluation",
+        question: "Which assessment finding would best indicate that the interventions are effective?",
+        options: [
+          {
+            text: "Decrease in blood pressure to 130/80",
+            correct: false,
+            explanation: "While improved, blood pressure alone is not the best indicator of successful heart failure management.",
+            topics: ["Vital Signs", "Treatment Response"]
+          },
+          {
+            text: "Improved oxygen saturation and decreased work of breathing",
+            correct: true,
+            explanation: "These changes directly reflect improved gas exchange and reduced fluid overload, indicating effective intervention.",
+            topics: ["Respiratory Assessment", "Treatment Effectiveness", "Clinical Monitoring"]
+          },
+          {
+            text: "Patient reports feeling better",
+            correct: false,
+            explanation: "Subjective improvement is important but should be corroborated with objective findings.",
+            topics: ["Patient Assessment", "Subjective Data"]
+          },
+          {
+            text: "Reduced peripheral edema",
+            correct: false,
+            explanation: "While important, peripheral edema takes longer to resolve and is not the best immediate indicator of improvement.",
+            topics: ["Edema Assessment", "Treatment Timeline"]
+          }
+        ],
+        keyTopics: ["Treatment Evaluation", "Clinical Monitoring", "Outcome Assessment"]
+      },
+      {
+        type: "synthesis",
+        question: "What is the most important long-term management strategy for this patient?",
+        options: [
+          {
+            text: "Daily weight monitoring and strict fluid restriction",
+            correct: false,
+            explanation: "While important, these alone don't address the underlying compliance issues.",
+            topics: ["Weight Monitoring", "Fluid Management"]
+          },
+          {
+            text: "Comprehensive medication compliance plan with cost consideration",
+            correct: true,
+            explanation: "This addresses the root cause of the exacerbation by developing a sustainable plan that considers the patient's financial barriers to compliance.",
+            topics: ["Medication Compliance", "Financial Planning", "Care Coordination"]
+          },
+          {
+            text: "Weekly clinic visits for vital sign monitoring",
+            correct: false,
+            explanation: "Regular monitoring is important but doesn't address the fundamental compliance issue.",
+            topics: ["Follow-up Care", "Vital Signs Monitoring"]
+          },
+          {
+            text: "Referral to cardiac rehabilitation",
+            correct: false,
+            explanation: "While beneficial, rehabilitation alone doesn't address the primary issue of medication non-compliance due to cost.",
+            topics: ["Cardiac Rehabilitation", "Exercise Tolerance"]
+          }
+        ],
+        keyTopics: ["Long-term Management", "Patient Education", "Resource Management"]
       }
     ],
     nextCaseHints: ["Consider how comorbidities affect heart failure management"]
