@@ -302,35 +302,59 @@ export default function ClinicalAnalysis() {
 
       setPerformance(newPerformance);
 
-      // Show feedback toast
+      // Show feedback toast with explanation
       toast({
-        title: selectedOption.correct ? "Correct! 🎉" : "Incorrect",
+        title: selectedOption.correct ? "Correct! 🎉" : "Review Needed",
         description: selectedOption.explanation,
-        variant: selectedOption.correct ? "default" : "destructive",
+        variant: selectedOption.correct ? "default" : "secondary",
       });
+
+      // If incorrect, provide additional context
+      if (!isCorrect) {
+        toast({
+          title: "Learning Opportunity",
+          description: "Take time to review the explanation before moving to the next question.",
+          duration: 5000,
+        });
+      }
     };
 
     const handleNextQuestion = () => {
-      // Even if the answer was incorrect, we move to the next question
+      // Always proceed to next question, regardless of correctness
       setShowFeedback(false);
+
       if (currentCase && currentQuestionIndex < currentCase.questions.length - 1) {
         setCurrentQuestionIndex(prev => prev + 1);
-      } else {
-        // Case completed, show summary and recommendations
-        const successRate = (performance.correctCount / performance.totalAttempted) * 100;
 
-        toast({
-          title: "Case Study Completed!",
-          description: `You got ${performance.correctCount} out of ${performance.totalAttempted} questions correct (${successRate.toFixed(1)}%).`,
-        });
+        // Provide adaptive guidance based on performance
+        const currentSuccessRate = (performance.correctCount / performance.totalAttempted) * 100;
 
-        // If performance is below 70%, suggest reviewing the case
-        if (successRate < 70) {
+        if (currentSuccessRate < 60) {
           toast({
-            title: "Recommendation",
-            description: "Consider reviewing the topics in your 'Areas for Review' before moving to the next case.",
+            title: "Study Tip",
+            description: "Take a moment to review the key concepts before answering. Focus on understanding the rationale for each option.",
             duration: 5000,
           });
+        }
+      } else if (currentCase) {
+        // Case completed, show comprehensive summary
+        const finalSuccessRate = (performance.correctCount / performance.totalAttempted) * 100;
+
+        toast({
+          title: "Case Study Completed! 🎉",
+          description: `You got ${performance.correctCount} out of ${performance.totalAttempted} questions correct (${finalSuccessRate.toFixed(1)}%).`,
+        });
+
+        // Provide targeted feedback based on overall performance
+        if (performance.weaknesses.length > 0) {
+          setTimeout(() => {
+            toast({
+              title: "Focused Review Recommended",
+              description: "Consider reviewing these topics: " +
+                performance.weaknesses.slice(0, 3).join(", "),
+              duration: 6000,
+            });
+          }, 1000);
         }
       }
     };
