@@ -678,7 +678,7 @@ export function registerRoutes(app: Express): Server {
             {
               text: "Administer medications based on room number",
               isCorrect: false,
-              explanation: "Room numbers are not a reliable patient identifier and should never be used alone. This approach risks serious medication errors."
+              explanation: "Room numbers are not a reliable patient identifier and should never beused alone. This approach risks serious medication errors."
             }
           ]
         },
@@ -1115,6 +1115,52 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error("Error submitting calculation:", error);
       res.status(500).json({ message: "Failed to submit calculation" });
+    }
+  });
+
+  app.post("/api/generate-prevention-questions", async (_req, res) => {
+    try {
+      // Generate new prevention strategy questions using OpenAI
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [
+          {
+            role: "system",
+            content: "You are an expert nursing educator creating NCLEX-style questions about nursing risk prevention strategies."
+          },
+          {
+            role: "user",
+            content: "Generate 5 new multiple-choice questions about nursing risk prevention. Include detailed explanations and conceptual breakdowns."
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 2000,
+      });
+
+      const newQuestions = JSON.parse(completion.choices[0].message.content);
+
+      // Transform the generated questions into the required format
+      const formattedQuestions = newQuestions.map((q: any, index: number) => ({
+        id: `generated-q${Date.now()}-${index}`,
+        question: q.question,
+        options: q.options.map((opt: any) => ({
+          value: opt.value,
+          label: opt.text
+        })),
+        correctAnswer: q.correctAnswer,
+        explanation: {
+          main: q.explanation,
+          concepts: q.concepts.map((c: any) => ({
+            title: c.title,
+            description: c.description
+          }))
+        }
+      }));
+
+      res.json(formattedQuestions);
+    } catch (error) {
+      console.error('Error generating prevention questions:', error);
+      res.status(500).json({ message: "Failed to generate questions" });
     }
   });
 

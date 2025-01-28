@@ -69,14 +69,7 @@ interface PreventionQuestion {
   };
 }
 
-interface Progress {
-  scenariosCompleted: number;
-  totalScenarios: number;
-  correctResponses: number;
-  skillLevel: string;
-}
-
-const preventionQuestions: PreventionQuestion[] = [
+const initialPreventionQuestions: PreventionQuestion[] = [
   {
     id: "q1",
     question: "A patient has been admitted with dizziness and weakness. Which combination of interventions best addresses fall prevention?",
@@ -140,6 +133,13 @@ const preventionQuestions: PreventionQuestion[] = [
   // Add 8 more questions following the same pattern...
 ];
 
+interface Progress {
+  scenariosCompleted: number;
+  totalScenarios: number;
+  correctResponses: number;
+  skillLevel: string;
+}
+
 export default function RiskReduction() {
   const { toast } = useToast();
   const [selectedScenario, setSelectedScenario] = useState<RiskScenario | null>(null);
@@ -147,15 +147,14 @@ export default function RiskReduction() {
   const [showExplanation, setShowExplanation] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [answeredQuestions, setAnsweredQuestions] = useState<Set<string>>(new Set());
-
-  // Add progress state
   const [progress, setProgress] = useState<Progress>({
     scenariosCompleted: 0,
     totalScenarios: 20,
     correctResponses: 0,
     skillLevel: "Beginner"
   });
-
+  const [preventionQuestions, setPreventionQuestions] = useState<PreventionQuestion[]>(initialPreventionQuestions);
+  const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
   const form = useForm<FormValues>({
     defaultValues: {
       answer: "",
@@ -180,6 +179,35 @@ export default function RiskReduction() {
     },
   });
 
+  const generateMoreQuestionsMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/generate-prevention-questions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate questions");
+      }
+
+      return response.json();
+    },
+    onSuccess: (newQuestions) => {
+      setPreventionQuestions(prev => [...prev, ...newQuestions]);
+      toast({
+        title: "New questions added!",
+        description: "Additional practice questions are now available.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to generate new questions. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleGenerateScenario = async () => {
     setIsLoading(true);
     try {
@@ -195,6 +223,15 @@ export default function RiskReduction() {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGenerateMoreQuestions = async () => {
+    setIsGeneratingQuestions(true);
+    try {
+      await generateMoreQuestionsMutation.mutateAsync();
+    } finally {
+      setIsGeneratingQuestions(false);
     }
   };
 
@@ -440,34 +477,39 @@ export default function RiskReduction() {
                     <div>
                       <h4 className="font-medium mb-2">Patient Identification</h4>
                       <div className="space-y-2">
-                        <p className="text-sm font-medium">Key Components:</p>
+                        <p className="text-sm font-medium">NCLEX Focus Points:</p>
                         <ul className="text-sm space-y-2">
-                          <li>• Use minimum two identifiers (full name, DOB, MRN)</li>
-                          <li>• Verify before all procedures and treatments</li>
-                          <li>• Match identifiers with all documentation</li>
+                          <li>• Two unique identifiers required by Joint Commission standards</li>
+                          <li>• Acceptable identifiers: full name, DOB, MRN (NOT room number)</li>
+                          <li>• Critical times for verification: medication administration, procedures, specimen collection</li>
+                          <li>• Special considerations: similar names, language barriers, unconscious patients</li>
+                          <li>• Documentation requirements for identification verification</li>
                         </ul>
-                        <p className="text-sm font-medium mt-2">NCLEX Focus:</p>
+                        <p className="text-sm font-medium mt-4">Common Pitfalls:</p>
                         <ul className="text-sm space-y-1">
-                          <li>• Never use room numbers as identifiers</li>
-                          <li>• Verify even when you "know" the patient</li>
-                          <li>• Check identification bands for accuracy</li>
+                          <li>• Relying on room numbers or bed location</li>
+                          <li>• Assuming patient identity without verification</li>
+                          <li>• Incomplete verification during emergencies</li>
+                          <li>• Not following facility-specific protocols</li>
                         </ul>
                       </div>
                     </div>
                     <div>
-                      <h4 className="font-medium mb-2">Time-Out Procedures</h4>
+                      <h4 className="font-medium mb-2">High-Risk Procedures</h4>
                       <div className="space-y-2">
-                        <p className="text-sm font-medium">Essential Steps:</p>
+                        <p className="text-sm font-medium">Critical Elements:</p>
                         <ul className="text-sm space-y-2">
-                          <li>• Active participation of all team members</li>
-                          <li>• Verification of correct patient, site, procedure</li>
-                          <li>• Documentation of completed time-out</li>
+                          <li>• Universal Protocol components and implementation</li>
+                          <li>• Site marking requirements and exceptions</li>
+                          <li>• Time-out process and documentation</li>
+                          <li>• Role-specific responsibilities during procedures</li>
                         </ul>
-                        <p className="text-sm font-medium mt-2">Critical Points:</p>
+                        <p className="text-sm font-medium mt-4">Safety Checklist:</p>
                         <ul className="text-sm space-y-1">
-                          <li>• Must occur before incision/procedure start</li>
-                          <li>• All activity must stop during time-out</li>
-                          <li>• Address any team member concerns</li>
+                          <li>• Pre-procedure verification process</li>
+                          <li>• Consent verification and documentation</li>
+                          <li>• Equipment and supply checks</li>
+                          <li>• Post-procedure monitoring requirements</li>
                         </ul>
                       </div>
                     </div>
@@ -646,14 +688,17 @@ export default function RiskReduction() {
                       />
                     </div>
                     <Button
-                      onClick={() => {
-                        toast({
-                          title: "More questions coming soon!",
-                          description: "This feature is under development.",
-                        });
-                      }}
+                      onClick={handleGenerateMoreQuestions}
+                      disabled={isGeneratingQuestions}
                     >
-                      Generate More Questions
+                      {isGeneratingQuestions ? (
+                        <>
+                          <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        "Generate More Questions"
+                      )}
                     </Button>
                   </div>
                 </div>
