@@ -42,8 +42,9 @@ const DialogContent = React.forwardRef<
       aria-describedby="dialog-description"
       {...props}
     >
+      <DialogPrimitive.Title className="sr-only">Dialog Title</DialogPrimitive.Title>
       {children}
-      <DialogPrimitive.Title className="sr-only">
+      <DialogPrimitive.Description className="sr-only">
         Dialog Content
       </DialogPrimitive.Title>
       <DialogPrimitive.Description className="sr-only">
