@@ -42,11 +42,11 @@ export default function AICompanion() {
 
   const checkForSilence = useCallback((dataArray: Uint8Array) => {
     const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
-    if (average < 5) { // Threshold for silence
+    if (average < 10) { // Increased threshold for better silence detection
       if (silenceTimeout.current === null) {
         silenceTimeout.current = setTimeout(() => {
           stopRecording();
-        }, 2000); // Stop after 2 seconds of silence
+        }, 1500); // Reduced to 1.5 seconds of silence for better responsiveness
       }
     } else {
       if (silenceTimeout.current) {
@@ -58,7 +58,13 @@ export default function AICompanion() {
 
   const startRecording = useCallback(async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      });
 
       // Set up audio context and analyzer for silence detection
       audioContext.current = new AudioContext();
@@ -66,6 +72,7 @@ export default function AICompanion() {
       const source = audioContext.current.createMediaStreamSource(stream);
       source.connect(analyser.current);
       analyser.current.fftSize = 256;
+      analyser.current.smoothingTimeConstant = 0.8; // Added smoothing for better detection
 
       const bufferLength = analyser.current.frequencyBinCount;
       const dataArray = new Uint8Array(bufferLength);
@@ -79,11 +86,16 @@ export default function AICompanion() {
         }
       };
 
-      mediaRecorder.current = new MediaRecorder(stream);
+      mediaRecorder.current = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus'
+      });
+
       audioChunks.current = [];
 
       mediaRecorder.current.ondataavailable = (event) => {
-        audioChunks.current.push(event.data);
+        if (event.data.size > 0) {
+          audioChunks.current.push(event.data);
+        }
       };
 
       mediaRecorder.current.onstop = async () => {
@@ -156,20 +168,29 @@ export default function AICompanion() {
           });
         } finally {
           setIsProcessing(false);
+          // Cleanup audio resources
           if (audioContext.current) {
             audioContext.current.close();
             audioContext.current = null;
           }
+          if (analyser.current) {
+            analyser.current.disconnect();
+            analyser.current = null;
+          }
+          if (silenceTimeout.current) {
+            clearTimeout(silenceTimeout.current);
+            silenceTimeout.current = null;
+          }
         }
       };
 
-      mediaRecorder.current.start();
+      mediaRecorder.current.start(100); // Reduced chunk size for better responsiveness
       setIsRecording(true);
       checkAudioLevel();
 
       toast({
         title: "Recording started",
-        description: "Speak clearly into your microphone. Recording will stop automatically after 2 seconds of silence."
+        description: "Speak clearly into your microphone. Recording will stop automatically after 1.5 seconds of silence."
       });
     } catch (error) {
       console.error('Error accessing microphone:', error);
