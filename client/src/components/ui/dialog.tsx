@@ -46,7 +46,7 @@ const DialogContent = React.forwardRef<
       {children}
       <DialogPrimitive.Description className="sr-only">
         Dialog Content
-      </DialogPrimitive.Title>
+      </DialogPrimitive.Description>
       <DialogPrimitive.Description className="sr-only">
         This dialog contains dynamic content that varies based on context
       </DialogPrimitive.Description>
