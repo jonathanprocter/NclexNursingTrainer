@@ -172,7 +172,7 @@ export default function AICompanion() {
       </div>
 
       <Dialog>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogTitle>Voice Interaction</DialogTitle>
           <div className="space-y-4" aria-label="Voice interaction controls">
             {!microphoneAvailable && (
