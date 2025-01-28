@@ -6,6 +6,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { generateDetailedExplanation } from "@/lib/ai/anthropic";
 import OpenAI from "openai";
+import { DialogTitle } from "@/components/ui/dialog";
 
 const openai = new OpenAI({ 
   apiKey: import.meta.env.VITE_OPENAI_API_KEY || '',
@@ -348,7 +349,7 @@ export default function AICompanion() {
     } catch (error) {
       console.error('Error accessing microphone:', error);
       setMicrophoneAvailable(false);
-      
+
       // Provide more specific error messages based on the error type
       if (error instanceof DOMException) {
         switch (error.name) {
@@ -400,6 +401,7 @@ export default function AICompanion() {
               <CardTitle>Voice Interaction</CardTitle>
             </CardHeader>
             <CardContent>
+              <DialogTitle className="sr-only">Voice Interaction Dialog</DialogTitle>
               <div className="space-y-4">
                 {!microphoneAvailable && (
                   <div className="bg-destructive/10 text-destructive p-4 rounded-lg mb-4 flex items-start gap-2">
