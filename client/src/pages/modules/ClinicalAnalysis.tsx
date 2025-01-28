@@ -207,7 +207,6 @@ const CaseStudiesSection = () => {
     weaknesses: []
   });
 
-  // Query for completed cases and pre-integrated cases
   const { data: completedCases = [] } = useQuery<string[]>({
     queryKey: ['/api/user/completed-cases'],
   });
@@ -216,6 +215,7 @@ const CaseStudiesSection = () => {
     queryKey: ['/api/pre-integrated-cases'],
   });
 
+  // This is the only place where we reset state
   const startNewCase = async (caseId: string) => {
     try {
       const response = await fetch("/api/generate-case", {
@@ -228,9 +228,9 @@ const CaseStudiesSection = () => {
         throw new Error("Failed to load case study");
       }
 
-      const result = await response.json();
+      const caseData = await response.json();
 
-      // Reset state only when starting a new case from the list
+      // Reset all state only when explicitly starting a new case
       setUserAnswers({});
       setShowFeedback(false);
       setCurrentQuestionIndex(0);
@@ -240,7 +240,7 @@ const CaseStudiesSection = () => {
         strengths: [],
         weaknesses: []
       });
-      setCurrentCase(result);
+      setCurrentCase(caseData);
     } catch (error) {
       toast({
         title: "Error",
@@ -253,16 +253,14 @@ const CaseStudiesSection = () => {
   const handleAnswerSelect = (questionIndex: number, optionIndex: number) => {
     if (!currentCase) return;
 
-    const question = currentCase.questions[questionIndex];
-    const selectedOption = question?.options[optionIndex];
+    const selectedOption = currentCase.questions[questionIndex]?.options[optionIndex];
+    if (!selectedOption) return;
 
-    if (!question || !selectedOption) return;
-
-    // Just store the answer and show feedback, no state resets
+    // Only record the answer and show feedback
     setUserAnswers(prev => ({ ...prev, [questionIndex]: optionIndex }));
     setShowFeedback(true);
 
-    // Update performance metrics without affecting the case progress
+    // Update performance metrics
     setPerformance(prev => ({
       ...prev,
       correctCount: prev.correctCount + (selectedOption.correct ? 1 : 0),
@@ -275,7 +273,7 @@ const CaseStudiesSection = () => {
         : prev.weaknesses
     }));
 
-    // Show feedback without any state changes
+    // Show feedback
     toast({
       title: selectedOption.correct ? "Correct! 🎉" : "Let's Review",
       description: selectedOption.explanation,
@@ -286,12 +284,12 @@ const CaseStudiesSection = () => {
   const handleNextQuestion = () => {
     if (!currentCase) return;
 
-    // Always move to next question regardless of answer correctness
+    // Simply move to next question, preserving all state
     if (currentQuestionIndex < currentCase.questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
-      setShowFeedback(false); // Only reset feedback, preserve all other state
+      setShowFeedback(false);
     } else {
-      // Show completion summary without resetting state
+      // Show completion summary
       const successRate = (performance.correctCount / performance.totalAttempted) * 100;
 
       toast({
