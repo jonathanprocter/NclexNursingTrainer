@@ -34,11 +34,14 @@ function Router() {
     <div className="min-h-screen bg-background">
       <NavBar />
       <main className="container mx-auto px-4 py-8">
-        <Switch location={window.location}>
+        <Switch>
           {/* Home Route */}
           <Route path="/" component={Home} />
-
-          {/* Dashboard Routes */}
+          
+          {/* Dashboard Route */}
+          <Route path="/dashboard" component={Dashboard} />
+          
+          {/* Dashboard Sub-Routes */}
           <Route path="/dashboard/analytics" component={Analytics} />
           <Route path="/dashboard/performance" component={PerformanceMetrics} />
           <Route path="/dashboard/instructor" component={InstructorDashboard} />
