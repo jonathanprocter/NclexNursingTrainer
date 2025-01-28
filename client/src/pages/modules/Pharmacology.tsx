@@ -1,19 +1,55 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Bot } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 export default function Pharmacology() {
   const { toast } = useToast();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [aiContent, setAiContent] = useState("");
+  const [currentSection, setCurrentSection] = useState("");
 
-  const handleAIHelp = (section: string) => {
-    toast({
-      title: "AI Assistant",
-      description: `Getting additional help for ${section}...`,
-    });
-    // AI help integration will be implemented here
+  const aiHelpMutation = useMutation({
+    mutationFn: async ({ section, context }: { section: string; context?: string }) => {
+      const response = await fetch("/api/ai-help", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ section, context }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to get AI help");
+      }
+
+      return response.json();
+    },
+  });
+
+  const handleAIHelp = async (section: string, context?: string) => {
+    setCurrentSection(section);
+    setIsDialogOpen(true);
+
+    try {
+      const result = await aiHelpMutation.mutateAsync({ section, context });
+      setAiContent(result.content);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to get AI assistance. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -528,6 +564,27 @@ export default function Pharmacology() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>AI Assistant - {currentSection}</DialogTitle>
+            <DialogDescription>
+              {aiHelpMutation.isPending ? (
+                <div className="flex items-center justify-center py-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              ) : (
+                <div className="prose prose-sm max-w-none">
+                  {aiContent.split('\n').map((paragraph, index) => (
+                    <p key={index}>{paragraph}</p>
+                  ))}
+                </div>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

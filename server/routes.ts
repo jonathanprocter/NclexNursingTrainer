@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { db } from "@db";
 import { modules, questions, quizAttempts, userProgress } from "@db/schema";
 import { eq } from "drizzle-orm";
-import { analyzePerformance, generateAdaptiveQuestions, getStudyRecommendations } from "../client/src/lib/ai-services";
+import { analyzePerformance, generateAdaptiveQuestions, getStudyRecommendations, getPharmacologyHelp } from "../client/src/lib/ai-services";
 
 export function registerRoutes(app: Express): Server {
   // Modules routes
@@ -108,7 +108,7 @@ export function registerRoutes(app: Express): Server {
       const performanceData = progress.map(p => ({
         topic: p.module?.type || "",
         score: (p.correctAnswers / p.completedQuestions) * 100 || 0,
-        timeSpent: p.lastAttempt ? 
+        timeSpent: p.lastAttempt ?
           (new Date(p.lastAttempt).getTime() - new Date(p.updatedAt).getTime()) / 1000 : 0
       }));
 
@@ -154,6 +154,17 @@ export function registerRoutes(app: Express): Server {
       });
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
+  // AI Help endpoint
+  app.post("/api/ai-help", async (req, res) => {
+    try {
+      const { section, context } = req.body;
+      const help = await getPharmacologyHelp(section, context);
+      res.json(help);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get AI help" });
     }
   });
 

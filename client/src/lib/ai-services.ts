@@ -1,9 +1,6 @@
 import OpenAI from "openai";
 import { Anthropic } from '@anthropic-ai/sdk';
 
-// the newest OpenAI model is "gpt-4o" which was released May 13, 2024
-// the newest Anthropic model is "claude-3-5-sonnet-20241022" which was released October 22, 2024
-
 const openai = new OpenAI();
 const anthropic = new Anthropic();
 
@@ -14,6 +11,36 @@ interface AIAnalysisResult {
   confidence: number;
 }
 
+// Helper function for module-specific AI assistance
+export async function getPharmacologyHelp(
+  section: string,
+  context?: string
+): Promise<{ content: string }> {
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert pharmacology instructor helping nursing students prepare for the NCLEX exam. Provide detailed explanations with clinical examples."
+        },
+        {
+          role: "user",
+          content: `Provide a detailed explanation for the ${section} section in pharmacology${context ? `. Context: ${context}` : ''}`
+        }
+      ]
+    });
+
+    return { 
+      content: response.choices[0].message.content || 'No explanation available'
+    };
+  } catch (error) {
+    console.error('Error getting pharmacology help:', error);
+    throw new Error('Failed to get AI assistance');
+  }
+}
+
+// Existing functions...
 export async function analyzePerformance(
   answers: Array<{
     question: string;
