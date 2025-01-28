@@ -190,344 +190,324 @@ export default function ClinicalAnalysis() {
     }
   };
 
-  const CaseStudiesSection = () => {
-    const [currentCase, setCurrentCase] = useState<CaseStudy | null>(null);
-    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-    const [userAnswers, setUserAnswers] = useState<Record<string, number>>({});
-    const [showFeedback, setShowFeedback] = useState(false);
-    const [performance, setPerformance] = useState<{
-      correctCount: number;
-      totalAttempted: number;
-      strengths: string[];
-      weaknesses: string[];
-    }>({
-      correctCount: 0,
-      totalAttempted: 0,
-      strengths: [],
-      weaknesses: []
-    });
+const CaseStudiesSection = () => {
+  const [currentCase, setCurrentCase] = useState<CaseStudy | null>(null);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [userAnswers, setUserAnswers] = useState<Record<string, number>>({});
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [performance, setPerformance] = useState<{
+    correctCount: number;
+    totalAttempted: number;
+    strengths: string[];
+    weaknesses: string[];
+  }>({
+    correctCount: 0,
+    totalAttempted: 0,
+    strengths: [],
+    weaknesses: []
+  });
 
-    // Query for completed cases
-    const { data: completedCases = [] } = useQuery<string[]>({
-      queryKey: ['/api/user/completed-cases'],
-    });
+  // Query for completed cases
+  const { data: completedCases = [] } = useQuery<string[]>({
+    queryKey: ['/api/user/completed-cases'],
+  });
 
-    // Query for pre-integrated cases
-    const { data: casesData = [] } = useQuery<CaseStudy[]>({
-      queryKey: ['/api/pre-integrated-cases'],
-    });
+  // Query for pre-integrated cases
+  const { data: casesData = [] } = useQuery<CaseStudy[]>({
+    queryKey: ['/api/pre-integrated-cases'],
+  });
 
-    const handleGenerateCase = async (caseId?: string) => {
-      try {
-        const result = await fetch("/api/generate-case", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ caseId }),
-        }).then(res => {
-          if (!res.ok) throw new Error("Failed to generate case");
-          return res.json();
-        });
-
-        // Only initialize state when starting a new case
-        if (!currentCase) {
-          setUserAnswers({});
-          setShowFeedback(false);
-          setCurrentQuestionIndex(0);
-          setPerformance({
-            correctCount: 0,
-            totalAttempted: 0,
-            strengths: [],
-            weaknesses: []
-          });
-        }
-
-        setCurrentCase(result);
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to load case study. Please try again.",
-          variant: "destructive",
-        });
-      }
-    };
-
-    const handleAnswerSelect = async (questionIndex: number, optionIndex: number) => {
-      if (!currentCase) return;
-
-      const question = currentCase.questions[questionIndex];
-      const selectedOption = question?.options[optionIndex];
-
-      if (!question || !selectedOption) return;
-
-      // Record the answer without clearing other answers
-      setUserAnswers(prev => ({ ...prev, [questionIndex]: optionIndex }));
-      setShowFeedback(true);
-
-      // Update performance metrics
-      const isCorrect = selectedOption.correct;
-      const newPerformance = {
-        correctCount: performance.correctCount + (isCorrect ? 1 : 0),
-        totalAttempted: performance.totalAttempted + 1,
-        strengths: [...performance.strengths],
-        weaknesses: [...performance.weaknesses]
-      };
-
-      // Update strengths and weaknesses based on answer
-      if (isCorrect) {
-        newPerformance.strengths = [...new Set([...newPerformance.strengths, ...selectedOption.topics])];
-      } else {
-        newPerformance.weaknesses = [...new Set([...newPerformance.weaknesses, ...selectedOption.topics])];
-      }
-
-      setPerformance(newPerformance);
-
-      // Show feedback toast
-      toast({
-        title: selectedOption.correct ? "Correct! 🎉" : "Review Needed",
-        description: selectedOption.explanation,
-        variant: selectedOption.correct ? "default" : "secondary",
+  const handleGenerateCase = async (caseId?: string) => {
+    try {
+      const result = await fetch("/api/generate-case", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ caseId }),
+      }).then(res => {
+        if (!res.ok) throw new Error("Failed to generate case");
+        return res.json();
       });
 
-      if (!isCorrect) {
-        // Provide additional guidance for incorrect answers
-        toast({
-          title: "Learning Opportunity",
-          description: "Take time to review the explanation. You can still continue with the case study.",
-          duration: 5000,
+      // Only initialize state when starting a completely new case
+      if (!currentCase) {
+        setUserAnswers({});
+        setShowFeedback(false);
+        setCurrentQuestionIndex(0);
+        setPerformance({
+          correctCount: 0,
+          totalAttempted: 0,
+          strengths: [],
+          weaknesses: []
         });
       }
+
+      setCurrentCase(result);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load case study. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAnswerSelect = async (questionIndex: number, optionIndex: number) => {
+    if (!currentCase) return;
+
+    const question = currentCase.questions[questionIndex];
+    const selectedOption = question?.options[optionIndex];
+
+    if (!question || !selectedOption) return;
+
+    // Store the answer and show feedback
+    setUserAnswers(prev => ({ ...prev, [questionIndex]: optionIndex }));
+    setShowFeedback(true);
+
+    // Update performance metrics
+    const isCorrect = selectedOption.correct;
+    const newPerformance = {
+      correctCount: performance.correctCount + (isCorrect ? 1 : 0),
+      totalAttempted: performance.totalAttempted + 1,
+      strengths: [...performance.strengths],
+      weaknesses: [...performance.weaknesses]
     };
 
-    const handleNextQuestion = () => {
-      if (!currentCase) return;
+    // Update strengths and weaknesses based on answer
+    if (isCorrect) {
+      newPerformance.strengths = [...new Set([...newPerformance.strengths, ...selectedOption.topics])];
+    } else {
+      newPerformance.weaknesses = [...new Set([...newPerformance.weaknesses, ...selectedOption.topics])];
+    }
 
-      setShowFeedback(false);
+    setPerformance(newPerformance);
 
-      if (currentQuestionIndex < currentCase.questions.length - 1) {
-        // Move to next question while preserving current progress
-        setCurrentQuestionIndex(prev => prev + 1);
+    // Show feedback toast
+    toast({
+      title: selectedOption.correct ? "Correct! 🎉" : "Let's Review",
+      description: selectedOption.explanation,
+      variant: selectedOption.correct ? "default" : "secondary",
+    });
+  };
 
-        // Provide adaptive guidance based on performance
-        const currentSuccessRate = (performance.correctCount / performance.totalAttempted) * 100;
-        if (currentSuccessRate < 60) {
+  const handleNextQuestion = () => {
+    if (!currentCase) return;
+
+    // Move to next question while preserving all progress
+    setShowFeedback(false);
+
+    if (currentQuestionIndex < currentCase.questions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+    } else {
+      // Case completed
+      const successRate = (performance.correctCount / performance.totalAttempted) * 100;
+
+      toast({
+        title: "Case Study Completed! 🎉",
+        description: `You got ${performance.correctCount} out of ${performance.totalAttempted} questions correct (${successRate.toFixed(1)}%).`,
+      });
+
+      if (performance.weaknesses.length > 0) {
+        setTimeout(() => {
           toast({
-            title: "Study Tip",
-            description: "Take a moment to review the key concepts before answering.",
-            duration: 5000,
+            title: "Areas to Review",
+            description: "Consider reviewing: " + performance.weaknesses.slice(0, 3).join(", "),
+            duration: 6000,
           });
-        }
-      } else {
-        // Case completed, show summary
-        const finalSuccessRate = (performance.correctCount / performance.totalAttempted) * 100;
-
-        toast({
-          title: "Case Study Completed! 🎉",
-          description: `You got ${performance.correctCount} out of ${performance.totalAttempted} questions correct (${finalSuccessRate.toFixed(1)}%).`,
-        });
-
-        if (performance.weaknesses.length > 0) {
-          setTimeout(() => {
-            toast({
-              title: "Areas to Review",
-              description: "Consider reviewing: " + performance.weaknesses.slice(0, 3).join(", "),
-              duration: 6000,
-            });
-          }, 1000);
-        }
+        }, 1000);
       }
-    };
+    }
+  };
 
-    // Rest of the component remains the same
-    return (
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Interactive Case Studies</CardTitle>
-            <p className="text-muted-foreground mt-2">
-              Apply clinical reasoning skills through progressive case studies.
-            </p>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              {/* Cases List */}
-              {!currentCase && (
-                <div className="grid gap-4 md:grid-cols-3">
-                  {casesData.map((caseStudy, index) => (
-                    <Card key={caseStudy.id} className={cn(
-                      "relative",
-                      !completedCases.includes(caseStudy.id) && index > 0 &&
-                      !completedCases.includes(casesData[index - 1]?.id) &&
-                      "opacity-50"
-                    )}>
-                      <CardHeader>
-                        <CardTitle className="text-lg">{caseStudy.title}</CardTitle>
-                        <p className="text-sm text-muted-foreground">{caseStudy.description}</p>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <Badge variant={caseStudy.difficulty === 'beginner' ? 'default' :
-                              caseStudy.difficulty === 'intermediate' ? 'secondary' : 'destructive'}>
-                              {caseStudy.difficulty}
+  // Rest of the component implementation remains the same
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Interactive Case Studies</CardTitle>
+          <p className="text-muted-foreground mt-2">
+            Apply clinical reasoning skills through progressive case studies.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            {/* Cases List */}
+            {!currentCase && (
+              <div className="grid gap-4 md:grid-cols-3">
+                {casesData.map((caseStudy, index) => (
+                  <Card key={caseStudy.id} className={cn(
+                    "relative",
+                    !completedCases.includes(caseStudy.id) && index > 0 &&
+                    !completedCases.includes(casesData[index - 1]?.id) &&
+                    "opacity-50"
+                  )}>
+                    <CardHeader>
+                      <CardTitle className="text-lg">{caseStudy.title}</CardTitle>
+                      <p className="text-sm text-muted-foreground">{caseStudy.description}</p>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Badge variant={caseStudy.difficulty === 'beginner' ? 'default' :
+                            caseStudy.difficulty === 'intermediate' ? 'secondary' : 'destructive'}>
+                            {caseStudy.difficulty}
+                          </Badge>
+                          {completedCases.includes(caseStudy.id) && (
+                            <Badge variant="outline" className="gap-1">
+                              <CheckCircle className="h-3 w-3" />
+                              Completed
                             </Badge>
-                            {completedCases.includes(caseStudy.id) && (
-                              <Badge variant="outline" className="gap-1">
-                                <CheckCircle className="h-3 w-3" />
-                                Completed
-                              </Badge>
-                            )}
-                          </div>
-
-                          {!completedCases.includes(caseStudy.id) &&
-                            (index === 0 || completedCases.includes(casesData[index - 1]?.id)) && (
-                              <Button
-                                className="w-full mt-4"
-                                onClick={() => handleGenerateCase(caseStudy.id)}
-                                disabled={false}
-                              >
-                                Start Case
-                              </Button>
-                            )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-
-              {/* Current Case Display */}
-              {currentCase && (
-                <Card>
-                  <CardHeader>
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <CardTitle>{currentCase.title}</CardTitle>
-                        <p className="text-sm text-muted-foreground mt-2">{currentCase.description}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-medium">Question {currentQuestionIndex + 1} of {currentCase.questions.length}</p>
-                        <Progress
-                          value={(currentQuestionIndex + 1) / currentCase.questions.length * 100}
-                          className="w-[200px] mt-2"
-                        />
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-6">
-                      {/* Case Content */}
-                      <div className="prose prose-sm max-w-none">
-                        <div dangerouslySetInnerHTML={{ __html: currentCase.content }} />
-                      </div>
-
-                      {/* Current Question */}
-                      <div className="space-y-4">
-                        <h3 className="text-lg font-semibold">
-                          {currentCase.questions[currentQuestionIndex].question}
-                        </h3>
-                        <div className="grid gap-3">
-                          {currentCase.questions[currentQuestionIndex].options.map((option, oIndex) => (
-                            <div key={oIndex} className="space-y-2">
-                              <Button
-                                variant={userAnswers[currentQuestionIndex] === oIndex ?
-                                  (option.correct ? "default" : "destructive") :
-                                  "outline"
-                                }
-                                className="w-full justify-start text-left h-auto p-4"
-                                onClick={() => handleAnswerSelect(currentQuestionIndex, oIndex)}
-                                disabled={showFeedback}
-                              >
-                                {option.text}
-                              </Button>
-
-                              {showFeedback && userAnswers[currentQuestionIndex] === oIndex && (
-                                <div className="bg-muted/30 p-4 rounded-md space-y-2">
-                                  <p className="font-medium">Explanation:</p>
-                                  <p className="text-sm text-muted-foreground">{option.explanation}</p>
-                                  <div className="mt-2">
-                                    <p className="font-medium text-sm">Related Topics:</p>
-                                    <div className="flex flex-wrap gap-2 mt-1">
-                                      {option.topics.map((topic, tIndex) => (
-                                        <Badge key={tIndex} variant="outline">{topic}</Badge>
-                                      ))}
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* Navigation Buttons */}
-                        <div className="flex justify-between mt-6">
-                          <Button
-                            variant="outline"
-                            onClick={() => {
-                              if (confirm("Are you sure you want to exit? Your progress will be lost.")) {
-                                setCurrentCase(null);
-                                setUserAnswers({});
-                                setShowFeedback(false);
-                                setCurrentQuestionIndex(0);
-                                setPerformance({
-                                  correctCount: 0,
-                                  totalAttempted: 0,
-                                  strengths: [],
-                                  weaknesses: []
-                                });
-                              }
-                            }}
-                          >
-                            Exit Case
-                          </Button>
-                          {showFeedback && (
-                            <Button onClick={handleNextQuestion}>
-                              {currentQuestionIndex < currentCase.questions.length - 1
-                                ? "Next Question"
-                                : "Complete Case"}
-                            </Button>
                           )}
                         </div>
 
-                        {/* Performance Summary (shown after last question) */}
-                        {showFeedback && currentQuestionIndex === currentCase.questions.length - 1 && (
-                          <div className="mt-6 p-4 bg-muted/30 rounded-lg">
-                            <h4 className="font-semibold mb-2">Case Study Summary</h4>
-                            <div className="space-y-2">
-                              <p>Score: {performance.correctCount} / {performance.totalAttempted}</p>
-                              {performance.strengths.length > 0 && (
-                                <div>
-                                  <p className="font-medium">Strengths:</p>
+                        {!completedCases.includes(caseStudy.id) &&
+                          (index === 0 || completedCases.includes(casesData[index - 1]?.id)) && (
+                            <Button
+                              className="w-full mt-4"
+                              onClick={() => handleGenerateCase(caseStudy.id)}
+                            >
+                              Start Case
+                            </Button>
+                          )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {/* Current Case Display */}
+            {currentCase && (
+              <Card>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle>{currentCase.title}</CardTitle>
+                      <p className="text-sm text-muted-foreground mt-2">{currentCase.description}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium">Question {currentQuestionIndex + 1} of {currentCase.questions.length}</p>
+                      <Progress
+                        value={(currentQuestionIndex + 1) / currentCase.questions.length * 100}
+                        className="w-[200px] mt-2"
+                      />
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    {/* Case Content */}
+                    <div className="prose prose-sm max-w-none">
+                      <div dangerouslySetInnerHTML={{ __html: currentCase.content }} />
+                    </div>
+
+                    {/* Current Question */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold">
+                        {currentCase.questions[currentQuestionIndex].question}
+                      </h3>
+                      <div className="grid gap-3">
+                        {currentCase.questions[currentQuestionIndex].options.map((option, oIndex) => (
+                          <div key={oIndex} className="space-y-2">
+                            <Button
+                              variant={userAnswers[currentQuestionIndex] === oIndex ?
+                                (option.correct ? "default" : "destructive") :
+                                "outline"
+                              }
+                              className="w-full justify-start text-left h-auto p-4"
+                              onClick={() => handleAnswerSelect(currentQuestionIndex, oIndex)}
+                              disabled={showFeedback}
+                            >
+                              {option.text}
+                            </Button>
+
+                            {showFeedback && userAnswers[currentQuestionIndex] === oIndex && (
+                              <div className="bg-muted/30 p-4 rounded-md space-y-2">
+                                <p className="font-medium">Explanation:</p>
+                                <p className="text-sm text-muted-foreground">{option.explanation}</p>
+                                <div className="mt-2">
+                                  <p className="font-medium text-sm">Related Topics:</p>
                                   <div className="flex flex-wrap gap-2 mt-1">
-                                    {performance.strengths.map((topic, index) => (
-                                      <Badge key={index} variant="default">{topic}</Badge>
+                                    {option.topics.map((topic, tIndex) => (
+                                      <Badge key={tIndex} variant="outline">{topic}</Badge>
                                     ))}
                                   </div>
                                 </div>
-                              )}
-                              {performance.weaknesses.length > 0 && (
-                                <div>
-                                  <p className="font-medium">Areas for Review:</p>
-                                  <div className="flex flex-wrap gap-2 mt-1">
-                                    {performance.weaknesses.map((topic, index) => (
-                                      <Badge key={index} variant="secondary">{topic}</Badge>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
+                              </div>
+                            )}
                           </div>
+                        ))}
+                      </div>
+
+                      {/* Navigation Buttons */}
+                      <div className="flex justify-between mt-6">
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            if (confirm("Are you sure you want to exit? Your progress will be lost.")) {
+                              setCurrentCase(null);
+                              setUserAnswers({});
+                              setShowFeedback(false);
+                              setCurrentQuestionIndex(0);
+                              setPerformance({
+                                correctCount: 0,
+                                totalAttempted: 0,
+                                strengths: [],
+                                weaknesses: []
+                              });
+                            }
+                          }}
+                        >
+                          Exit Case
+                        </Button>
+                        {showFeedback && (
+                          <Button onClick={handleNextQuestion}>
+                            {currentQuestionIndex < currentCase.questions.length - 1
+                              ? "Next Question"
+                              : "Complete Case"}
+                          </Button>
                         )}
                       </div>
+
+                      {/* Performance Summary (shown after last question) */}
+                      {showFeedback && currentQuestionIndex === currentCase.questions.length - 1 && (
+                        <div className="mt-6 p-4 bg-muted/30 rounded-lg">
+                          <h4 className="font-semibold mb-2">Case Study Summary</h4>
+                          <div className="space-y-2">
+                            <p>Score: {performance.correctCount} / {performance.totalAttempted}</p>
+                            {performance.strengths.length > 0 && (
+                              <div>
+                                <p className="font-medium">Strengths:</p>
+                                <div className="flex flex-wrap gap-2 mt-1">
+                                  {performance.strengths.map((topic, index) => (
+                                    <Badge key={index} variant="default">{topic}</Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {performance.weaknesses.length > 0 && (
+                              <div>
+                                <p className="font-medium">Areas for Review:</p>
+                                <div className="flex flex-wrap gap-2 mt-1">
+                                  {performance.weaknesses.map((topic, index) => (
+                                    <Badge key={index} variant="secondary">{topic}</Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  };
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
 
   return (
     <div className="space-y-6">
