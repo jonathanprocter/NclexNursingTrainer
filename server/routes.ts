@@ -3,71 +3,63 @@ import { createServer, type Server } from "http";
 import { db } from "@db";
 import { modules, questions, quizAttempts, userProgress, questionHistory } from "@db/schema";
 import { eq, and } from "drizzle-orm";
-import { analyzePerformance, generateAdaptiveQuestions, getStudyRecommendations, getPathophysiologyHelp } from "../client/src/lib/ai-services";
+import { practiceQuestions } from "./data/practice-questions";
 
 // Question generation helper function
 async function generateNewQuestions(userId: number, topic?: string) {
   try {
-    // Get all practice exercises
-    const allQuestions = [
-      ...practiceExercises.pattern,
-      ...practiceExercises.hypothesis,
-      ...practiceExercises.decision,
-    ];
+    // Get all available questions for the topic
+    let availableQuestions = [];
+    if (topic) {
+      availableQuestions = practiceQuestions[topic.toLowerCase().replace("/", "-")] || [];
+    } else {
+      // If no topic specified, get all questions
+      availableQuestions = Object.values(practiceQuestions).flat();
+    }
+
+    if (availableQuestions.length === 0) {
+      throw new Error("No questions available for the selected topic.");
+    }
 
     // Get previously used questions for this user
     const usedQuestions = await db.select().from(questionHistory).where(eq(questionHistory.userId, userId));
     const usedQuestionIds = new Set(usedQuestions.map(q => q.questionId));
 
-    // Filter out used questions and by topic if specified
-    let availableQuestions = allQuestions.filter(q => !usedQuestionIds.has(q.id));
+    // Filter out used questions
+    let unusedQuestions = availableQuestions.filter(q => !usedQuestionIds.has(q.id));
 
-    if (topic) {
-      availableQuestions = availableQuestions.filter(q => 
-        q.title?.toLowerCase().includes(topic.toLowerCase()) ||
-        q.type.toLowerCase().includes(topic.toLowerCase())
-      );
-    }
-
-    if (availableQuestions.length < 10) {
-      // If we don't have enough new questions, clear history and try again
+    // If we don't have enough unused questions, reset the history
+    if (unusedQuestions.length < 5) {
       await db.delete(questionHistory).where(eq(questionHistory.userId, userId));
-      availableQuestions = allQuestions;
-      if (topic) {
-        availableQuestions = availableQuestions.filter(q => 
-          q.title?.toLowerCase().includes(topic.toLowerCase()) ||
-          q.type.toLowerCase().includes(topic.toLowerCase())
-        );
-      }
+      unusedQuestions = availableQuestions;
     }
 
-    // Randomly select questions
+    // Select random questions
     const selectedQuestions = [];
-    const questionsCopy = [...availableQuestions];
+    const maxQuestions = Math.min(5, unusedQuestions.length);
 
-    while (selectedQuestions.length < 10 && questionsCopy.length > 0) {
-      const randomIndex = Math.floor(Math.random() * questionsCopy.length);
-      const question = questionsCopy.splice(randomIndex, 1)[0];
+    while (selectedQuestions.length < maxQuestions) {
+      const randomIndex = Math.floor(Math.random() * unusedQuestions.length);
+      const question = unusedQuestions[randomIndex];
+
+      // Remove the selected question to avoid duplicates
+      unusedQuestions.splice(randomIndex, 1);
 
       // Record this question as used
       await db.insert(questionHistory).values({
         userId,
         questionId: question.id,
-        type: question.type,
+        type: question.category.toLowerCase()
       });
 
-      // Format question for frontend
       selectedQuestions.push({
         id: selectedQuestions.length + 1,
-        text: question.content,
-        options: question.options.map((text: string, index: number) => ({
-          id: String.fromCharCode(97 + index), // a, b, c, d
-          text
-        })),
-        correctAnswer: String.fromCharCode(97 + question.correctAnswer),
+        text: question.text,
+        options: question.options,
+        correctAnswer: question.correctAnswer,
         explanation: question.explanation,
-        category: question.type.charAt(0).toUpperCase() + question.type.slice(1),
-        difficulty: "Medium"
+        category: question.category,
+        difficulty: question.difficulty
       });
     }
 
@@ -808,16 +800,17 @@ export function registerRoutes(app: Express): Server {
 
   // Add new questions generation endpoint
   app.post("/api/generate-questions", async (req, res) => {
-    const { topic } = req.body;
-    // For testing purposes, using userId 1. In production, this should come from the session
-    const userId = 1; 
-
     try {
+      const { topic } = req.body;
+      // For testing purposes, using userId 1. In production, this should come from the session
+      const userId = req.session?.userId || 1;
       const newQuestions = await generateNewQuestions(userId, topic);
       res.json(newQuestions);
     } catch (error) {
       console.error("Error in generate-questions endpoint:", error);
-      res.status(500).json({ message: error.message || "Failed to generate questions" });
+      res.status(500).json({ 
+        message: error instanceof Error ? error.message : "Failed to generate questions" 
+      });
     }
   });
 
