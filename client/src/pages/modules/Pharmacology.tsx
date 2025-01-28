@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Bot } from "lucide-react";
+import { Bot, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Helper function to format section names for display
 const formatSectionName = (section: string): string => {
@@ -50,6 +51,17 @@ const formatAIContent = (content: string): string => {
   return content;
 };
 
+// Helper function to handle content export
+const exportContent = (title: string, content: string) => {
+  const element = document.createElement('a');
+  const file = new Blob([content], { type: 'text/plain' });
+  element.href = URL.createObjectURL(file);
+  element.download = `${title.toLowerCase().replace(/\s+/g, '_')}_notes.txt`;
+  document.body.appendChild(element);
+  element.click();
+  document.body.removeChild(element);
+};
+
 export default function Pharmacology() {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -84,6 +96,17 @@ export default function Pharmacology() {
         title: "Error",
         description: "Failed to get AI assistance. Please try again.",
         variant: "destructive",
+      });
+    }
+  };
+
+  const handleExport = () => {
+    if (aiContent) {
+      exportContent(currentSection, aiContent);
+      toast({
+        title: "Success",
+        description: "Content exported successfully!",
+        duration: 3000,
       });
     }
   };
@@ -836,26 +859,38 @@ export default function Pharmacology() {
 
       {/* Dialog for AI Help */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
+        <DialogContent className="max-w-2xl max-h-[80vh]">
+          <DialogHeader className="flex flex-row items-center justify-between pr-8">
             <DialogTitle className="text-2xl font-bold">
               {currentSection}
             </DialogTitle>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleExport}
+              title="Export content"
+              className="h-8 w-8"
+            >
+              <Download className="h-4 w-4" />
+            </Button>
           </DialogHeader>
+
           {aiHelpMutation.isPending ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
           ) : (
-            <div className="prose prose-sm max-w-none">
-              {aiContent.split('\n').map((paragraph, index) => (
-                paragraph.trim() && (
-                  <p key={index} className="mb-4 text-foreground">
-                    {paragraph}
-                  </p>
-                )
-              ))}
-            </div>
+            <ScrollArea className="h-[calc(80vh-8rem)] pr-4">
+              <div className="prose prose-sm max-w-none">
+                {aiContent.split('\n').map((paragraph, index) => (
+                  paragraph.trim() && (
+                    <p key={index} className="mb-4 text-foreground">
+                      {paragraph}
+                    </p>
+                  )
+                ))}
+              </div>
+            </ScrollArea>
           )}
         </DialogContent>
       </Dialog>
