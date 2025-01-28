@@ -616,7 +616,7 @@ function generateNewQuestions(topic?: string) {
 
     // Transform question format to match frontend expectations
     selectedQuestions.push({
-      id: parseInt(question.id.split('-')[1]),
+      id: selectedQuestions.length + 1, // Sequential IDs starting from 1
       text: question.content,
       options: question.options.map((text, index) => ({
         id: String.fromCharCode(97 + index), // a, b, c, d
@@ -684,8 +684,7 @@ export function registerRoutes(app: Express): Server {
               text: "Raise all bed rails and keep the patient in bed",
               isCorrect: false,
               explanation: "This overly restrictive approach may increase risks (climbing over rails) and delays necessary mobilization. Early mobilization with proper safety measures is important for recovery."
-            }
-          ]
+            }          ]
         },
         {
           id: "risk-2",

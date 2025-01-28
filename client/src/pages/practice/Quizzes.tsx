@@ -64,6 +64,7 @@ export default function Quizzes() {
       return response.json();
     },
     onSuccess: (newQuestions) => {
+      // Reset all state
       setQuestions(newQuestions);
       setCurrentQuestion(0);
       setQuizComplete(false);
