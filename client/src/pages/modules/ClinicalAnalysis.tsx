@@ -187,17 +187,20 @@ export default function ClinicalAnalysis() {
     const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
     const [showFeedback, setShowFeedback] = useState(false);
     const { toast } = useToast();
-    const [preIntegratedCases, setPreIntegratedCases] = useState<CaseStudy[]>([]); //Added state
-    const { data: completedCases = [] } = useQuery({
+    const [preIntegratedCases, setPreIntegratedCases] = useState<CaseStudy[]>([]);
+
+    // Query for completed cases
+    const { data: completedCases = [] } = useQuery<string[]>({
       queryKey: ['/api/user/completed-cases'],
-      onSuccess: (data) => {
-        //Fetch pre-integrated cases only once when completedCases is fetched.
-        fetch('/api/pre-integrated-cases')
-          .then(res => res.json())
-          .then(data => setPreIntegratedCases(data));
-      }
     });
 
+    // Query for pre-integrated cases
+    const { data: casesData = [] } = useQuery<CaseStudy[]>({
+      queryKey: ['/api/pre-integrated-cases'],
+      onSuccess: (data) => {
+        setPreIntegratedCases(data);
+      },
+    });
 
     const generateCaseMutation = useMutation({
       mutationFn: async (caseId?: string) => {
@@ -211,7 +214,7 @@ export default function ClinicalAnalysis() {
           throw new Error("Failed to generate case study");
         }
 
-        return response.json();
+        return response.json() as Promise<CaseStudy>;
       },
     });
 
@@ -285,25 +288,13 @@ export default function ClinicalAnalysis() {
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              {/* Progress Overview */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold">Your Progress</h3>
-                  <p className="text-sm text-muted-foreground">Complete cases in sequence to unlock advanced scenarios</p>
-                </div>
-                <Button onClick={() => handleGenerateCase()} className="gap-2">
-                  <RefreshCw className="h-4 w-4" />
-                  Start Next Case
-                </Button>
-              </div>
-
               {/* Cases List */}
               <div className="grid gap-4 md:grid-cols-3">
-                {preIntegratedCases.map((caseStudy, index) => (
+                {casesData.map((caseStudy, index) => (
                   <Card key={caseStudy.id} className={cn(
                     "relative",
                     !completedCases.includes(caseStudy.id) && index > 0 &&
-                    !completedCases.includes(preIntegratedCases[index - 1].id) &&
+                    !completedCases.includes(casesData[index - 1].id) &&
                     "opacity-50"
                   )}>
                     <CardHeader>
@@ -360,7 +351,7 @@ export default function ClinicalAnalysis() {
                         )}
 
                         {!currentCase && !completedCases.includes(caseStudy.id) &&
-                          (index === 0 || completedCases.includes(preIntegratedCases[index - 1].id)) && (
+                          (index === 0 || completedCases.includes(casesData[index - 1].id)) && (
                             <Button
                               className="w-full mt-4"
                               onClick={() => handleGenerateCase(caseStudy.id)}
@@ -373,56 +364,12 @@ export default function ClinicalAnalysis() {
                   </Card>
                 ))}
               </div>
-
-              {/* Current Case Display */}
-              {currentCase && (
-                <Card className="mt-6">
-                  <CardHeader>
-                    <CardTitle>Current Case: {currentCase.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="prose prose-sm max-w-none">
-                        <div dangerouslySetInnerHTML={{ __html: currentCase.content }} />
-                      </div>
-
-                      <div className="space-y-6">
-                        {currentCase.questions.map((question, index) => (
-                          <div key={index} className="space-y-2">
-                            <p className="font-medium">{index + 1}. {question.question}</p>
-                            <Textarea
-                              value={userAnswers[index] || ''}
-                              onChange={(e) => handleAnswerChange(index, e.target.value)}
-                              placeholder="Enter your answer..."
-                              className="min-h-[100px]"
-                            />
-                            {showFeedback && (
-                              <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded">
-                                <p>{question.explanation}</p>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-
-                        <Button
-                          onClick={handleAnswerSubmit}
-                          disabled={!Object.keys(userAnswers).length || showFeedback}
-                          className="w-full"
-                        >
-                          Submit Answers
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
             </div>
           </CardContent>
         </Card>
       </div>
     );
   };
-
 
   return (
     <div className="space-y-6">
