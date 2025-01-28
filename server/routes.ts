@@ -677,7 +677,7 @@ export function registerRoutes(app: Express): Server {
             },
             {
               text: "Administer medications based on room number",
-              isCorrect: false,
+              iscorrect: false,
               explanation: "Room numbers are not a reliable patient identifier and should never beused alone. This approach risks serious medication errors."
             }
           ]
@@ -1120,24 +1120,54 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/generate-prevention-questions", async (_req, res) => {
     try {
+      const promptStructure = {
+        questions: [
+          {
+            question: "string - The question text",
+            options: [
+              { value: "a", text: "string - First option" },
+              { value: "b", text: "string - Second option" },
+              { value: "c", text: "string - Third option" },
+              { value: "d", text: "string - Fourth option" }
+            ],
+            correctAnswer: "string - The correct option value (a, b, c, or d)",
+            explanation: "string - Detailed explanation of the correct answer",
+            concepts: [
+              {
+                title: "string - Concept title",
+                description: "string - Concept description"
+              }
+            ]
+          }
+        ]
+      };
+
       // Generate new prevention strategy questions using OpenAI
       const completion = await openai.chat.completions.create({
         model: "gpt-4",
         messages: [
           {
             role: "system",
-            content: "You are an expert nursing educator creating NCLEX-style questions about nursing risk prevention strategies."
+            content: "You are an expert nursing educator creating NCLEX-style questions about nursing risk prevention strategies. Generate questions in the exact JSON format provided, with no additional text or formatting."
           },
           {
             role: "user",
-            content: "Generate 5 new multiple-choice questions about nursing risk prevention. Include detailed explanations and conceptual breakdowns."
+            content: `Generate 5 new multiple-choice questions about nursing risk prevention. Return the response in this exact JSON structure: ${JSON.stringify(promptStructure, null, 2)}`
           }
         ],
         temperature: 0.7,
         max_tokens: 2000,
+        response_format: { type: "json_object" }
       });
 
-      const newQuestions = JSON.parse(completion.choices[0].message.content);
+      let newQuestions;
+      try {
+        newQuestions = JSON.parse(completion.choices[0].message.content).questions;
+      } catch (parseError) {
+        console.error('JSON Parse Error:', parseError);
+        console.error('Raw content:', completion.choices[0].message.content);
+        throw new Error('Failed to parse generated questions');
+      }
 
       // Transform the generated questions into the required format
       const formattedQuestions = newQuestions.map((q: any, index: number) => ({
