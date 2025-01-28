@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Mic, StopCircle, History, Lightbulb } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useState } from 'react';
-import { toast } from "@/components/ui/toast"; // Assuming a toast component exists
+import { useToast } from "@/hooks/use-toast";
 
 
 export default function AICompanion() {
@@ -21,6 +21,7 @@ export default function AICompanion() {
       }
     } catch (error) {
       console.warn("Microphone access denied:", error);
+      const { toast } = useToast();
       toast({
         title: "Microphone Access Required",
         description: "Please allow microphone access to use voice features.",
