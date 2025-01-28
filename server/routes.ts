@@ -11,7 +11,8 @@ async function generateNewQuestions(userId: number, topic?: string) {
     // Get all available questions for the topic
     let availableQuestions = [];
     if (topic) {
-      availableQuestions = practiceQuestions[topic.toLowerCase().replace("/", "-")] || [];
+      const topicKey = topic.toLowerCase().replace("/", "-") as keyof typeof practiceQuestions;
+      availableQuestions = practiceQuestions[topicKey] || [];
     } else {
       // If no topic specified, get all questions
       availableQuestions = Object.values(practiceQuestions).flat();
@@ -38,35 +39,43 @@ async function generateNewQuestions(userId: number, topic?: string) {
     const selectedQuestions = [];
     const maxQuestions = Math.min(5, unusedQuestions.length);
 
-    while (selectedQuestions.length < maxQuestions) {
+    for (let i = 0; i < maxQuestions; i++) {
       const randomIndex = Math.floor(Math.random() * unusedQuestions.length);
       const question = unusedQuestions[randomIndex];
-
-      // Remove the selected question to avoid duplicates
       unusedQuestions.splice(randomIndex, 1);
 
-      // Record this question as used
-      await db.insert(questionHistory).values({
-        userId,
-        questionId: question.id,
-        type: question.category.toLowerCase()
-      });
+      try {
+        // Record this question as used
+        await db.insert(questionHistory).values({
+          userId,
+          questionId: question.id,
+          type: question.category.toLowerCase()
+        });
 
-      selectedQuestions.push({
-        id: selectedQuestions.length + 1,
-        text: question.text,
-        options: question.options,
-        correctAnswer: question.correctAnswer,
-        explanation: question.explanation,
-        category: question.category,
-        difficulty: question.difficulty
-      });
+        selectedQuestions.push({
+          id: i + 1,
+          text: question.text,
+          options: question.options,
+          correctAnswer: question.correctAnswer,
+          explanation: question.explanation,
+          category: question.category,
+          difficulty: question.difficulty
+        });
+      } catch (error) {
+        console.error("Error recording question history:", error);
+        // Continue with next question if one fails
+        continue;
+      }
+    }
+
+    if (selectedQuestions.length === 0) {
+      throw new Error("Failed to generate any valid questions.");
     }
 
     return selectedQuestions;
   } catch (error) {
     console.error("Error generating questions:", error);
-    throw new Error("Failed to generate questions. Please try again.");
+    throw new Error(error instanceof Error ? error.message : "Failed to generate questions. Please try again.");
   }
 }
 
@@ -618,6 +627,22 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Add new questions generation endpoint
+  app.post("/api/generate-questions", async (req, res) => {
+    try {
+      const { topic } = req.body;
+      // For testing purposes, using userId 1
+      const userId = 1;
+      const newQuestions = await generateNewQuestions(userId, topic);
+      res.json(newQuestions);
+    } catch (error) {
+      console.error("Error in generate-questions endpoint:", error);
+      res.status(500).json({ 
+        message: error instanceof Error ? error.message : "Failed to generate questions" 
+      });
+    }
+  });
+
   app.post("/api/generate-prevention-questions", async (_req, res) => {
     try {
       if (!process.env.OPENAI_API_KEY) {
@@ -775,8 +800,7 @@ export function registerRoutes(app: Express): Server {
           and real-world applications in your responses.`
           },
           {
-            role: "user",
-            content: question
+            role: "user",            content: question
           }
         ],
         temperature: 0.7,
@@ -802,8 +826,8 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/generate-questions", async (req, res) => {
     try {
       const { topic } = req.body;
-      // For testing purposes, using userId 1. In production, this should come from the session
-      const userId = req.session?.userId || 1;
+      // For testing purposes, using userId 1
+      const userId = 1;
       const newQuestions = await generateNewQuestions(userId, topic);
       res.json(newQuestions);
     } catch (error) {
