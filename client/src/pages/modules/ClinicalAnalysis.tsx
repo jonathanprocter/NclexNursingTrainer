@@ -623,17 +623,17 @@ const ClinicalReasoningSection = () => {
         {
           title: "Data Collection",
           description: "Gather relevant clinical information systematically",
-          example: "Patient symptoms, vital signs, risk factors, and clinical findings"
+          example: "Patient: Symptoms, vital signs, risk factors, and clinical findings"
         },
         {
           title: "Hypothesis Generation",
           description: "Form initial hypotheses based on presenting data",
-          example: "Given chest pain and SOB: Consider ACS, PE, anxiety"
+          example: "Clinical Picture: Given chest pain and SOB, consider ACS, PE, or anxiety"
         },
         {
           title: "Hypothesis Testing",
           description: "Gather additional data to confirm or reject hypotheses",
-          example: "ECG changes, cardiac enzymes, D-dimer results"
+          example: "Diagnostics: ECG changes, cardiac enzymes, D-dimer results"
         }
       ]
     },
@@ -644,21 +644,20 @@ const ClinicalReasoningSection = () => {
         {
           title: "Symptom Clustering",
           description: "Group related symptoms to identify potential underlying conditions",
-          example: "Chest pain, shortness of breath, diaphoresis may indicate ACS"
+          example: "Clinical Pattern: Chest pain + SOB + diaphoresis → Consider ACS"
         },
         {
           title: "Vital Sign Patterns",
           description: "Recognize significant changes in vital signs",
-          example: "Elevated heart rate and blood pressure may suggest shock or distress"
+          example: "Vital Trends: ↑HR + ↑BP may indicate cardiovascular stress"
         },
         {
           title: "Laboratory Data Patterns",
-          description: "Interpret abnormal laboratory values in the context of clinical findings",
-          example: "Elevated troponin levels confirm myocardial injury"
+          description: "Interpret abnormal laboratory values in clinical context",
+          example: "Lab Correlation: Elevated troponin confirms myocardial injury"
         }
       ]
     }
-    // Add more models
   ];
 
   const handleOptionSelect = (option: { text: string; nextId: string; feedback?: string }) => {
@@ -752,11 +751,11 @@ const ClinicalReasoningSection = () => {
 
                   <div className="space-y-4">
                     {model.steps.map((step, stepIndex) => (
-                      <div key={stepIndex} className="border-l-2 border-primary pl-4">
-                        <h4 className="font-medium">{step.title}</h4>
+                      <div key={stepIndex} className="bg-background/50 p-4 rounded-md">
+                        <h4 className="font-semibold text-base">{step.title}</h4>
                         <p className="text-sm text-muted-foreground mt-1">{step.description}</p>
                         <div className="mt-2 bg-muted p-3 rounded-md">
-                          <p className="text-sm italic">Example: {step.example}</p>
+                          <p className="text-sm"><span className="font-medium">Example:</span> {step.example}</p>
                         </div>
                       </div>
                     ))}
