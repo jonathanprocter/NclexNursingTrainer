@@ -187,7 +187,6 @@ export default function ClinicalAnalysis() {
     const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
     const [showFeedback, setShowFeedback] = useState(false);
     const { toast } = useToast();
-    const [preIntegratedCases, setPreIntegratedCases] = useState<CaseStudy[]>([]);
 
     // Query for completed cases
     const { data: completedCases = [] } = useQuery<string[]>({
@@ -197,9 +196,6 @@ export default function ClinicalAnalysis() {
     // Query for pre-integrated cases
     const { data: casesData = [] } = useQuery<CaseStudy[]>({
       queryKey: ['/api/pre-integrated-cases'],
-      onSuccess: (data) => {
-        setPreIntegratedCases(data);
-      },
     });
 
     const generateCaseMutation = useMutation({
@@ -207,7 +203,7 @@ export default function ClinicalAnalysis() {
         const response = await fetch("/api/generate-case", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ completedCases, caseId }),
+          body: JSON.stringify({ caseId }),
         });
 
         if (!response.ok) {
@@ -215,6 +211,22 @@ export default function ClinicalAnalysis() {
         }
 
         return response.json() as Promise<CaseStudy>;
+      },
+      onSuccess: (data) => {
+        setCurrentCase(data);
+        setUserAnswers({});
+        setShowFeedback(false);
+        toast({
+          title: "Success",
+          description: "Case study loaded successfully!",
+        });
+      },
+      onError: (error) => {
+        toast({
+          title: "Error",
+          description: "Failed to load case study. Please try again.",
+          variant: "destructive",
+        });
       },
     });
 
@@ -235,42 +247,28 @@ export default function ClinicalAnalysis() {
 
         return response.json();
       },
-    });
-
-    const handleGenerateCase = async (caseId?: string) => {
-      try {
-        const result = await generateCaseMutation.mutateAsync(caseId);
-        setCurrentCase(result);
-        setUserAnswers({});
-        setShowFeedback(false);
-        toast({
-          title: "Success",
-          description: "New case study generated successfully!",
-        });
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to generate case study. Please try again.",
-          variant: "destructive",
-        });
-      }
-    };
-
-    const handleAnswerSubmit = async () => {
-      try {
-        await submitCaseMutation.mutateAsync(userAnswers);
+      onSuccess: () => {
         setShowFeedback(true);
         toast({
           title: "Success",
           description: "Case study answers submitted successfully!",
         });
-      } catch (error) {
+      },
+      onError: (error) => {
         toast({
           title: "Error",
-          description: "Failed to submit answers. Please try again.",
+          description: "Failed to submit case study. Please try again.",
           variant: "destructive",
         });
       }
+    });
+
+    const handleGenerateCase = async (caseId?: string) => {
+      await generateCaseMutation.mutateAsync(caseId);
+    };
+
+    const handleAnswerSubmit = async () => {
+      await submitCaseMutation.mutateAsync(userAnswers);
     };
 
     const handleAnswerChange = (index: number, value: string) => {
@@ -294,7 +292,7 @@ export default function ClinicalAnalysis() {
                   <Card key={caseStudy.id} className={cn(
                     "relative",
                     !completedCases.includes(caseStudy.id) && index > 0 &&
-                    !completedCases.includes(casesData[index - 1].id) &&
+                    !completedCases.includes(casesData[index - 1]?.id) &&
                     "opacity-50"
                   )}>
                     <CardHeader>
@@ -316,47 +314,14 @@ export default function ClinicalAnalysis() {
                           )}
                         </div>
 
-                        {currentCase?.id === caseStudy.id && (
-                          <div className="mt-4">
-                            <div className="prose prose-sm max-w-none mb-4">
-                              <div dangerouslySetInnerHTML={{ __html: currentCase.content }} />
-                            </div>
-
-                            {currentCase.questions.map((question, qIndex) => (
-                              <div key={qIndex} className="mt-4 space-y-2">
-                                <p className="font-medium">{qIndex + 1}. {question.question}</p>
-                                <Textarea
-                                  value={userAnswers[qIndex] || ''}
-                                  onChange={(e) => handleAnswerChange(qIndex, e.target.value)}
-                                  placeholder="Enter your answer..."
-                                  className="min-h-[100px]"
-                                />
-                                {showFeedback && (
-                                  <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded">
-                                    <p>{question.explanation}</p>
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-
-                            <div className="mt-4 flex justify-end gap-2">
-                              <Button
-                                onClick={() => handleAnswerSubmit()}
-                                disabled={!Object.keys(userAnswers).length || showFeedback}
-                              >
-                                Submit Answers
-                              </Button>
-                            </div>
-                          </div>
-                        )}
-
                         {!currentCase && !completedCases.includes(caseStudy.id) &&
-                          (index === 0 || completedCases.includes(casesData[index - 1].id)) && (
+                          (index === 0 || completedCases.includes(casesData[index - 1]?.id)) && (
                             <Button
                               className="w-full mt-4"
                               onClick={() => handleGenerateCase(caseStudy.id)}
+                              disabled={generateCaseMutation.isPending}
                             >
-                              Start Case
+                              {generateCaseMutation.isPending ? 'Loading...' : 'Start Case'}
                             </Button>
                           )}
                       </div>
@@ -364,6 +329,61 @@ export default function ClinicalAnalysis() {
                   </Card>
                 ))}
               </div>
+
+              {/* Current Case Display */}
+              {currentCase && (
+                <Card className="mt-6">
+                  <CardHeader>
+                    <CardTitle>Current Case: {currentCase.title}</CardTitle>
+                    <p className="text-sm text-muted-foreground mt-2">{currentCase.description}</p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-6">
+                      <div className="prose prose-sm max-w-none">
+                        <div dangerouslySetInnerHTML={{ __html: currentCase.content }} />
+                      </div>
+
+                      <div className="space-y-6">
+                        {currentCase.questions.map((question, index) => (
+                          <div key={index} className="space-y-2">
+                            <p className="font-medium">{index + 1}. {question.question}</p>
+                            <Textarea
+                              value={userAnswers[index] || ''}
+                              onChange={(e) => handleAnswerChange(index, e.target.value)}
+                              placeholder="Enter your answer..."
+                              className="min-h-[100px]"
+                            />
+                            {showFeedback && (
+                              <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded">
+                                <p>{question.explanation}</p>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            onClick={() => {
+                              setCurrentCase(null);
+                              setUserAnswers({});
+                              setShowFeedback(false);
+                            }}
+                            variant="outline"
+                          >
+                            Close Case
+                          </Button>
+                          <Button
+                            onClick={handleAnswerSubmit}
+                            disabled={!Object.keys(userAnswers).length || showFeedback || submitCaseMutation.isPending}
+                          >
+                            {submitCaseMutation.isPending ? 'Submitting...' : 'Submit Answers'}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </CardContent>
         </Card>
