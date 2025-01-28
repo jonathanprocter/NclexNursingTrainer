@@ -11,6 +11,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -860,19 +861,23 @@ export default function Pharmacology() {
       {/* Dialog for AI Help */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh]">
-          <DialogHeader className="flex flex-row items-center justify-between pr-8">
-            <DialogTitle className="text-2xl font-bold">
-              {currentSection}
-            </DialogTitle>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleExport}
-              title="Export content"
-              className="h-8 w-8"
-            >
-              <Download className="h-4 w-4" />
-            </Button>
+          <DialogHeader>
+            <DialogTitle>{currentSection}</DialogTitle>
+            <DialogDescription>
+              AI-powered assistance for your learning journey
+            </DialogDescription>
+
+            <div className="absolute right-4 top-4">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleExport}
+                title="Export content"
+                className="h-8 w-8"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+            </div>
           </DialogHeader>
 
           {aiHelpMutation.isPending ? (
@@ -880,15 +885,15 @@ export default function Pharmacology() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
           ) : (
-            <ScrollArea className="h-[calc(80vh-8rem)] pr-4">
+            <ScrollArea className="h-[calc(80vh-12rem)] pr-4">
               <div className="prose prose-sm max-w-none">
-                {aiContent.split('\n').map((paragraph, index) => (
+                {aiContent.split('\n').map((paragraph, index) =>
                   paragraph.trim() && (
-                    <p key={index} className="mb-4 text-foreground">
+                    <div key={index} className="mb-4 text-foreground">
                       {paragraph}
-                    </p>
+                    </div>
                   )
-                ))}
+                )}
               </div>
             </ScrollArea>
           )}
