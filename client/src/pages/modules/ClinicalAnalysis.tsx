@@ -68,6 +68,26 @@ interface PracticeExercise {
   options?: string[];
 }
 
+interface DecisionNode {
+  id: string;
+  content: string;
+  options: {
+    text: string;
+    nextId: string;
+    feedback?: string;
+  }[];
+}
+
+interface ReasoningModel {
+  title: string;
+  description: string;
+  steps: {
+    title: string;
+    description: string;
+    example: string;
+  }[];
+}
+
 export default function ClinicalAnalysis() {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -515,6 +535,242 @@ const CaseStudiesSection = () => {
   );
 };
 
+const ClinicalReasoningSection = () => {
+  const [currentNodeId, setCurrentNodeId] = useState<string>("root");
+  const [selectedModel, setSelectedModel] = useState<string | null>(null);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedback, setFeedback] = useState("");
+
+  const decisionTree: Record<string, DecisionNode> = {
+    root: {
+      id: "root",
+      content: "A 65-year-old patient presents with sudden onset chest pain, shortness of breath, and anxiety.",
+      options: [
+        {
+          text: "Assess vital signs and perform focused cardiac examination",
+          nextId: "vitals",
+          feedback: "Good choice! Initial assessment of vital signs is crucial for risk stratification."
+        },
+        {
+          text: "Immediately order cardiac enzymes and chest X-ray",
+          nextId: "tests",
+          feedback: "While tests are important, initial clinical assessment should come first."
+        },
+        {
+          text: "Start oxygen therapy and call for cardiac consult",
+          nextId: "treatment",
+          feedback: "Treatment may be needed, but assessment should precede interventions."
+        }
+      ]
+    },
+    vitals: {
+      id: "vitals",
+      content: "Vital signs show: BP 160/95, HR 102, RR 24, SpO2 94% on RA. Patient appears diaphoretic.",
+      options: [
+        {
+          text: "Consider Acute Coronary Syndrome - obtain ECG",
+          nextId: "ecg",
+          feedback: "Excellent! These vital signs with presenting symptoms warrant immediate ECG."
+        },
+        {
+          text: "Start anti-anxiety medication for panic attack",
+          nextId: "anxiety",
+          feedback: "Be cautious about attributing symptoms to anxiety without ruling out cardiac causes."
+        }
+      ]
+    },
+    // Add more nodes as needed
+    ecg: {
+      id: "ecg",
+      content: "ECG shows ST-segment elevation in leads II, III, and aVF.",
+      options: [
+        { text: "Proceed with immediate intervention (e.g., PCI)", nextId: "intervention", feedback: "Correct!  ST-elevation MI requires urgent reperfusion therapy." },
+        { text: "Observe and repeat ECG in 30 minutes", nextId: "observe", feedback: "Incorrect.  ST-segment elevation indicates an ongoing MI." }
+      ]
+    },
+    intervention: {
+      id: "intervention",
+      content: "Intervention completed successfully.",
+      options: []
+    },
+    observe: {
+      id: "observe",
+      content: "The patient's condition worsened.  This highlights the importance of timely intervention.",
+      options: []
+    },
+    tests: {
+      id: "tests",
+      content: "Cardiac enzymes and chest x-ray results pending.",
+      options: []
+    },
+    treatment: {
+      id: "treatment",
+      content: "Oxygen therapy initiated.  Cardiac consult en route.",
+      options: []
+    },
+    anxiety: {
+      id: "anxiety",
+      content: "Anti-anxiety medication administered.  Cardiac evaluation still pending.",
+      options: []
+    }
+  };
+
+  const reasoningModels: ReasoningModel[] = [
+    {
+      title: "Hypothesis-Driven Reasoning",
+      description: "Generate and test clinical hypotheses based on patient data",
+      steps: [
+        {
+          title: "Data Collection",
+          description: "Gather relevant clinical information systematically",
+          example: "Patient symptoms, vital signs, risk factors, and clinical findings"
+        },
+        {
+          title: "Hypothesis Generation",
+          description: "Form initial hypotheses based on presenting data",
+          example: "Given chest pain and SOB: Consider ACS, PE, anxiety"
+        },
+        {
+          title: "Hypothesis Testing",
+          description: "Gather additional data to confirm or reject hypotheses",
+          example: "ECG changes, cardiac enzymes, D-dimer results"
+        }
+      ]
+    },
+    {
+      title: "Pattern Recognition",
+      description: "Identify and interpret recurring clinical patterns",
+      steps: [
+        {
+          title: "Symptom Clustering",
+          description: "Group related symptoms to identify potential underlying conditions",
+          example: "Chest pain, shortness of breath, diaphoresis may indicate ACS"
+        },
+        {
+          title: "Vital Sign Patterns",
+          description: "Recognize significant changes in vital signs",
+          example: "Elevated heart rate and blood pressure may suggest shock or distress"
+        },
+        {
+          title: "Laboratory Data Patterns",
+          description: "Interpret abnormal laboratory values in the context of clinical findings",
+          example: "Elevated troponin levels confirm myocardial injury"
+        }
+      ]
+    }
+    // Add more models
+  ];
+
+  const handleOptionSelect = (option: { text: string; nextId: string; feedback?: string }) => {
+    setFeedback(option.feedback || "");
+    setShowFeedback(true);
+    setCurrentNodeId(option.nextId);
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Clinical Reasoning Frameworks</CardTitle>
+        <p className="text-muted-foreground mt-2">
+          Learn and apply systematic approaches to clinical reasoning and decision-making.
+        </p>
+      </CardHeader>
+      <CardContent>
+        <Tabs defaultValue="decision_tree" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="decision_tree">Interactive Decision Tree</TabsTrigger>
+            <TabsTrigger value="reasoning_models">Reasoning Models</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="decision_tree">
+            <div className="space-y-6">
+              <div className="bg-muted/50 p-6 rounded-lg">
+                <h3 className="text-lg font-semibold mb-4">Clinical Scenario</h3>
+                <div className="prose prose-sm max-w-none mb-6">
+                  <p>{decisionTree[currentNodeId].content}</p>
+                </div>
+
+                <div className="space-y-4">
+                  {decisionTree[currentNodeId].options.map((option, index) => (
+                    <Button
+                      key={index}
+                      variant="outline"
+                      className="w-full justify-start text-left h-auto p-4"
+                      onClick={() => handleOptionSelect(option)}
+                    >
+                      {option.text}
+                    </Button>
+                  ))}
+                </div>
+
+                {showFeedback && feedback && (
+                  <div className="mt-4 p-4 bg-muted rounded-md">
+                    <p className="text-sm">{feedback}</p>
+                  </div>
+                )}
+
+                <div className="mt-4 flex justify-between">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setCurrentNodeId("root");
+                      setShowFeedback(false);
+                    }}
+                  >
+                    Restart Scenario
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleAIHelp("decision_tree", decisionTree[currentNodeId].content)}
+                  >
+                    <Bot className="h-4 w-4 mr-2" />
+                    AI Help
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="reasoning_models">
+            <div className="space-y-6">
+              {reasoningModels.map((model, index) => (
+                <div key={index} className="bg-muted/50 p-6 rounded-lg">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-lg font-semibold">{model.title}</h3>
+                      <p className="text-muted-foreground mt-1">{model.description}</p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleAIHelp("reasoning_model", model.title)}
+                    >
+                      <Bot className="h-4 w-4 mr-2" />
+                      AI Help
+                    </Button>
+                  </div>
+
+                  <div className="space-y-4">
+                    {model.steps.map((step, stepIndex) => (
+                      <div key={stepIndex} className="border-l-2 border-primary pl-4">
+                        <h4 className="font-medium">{step.title}</h4>
+                        <p className="text-sm text-muted-foreground mt-1">{step.description}</p>
+                        <div className="mt-2 bg-muted p-3 rounded-md">
+                          <p className="text-sm italic">Example: {step.example}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+    </Card>
+  );
+};
+
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
@@ -652,56 +908,7 @@ const CaseStudiesSection = () => {
 
         {/* Clinical Reasoning Tab */}
         <TabsContent value="clinical-reasoning">
-          <Card>
-            <CardHeader>
-              <CardTitle>Clinical Reasoning Frameworks</CardTitle>
-              <p className="text-muted-foreground mt-2">
-                Learn and apply systematic approaches to clinical reasoning and decision-making.
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="bg-muted/50 p-6 rounded-lg">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="text-lg font-semibold">Interactive Decision Trees</h3>
-                      <p className="text-muted-foreground mt-1">
-                        Practice clinical decision-making through guided scenarios.
-                      </p>
-                    </div>
-                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("decision_trees")}>
-                      <Bot className="h-4 w-4 mr-2" />
-                      AI Help
-                    </Button>
-                  </div>
-                  {/* Add decision tree visualization and interaction here */}
-                </div>
-
-                <div className="bg-muted/50 p-6 rounded-lg">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="text-lg font-semibold">Reasoning Models</h3>
-                      <p className="text-muted-foreground mt-1">
-                        Explore different approaches to clinical reasoning and decision-making.
-                      </p>
-                    </div>
-                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("reasoning_models")}>
-                      <Bot className="h-4 w-4 mr-2" />
-                      AI Help
-                    </Button>
-                  </div>
-                  <div className="space-y-4">
-                    <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-                      <li>Hypothesis-driven reasoning</li>
-                      <li>Pattern recognition approaches</li>
-                      <li>Evidence-based frameworks</li>
-                      <li>Decision analysis tools</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <ClinicalReasoningSection />
         </TabsContent>
 
         {/* Practice Tab */}
@@ -735,8 +942,7 @@ const CaseStudiesSection = () => {
                     <div className="flex justify-between items-start mb-4">
                       <div>
                         <h3 className="text-lg font-semibold">{currentExercise.title}</h3>
-                        <p className="text-muted-foreground mt-1">{currentExercise.description}</p>
-                      </div>
+                        <p className="text-muted-foreground mt-1">{currentExercise.description}</p>                      </div>
                       <Button variant="outline" size="sm" onClick={() => handleAIHelp(currentExercise.type)}>
                         <Bot className="h-4 w-4 mr-2" />
                         AI Help
