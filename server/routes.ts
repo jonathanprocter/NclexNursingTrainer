@@ -593,6 +593,31 @@ const preIntegratedCases = [
   }
 ];
 
+// Question generation helper function
+function generateNewQuestions(topic?: string) {
+  const allQuestions = [
+    ...practiceExercises.pattern,
+    ...practiceExercises.hypothesis,
+    ...practiceExercises.decision,
+  ];
+
+  // Filter questions by topic if specified
+  const availableQuestions = topic
+    ? allQuestions.filter(q => q.title?.toLowerCase().includes(topic.toLowerCase()))
+    : allQuestions;
+
+  // Randomly select 10 questions
+  const selectedQuestions = [];
+  const questionsCopy = [...availableQuestions];
+
+  while (selectedQuestions.length < 10 && questionsCopy.length > 0) {
+    const randomIndex = Math.floor(Math.random() * questionsCopy.length);
+    selectedQuestions.push(questionsCopy.splice(randomIndex, 1)[0]);
+  }
+
+  return selectedQuestions;
+}
+
 export function registerRoutes(app: Express): Server {
   // Modules routes
   app.get("/api/modules", async (_req, res) => {
@@ -661,7 +686,7 @@ export function registerRoutes(app: Express): Server {
           ],
           options: [
             {
-              text: "Implement the full 'Five Rights' check and use two patient identifiers",
+              text: "Implement the full 'Five Rights' check and usetwo patient identifiers",
               isCorrect: true,
               explanation: "This approach ensures medication safety by verifying: right patient (using two identifiers), right drug, right dose, right route, and right time. This systematic process helps prevent medication errors and aligns with Joint Commission safety goals."
             },
@@ -1317,6 +1342,17 @@ export function registerRoutes(app: Express): Server {
         message: "Failed to generate AI response",
         error: error instanceof Error ? error.message : 'Unknown error'
       });
+    }
+  });
+
+  // Add new questions generation endpoint
+  app.post("/api/generate-questions", (req, res) => {
+    const { topic } = req.body;
+    try {
+      const newQuestions = generateNewQuestions(topic);
+      res.json(newQuestions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to generate questions" });
     }
   });
 
