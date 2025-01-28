@@ -860,25 +860,30 @@ export default function Pharmacology() {
 
       {/* Dialog for AI Help */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh]">
+        <DialogContent
+          className="max-w-2xl max-h-[80vh]"
+          aria-describedby="dialog-description"
+        >
           <DialogHeader>
             <DialogTitle>{currentSection}</DialogTitle>
-            <DialogDescription>
-              AI-powered assistance for your learning journey
-            </DialogDescription>
-
-            <div className="absolute right-4 top-4">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleExport}
-                title="Export content"
-                className="h-8 w-8"
-              >
-                <Download className="h-4 w-4" />
-              </Button>
+            <div id="dialog-description">
+              <DialogDescription>
+                AI-powered learning assistance for {currentSection.toLowerCase()}
+              </DialogDescription>
             </div>
           </DialogHeader>
+
+          <div className="absolute right-4 top-4">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleExport}
+              title="Export content"
+              className="h-8 w-8"
+            >
+              <Download className="h-4 w-4" />
+            </Button>
+          </div>
 
           {aiHelpMutation.isPending ? (
             <div className="flex items-center justify-center py-8">
