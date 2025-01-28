@@ -1,19 +1,69 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { Bot, Brain, FileCheck, Users, AlertTriangle, Lightbulb, Plus } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function ClinicalJudgment() {
+  const { toast } = useToast();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [aiContent, setAiContent] = useState("");
+  const [currentTopic, setCurrentTopic] = useState("");
+
+  const aiHelpMutation = useMutation({
+    mutationFn: async ({ topic, context }: { topic: string; context?: string }) => {
+      const response = await fetch("/api/ai-help", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic, context }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to get AI assistance");
+      }
+
+      return response.json();
+    },
+  });
+
+  const handleAIHelp = async (topic: string, context?: string) => {
+    setCurrentTopic(topic);
+    setIsDialogOpen(true);
+
+    try {
+      const result = await aiHelpMutation.mutateAsync({ topic, context });
+      setAiContent(result.content);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to get AI assistance. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto px-4 py-8">
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold mb-2">Clinical Judgment</h1>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          Master nursing process and clinical decision-making skills
+          Master the critical thinking and decision-making skills essential for the Next Generation NCLEX® examination
         </p>
       </div>
 
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
+        <TabsList className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="process">Nursing Process</TabsTrigger>
           <TabsTrigger value="decision">Decision Making</TabsTrigger>
@@ -21,84 +71,403 @@ export default function ClinicalJudgment() {
         </TabsList>
 
         <TabsContent value="overview">
+          <div className="grid gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Module Progress</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Overall Completion</span>
+                    <span>0%</span>
+                  </div>
+                  <Progress value={0} className="h-2" />
+
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <Card>
+                      <CardHeader className="py-4">
+                        <div className="flex items-center gap-2">
+                          <Brain className="h-4 w-4 text-primary" />
+                          <CardTitle className="text-lg">Knowledge Areas</CardTitle>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-2xl font-bold">0/4</p>
+                        <p className="text-sm text-muted-foreground">Core competencies mastered</p>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="py-4">
+                        <div className="flex items-center gap-2">
+                          <FileCheck className="h-4 w-4 text-primary" />
+                          <CardTitle className="text-lg">Cases Completed</CardTitle>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-2xl font-bold">0/10</p>
+                        <p className="text-sm text-muted-foreground">Practice scenarios solved</p>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="py-4">
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4 text-primary" />
+                          <CardTitle className="text-lg">Performance</CardTitle>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-2xl font-bold">N/A</p>
+                        <p className="text-sm text-muted-foreground">Average score on cases</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="grid gap-6 md:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <CardTitle>Key Focus Areas</CardTitle>
+                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("focus_areas")}>
+                      <Bot className="h-4 w-4 mr-2" />
+                      AI Guidance
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-4">
+                    <li className="flex items-start gap-3">
+                      <AlertTriangle className="h-5 w-5 text-yellow-500 mt-0.5" />
+                      <div>
+                        <h4 className="font-medium">Recognition of Clinical Changes</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Develop skills in identifying subtle changes in patient condition and understanding their significance
+                        </p>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <Brain className="h-5 w-5 text-blue-500 mt-0.5" />
+                      <div>
+                        <h4 className="font-medium">Analysis of Complex Data</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Learn to synthesize multiple data points to form accurate clinical judgments
+                        </p>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <Lightbulb className="h-5 w-5 text-green-500 mt-0.5" />
+                      <div>
+                        <h4 className="font-medium">Prioritization Skills</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Master the art of prioritizing care based on patient needs and clinical urgency
+                        </p>
+                      </div>
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <CardTitle>Clinical Judgment Model</CardTitle>
+                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("judgment_model")}>
+                      <Bot className="h-4 w-4 mr-2" />
+                      AI Explanation
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Understanding the NCSBN Clinical Judgment Measurement Model (NCJMM) and its application in NCLEX-style questions
+                    </p>
+                    <ul className="space-y-3">
+                      <li className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-primary" />
+                        <span className="text-sm">Recognize Cues</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-primary" />
+                        <span className="text-sm">Analyze Cues</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-primary" />
+                        <span className="text-sm">Prioritize Hypotheses</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-primary" />
+                        <span className="text-sm">Generate Solutions</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-primary" />
+                        <span className="text-sm">Take Actions</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-primary" />
+                        <span className="text-sm">Evaluate Outcomes</span>
+                      </li>
+                    </ul>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="process">
           <Card>
             <CardHeader>
-              <CardTitle>Course Progress</CardTitle>
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle>The Nursing Process & Clinical Judgment</CardTitle>
+                  <p className="text-muted-foreground mt-2">
+                    Master the integration of the nursing process with clinical judgment skills
+                  </p>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => handleAIHelp("nursing_process_overview")}>
+                  <Bot className="h-4 w-4 mr-2" />
+                  AI Guide
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Overall Progress</span>
-                  <span>0%</span>
+              <div className="space-y-6">
+                <div className="bg-muted/50 p-6 rounded-lg">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-lg font-semibold">Assessment</h3>
+                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("assessment_challenges")}>
+                      <Bot className="h-4 w-4 mr-2" />
+                      Common Challenges
+                    </Button>
+                  </div>
+                  <ul className="space-y-3 text-sm text-muted-foreground">
+                    <li>• Systematic data collection techniques</li>
+                    <li>• Recognition of significant findings</li>
+                    <li>• Cultural considerations in assessment</li>
+                    <li>• Documentation best practices</li>
+                  </ul>
                 </div>
-                <Progress value={0} className="h-2" />
-                
-                <div className="grid gap-4 md:grid-cols-3">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">Cases Completed</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-2xl font-bold">0/25</p>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">Skills Mastered</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-2xl font-bold">0/10</p>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">Time Spent</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-2xl font-bold">0h</p>
-                    </CardContent>
-                  </Card>
+
+                <div className="bg-muted/50 p-6 rounded-lg">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-lg font-semibold">Diagnosis</h3>
+                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("diagnosis_tips")}>
+                      <Bot className="h-4 w-4 mr-2" />
+                      Diagnosis Tips
+                    </Button>
+                  </div>
+                  <ul className="space-y-3 text-sm text-muted-foreground">
+                    <li>• Pattern recognition in clinical findings</li>
+                    <li>• Prioritizing nursing diagnoses</li>
+                    <li>• Risk versus actual diagnosis</li>
+                    <li>• Writing clear problem statements</li>
+                  </ul>
+                </div>
+
+                <div className="bg-muted/50 p-6 rounded-lg">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-lg font-semibold">Planning</h3>
+                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("planning_strategies")}>
+                      <Bot className="h-4 w-4 mr-2" />
+                      Planning Help
+                    </Button>
+                  </div>
+                  <ul className="space-y-3 text-sm text-muted-foreground">
+                    <li>• Setting SMART goals</li>
+                    <li>• Prioritizing interventions</li>
+                    <li>• Evidence-based practice integration</li>
+                    <li>• Collaborative care planning</li>
+                  </ul>
+                </div>
+
+                <div className="bg-muted/50 p-6 rounded-lg">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-lg font-semibold">Implementation</h3>
+                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("implementation_guidance")}>
+                      <Bot className="h-4 w-4 mr-2" />
+                      Implementation Tips
+                    </Button>
+                  </div>
+                  <ul className="space-y-3 text-sm text-muted-foreground">
+                    <li>• Safe intervention execution</li>
+                    <li>• Time management strategies</li>
+                    <li>• Delegation principles</li>
+                    <li>• Documentation requirements</li>
+                  </ul>
+                </div>
+
+                <div className="bg-muted/50 p-6 rounded-lg">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-lg font-semibold">Evaluation</h3>
+                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("evaluation_methods")}>
+                      <Bot className="h-4 w-4 mr-2" />
+                      Evaluation Help
+                    </Button>
+                  </div>
+                  <ul className="space-y-3 text-sm text-muted-foreground">
+                    <li>• Measuring outcome achievement</li>
+                    <li>• Modifying care plans</li>
+                    <li>• Quality improvement integration</li>
+                    <li>• Communication of outcomes</li>
+                  </ul>
                 </div>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="process">
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Coming Soon</h3>
-              <p className="text-muted-foreground">
-                Learn about the nursing process and its application in clinical settings.
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
         <TabsContent value="decision">
           <Card>
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Coming Soon</h3>
-              <p className="text-muted-foreground">
-                Master clinical decision-making skills with interactive scenarios.
-              </p>
+            <CardHeader>
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle>Clinical Decision Making</CardTitle>
+                  <p className="text-muted-foreground mt-2">
+                    Develop expert decision-making skills through structured learning and practice
+                  </p>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => handleAIHelp("decision_making_overview")}>
+                  <Bot className="h-4 w-4 mr-2" />
+                  AI Overview
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div className="bg-muted/50 p-6 rounded-lg">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-lg font-semibold">Critical Thinking Framework</h3>
+                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("critical_thinking")}>
+                      <Bot className="h-4 w-4 mr-2" />
+                      Framework Help
+                    </Button>
+                  </div>
+                  <ul className="space-y-3 text-sm text-muted-foreground">
+                    <li>• Information gathering and analysis</li>
+                    <li>• Pattern recognition and interpretation</li>
+                    <li>• Evidence-based decision making</li>
+                    <li>• Outcome prediction and risk assessment</li>
+                  </ul>
+                </div>
+
+                <div className="bg-muted/50 p-6 rounded-lg">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-lg font-semibold">Priority Setting</h3>
+                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("priority_setting")}>
+                      <Bot className="h-4 w-4 mr-2" />
+                      Priority Tips
+                    </Button>
+                  </div>
+                  <ul className="space-y-3 text-sm text-muted-foreground">
+                    <li>• ABC (Airway, Breathing, Circulation) approach</li>
+                    <li>• Maslow's hierarchy in nursing</li>
+                    <li>• Urgent vs. important matrix</li>
+                    <li>• Multiple patient prioritization</li>
+                  </ul>
+                </div>
+
+                <div className="bg-muted/50 p-6 rounded-lg">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-lg font-semibold">Risk Assessment</h3>
+                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("risk_assessment")}>
+                      <Bot className="h-4 w-4 mr-2" />
+                      Risk Tips
+                    </Button>
+                  </div>
+                  <ul className="space-y-3 text-sm text-muted-foreground">
+                    <li>• Identifying potential complications</li>
+                    <li>• Risk factor analysis</li>
+                    <li>• Preventive measure implementation</li>
+                    <li>• Documentation of risk factors</li>
+                  </ul>
+                </div>
+
+                <div className="bg-muted/50 p-6 rounded-lg">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-lg font-semibold">Clinical Reasoning</h3>
+                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("clinical_reasoning")}>
+                      <Bot className="h-4 w-4 mr-2" />
+                      Reasoning Help
+                    </Button>
+                  </div>
+                  <ul className="space-y-3 text-sm text-muted-foreground">
+                    <li>• Hypothesis generation</li>
+                    <li>• Clinical pattern recognition</li>
+                    <li>• Evidence evaluation</li>
+                    <li>• Decision validation</li>
+                  </ul>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="practice">
           <Card>
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Coming Soon</h3>
-              <p className="text-muted-foreground">
-                Practice your clinical judgment skills with real-world cases.
-              </p>
+            <CardHeader>
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle>Practice Cases</CardTitle>
+                  <p className="text-muted-foreground mt-2">
+                    Apply your clinical judgment skills to realistic patient scenarios
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => handleAIHelp("generate_case")}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Generate New Case
+                  </Button>
+                  <Button variant="outline" onClick={() => handleAIHelp("case_analysis")}>
+                    <Bot className="h-4 w-4 mr-2" />
+                    Analysis Help
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {/* Practice cases will be dynamically loaded here */}
+                <div className="text-center p-8 text-muted-foreground">
+                  <p>Click "Generate New Case" to start practicing with realistic scenarios</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Bot className="h-5 w-5" />
+              AI Assistant - {currentTopic}
+            </DialogTitle>
+            <DialogDescription>
+              Personalized guidance and explanations to help you master clinical judgment
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh]">
+            <div className="p-4 space-y-4">
+              {aiContent ? (
+                <div className="prose prose-sm max-w-none">
+                  <div dangerouslySetInnerHTML={{ __html: aiContent }} />
+                </div>
+              ) : (
+                <p className="text-center text-muted-foreground">
+                  Loading AI assistance...
+                </p>
+              )}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
