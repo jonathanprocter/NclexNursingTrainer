@@ -11,6 +11,53 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// Practice exercise templates
+const practiceExercises = {
+  pattern: [
+    {
+      id: "pattern-1",
+      type: "pattern",
+      title: "Vital Signs Pattern Recognition",
+      description: "Identify patterns in vital sign changes that indicate clinical deterioration",
+      content: "Review the following vital sign trends over 24 hours and identify concerning patterns:\n\nBP: 120/80 → 110/70 → 90/60\nHR: 80 → 95 → 110\nRR: 16 → 20 → 24\nTemp: 37.0°C → 37.5°C → 38.2°C",
+      options: ["Early signs of sepsis", "Medication side effect", "Volume depletion", "Anxiety response"]
+    },
+    // Add more pattern exercises
+  ],
+  hypothesis: [
+    {
+      id: "hypothesis-1",
+      type: "hypothesis",
+      title: "Clinical Hypothesis Formation",
+      description: "Develop and test clinical hypotheses based on patient presentation",
+      content: "Patient presents with sudden onset chest pain, shortness of breath, and anxiety. Recent long flight from Europe. No cardiac history.",
+      options: ["Pulmonary embolism", "Acute coronary syndrome", "Panic attack", "Pneumothorax"]
+    },
+    // Add more hypothesis exercises
+  ],
+  decision: [
+    {
+      id: "decision-1",
+      type: "decision",
+      title: "Clinical Decision Making",
+      description: "Make evidence-based clinical decisions in complex scenarios",
+      content: "elderly patient with UTI symptoms shows signs of confusion. History of chronic kidney disease. Current medications include ACE inhibitor and diuretic.",
+      options: ["Start empiric antibiotics", "Adjust current medications", "Order additional tests", "Immediate hospitalization"]
+    },
+    // Add more decision exercises
+  ],
+  documentation: [
+    {
+      id: "documentation-1",
+      type: "documentation",
+      title: "Clinical Documentation Practice",
+      description: "Practice clear and accurate clinical documentation",
+      content: "Document your assessment and plan for a patient admitted with diabetic ketoacidosis, including relevant lab values, current treatment, and monitoring parameters.",
+    },
+    // Add more documentation exercises
+  ]
+};
+
 // Pre-integrated case studies with progressive complexity
 const preIntegratedCases = [
   {
@@ -424,6 +471,42 @@ export function registerRoutes(app: Express): Server {
       });
     } catch (error) {
       res.status(500).json({ message: "Failed to record case completion" });
+    }
+  });
+
+  // Add new route for generating practice exercises
+  app.post("/api/generate-exercise", async (req, res) => {
+    try {
+      const { type } = req.body;
+
+      if (!type || !practiceExercises[type as keyof typeof practiceExercises]) {
+        return res.status(400).json({ message: "Invalid exercise type" });
+      }
+
+      const exercises = practiceExercises[type as keyof typeof practiceExercises];
+      const randomExercise = exercises[Math.floor(Math.random() * exercises.length)];
+
+      res.json(randomExercise);
+    } catch (error) {
+      console.error("Exercise generation error:", error);
+      res.status(500).json({ message: "Failed to generate exercise" });
+    }
+  });
+
+  // Add route for submitting exercises
+  app.post("/api/submit-exercise", async (req, res) => {
+    try {
+      const { exerciseId, type, response } = req.body;
+
+      // Here we would typically validate the response and provide feedback
+      // For now, we'll just acknowledge the submission
+      res.json({
+        success: true,
+        feedback: "Exercise submitted successfully. Keep practicing to improve your clinical reasoning skills!"
+      });
+    } catch (error) {
+      console.error("Exercise submission error:", error);
+      res.status(500).json({ message: "Failed to submit exercise" });
     }
   });
 

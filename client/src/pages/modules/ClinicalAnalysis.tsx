@@ -77,6 +77,7 @@ export default function ClinicalAnalysis() {
   const [currentSection, setCurrentSection] = useState("");
   const [selectedExerciseType, setSelectedExerciseType] = useState<ExerciseType>("pattern");
   const [currentExercise, setCurrentExercise] = useState<PracticeExercise | null>(null);
+  const [isLoading, setIsLoading] = useState(false); // Added loading state
 
   // Form for clinical documentation
   const form = useForm({
@@ -85,6 +86,7 @@ export default function ClinicalAnalysis() {
       clinicalHypothesis: "",
       interventionPlan: "",
       expectedOutcomes: "",
+      response: "", // Added for free-form responses
     },
   });
 
@@ -159,12 +161,13 @@ export default function ClinicalAnalysis() {
   // Generate practice exercise
   const handleGenerateExercise = async (type: ExerciseType) => {
     setSelectedExerciseType(type);
+    setIsLoading(true);
     try {
       const result = await generateExerciseMutation.mutateAsync(type);
       setCurrentExercise(result);
       toast({
-        title: "Success",
-        description: "New exercise generated successfully!",
+        title: "New Exercise Generated",
+        description: "Ready to practice " + type + " skills!",
       });
     } catch (error) {
       toast({
@@ -172,6 +175,8 @@ export default function ClinicalAnalysis() {
         description: "Failed to generate exercise. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -285,7 +290,7 @@ const CaseStudiesSection = () => {
 
     // Update performance metrics
     setPerformance(prev => {
-      const newStrengths = selectedOption.correct 
+      const newStrengths = selectedOption.correct
         ? [...new Set([...prev.strengths, ...selectedOption.topics])]
         : prev.strengths;
       const newWeaknesses = !selectedOption.correct
@@ -769,6 +774,141 @@ const ClinicalReasoningSection = () => {
   );
 };
 
+const PracticeSection = () => {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleGenerateExercise = async (type: ExerciseType) => {
+    setSelectedExerciseType(type);
+    setIsLoading(true);
+    try {
+      const result = await generateExerciseMutation.mutateAsync(type);
+      setCurrentExercise(result);
+      toast({
+        title: "New Exercise Generated",
+        description: "Ready to practice " + type + " skills!",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to generate exercise. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Practice Exercises</CardTitle>
+        <p className="text-muted-foreground mt-2">
+          Apply your clinical reasoning skills through interactive exercises.
+        </p>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-6">
+          {/* Exercise Type Selection */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {exerciseTypes.map((type) => (
+              <Button
+                key={type}
+                variant={selectedExerciseType === type ? "default" : "outline"}
+                onClick={() => handleGenerateExercise(type)}
+                className="w-full"
+                disabled={isLoading}
+              >
+                {type.charAt(0).toUpperCase() + type.slice(1)}
+                {isLoading && selectedExerciseType === type ? (
+                  <RefreshCw className="ml-2 h-4 w-4 animate-spin" />
+                ) : selectedExerciseType === type ? (
+                  <RefreshCw className="ml-2 h-4 w-4" />
+                ) : null}
+              </Button>
+            ))}
+          </div>
+
+          {/* Current Exercise Display */}
+          {currentExercise && (
+            <div className="bg-muted/50 p-6 rounded-lg">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold">{currentExercise.title}</h3>
+                  <p className="text-muted-foreground mt-1">{currentExercise.description}</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleAIHelp(currentExercise.type)}
+                  disabled={isLoading}
+                >
+                  <Bot className="h-4 w-4 mr-2" />
+                  AI Help
+                </Button>
+              </div>
+
+              <div className="prose prose-sm max-w-none mb-6">
+                <p>{currentExercise.content}</p>
+              </div>
+
+              {currentExercise.options ? (
+                // Multiple choice exercise
+                <div className="space-y-4">
+                  <RadioGroup
+                    onValueChange={(value) => {
+                      form.setValue("answer", value);
+                      form.handleSubmit(handleExerciseSubmit)();
+                    }}
+                  >
+                    {currentExercise.options.map((option, index) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        <RadioGroupItem value={index.toString()} id={`option-${index}`} />
+                        <label
+                          htmlFor={`option-${index}`}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          {option}
+                        </label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                </div>
+              ) : (
+                // Free-form exercise
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(handleExerciseSubmit)} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="response"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Your Response</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Enter your detailed response..."
+                              className="min-h-[200px]"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button type="submit" disabled={isLoading}>
+                      Submit Response
+                    </Button>
+                  </form>
+                </Form>
+              )}
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
@@ -911,148 +1051,7 @@ const ClinicalReasoningSection = () => {
 
         {/* Practice Tab */}
         <TabsContent value="practice">
-          <Card>
-            <CardHeader>
-              <CardTitle>Practice Exercises</CardTitle>
-              <p className="text-muted-foreground mt-2">
-                Strengthen your clinical analysis skills through targeted practice exercises.
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {/* Exercise Type Selection */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {exerciseTypes.map((type) => (
-                    <Button
-                      key={type}
-                      variant={selectedExerciseType === type ? "default" : "outline"}
-                      onClick={() => handleGenerateExercise(type)}
-                      className="w-full"
-                    >
-                      {type.charAt(0).toUpperCase() + type.slice(1)}
-                      {selectedExerciseType === type && (
-                        <RefreshCw className="ml-2 h-4 w-4" />
-                      )}
-                    </Button>
-                  ))}
-                </div>
-
-                {/* Current Exercise Display */}
-                {currentExercise && (
-                  <div className="bg-muted/50 p-6 rounded-lg">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="text-lg font-semibold">{currentExercise.title}</h3>
-                        <p className="text-muted-foreground mt-1">{currentExercise.description}</p>                      </div>
-                      <Button variant="outline" size="sm" onClick={() => handleAIHelp(currentExercise.type)}>
-                        <Bot className="h-4 w-4 mr-2" />
-                        AI Help
-                      </Button>
-                    </div>
-
-                    <div className="prose prose-sm max-w-none mb-6">
-                      <div dangerouslySetInnerHTML={{ __html: currentExercise.content }} />
-                    </div>
-
-                    {/* Exercise Input Form */}
-                    <Form {...form}>
-                      <form onSubmit={form.handleSubmit(handleExerciseSubmit)} className="space-y-4">
-                        {selectedExerciseType === 'documentation' && (
-                          <>
-                            <FormField
-                              control={form.control}
-                              name="patientAssessment"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Patient Assessment</FormLabel>
-                                  <FormControl>
-                                    <Textarea {...field} />
-                                  </FormControl>
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={form.control}
-                              name="clinicalHypothesis"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Clinical Hypothesis</FormLabel>
-                                  <FormControl>
-                                    <Textarea {...field} />
-                                  </FormControl>
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={form.control}
-                              name="interventionPlan"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Intervention Plan</FormLabel>
-                                  <FormControl>
-                                    <Textarea {...field} />
-                                  </FormControl>
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={form.control}
-                              name="expectedOutcomes"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Expected Outcomes</FormLabel>
-                                  <FormControl>
-                                    <Textarea {...field} />
-                                  </FormControl>
-                                </FormItem>
-                              )}
-                            />
-                          </>
-                        )}
-
-                        {(selectedExerciseType === 'pattern' || selectedExerciseType === 'hypothesis') && (
-                          <RadioGroup onValueChange={(value) => form.setValue('answer', value)}>
-                            {currentExercise.options?.map((option, index) => (
-                              <FormItem key={index} className="flex items-center space-x-3 space-y-0">
-                                <FormControl>
-                                  <RadioGroupItem value={String(index)} />
-                                </FormControl>
-                                <FormLabel className="font-normal">
-                                  {option}
-                                </FormLabel>
-                              </FormItem>
-                            ))}
-                          </RadioGroup>
-                        )}
-
-                        {selectedExerciseType === 'decision' && (
-                          <FormField
-                            control={form.control}
-                            name="decisionRationale"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Decision Rationale</FormLabel>
-                                <FormControl>
-                                  <Textarea {...field} />
-                                </FormControl>
-                                <FormDescription>
-                                  Explain your clinical decision-making process
-                                </FormDescription>
-                              </FormItem>
-                            )}
-                          />
-                        )}
-
-                        <Button type="submit" className="w-full">
-                          Submit Response
-                        </Button>
-                      </form>
-                    </Form>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <PracticeSection />
         </TabsContent>
       </Tabs>
 
