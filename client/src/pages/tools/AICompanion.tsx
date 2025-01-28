@@ -127,6 +127,14 @@ export default function AICompanion() {
   }, [stopRecording]);
 
   const startRecording = useCallback(async () => {
+    if (!microphoneAvailable) {
+      toast({
+        variant: "destructive",
+        title: "Microphone Not Available",
+        description: "Please ensure microphone access is enabled in your browser settings."
+      });
+      return;
+    }
     // First check if the browser supports mediaDevices
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       toast({
@@ -330,8 +338,9 @@ export default function AICompanion() {
               <CardTitle>Voice Interaction</CardTitle>
             </CardHeader>
             <CardContent>
-              <DialogTitle className="sr-only">Voice Interaction Dialog</DialogTitle>
-              <div className="space-y-4">
+              <div className="space-y-4" aria-labelledby="voice-interaction-title" aria-describedby="voice-interaction-description">
+                <h2 id="voice-interaction-title" className="sr-only">Voice Interaction Dialog</h2>
+                <p id="voice-interaction-description" className="sr-only">Voice interface for NCLEX preparation assistance</p>
                 {!microphoneAvailable && (
                   <div className="bg-destructive/10 text-destructive p-4 rounded-lg mb-4 flex items-start gap-2">
                     <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
