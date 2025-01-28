@@ -28,7 +28,14 @@ import {
   Clock,
   Menu,
 } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetTrigger,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription 
+} from "@/components/ui/sheet";
 import { useState } from "react";
 
 const dashboardItems = [
@@ -244,9 +251,15 @@ export default function NavBar() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-                <nav className="flex flex-col gap-4">
+                <SheetHeader>
+                  <SheetTitle>Navigation Menu</SheetTitle>
+                  <SheetDescription>
+                    Access all NCLEX preparation resources
+                  </SheetDescription>
+                </SheetHeader>
+                <nav className="flex flex-col gap-4 mt-6">
                   <div className="px-4 py-2">
-                    <h2 className="text-lg font-semibold mb-2">Dashboards</h2>
+                    
                     {dashboardItems.map((item) => (
                       <MobileNavItem
                         key={item.title}
@@ -262,7 +275,7 @@ export default function NavBar() {
                   </div>
 
                   <div className="px-4 py-2">
-                    <h2 className="text-lg font-semibold mb-2">Learning Modules</h2>
+                    
                     {learningModules.map((item) => (
                       <MobileNavItem
                         key={item.title}
@@ -278,7 +291,7 @@ export default function NavBar() {
                   </div>
 
                   <div className="px-4 py-2">
-                    <h2 className="text-lg font-semibold mb-2">Practice & Simulation</h2>
+                    
                     {practiceItems.map((item) => (
                       <MobileNavItem
                         key={item.title}
@@ -294,7 +307,7 @@ export default function NavBar() {
                   </div>
 
                   <div className="px-4 py-2">
-                    <h2 className="text-lg font-semibold mb-2">Study Tools</h2>
+                    
                     {studyTools.map((item) => (
                       <MobileNavItem
                         key={item.title}

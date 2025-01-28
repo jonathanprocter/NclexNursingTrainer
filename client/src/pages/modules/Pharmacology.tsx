@@ -753,7 +753,7 @@ export default function Pharmacology() {
                       <ul className="list-disc list-inside space-y-2 text-muted-foreground">
                         <li>Multiple IV Medications
                           <p className="ml-6 mt-1">
-                            Calculate total fluid rates when multiple IV medications are running simultaneously.
+                            Calculate total fluid rates when multiple IV medications are runningsimultaneously.
                           </p>
                         </li>
                         <li>Titration Calculations
@@ -858,19 +858,15 @@ export default function Pharmacology() {
         </TabsContent>
       </Tabs>
 
-      {/* Dialog for AI Help */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent
-          className="max-w-2xl max-h-[80vh]"
-          aria-describedby="dialog-description"
-        >
-          <DialogHeader>
-            <DialogTitle>{currentSection}</DialogTitle>
-            <div id="dialog-description">
-              <DialogDescription>
-                AI-powered learning assistance for {currentSection.toLowerCase()}
-              </DialogDescription>
-            </div>
+        <DialogContent className="max-w-2xl max-h-[80vh]">
+          <DialogHeader className="space-y-1.5 pb-4">
+            <DialogTitle className="text-2xl font-bold">
+              {currentSection}
+            </DialogTitle>
+            <DialogDescription>
+              AI-powered assistance for your learning journey
+            </DialogDescription>
           </DialogHeader>
 
           <div className="absolute right-4 top-4">
