@@ -256,29 +256,49 @@ const CaseStudiesSection = () => {
     const selectedOption = currentCase.questions[questionIndex]?.options[optionIndex];
     if (!selectedOption) return;
 
-    // Only record the answer and show feedback
+    // Record the answer and show feedback
     setUserAnswers(prev => ({ ...prev, [questionIndex]: optionIndex }));
     setShowFeedback(true);
 
     // Update performance metrics
-    setPerformance(prev => ({
-      ...prev,
-      correctCount: prev.correctCount + (selectedOption.correct ? 1 : 0),
-      totalAttempted: prev.totalAttempted + 1,
-      strengths: selectedOption.correct 
+    setPerformance(prev => {
+      const newStrengths = selectedOption.correct 
         ? [...new Set([...prev.strengths, ...selectedOption.topics])]
-        : prev.strengths,
-      weaknesses: !selectedOption.correct
+        : prev.strengths;
+      const newWeaknesses = !selectedOption.correct
         ? [...new Set([...prev.weaknesses, ...selectedOption.topics])]
-        : prev.weaknesses
-    }));
+        : prev.weaknesses;
 
-    // Show feedback
-    toast({
-      title: selectedOption.correct ? "Correct! 🎉" : "Let's Review",
-      description: selectedOption.explanation,
-      duration: 5000,
+      return {
+        correctCount: prev.correctCount + (selectedOption.correct ? 1 : 0),
+        totalAttempted: prev.totalAttempted + 1,
+        strengths: newStrengths,
+        weaknesses: newWeaknesses
+      };
     });
+
+    // Show detailed feedback with suggestions
+    const feedbackTitle = selectedOption.correct ? "Correct! 🎉" : "Review Needed";
+    const feedbackDescription = selectedOption.correct
+      ? selectedOption.explanation
+      : `${selectedOption.explanation}\n\nKey topics to review: ${selectedOption.topics.join(", ")}`;
+
+    toast({
+      title: feedbackTitle,
+      description: feedbackDescription,
+      duration: 6000,
+    });
+
+    // If incorrect, show additional resources toast after a delay
+    if (!selectedOption.correct) {
+      setTimeout(() => {
+        toast({
+          title: "Learning Resources",
+          description: "Click 'AI Help' for targeted assistance with: " + selectedOption.topics.join(", "),
+          duration: 8000,
+        });
+      }, 1000);
+    }
   };
 
   const handleNextQuestion = () => {
