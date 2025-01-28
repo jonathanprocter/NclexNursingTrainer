@@ -290,24 +290,6 @@ export default function AICompanion() {
     }
   }, [toast, isRecording, checkForSilence, microphoneAvailable]);
 
-  const stopRecording = useCallback(() => {
-    if (mediaRecorder.current && isRecording) {
-      if (silenceTimeout.current) {
-        clearTimeout(silenceTimeout.current);
-        silenceTimeout.current = null;
-      }
-
-      mediaRecorder.current.stop();
-      mediaRecorder.current.stream.getTracks().forEach(track => track.stop());
-      setIsRecording(false);
-
-      toast({
-        title: "Recording stopped",
-        description: "Processing your question..."
-      });
-    }
-  }, [isRecording, toast]);
-
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
