@@ -151,22 +151,26 @@ export default function AICompanion() {
   }, [stopRecording]);
 
   const startRecording = useCallback(async () => {
-    if (!microphoneAvailable) {
+    // First check if the browser supports mediaDevices
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       toast({
         variant: "destructive",
-        title: "Microphone Not Available",
-        description: "Please check your microphone permissions and try again.",
+        title: "Browser Not Supported",
+        description: "Your browser doesn't support microphone access.",
       });
       return;
     }
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      // Request microphone access with specific constraints
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          autoGainControl: true
-        } 
+          autoGainControl: true,
+          sampleRate: 44100,
+          channelCount: 1
+        }
       });
 
       // Set up audio context and analyzer for silence detection
@@ -298,11 +302,39 @@ export default function AICompanion() {
     } catch (error) {
       console.error('Error accessing microphone:', error);
       setMicrophoneAvailable(false);
-      toast({
-        variant: "destructive",
-        title: "Microphone Error",
-        description: "Could not access microphone. Please check your permissions in the browser settings.",
-      });
+      
+      // Provide more specific error messages based on the error type
+      if (error instanceof DOMException) {
+        switch (error.name) {
+          case 'NotAllowedError':
+            toast({
+              variant: "destructive",
+              title: "Permission Denied",
+              description: "Microphone access was denied. Please allow access in your browser settings.",
+            });
+            break;
+          case 'NotFoundError':
+            toast({
+              variant: "destructive",
+              title: "No Microphone Found",
+              description: "No microphone device was detected.",
+            });
+            break;
+          case 'NotReadableError':
+            toast({
+              variant: "destructive",
+              title: "Microphone Error",
+              description: "Your microphone is busy or unavailable.",
+            });
+            break;
+          default:
+            toast({
+              variant: "destructive",
+              title: "Microphone Error",
+              description: "An error occurred while accessing the microphone.",
+            });
+        }
+      }
     }
   }, [toast, isRecording, checkForSilence, microphoneAvailable]);
 
