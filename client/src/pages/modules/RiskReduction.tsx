@@ -69,6 +69,13 @@ interface PreventionQuestion {
   };
 }
 
+interface Progress {
+  scenariosCompleted: number;
+  totalScenarios: number;
+  correctResponses: number;
+  skillLevel: string;
+}
+
 const preventionQuestions: PreventionQuestion[] = [
   {
     id: "q1",
@@ -140,6 +147,14 @@ export default function RiskReduction() {
   const [showExplanation, setShowExplanation] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [answeredQuestions, setAnsweredQuestions] = useState<Set<string>>(new Set());
+
+  // Add progress state
+  const [progress, setProgress] = useState<Progress>({
+    scenariosCompleted: 0,
+    totalScenarios: 20,
+    correctResponses: 0,
+    skillLevel: "Beginner"
+  });
 
   const form = useForm<FormValues>({
     defaultValues: {
