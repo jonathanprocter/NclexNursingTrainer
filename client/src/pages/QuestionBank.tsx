@@ -1,47 +1,204 @@
-import { useState } from "react";
-import QuestionCard from "@/components/nclex/QuestionCard";
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
 
-const questions = [
-  {
-    id: 1,
-    text: "A client with type 2 diabetes mellitus has a blood glucose level of 180 mg/dL before lunch. Which of the following nursing actions is most appropriate?",
-    options: [
-      { id: "a", text: "Administer the prescribed insulin" },
-      { id: "b", text: "Hold the lunch tray" },
-      { id: "c", text: "Notify the healthcare provider" },
-      { id: "d", text: "Document the finding and proceed with lunch" }
-    ],
-    correctAnswer: "d",
-    explanation: "For a client with type 2 diabetes, a blood glucose level of 180 mg/dL before a meal is not unusually high and does not require immediate intervention. The nurse should document the finding and allow the client to eat lunch as scheduled."
-  },
-  // Add more questions as needed
-];
+interface Option {
+  id: string;
+  text: string;
+}
+
+interface Question {
+  id: string;
+  text: string;
+  options: Option[];
+  correctAnswer: string;
+  explanation: string;
+  category: string;
+  difficulty: string;
+  tags: string[];
+}
 
 export default function QuestionBank() {
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [questionsAnswered, setQuestionsAnswered] = useState(0);
+  const [correctAnswers, setCorrectAnswers] = useState(0);
 
-  const handleNextQuestion = () => {
-    setCurrentQuestionIndex((prev) => 
-      prev < questions.length - 1 ? prev + 1 : 0
-    );
+  // Fetch questions from the API
+  const { data: questions = [], isLoading } = useQuery<Question[]>({
+    queryKey: ['/api/questions', selectedCategory],
+  });
+
+  useEffect(() => {
+    if (questions.length > 0 && !currentQuestion) {
+      const randomIndex = Math.floor(Math.random() * questions.length);
+      setCurrentQuestion(questions[randomIndex]);
+    }
+  }, [questions, currentQuestion]);
+
+  const handleAnswerSelect = (optionId: string) => {
+    if (!currentQuestion || showExplanation) return;
+
+    setSelectedAnswer(optionId);
+    setShowExplanation(true);
+    setQuestionsAnswered(prev => prev + 1);
+
+    if (optionId === currentQuestion.correctAnswer) {
+      setCorrectAnswers(prev => prev + 1);
+    }
   };
 
-  return (
-    <div className="space-y-6">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold mb-2">Practice Questions</h1>
-        <p className="text-muted-foreground">
-          Test your knowledge with NCLEX-style questions
-        </p>
+  const handleNextQuestion = () => {
+    setSelectedAnswer(null);
+    setShowExplanation(false);
+
+    // Filter out the current question to avoid repetition
+    const remainingQuestions = questions.filter(q => q.id !== currentQuestion?.id);
+
+    if (remainingQuestions.length > 0) {
+      const randomIndex = Math.floor(Math.random() * remainingQuestions.length);
+      setCurrentQuestion(remainingQuestions[randomIndex]);
+    } else {
+      // If all questions have been shown, reset to full pool
+      const randomIndex = Math.floor(Math.random() * questions.length);
+      setCurrentQuestion(questions[randomIndex]);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold mb-2">Loading Questions...</h2>
+          <p className="text-muted-foreground">Please wait while we prepare your practice session.</p>
+        </div>
       </div>
+    );
+  }
 
-      <QuestionCard
-        question={questions[currentQuestionIndex]}
-        onNext={handleNextQuestion}
-      />
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto space-y-6">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold mb-2">NCLEX Practice Questions</h1>
+          <p className="text-muted-foreground">
+            Test your knowledge with our comprehensive question bank
+          </p>
+        </div>
 
-      <div className="text-center text-sm text-muted-foreground">
-        Question {currentQuestionIndex + 1} of {questions.length}
+        <Card className="mb-6">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-xl">Practice Session</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                Questions Answered: {questionsAnswered}
+              </p>
+            </div>
+            <div className="w-32">
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="fundamentals">Fundamentals</SelectItem>
+                  <SelectItem value="med-surg">Med-Surg</SelectItem>
+                  <SelectItem value="pediatrics">Pediatrics</SelectItem>
+                  <SelectItem value="pharmacology">Pharmacology</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardHeader>
+        </Card>
+
+        {currentQuestion && (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="space-y-6">
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <Badge variant="outline">{currentQuestion.category}</Badge>
+                  <Badge 
+                    variant={
+                      currentQuestion.difficulty === "Easy" ? "default" :
+                      currentQuestion.difficulty === "Medium" ? "secondary" :
+                      "destructive"
+                    }
+                  >
+                    {currentQuestion.difficulty}
+                  </Badge>
+                  {currentQuestion.tags.map((tag, index) => (
+                    <Badge key={index} variant="outline" className="bg-muted">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+
+                <h3 className="text-lg font-medium leading-6">
+                  {currentQuestion.text}
+                </h3>
+
+                <div className="space-y-4">
+                  {currentQuestion.options.map((option) => (
+                    <Button
+                      key={option.id}
+                      variant={
+                        showExplanation
+                          ? option.id === currentQuestion.correctAnswer
+                            ? "default"
+                            : option.id === selectedAnswer
+                            ? "destructive"
+                            : "outline"
+                          : selectedAnswer === option.id
+                          ? "default"
+                          : "outline"
+                      }
+                      className="w-full justify-start text-left h-auto p-4"
+                      onClick={() => handleAnswerSelect(option.id)}
+                      disabled={showExplanation}
+                    >
+                      {option.text}
+                    </Button>
+                  ))}
+                </div>
+
+                {showExplanation && (
+                  <div className="mt-6 p-4 bg-muted rounded-lg">
+                    <h4 className="font-semibold mb-2">Explanation</h4>
+                    <p className="text-muted-foreground">{currentQuestion.explanation}</p>
+                  </div>
+                )}
+
+                {showExplanation && (
+                  <div className="flex justify-end mt-4">
+                    <Button onClick={handleNextQuestion}>Next Question</Button>
+                  </div>
+                )}
+
+                {questionsAnswered > 0 && (
+                  <div className="mt-6">
+                    <div className="flex justify-between text-sm mb-2">
+                      <span>Progress</span>
+                      <span>{Math.round((correctAnswers / questionsAnswered) * 100)}% Correct</span>
+                    </div>
+                    <Progress value={(correctAnswers / questionsAnswered) * 100} className="h-2" />
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
