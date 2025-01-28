@@ -676,7 +676,7 @@ export function registerRoutes(app: Express): Server {
               explanation: "Using only one identifier is insufficient. Best practice requires two patient identifiers and implementation of all 'Five Rights' of medication administration."
             },
             {
-              text: "Administer medications based on room number",
+              text: "Administer medications basedon room number",
               iscorrect: false,
               explanation: "Room numbers are not a reliable patient identifier and should never beused alone. This approach risks serious medication errors."
             }
@@ -1120,77 +1120,101 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/generate-prevention-questions", async (_req, res) => {
     try {
-      const promptStructure = {
-        questions: [
-          {
-            question: "string - The question text",
-            options: [
-              { value: "a", text: "string - First option" },
-              { value: "b", text: "string - Second option" },
-              { value: "c", text: "string - Third option" },
-              { value: "d", text: "string - Fourth option" }
-            ],
-            correctAnswer: "string - The correct option value (a, b, c, or d)",
-            explanation: "string - Detailed explanation of the correct answer",
-            concepts: [
-              {
-                title: "string - Concept title",
-                description: "string - Concept description"
-              }
-            ]
-          }
-        ]
-      };
-
       // Generate new prevention strategy questions using OpenAI
       const completion = await openai.chat.completions.create({
         model: "gpt-4",
         messages: [
           {
             role: "system",
-            content: "You are an expert nursing educator creating NCLEX-style questions about nursing risk prevention strategies. Generate questions in the exact JSON format provided, with no additional text or formatting."
+            content: `You are an expert nursing educator creating NCLEX-style questions about nursing risk prevention strategies. 
+            Each question should follow this exact format and be focused on risk prevention in nursing practice.
+            Return an array of 5 questions in valid JSON format.`
           },
           {
             role: "user",
-            content: `Generate 5 new multiple-choice questions about nursing risk prevention. Return the response in this exact JSON structure: ${JSON.stringify(promptStructure, null, 2)}`
+            content: `Generate 5 NCLEX-style questions about nursing risk prevention. Each question must have:
+            - A clear scenario or situation
+            - 4 multiple choice options (a, b, c, d)
+            - A correct answer
+            - A detailed explanation
+            - 3-4 key concepts that relate to the question
+
+            Format each question exactly like this example:
+            {
+              "questions": [
+                {
+                  "question": "A nurse is caring for a patient at risk for falls...",
+                  "options": [
+                    {"value": "a", "text": "Option A text"},
+                    {"value": "b", "text": "Option B text"},
+                    {"value": "c", "text": "Option C text"},
+                    {"value": "d", "text": "Option D text"}
+                  ],
+                  "correctAnswer": "b",
+                  "explanation": "Detailed explanation here...",
+                  "concepts": [
+                    {"title": "Risk Assessment", "description": "Description here"},
+                    {"title": "Prevention Strategies", "description": "Description here"}
+                  ]
+                }
+              ]
+            }`
           }
         ],
         temperature: 0.7,
         max_tokens: 2000,
-        response_format: { type: "json_object" }
       });
 
       let newQuestions;
       try {
-        newQuestions = JSON.parse(completion.choices[0].message.content).questions;
+        const content = completion.choices[0].message.content;
+        // Ensure we have valid JSON by finding the JSON object
+        const jsonStart = content.indexOf('{');
+        const jsonEnd = content.lastIndexOf('}') + 1;
+        const jsonStr = content.slice(jsonStart, jsonEnd);
+        newQuestions = JSON.parse(jsonStr).questions;
+
+        if (!Array.isArray(newQuestions)) {
+          throw new Error('Generated content is not in the expected format');
+        }
       } catch (parseError) {
         console.error('JSON Parse Error:', parseError);
         console.error('Raw content:', completion.choices[0].message.content);
         throw new Error('Failed to parse generated questions');
       }
 
-      // Transform the generated questions into the required format
-      const formattedQuestions = newQuestions.map((q: any, index: number) => ({
-        id: `generated-q${Date.now()}-${index}`,
-        question: q.question,
-        options: q.options.map((opt: any) => ({
-          value: opt.value,
-          label: opt.text
-        })),
-        correctAnswer: q.correctAnswer,
-        explanation: {
-          main: q.explanation,
-          concepts: q.concepts.map((c: any) => ({
-            title: c.title,
-            description: c.description
-          }))
+      // Transform and validate the generated questions
+      const formattedQuestions = newQuestions.map((q: any, index: number) => {
+        // Validate required fields
+        if (!q.question || !Array.isArray(q.options) || !q.correctAnswer || !q.explanation || !Array.isArray(q.concepts)) {
+          throw new Error(`Question ${index + 1} is missing required fields`);
         }
-      }));
+
+        return {
+          id: `generated-q${Date.now()}-${index}`,
+          question: q.question,
+          options: q.options.map((opt: any) => ({
+            value: opt.value,
+            label: opt.text
+          })),
+          correctAnswer: q.correctAnswer,
+          explanation: {
+            main: q.explanation,
+            concepts: q.concepts.map((c: any) => ({
+              title: c.title,
+              description: c.description
+            }))
+          }
+        };
+      });
 
       res.json(formattedQuestions);
     } catch (error) {
       console.error('Error generating prevention questions:', error);
-      res.status(500).json({ message: "Failed to generate questions" });
+      res.status(500).json({ 
+        message: "Failed to generate questions",
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 
