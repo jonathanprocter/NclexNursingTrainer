@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Mic, StopCircle, History, Lightbulb } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { generateDetailedExplanation } from "@/lib/ai/anthropic";
 import OpenAI from "openai";
@@ -14,19 +14,71 @@ const openai = new OpenAI({
 
 export default function AICompanion() {
   const [isRecording, setIsRecording] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [conversations, setConversations] = useState<Array<{
     question: string;
     answer: string;
     timestamp: Date;
   }>>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
+
   const mediaRecorder = useRef<MediaRecorder | null>(null);
+  const audioContext = useRef<AudioContext | null>(null);
+  const analyser = useRef<AnalyserNode | null>(null);
+  const silenceTimeout = useRef<NodeJS.Timeout | null>(null);
   const audioChunks = useRef<Blob[]>([]);
   const { toast } = useToast();
+
+  useEffect(() => {
+    return () => {
+      // Cleanup on component unmount
+      if (silenceTimeout.current) {
+        clearTimeout(silenceTimeout.current);
+      }
+      if (audioContext.current) {
+        audioContext.current.close();
+      }
+    };
+  }, []);
+
+  const checkForSilence = useCallback((dataArray: Uint8Array) => {
+    const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+    if (average < 5) { // Threshold for silence
+      if (silenceTimeout.current === null) {
+        silenceTimeout.current = setTimeout(() => {
+          stopRecording();
+        }, 2000); // Stop after 2 seconds of silence
+      }
+    } else {
+      if (silenceTimeout.current) {
+        clearTimeout(silenceTimeout.current);
+        silenceTimeout.current = null;
+      }
+    }
+  }, []);
 
   const startRecording = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      // Set up audio context and analyzer for silence detection
+      audioContext.current = new AudioContext();
+      analyser.current = audioContext.current.createAnalyser();
+      const source = audioContext.current.createMediaStreamSource(stream);
+      source.connect(analyser.current);
+      analyser.current.fftSize = 256;
+
+      const bufferLength = analyser.current.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+
+      // Start monitoring audio levels
+      const checkAudioLevel = () => {
+        if (analyser.current && isRecording) {
+          analyser.current.getByteFrequencyData(dataArray);
+          checkForSilence(dataArray);
+          requestAnimationFrame(checkAudioLevel);
+        }
+      };
+
       mediaRecorder.current = new MediaRecorder(stream);
       audioChunks.current = [];
 
@@ -38,8 +90,11 @@ export default function AICompanion() {
         setIsProcessing(true);
         try {
           const audioBlob = new Blob(audioChunks.current, { type: 'audio/webm' });
-          const formData = new FormData();
-          formData.append('file', audioBlob, 'audio.webm');
+
+          toast({
+            title: "Processing",
+            description: "Transcribing your question..."
+          });
 
           // Transcribe audio using Whisper
           const transcription = await openai.audio.transcriptions.create({
@@ -50,6 +105,11 @@ export default function AICompanion() {
           if (!transcription.text) {
             throw new Error("Failed to transcribe audio");
           }
+
+          toast({
+            title: "Processing",
+            description: "Generating response..."
+          });
 
           // Generate initial response using GPT-4
           const completion = await openai.chat.completions.create({
@@ -82,6 +142,11 @@ export default function AICompanion() {
             timestamp: new Date()
           }, ...prev]);
 
+          toast({
+            title: "Success",
+            description: "Response generated successfully"
+          });
+
         } catch (error) {
           console.error('Error processing audio:', error);
           toast({
@@ -91,15 +156,20 @@ export default function AICompanion() {
           });
         } finally {
           setIsProcessing(false);
+          if (audioContext.current) {
+            audioContext.current.close();
+            audioContext.current = null;
+          }
         }
       };
 
       mediaRecorder.current.start();
       setIsRecording(true);
+      checkAudioLevel();
 
       toast({
         title: "Recording started",
-        description: "Speak clearly into your microphone"
+        description: "Speak clearly into your microphone. Recording will stop automatically after 2 seconds of silence."
       });
     } catch (error) {
       console.error('Error accessing microphone:', error);
@@ -109,10 +179,15 @@ export default function AICompanion() {
         description: "Could not access microphone. Please check your permissions."
       });
     }
-  }, [toast]);
+  }, [toast, isRecording, checkForSilence]);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorder.current && isRecording) {
+      if (silenceTimeout.current) {
+        clearTimeout(silenceTimeout.current);
+        silenceTimeout.current = null;
+      }
+
       mediaRecorder.current.stop();
       mediaRecorder.current.stream.getTracks().forEach(track => track.stop());
       setIsRecording(false);
