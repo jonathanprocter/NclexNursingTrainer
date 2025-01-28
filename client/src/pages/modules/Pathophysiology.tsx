@@ -124,9 +124,9 @@ export default function Pathophysiology() {
     }
 
     try {
-      const result = await aiHelpMutation.mutateAsync({ 
+      const result = await aiHelpMutation.mutateAsync({
         topic: currentTopic.toLowerCase().replace(/\s+/g, '_'),
-        question 
+        question
       });
       setAiContent(result.content);
       setIsQuestionDialogOpen(false);
@@ -150,8 +150,8 @@ export default function Pathophysiology() {
   };
 
   const QuestionDialog = () => (
-    <Dialog 
-      open={isQuestionDialogOpen} 
+    <Dialog
+      open={isQuestionDialogOpen}
       onOpenChange={(open) => {
         setIsQuestionDialogOpen(open);
         if (!open) {
@@ -212,9 +212,9 @@ export default function Pathophysiology() {
         <Bot className="h-4 w-4 mr-2" />
         AI Guide
       </Button>
-      <Button 
-        variant="outline" 
-        size="sm" 
+      <Button
+        variant="outline"
+        size="sm"
         onClick={() => {
           setCurrentTopic(formatTopicName(topic));
           setIsQuestionDialogOpen(true);
@@ -411,7 +411,101 @@ export default function Pathophysiology() {
                   </div>
                 </div>
 
-                {/* Additional systems will be added here */}
+                {/* Endocrine System */}
+                <div className="bg-muted/50 p-6 rounded-lg">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-lg font-semibold">Endocrine System</h3>
+                    <AIButtons topic="endocrine_system_pathophysiology" />
+                  </div>
+                  <div className="space-y-4">
+                    <ul className="space-y-3 text-sm text-muted-foreground">
+                      <li>• Hormonal regulation disorders</li>
+                      <li>• Diabetes pathophysiology</li>
+                      <li>• Thyroid dysfunction</li>
+                      <li>• Adrenal disorders</li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Immune System */}
+                <div className="bg-muted/50 p-6 rounded-lg">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-lg font-semibold">Immune System</h3>
+                    <AIButtons topic="immune_system_pathophysiology" />
+                  </div>
+                  <div className="space-y-4">
+                    <ul className="space-y-3 text-sm text-muted-foreground">
+                      <li>• Autoimmune disorders</li>
+                      <li>• Immunodeficiency states</li>
+                      <li>• Inflammatory responses</li>
+                      <li>• Hypersensitivity reactions</li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Gastrointestinal System */}
+                <div className="bg-muted/50 p-6 rounded-lg">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-lg font-semibold">Gastrointestinal System</h3>
+                    <AIButtons topic="gastrointestinal_pathophysiology" />
+                  </div>
+                  <div className="space-y-4">
+                    <ul className="space-y-3 text-sm text-muted-foreground">
+                      <li>• Digestive disorders</li>
+                      <li>• Hepatobiliary dysfunction</li>
+                      <li>• Pancreatic disorders</li>
+                      <li>• GI inflammatory conditions</li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Renal System */}
+                <div className="bg-muted/50 p-6 rounded-lg">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-lg font-semibold">Renal System</h3>
+                    <AIButtons topic="renal_system_pathophysiology" />
+                  </div>
+                  <div className="space-y-4">
+                    <ul className="space-y-3 text-sm text-muted-foreground">
+                      <li>• Acute kidney injury</li>
+                      <li>• Chronic kidney disease</li>
+                      <li>• Fluid & electrolyte disorders</li>
+                      <li>• Glomerular disorders</li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Musculoskeletal System */}
+                <div className="bg-muted/50 p-6 rounded-lg">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-lg font-semibold">Musculoskeletal System</h3>
+                    <AIButtons topic="musculoskeletal_pathophysiology" />
+                  </div>
+                  <div className="space-y-4">
+                    <ul className="space-y-3 text-sm text-muted-foreground">
+                      <li>• Bone disorders</li>
+                      <li>• Joint pathologies</li>
+                      <li>• Muscle diseases</li>
+                      <li>• Connective tissue disorders</li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Reproductive System */}
+                <div className="bg-muted/50 p-6 rounded-lg">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-lg font-semibold">Reproductive System</h3>
+                    <AIButtons topic="reproductive_pathophysiology" />
+                  </div>
+                  <div className="space-y-4">
+                    <ul className="space-y-3 text-sm text-muted-foreground">
+                      <li>• Hormonal disorders</li>
+                      <li>• Reproductive tract pathologies</li>
+                      <li>• Pregnancy complications</li>
+                      <li>• Genetic disorders</li>
+                    </ul>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
