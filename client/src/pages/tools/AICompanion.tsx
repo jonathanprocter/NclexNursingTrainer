@@ -6,7 +6,8 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { generateDetailedExplanation } from "@/lib/ai/anthropic";
 import OpenAI from "openai";
-import { DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 
 const openai = new OpenAI({ 
   apiKey: import.meta.env.VITE_OPENAI_API_KEY || '',
@@ -16,7 +17,7 @@ const openai = new OpenAI({
 export default function AICompanion() {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [microphoneAvailable, setMicrophoneAvailable] = useState<boolean | null>(null);
+  const [microphoneAvailable, setMicrophoneAvailable] = useState(false);
   const [conversations, setConversations] = useState<Array<{
     question: string;
     answer: string;
@@ -30,29 +31,8 @@ export default function AICompanion() {
   const audioChunks = useRef<Blob[]>([]);
   const { toast } = useToast();
 
-  // Check microphone availability on component mount
   useEffect(() => {
     const checkMicrophoneAccess = async () => {
-      if (!window.isSecureContext) {
-        setMicrophoneAvailable(false);
-        toast({
-          variant: "destructive",
-          title: "Security Error",
-          description: "Microphone access requires a secure (HTTPS) connection."
-        });
-        return;
-      }
-
-      if (!navigator.mediaDevices?.getUserMedia) {
-        setMicrophoneAvailable(false);
-        toast({
-          variant: "destructive",
-          title: "Browser Not Supported",
-          description: "Your browser doesn't support microphone access"
-        });
-        return;
-      }
-
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         stream.getTracks().forEach(track => track.stop());
@@ -60,127 +40,47 @@ export default function AICompanion() {
       } catch (error) {
         console.error('Microphone access error:', error);
         setMicrophoneAvailable(false);
-        if (error instanceof DOMException) {
-          if (error.name === 'NotAllowedError') {
-            toast({
-              variant: "destructive",
-              title: "Permission Required",
-              description: "Please allow microphone access in your browser settings"
-            });
-          } else {
-            toast({
-              variant: "destructive",
-              title: "Microphone Error",
-              description: `Error: ${error.name}`
-            });
-          }
-        }
+        toast({
+          variant: "destructive",
+          title: "Microphone Access Required",
+          description: "Please enable microphone access in your browser settings"
+        });
       }
     };
 
-    checkMicrophoneAccess();
-    return () => {
-      // Cleanup on component unmount
-      if (silenceTimeout.current) {
-        clearTimeout(silenceTimeout.current);
-      }
-      if (audioContext.current) {
-        audioContext.current.close();
-      }
-    };
+    if (typeof window !== 'undefined' && navigator?.mediaDevices) {
+      checkMicrophoneAccess();
+    }
   }, [toast]);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorder.current && isRecording) {
-      if (silenceTimeout.current) {
-        clearTimeout(silenceTimeout.current);
-        silenceTimeout.current = null;
-      }
-
       mediaRecorder.current.stop();
       mediaRecorder.current.stream.getTracks().forEach(track => track.stop());
       setIsRecording(false);
-
-      toast({
-        title: "Recording stopped",
-        description: "Processing your question..."
-      });
     }
-  }, [isRecording, toast]);
-
-  const checkForSilence = useCallback((dataArray: Uint8Array) => {
-    const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
-    if (average < 15) { // Adjusted threshold for better silence detection
-      if (silenceTimeout.current === null) {
-        silenceTimeout.current = setTimeout(() => {
-          if (mediaRecorder.current?.state === 'recording') {
-            stopRecording();
-          }
-        }, 1000); // Reduced to 1 second of silence for better responsiveness
-      }
-    } else {
-      if (silenceTimeout.current) {
-        clearTimeout(silenceTimeout.current);
-        silenceTimeout.current = null;
-      }
-    }
-  }, [stopRecording]);
+  }, [isRecording]);
 
   const startRecording = useCallback(async () => {
     if (!microphoneAvailable) {
       toast({
         variant: "destructive",
         title: "Microphone Not Available",
-        description: "Please ensure microphone access is enabled in your browser settings."
-      });
-      return;
-    }
-    // First check if the browser supports mediaDevices
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      toast({
-        variant: "destructive",
-        title: "Browser Not Supported",
-        description: "Your browser doesn't support microphone access.",
+        description: "Please ensure microphone access is enabled"
       });
       return;
     }
 
     try {
-      // Request microphone access with specific constraints
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          autoGainControl: true,
-          sampleRate: 44100,
-          channelCount: 1
+          autoGainControl: true
         }
       });
 
-      // Set up audio context and analyzer for silence detection
-      audioContext.current = new AudioContext();
-      analyser.current = audioContext.current.createAnalyser();
-      const source = audioContext.current.createMediaStreamSource(stream);
-      source.connect(analyser.current);
-      analyser.current.fftSize = 256;
-      analyser.current.smoothingTimeConstant = 0.8;
-
-      const bufferLength = analyser.current.frequencyBinCount;
-      const dataArray = new Uint8Array(bufferLength);
-
-      // Start monitoring audio levels
-      const checkAudioLevel = () => {
-        if (analyser.current && isRecording) {
-          analyser.current.getByteFrequencyData(dataArray);
-          checkForSilence(dataArray);
-          requestAnimationFrame(checkAudioLevel);
-        }
-      };
-
-      mediaRecorder.current = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus'
-      });
-
+      mediaRecorder.current = new MediaRecorder(stream);
       audioChunks.current = [];
 
       mediaRecorder.current.ondataavailable = (event) => {
@@ -190,137 +90,77 @@ export default function AICompanion() {
       };
 
       mediaRecorder.current.onstop = async () => {
-        setIsProcessing(true);
         try {
           const audioBlob = new Blob(audioChunks.current, { type: 'audio/webm' });
+          setIsProcessing(true);
 
-          toast({
-            title: "Processing",
-            description: "Transcribing your question..."
-          });
+          const formData = new FormData();
+          formData.append('file', audioBlob);
 
-          // Transcribe audio using Whisper
+          // Process audio with OpenAI Whisper
           const transcription = await openai.audio.transcriptions.create({
-            model: "whisper-1",
-            file: new File([audioBlob], 'audio.webm', { type: 'audio/webm' })
+            file: new File([audioBlob], 'audio.webm', { type: 'audio/webm' }),
+            model: "whisper-1"
           });
 
           if (!transcription.text) {
             throw new Error("Failed to transcribe audio");
           }
 
-          toast({
-            title: "Processing",
-            description: "Generating response..."
-          });
-
-          // Generate initial response using GPT-4
+          // Get initial response
           const completion = await openai.chat.completions.create({
             model: "gpt-4",
-            messages: [
-              {
-                role: "system",
-                content: "You are a knowledgeable nursing assistant helping students prepare for the NCLEX exam. Provide accurate, concise medical information."
-              },
-              {
-                role: "user",
-                content: transcription.text
-              }
-            ]
+            messages: [{
+              role: "system",
+              content: "You are a helpful NCLEX study assistant."
+            }, {
+              role: "user",
+              content: transcription.text
+            }]
           });
 
-          const initialResponse = completion.choices[0].message.content;
-
-          // Get detailed explanation from Claude
-          const detailedResponse = await generateDetailedExplanation({
+          const response = await generateDetailedExplanation({
             topic: transcription.text,
-            concept: initialResponse || "",
+            concept: completion.choices[0].message.content || "",
             difficulty: "medium",
             learningStyle: "comprehensive"
           });
 
           setConversations(prev => [{
             question: transcription.text,
-            answer: detailedResponse,
+            answer: response,
             timestamp: new Date()
           }, ...prev]);
-
-          toast({
-            title: "Success",
-            description: "Response generated successfully"
-          });
 
         } catch (error) {
           console.error('Error processing audio:', error);
           toast({
             variant: "destructive",
             title: "Error",
-            description: "Failed to process your question. Please try again."
+            description: "Failed to process recording"
           });
         } finally {
           setIsProcessing(false);
-          // Cleanup audio resources
-          if (audioContext.current) {
-            audioContext.current.close();
-            audioContext.current = null;
-          }
-          if (analyser.current) {
-            analyser.current.disconnect();
-            analyser.current = null;
-          }
-          if (silenceTimeout.current) {
-            clearTimeout(silenceTimeout.current);
-            silenceTimeout.current = null;
-          }
         }
       };
 
-      mediaRecorder.current.start(100);
+      mediaRecorder.current.start();
       setIsRecording(true);
-      checkAudioLevel();
 
       toast({
-        title: "Recording started",
-        description: "Speak clearly into your microphone. Recording will stop automatically after 1.5 seconds of silence."
+        title: "Recording Started",
+        description: "Speak your question clearly"
       });
+
     } catch (error) {
       console.error('Error accessing microphone:', error);
-      setMicrophoneAvailable(false);
-
-      // Provide more specific error messages based on the error type
-      if (error instanceof DOMException) {
-        switch (error.name) {
-          case 'NotAllowedError':
-            toast({
-              variant: "destructive",
-              title: "Permission Denied",
-              description: "Microphone access was denied. Please allow access in your browser settings.",
-            });
-            break;
-          case 'NotFoundError':
-            toast({
-              variant: "destructive",
-              title: "No Microphone Found",
-              description: "No microphone device was detected.",
-            });
-            break;
-          case 'NotReadableError':
-            toast({
-              variant: "destructive",
-              title: "Microphone Error",
-              description: "Your microphone is busy or unavailable.",
-            });
-            break;
-          default:
-            toast({
-              variant: "destructive",
-              title: "Microphone Error",
-              description: "An error occurred while accessing the microphone.",
-            });
-        }
-      }
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not access microphone"
+      });
     }
-  }, [toast, isRecording, checkForSilence, microphoneAvailable]);
+  }, [microphoneAvailable, toast]);
 
   return (
     <div className="space-y-6">
@@ -331,88 +171,69 @@ export default function AICompanion() {
         </p>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-6">
-        <div className="md:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Voice Interaction</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4" aria-labelledby="voice-interaction-title" aria-describedby="voice-interaction-description">
-                <h2 id="voice-interaction-title" className="sr-only">Voice Interaction Dialog</h2>
-                <p id="voice-interaction-description" className="sr-only">Voice interface for NCLEX preparation assistance</p>
-                {!microphoneAvailable && (
-                  <div className="bg-destructive/10 text-destructive p-4 rounded-lg mb-4 flex items-start gap-2">
-                    <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="font-semibold">Microphone Access Required</p>
-                      <p className="text-sm mt-1">
-                        Please allow microphone access in your browser settings to use voice features.
-                        Usually, you can click the camera icon in your browser's address bar to manage permissions.
-                      </p>
-                    </div>
+      <Dialog>
+        <DialogContent>
+          <DialogTitle>Voice Interaction</DialogTitle>
+          <div className="space-y-4" aria-label="Voice interaction controls">
+            {!microphoneAvailable && (
+              <div className="bg-destructive/10 text-destructive p-4 rounded-lg mb-4">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-5 w-5 mt-0.5" />
+                  <div>
+                    <p className="font-semibold">Microphone Access Required</p>
+                    <p className="text-sm mt-1">
+                      Please enable microphone access in your browser settings
+                    </p>
                   </div>
-                )}
-
-                <p className="text-muted-foreground">
-                  Ask questions, request explanations, or start practice sessions using your voice.
-                </p>
-
-                <div className="flex justify-center gap-4 py-8">
-                  <Button 
-                    size="lg" 
-                    className={`w-16 h-16 rounded-full ${isRecording ? 'bg-red-500 hover:bg-red-600' : ''}`}
-                    onClick={startRecording}
-                    disabled={isRecording || isProcessing || !microphoneAvailable}
-                  >
-                    <Mic className="h-8 w-8" />
-                  </Button>
-                  <Button 
-                    size="lg" 
-                    variant="outline" 
-                    className="w-16 h-16 rounded-full"
-                    onClick={stopRecording}
-                    disabled={!isRecording || isProcessing}
-                  >
-                    <StopCircle className="h-8 w-8" />
-                  </Button>
-                </div>
-
-                <div className="bg-muted p-4 rounded-lg">
-                  <p className="text-sm text-muted-foreground">
-                    Try saying: "Explain the pathophysiology of diabetes" or
-                    "Start a practice quiz on pharmacology"
-                  </p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            )}
+
+            <div className="flex justify-center gap-4 py-8">
+              <Button
+                size="lg"
+                className={`w-16 h-16 rounded-full ${isRecording ? 'bg-red-500 hover:bg-red-600' : ''}`}
+                onClick={startRecording}
+                disabled={isRecording || isProcessing || !microphoneAvailable}
+              >
+                <Mic className="h-8 w-8" />
+                <VisuallyHidden>Start Recording</VisuallyHidden>
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="w-16 h-16 rounded-full"
+                onClick={stopRecording}
+                disabled={!isRecording || isProcessing}
+              >
+                <StopCircle className="h-8 w-8" />
+                <VisuallyHidden>Stop Recording</VisuallyHidden>
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <div className="grid md:grid-cols-3 gap-6">
+        <div className="md:col-span-2">
           <Card>
             <CardHeader>
               <CardTitle>Conversation History</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {conversations.length > 0 ? (
-                  conversations.map((conv, index) => (
-                    <div key={index} className="space-y-2 border-b pb-4 last:border-b-0">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary">Question</Badge>
-                        <span className="text-sm">{conv.question}</span>
-                      </div>
-                      <div className="bg-muted p-3 rounded-lg">
-                        <p className="text-sm whitespace-pre-wrap">{conv.answer}</p>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {conv.timestamp.toLocaleString()}
-                      </p>
+                {conversations.map((conv, index) => (
+                  <div key={index} className="border-b pb-4 last:border-b-0">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary">Question</Badge>
+                      <span>{conv.question}</span>
                     </div>
-                  ))
-                ) : (
-                  <p className="text-center text-muted-foreground">
-                    No conversation history yet. Start talking to build your learning journey.
-                  </p>
-                )}
+                    <p className="mt-2 text-muted-foreground">{conv.answer}</p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {conv.timestamp.toLocaleString()}
+                    </p>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
@@ -422,27 +243,17 @@ export default function AICompanion() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <History className="h-5 w-5" />
-                Recent Topics
+                <History className="h-5 w-5" /> Topics
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {conversations.length > 0 ? (
-                  <div className="space-y-2">
-                    {Array.from(new Set(conversations.slice(0, 5).map(c => c.question))).map((q, i) => (
-                      <p key={i} className="text-sm">{q}</p>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    No recent topics. Your studied topics will appear here.
-                  </p>
-                )}
+                {conversations.slice(0, 5).map((conv, index) => (
+                  <p key={index} className="text-sm">{conv.question}</p>
+                ))}
               </div>
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -467,7 +278,6 @@ export default function AICompanion() {
               </div>
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader>
               <CardTitle>Voice Stats</CardTitle>
