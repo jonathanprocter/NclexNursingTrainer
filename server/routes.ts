@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { db } from "@db";
-import { modules, questions, quizAttempts, userProgress } from "@db/schema";
+import { modules, questions, quizAttempts, userProgress, questionHistory } from "@db/schema"; // Added questionHistory
 import { eq } from "drizzle-orm";
 import { analyzePerformance, generateAdaptiveQuestions, getStudyRecommendations, getPathophysiologyHelp } from "../client/src/lib/ai-services";
 import OpenAI from 'openai';
@@ -594,17 +594,31 @@ const preIntegratedCases = [
 ];
 
 // Question generation helper function
-function generateNewQuestions(topic?: string) {
+async function generateNewQuestions(userId: number, topic?: string) {
   const allQuestions = [
     ...practiceExercises.pattern,
     ...practiceExercises.hypothesis,
     ...practiceExercises.decision,
   ];
 
-  // Filter questions by topic if specified
-  const availableQuestions = topic
-    ? allQuestions.filter(q => q.title?.toLowerCase().includes(topic.toLowerCase()))
-    : allQuestions;
+  // Get previously used questions for this user
+  const usedQuestions = await db.query.questionHistory.findMany({
+    where: eq(questionHistory.userId, userId),
+  });
+
+  const usedQuestionIds = new Set(usedQuestions.map(h => h.questionId));
+
+  // Filter out used questions and by topic if specified
+  const availableQuestions = allQuestions.filter(q =>
+    !usedQuestionIds.has(q.id) &&
+    (!topic || q.title?.toLowerCase().includes(topic.toLowerCase()))
+  );
+
+  if (availableQuestions.length < 10) {
+    // If we don't have enough new questions, reset the history
+    await db.delete(questionHistory).where(eq(questionHistory.userId, userId));
+    return generateNewQuestions(userId, topic); // Retry with cleared history
+  }
 
   // Randomly select 10 questions
   const selectedQuestions = [];
@@ -613,6 +627,13 @@ function generateNewQuestions(topic?: string) {
   while (selectedQuestions.length < 10 && questionsCopy.length > 0) {
     const randomIndex = Math.floor(Math.random() * questionsCopy.length);
     const question = questionsCopy.splice(randomIndex, 1)[0];
+
+    // Add to question history
+    await db.insert(questionHistory).values({
+      userId,
+      questionId: question.id,
+      type: question.type,
+    });
 
     // Transform question format to match frontend expectations
     selectedQuestions.push({
@@ -668,7 +689,7 @@ export function registerRoutes(app: Express): Server {
             {
               text: "Conduct a thorough fall risk assessment and implement multiple preventive measures",
               isCorrect: true,
-              explanation: "This is the most comprehensive approach that addresses multiple risk factors. The fall risk assessment helps identify specific risks, while implementing multiple preventive measures (proper positioning, assistive devices, clear pathways, etc.) creates a safer environment. This aligns with evidence-based fall prevention protocols."
+              explanation: "This is the most comprehensive approach that addresses multiple risk factors. The fall risk assessment helps identify specific risks, while implementing multiple preventive measures (proper positioning, assistive devices, clear pathways, etc.) creates a safer environment. This aligns with evidence-based fallprevention protocols."
             },
             {
               text: "Tell the patient to wait for assistance before getting up",
@@ -684,7 +705,8 @@ export function registerRoutes(app: Express): Server {
               text: "Raise all bed rails and keep the patient in bed",
               isCorrect: false,
               explanation: "This overly restrictive approach may increase risks (climbing over rails) and delays necessary mobilization. Early mobilization with proper safety measures is important for recovery."
-            }          ]
+            }
+          ]
         },
         {
           id: "risk-2",
@@ -715,7 +737,8 @@ export function registerRoutes(app: Express): Server {
             },
             {
               text: "Administer medications basedon room number",
-              iscorrect: false,explanation: "Room numbers are not a reliable patient identifier and should never beusedalone. This approach risks serious medication errors."
+              isCorrect: false,
+              explanation: "Room numbers are not a reliable patient identifier and should never be used alone. This approach risks serious medication errors."
             }
           ]
         },
@@ -1359,13 +1382,16 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Add new questions generation endpoint
-  app.post("/api/generate-questions", (req, res) => {
+  app.post("/api/generate-questions", async (req, res) => {
     const { topic } = req.body;
+    // For testing purposes, using userId 1. In production, this should come from the session
+    const userId = req.session?.userId || 1;
+
     try {
-      const newQuestions = generateNewQuestions(topic);
+      const newQuestions = await generateNewQuestions(userId, topic);
       res.json(newQuestions);
     } catch (error) {
-      res.status(500).json({ message: "Failed to generate questions" });
+      res.status(500).json({ message: error.message });
     }
   });
 

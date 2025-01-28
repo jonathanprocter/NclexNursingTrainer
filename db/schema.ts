@@ -33,6 +33,14 @@ export const questions = pgTable("questions", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const questionHistory = pgTable("question_history", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  questionId: text("question_id").notNull(), // Store the original question ID (e.g., "pattern-1")
+  type: text("type").notNull(), // pattern, hypothesis, decision, etc.
+  usedAt: timestamp("used_at").notNull().defaultNow(),
+});
+
 export const quizAttempts = pgTable("quiz_attempts", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id),
@@ -71,6 +79,9 @@ export const insertQuizAttemptSchema = createInsertSchema(quizAttempts);
 export const selectQuizAttemptSchema = createSelectSchema(quizAttempts);
 export const insertUserProgressSchema = createInsertSchema(userProgress);
 export const selectUserProgressSchema = createSelectSchema(userProgress);
+export const insertQuestionHistorySchema = createInsertSchema(questionHistory);
+export const selectQuestionHistorySchema = createSelectSchema(questionHistory);
+
 
 // Export types for all tables
 export type InsertUser = typeof users.$inferInsert;
@@ -83,3 +94,5 @@ export type InsertQuizAttempt = typeof quizAttempts.$inferInsert;
 export type SelectQuizAttempt = typeof quizAttempts.$inferSelect;
 export type InsertUserProgress = typeof userProgress.$inferInsert;
 export type SelectUserProgress = typeof userProgress.$inferSelect;
+export type InsertQuestionHistory = typeof questionHistory.$inferInsert;
+export type SelectQuestionHistory = typeof questionHistory.$inferSelect;
