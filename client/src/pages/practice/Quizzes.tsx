@@ -1,7 +1,7 @@
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
 import QuestionCard from "@/components/nclex/QuestionCard";
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,10 @@ import { Clock, Book, Activity, BarChart3, HelpCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
+
+interface StudyTimeFormData {
+  duration: string;
+}
 
 export default function Quizzes() {
   const { toast } = useToast();
@@ -19,6 +23,8 @@ export default function Quizzes() {
   const [score, setScore] = useState({ correct: 0, total: 0 });
   const [quizComplete, setQuizComplete] = useState(false);
   const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
+  const [isReviewMode, setIsReviewMode] = useState(false);
+  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
 
   // Format time as mm:ss
   const formatTime = (seconds: number) => {
@@ -29,12 +35,83 @@ export default function Quizzes() {
 
   // Timer effect
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeRemaining((prev) => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
+    if (!quizComplete && !isReviewMode) {
+      const timer = setInterval(() => {
+        setTimeRemaining((prev) => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [quizComplete, isReviewMode]);
 
-    return () => clearInterval(timer);
-  }, []);
+  const handleAnswer = (questionId: number, selectedAnswer: string) => {
+    if (isReviewMode) return;
+
+    setUserAnswers(prev => ({...prev, [questionId]: selectedAnswer}));
+    const correct = selectedAnswer === mockQuestions[currentQuestion].correctAnswer;
+    setScore(prev => ({
+      ...prev,
+      correct: prev.correct + (correct ? 1 : 0),
+      total: prev.total + 1
+    }));
+
+    if (currentQuestion === mockQuestions.length - 1) {
+      setQuizComplete(true);
+      const percentage = Math.round((score.correct / mockQuestions.length) * 100);
+      toast({
+        title: "Quiz Complete!",
+        description: `You scored ${percentage}% (${score.correct}/${mockQuestions.length} correct)`,
+      });
+    } else {
+      setCurrentQuestion(prev => prev + 1);
+    }
+  };
+
+  const generateNewQuestions = (topic?: string) => {
+    setCurrentQuestion(0);
+    setQuizComplete(false);
+    setScore({ correct: 0, total: 0 });
+    setUserAnswers({});
+    setTimeRemaining(1800);
+    setIsReviewMode(false);
+    setSelectedTopic(topic || null);
+
+    toast({
+      title: "New Questions Generated",
+      description: topic ? `Focus area: ${topic}` : "Get ready for a new set of questions!",
+    });
+  };
+
+  const startTopicPractice = (topic: string) => {
+    generateNewQuestions(topic);
+    // Switch to questions tab
+    const questionsTab = document.querySelector('[value="questions"]') as HTMLElement;
+    if (questionsTab) questionsTab.click();
+  };
+
+  const startReview = () => {
+    setIsReviewMode(true);
+    setCurrentQuestion(0);
+    setQuizComplete(false);
+  };
+
+  const handleAIHelp = async () => {
+    setShowAIHelp(true);
+    setAiResponse("Loading AI explanation...");
+    // Simulate API call
+    setTimeout(() => {
+      setAiResponse(`Here's a detailed explanation of the concept:
+
+1. Key Points to Remember:
+${mockQuestions[currentQuestion].explanation}
+
+2. Clinical Reasoning:
+- Consider the patient's condition and vital signs
+- Follow standard protocols and guidelines
+- Always prioritize patient safety
+
+Would you like me to elaborate on any of these points?`);
+    }, 1500);
+  };
 
   // Mock questions with diverse content
   const mockQuestions = [
@@ -180,70 +257,18 @@ export default function Quizzes() {
     }
   ];
 
-  const handleAnswer = (questionId: number, selectedAnswer: string) => {
-    setUserAnswers(prev => ({...prev, [questionId]: selectedAnswer}));
-    const correct = selectedAnswer === mockQuestions[currentQuestion].correctAnswer;
-    setScore(prev => ({
-      ...prev,
-      correct: prev.correct + (correct ? 1 : 0),
-      total: prev.total + 1
-    }));
-
-    if (currentQuestion === mockQuestions.length - 1) {
-      setQuizComplete(true);
-      const percentage = Math.round((score.correct / mockQuestions.length) * 100);
-      toast({
-        title: "Quiz Complete!",
-        description: `You scored ${percentage}% (${score.correct}/${mockQuestions.length} correct)`,
-      });
-    } else {
-      setCurrentQuestion(prev => prev + 1);
-    }
-  };
-
-  const generateNewQuestions = () => {
-    // In a real implementation, this would fetch new questions from an API
-    setCurrentQuestion(0);
-    setQuizComplete(false);
-    setScore({ correct: 0, total: 0 });
-    setUserAnswers({});
-    setTimeRemaining(1800);
-    toast({
-      title: "New Questions Generated",
-      description: "Get ready for a new set of questions!",
-    });
-  };
-
-  const handleAIHelp = async () => {
-    setShowAIHelp(true);
-    setAiResponse("Loading AI explanation...");
-    // Simulate API call
-    setTimeout(() => {
-      setAiResponse(`Here's a detailed explanation of the concept:
-
-1. Key Points to Remember:
-${mockQuestions[currentQuestion].explanation}
-
-2. Clinical Reasoning:
-- Consider the patient's condition and vital signs
-- Follow standard protocols and guidelines
-- Always prioritize patient safety
-
-Would you like me to elaborate on any of these points?`);
-    }, 1500);
-  };
-
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold mb-2">Practice Quizzes</h1>
         <p className="text-muted-foreground max-w-2xl mx-auto">
           Test your knowledge with topic-specific quizzes and track your progress
+          {selectedTopic && <span className="font-medium"> - Focusing on {selectedTopic}</span>}
         </p>
       </div>
 
       <Tabs defaultValue="questions" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList>
           <TabsTrigger value="questions" className="flex items-center gap-2">
             <Book className="h-4 w-4" />
             Questions
@@ -278,12 +303,14 @@ Would you like me to elaborate on any of these points?`);
                       </Badge>
                     </div>
                     <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4" />
-                        <span className="text-sm text-muted-foreground">
-                          Time: {formatTime(timeRemaining)}
-                        </span>
-                      </div>
+                      {!isReviewMode && (
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4" />
+                          <span className="text-sm text-muted-foreground">
+                            Time: {formatTime(timeRemaining)}
+                          </span>
+                        </div>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"
@@ -299,6 +326,8 @@ Would you like me to elaborate on any of these points?`);
                   <QuestionCard
                     question={mockQuestions[currentQuestion]}
                     onNext={(answer) => handleAnswer(mockQuestions[currentQuestion].id, answer)}
+                    userAnswer={isReviewMode ? userAnswers[mockQuestions[currentQuestion].id] : undefined}
+                    showAnswer={isReviewMode}
                   />
 
                   <div className="mt-4">
@@ -307,7 +336,7 @@ Would you like me to elaborate on any of these points?`);
                       className="h-2" 
                     />
                     <div className="flex justify-between text-sm text-muted-foreground mt-2">
-                      <span>Progress</span>
+                      <span>{isReviewMode ? "Review Progress" : "Progress"}</span>
                       <span>{currentQuestion + 1}/{mockQuestions.length} Questions</span>
                     </div>
                   </div>
@@ -322,10 +351,10 @@ Would you like me to elaborate on any of these points?`);
                     </p>
                   </div>
                   <div className="flex justify-center gap-4">
-                    <Button onClick={generateNewQuestions}>
+                    <Button onClick={() => generateNewQuestions()}>
                       Generate New Questions
                     </Button>
-                    <Button variant="outline" onClick={() => setQuizComplete(false)}>
+                    <Button variant="outline" onClick={startReview}>
                       Review Answers
                     </Button>
                   </div>
@@ -342,7 +371,14 @@ Would you like me to elaborate on any of these points?`);
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {['Fundamentals', 'Med-Surg', 'Pediatrics', 'OB/GYN', 'Mental Health', 'Leadership'].map((topic) => (
+                {[
+                  'Fundamentals',
+                  'Med-Surg',
+                  'Pediatrics',
+                  'OB/GYN',
+                  'Mental Health',
+                  'Leadership'
+                ].map((topic) => (
                   <Card key={topic}>
                     <CardContent className="p-4">
                       <h3 className="font-semibold mb-2">{topic}</h3>
@@ -351,7 +387,12 @@ Would you like me to elaborate on any of these points?`);
                         <span>Questions: 50</span>
                         <span>Completed: 25</span>
                       </div>
-                      <Button className="w-full mt-4">Practice</Button>
+                      <Button 
+                        className="w-full mt-4"
+                        onClick={() => startTopicPractice(topic)}
+                      >
+                        Practice
+                      </Button>
                     </CardContent>
                   </Card>
                 ))}
@@ -438,7 +479,7 @@ Would you like me to elaborate on any of these points?`);
                         </div>
                         <Progress value={70 + index} className="h-2" />
                       </div>
-                      <Button variant="outline" className="w-full mt-4">
+                      <Button variant="outline" className="w-full mt-4" onClick={startReview}>
                         Review Answers
                       </Button>
                     </CardContent>

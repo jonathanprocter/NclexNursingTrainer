@@ -13,21 +13,36 @@ interface QuestionCardProps {
     correctAnswer: string;
     explanation: string;
   };
-  onNext: () => void;
+  onNext: (selectedAnswer: string) => void;
+  userAnswer?: string;
+  showAnswer?: boolean;
 }
 
-export default function QuestionCard({ question, onNext }: QuestionCardProps) {
-  const [selectedAnswer, setSelectedAnswer] = useState<string>("");
-  const [showExplanation, setShowExplanation] = useState(false);
+export default function QuestionCard({ question, onNext, userAnswer, showAnswer }: QuestionCardProps) {
+  const [selectedAnswer, setSelectedAnswer] = useState<string>(userAnswer || "");
+  const [showExplanation, setShowExplanation] = useState(showAnswer);
 
   const handleSubmit = () => {
     if (!showExplanation) {
       setShowExplanation(true);
+      onNext(selectedAnswer);
     } else {
       setSelectedAnswer("");
       setShowExplanation(false);
-      onNext();
+      onNext(selectedAnswer);
     }
+  };
+
+  const getOptionClass = (optionId: string) => {
+    if (!showExplanation && !showAnswer) return "";
+
+    if (optionId === question.correctAnswer) {
+      return "bg-green-50 border-green-200";
+    }
+    if ((userAnswer || selectedAnswer) === optionId && optionId !== question.correctAnswer) {
+      return "bg-red-50 border-red-200";
+    }
+    return "";
   };
 
   return (
@@ -37,20 +52,19 @@ export default function QuestionCard({ question, onNext }: QuestionCardProps) {
       </CardHeader>
       <CardContent className="space-y-6">
         <p className="text-lg">{question.text}</p>
-        
+
         <RadioGroup
           value={selectedAnswer}
           onValueChange={setSelectedAnswer}
           className="space-y-3"
-          disabled={showExplanation}
+          disabled={showExplanation || showAnswer}
         >
           {question.options.map((option) => (
             <div
               key={option.id}
               className={cn(
                 "flex items-center space-x-3 p-3 rounded-lg border",
-                showExplanation && option.id === question.correctAnswer && "bg-green-50 border-green-200",
-                showExplanation && selectedAnswer === option.id && option.id !== question.correctAnswer && "bg-red-50 border-red-200"
+                getOptionClass(option.id)
               )}
             >
               <RadioGroupItem value={option.id} id={option.id} />
@@ -61,7 +75,7 @@ export default function QuestionCard({ question, onNext }: QuestionCardProps) {
           ))}
         </RadioGroup>
 
-        {showExplanation && (
+        {(showExplanation || showAnswer) && (
           <div className="mt-4 p-4 bg-muted rounded-lg">
             <h4 className="font-semibold mb-2">Explanation:</h4>
             <p>{question.explanation}</p>
@@ -72,9 +86,9 @@ export default function QuestionCard({ question, onNext }: QuestionCardProps) {
         <Button
           className="w-full"
           onClick={handleSubmit}
-          disabled={!selectedAnswer && !showExplanation}
+          disabled={(!selectedAnswer && !showExplanation && !showAnswer)}
         >
-          {showExplanation ? "Next Question" : "Submit Answer"}
+          {showAnswer ? "Next Question" : (showExplanation ? "Next Question" : "Submit Answer")}
         </Button>
       </CardFooter>
     </Card>
