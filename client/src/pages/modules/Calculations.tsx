@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Bot, Calculator, CheckCircle2, RefreshCw } from "lucide-react";
+import { Bot, Calculator, CheckCircle2, RefreshCw, Brain, Clock, Shield, Book } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -138,8 +138,7 @@ export default function Calculations() {
                 <CardTitle>NCLEX Preparation Guide</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-6">
-                  {/* Key Topics */}
+                <div className="space-y-8">
                   <div>
                     <h3 className="font-semibold text-lg mb-3">Essential NCLEX Calculation Topics</h3>
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -182,50 +181,85 @@ export default function Calculations() {
                     </div>
                   </div>
 
-                  {/* Study Strategy */}
                   <div className="bg-muted/50 p-4 rounded-lg">
-                    <h3 className="font-semibold text-lg mb-3">NCLEX Success Strategy</h3>
-                    <div className="space-y-3">
-                      <div className="flex items-start gap-3">
-                        <div className="bg-primary/10 p-2 rounded-full">
-                          <CheckCircle2 className="h-4 w-4 text-primary" />
-                        </div>
-                        <div>
-                          <h4 className="font-medium">Master Core Concepts</h4>
-                          <p className="text-sm text-muted-foreground">Focus on unit conversions and basic calculations before advancing to complex problems</p>
-                        </div>
+                    <h3 className="font-semibold text-lg mb-3">Common Calculation Challenges</h3>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <h4 className="font-medium mb-2 flex items-center">
+                          <Shield className="h-4 w-4 mr-2" />
+                          High-Risk Areas
+                        </h4>
+                        <ul className="text-sm space-y-2">
+                          <li>• <span className="font-medium">Decimal Point Errors:</span> Always use leading zeros (0.5 not .5) and never trailing zeros (2 not 2.0)</li>
+                          <li>• <span className="font-medium">Unit Conversions:</span> Master common conversions (mg to mcg, lb to kg)</li>
+                          <li>• <span className="font-medium">IV Drip Calculations:</span> Understand relationships between time, volume, and rate</li>
+                          <li>• <span className="font-medium">Pediatric Dosing:</span> Extra attention to weight-based calculations</li>
+                        </ul>
                       </div>
-                      <div className="flex items-start gap-3">
-                        <div className="bg-primary/10 p-2 rounded-full">
-                          <CheckCircle2 className="h-4 w-4 text-primary" />
-                        </div>
-                        <div>
-                          <h4 className="font-medium">Systematic Practice</h4>
-                          <p className="text-sm text-muted-foreground">Work through each calculation type methodically, increasing difficulty gradually</p>
-                        </div>
+                      <div>
+                        <h4 className="font-medium mb-2 flex items-center">
+                          <Brain className="h-4 w-4 mr-2" />
+                          Critical Thinking
+                        </h4>
+                        <ul className="text-sm space-y-2">
+                          <li>• <span className="font-medium">Reasonableness:</span> Does your answer make clinical sense?</li>
+                          <li>• <span className="font-medium">Safety Checks:</span> Know normal dosage ranges for common medications</li>
+                          <li>• <span className="font-medium">Problem Solving:</span> Break complex calculations into smaller steps</li>
+                          <li>• <span className="font-medium">Verification:</span> Use multiple methods to verify your answer</li>
+                        </ul>
                       </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-muted/50 p-4 rounded-lg">
+                    <h3 className="font-semibold text-lg mb-3">NCLEX Success Strategies</h3>
+                    <div className="space-y-4">
                       <div className="flex items-start gap-3">
                         <div className="bg-primary/10 p-2 rounded-full">
-                          <CheckCircle2 className="h-4 w-4 text-primary" />
+                          <Clock className="h-4 w-4 text-primary" />
                         </div>
                         <div>
                           <h4 className="font-medium">Time Management</h4>
-                          <p className="text-sm text-muted-foreground">Practice completing calculations within 2 minutes to build speed and accuracy</p>
+                          <ul className="text-sm space-y-1 text-muted-foreground">
+                            <li>• Aim to complete each calculation in under 2 minutes</li>
+                            <li>• Practice with a timer to build speed and accuracy</li>
+                            <li>• If stuck, mark and return later - don't get bogged down</li>
+                          </ul>
                         </div>
                       </div>
+
                       <div className="flex items-start gap-3">
                         <div className="bg-primary/10 p-2 rounded-full">
-                          <CheckCircle2 className="h-4 w-4 text-primary" />
+                          <Book className="h-4 w-4 text-primary" />
                         </div>
                         <div>
-                          <h4 className="font-medium">Double-Check Work</h4>
-                          <p className="text-sm text-muted-foreground">Verify units, decimal points, and final answers using different methods</p>
+                          <h4 className="font-medium">Systematic Approach</h4>
+                          <ul className="text-sm space-y-1 text-muted-foreground">
+                            <li>1. Read the question carefully - identify what's being asked</li>
+                            <li>2. Extract relevant information and desired units</li>
+                            <li>3. Set up your equation before calculating</li>
+                            <li>4. Double-check your work and units</li>
+                          </ul>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3">
+                        <div className="bg-primary/10 p-2 rounded-full">
+                          <Brain className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <h4 className="font-medium">Practice Tips</h4>
+                          <ul className="text-sm space-y-1 text-muted-foreground">
+                            <li>• Start with basic conversions before complex calculations</li>
+                            <li>• Practice multiple solution methods for each problem type</li>
+                            <li>• Use realistic clinical scenarios in your practice</li>
+                            <li>• Keep a log of mistakes to identify pattern areas for improvement</li>
+                          </ul>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Progress Tracking */}
                   <div>
                     <h3 className="font-semibold text-lg mb-3">Your Progress</h3>
                     <div className="space-y-4">
@@ -276,7 +310,6 @@ export default function Calculations() {
 
         <TabsContent value="practice">
           <div className="grid gap-6">
-            {/* Problem Selection */}
             <Card>
               <CardHeader>
                 <CardTitle>Practice Problems</CardTitle>
@@ -320,7 +353,6 @@ export default function Calculations() {
               </CardContent>
             </Card>
 
-            {/* Current Problem Display */}
             {currentProblem && (
               <Card>
                 <CardHeader>
@@ -343,7 +375,6 @@ export default function Calculations() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {/* Problem Content */}
                   <div className="space-y-4">
                     <div className="prose prose-sm max-w-none">
                       <h3 className="text-lg font-semibold">Question:</h3>
@@ -362,7 +393,6 @@ export default function Calculations() {
                       </dl>
                     </div>
 
-                    {/* Answer Form */}
                     <Form {...form}>
                       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
                         <FormField
@@ -403,7 +433,6 @@ export default function Calculations() {
                       </form>
                     </Form>
 
-                    {/* Solution Display */}
                     {showSolution && (
                       <div className="bg-muted/50 p-4 rounded-lg space-y-2">
                         <h4 className="font-medium">Solution:</h4>
