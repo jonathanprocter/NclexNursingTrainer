@@ -122,6 +122,26 @@ export default function ClinicalJudgment() {
     </Dialog>
   );
 
+  const AIButtons = ({ topic, context }: { topic: string; context?: string }) => (
+    <div className="flex gap-2">
+      <Button variant="outline" size="sm" onClick={() => handleAIHelp(topic, context)}>
+        <Bot className="h-4 w-4 mr-2" />
+        AI Guide
+      </Button>
+      <Button 
+        variant="outline" 
+        size="sm" 
+        onClick={() => {
+          setCurrentTopic(formatTopicName(topic));
+          setIsQuestionDialogOpen(true);
+        }}
+      >
+        <Bot className="h-4 w-4 mr-2" />
+        Ask Question
+      </Button>
+    </div>
+  );
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto px-4 py-8">
       <div className="text-center mb-8">
@@ -202,10 +222,7 @@ export default function ClinicalJudgment() {
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <CardTitle>Key Focus Areas</CardTitle>
-                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("focus_areas")}>
-                      <Bot className="h-4 w-4 mr-2" />
-                      AI Guidance
-                    </Button>
+                    <AIButtons topic="focus_areas" />
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -245,10 +262,7 @@ export default function ClinicalJudgment() {
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <CardTitle>Clinical Judgment Model</CardTitle>
-                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("judgment_model")}>
-                      <Bot className="h-4 w-4 mr-2" />
-                      AI Explanation
-                    </Button>
+                    <AIButtons topic="judgment_model" />
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -299,10 +313,7 @@ export default function ClinicalJudgment() {
                     Master the integration of the nursing process with clinical judgment skills
                   </p>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => handleAIHelp("nursing_process_overview")}>
-                  <Bot className="h-4 w-4 mr-2" />
-                  AI Guide
-                </Button>
+                <AIButtons topic="nursing_process_overview" />
               </div>
             </CardHeader>
             <CardContent>
@@ -310,10 +321,7 @@ export default function ClinicalJudgment() {
                 <div className="bg-muted/50 p-6 rounded-lg">
                   <div className="flex justify-between items-start mb-4">
                     <h3 className="text-lg font-semibold">Assessment</h3>
-                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("assessment_challenges")}>
-                      <Bot className="h-4 w-4 mr-2" />
-                      Common Challenges
-                    </Button>
+                    <AIButtons topic="assessment_challenges" />
                   </div>
                   <ul className="space-y-3 text-sm text-muted-foreground">
                     <li>• Systematic data collection techniques</li>
@@ -326,10 +334,7 @@ export default function ClinicalJudgment() {
                 <div className="bg-muted/50 p-6 rounded-lg">
                   <div className="flex justify-between items-start mb-4">
                     <h3 className="text-lg font-semibold">Diagnosis</h3>
-                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("diagnosis_tips")}>
-                      <Bot className="h-4 w-4 mr-2" />
-                      Diagnosis Tips
-                    </Button>
+                    <AIButtons topic="diagnosis_tips" />
                   </div>
                   <ul className="space-y-3 text-sm text-muted-foreground">
                     <li>• Pattern recognition in clinical findings</li>
@@ -342,10 +347,7 @@ export default function ClinicalJudgment() {
                 <div className="bg-muted/50 p-6 rounded-lg">
                   <div className="flex justify-between items-start mb-4">
                     <h3 className="text-lg font-semibold">Planning</h3>
-                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("planning_strategies")}>
-                      <Bot className="h-4 w-4 mr-2" />
-                      Planning Help
-                    </Button>
+                    <AIButtons topic="planning_strategies" />
                   </div>
                   <ul className="space-y-3 text-sm text-muted-foreground">
                     <li>• Setting SMART goals</li>
@@ -358,10 +360,7 @@ export default function ClinicalJudgment() {
                 <div className="bg-muted/50 p-6 rounded-lg">
                   <div className="flex justify-between items-start mb-4">
                     <h3 className="text-lg font-semibold">Implementation</h3>
-                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("implementation_guidance")}>
-                      <Bot className="h-4 w-4 mr-2" />
-                      Implementation Tips
-                    </Button>
+                    <AIButtons topic="implementation_guidance" />
                   </div>
                   <ul className="space-y-3 text-sm text-muted-foreground">
                     <li>• Safe intervention execution</li>
@@ -374,10 +373,7 @@ export default function ClinicalJudgment() {
                 <div className="bg-muted/50 p-6 rounded-lg">
                   <div className="flex justify-between items-start mb-4">
                     <h3 className="text-lg font-semibold">Evaluation</h3>
-                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("evaluation_methods")}>
-                      <Bot className="h-4 w-4 mr-2" />
-                      Evaluation Help
-                    </Button>
+                    <AIButtons topic="evaluation_methods" />
                   </div>
                   <ul className="space-y-3 text-sm text-muted-foreground">
                     <li>• Measuring outcome achievement</li>
@@ -401,10 +397,7 @@ export default function ClinicalJudgment() {
                     Develop expert decision-making skills through structured learning and practice
                   </p>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => handleAIHelp("decision_making_overview")}>
-                  <Bot className="h-4 w-4 mr-2" />
-                  AI Overview
-                </Button>
+                <AIButtons topic="decision_making_overview" />
               </div>
             </CardHeader>
             <CardContent>
@@ -412,10 +405,7 @@ export default function ClinicalJudgment() {
                 <div className="bg-muted/50 p-6 rounded-lg">
                   <div className="flex justify-between items-start mb-4">
                     <h3 className="text-lg font-semibold">Critical Thinking Framework</h3>
-                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("critical_thinking")}>
-                      <Bot className="h-4 w-4 mr-2" />
-                      Framework Help
-                    </Button>
+                    <AIButtons topic="critical_thinking" />
                   </div>
                   <ul className="space-y-3 text-sm text-muted-foreground">
                     <li>• Information gathering and analysis</li>
@@ -428,10 +418,7 @@ export default function ClinicalJudgment() {
                 <div className="bg-muted/50 p-6 rounded-lg">
                   <div className="flex justify-between items-start mb-4">
                     <h3 className="text-lg font-semibold">Priority Setting</h3>
-                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("priority_setting")}>
-                      <Bot className="h-4 w-4 mr-2" />
-                      Priority Tips
-                    </Button>
+                    <AIButtons topic="priority_setting" />
                   </div>
                   <ul className="space-y-3 text-sm text-muted-foreground">
                     <li>• ABC (Airway, Breathing, Circulation) approach</li>
@@ -444,10 +431,7 @@ export default function ClinicalJudgment() {
                 <div className="bg-muted/50 p-6 rounded-lg">
                   <div className="flex justify-between items-start mb-4">
                     <h3 className="text-lg font-semibold">Risk Assessment</h3>
-                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("risk_assessment")}>
-                      <Bot className="h-4 w-4 mr-2" />
-                      Risk Tips
-                    </Button>
+                    <AIButtons topic="risk_assessment" />
                   </div>
                   <ul className="space-y-3 text-sm text-muted-foreground">
                     <li>• Identifying potential complications</li>
@@ -460,10 +444,7 @@ export default function ClinicalJudgment() {
                 <div className="bg-muted/50 p-6 rounded-lg">
                   <div className="flex justify-between items-start mb-4">
                     <h3 className="text-lg font-semibold">Clinical Reasoning</h3>
-                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("clinical_reasoning")}>
-                      <Bot className="h-4 w-4 mr-2" />
-                      Reasoning Help
-                    </Button>
+                    <AIButtons topic="clinical_reasoning" />
                   </div>
                   <ul className="space-y-3 text-sm text-muted-foreground">
                     <li>• Hypothesis generation</li>
@@ -492,10 +473,7 @@ export default function ClinicalJudgment() {
                     <Plus className="h-4 w-4 mr-2" />
                     Generate New Case
                   </Button>
-                  <Button variant="outline" onClick={() => handleAIHelp("case_analysis")}>
-                    <Bot className="h-4 w-4 mr-2" />
-                    Analysis Help
-                  </Button>
+                  <AIButtons topic="case_analysis" />
                 </div>
               </div>
             </CardHeader>
@@ -535,18 +513,6 @@ export default function ClinicalJudgment() {
               )}
             </div>
           </ScrollArea>
-          <div className="mt-4 flex justify-end">
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setIsDialogOpen(false);
-                setIsQuestionDialogOpen(true);
-              }}
-            >
-              <Bot className="h-4 w-4 mr-2" />
-              Ask a Question
-            </Button>
-          </div>
         </DialogContent>
       </Dialog>
 
