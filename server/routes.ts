@@ -4,6 +4,96 @@ import { db } from "@db";
 import { modules, questions, quizAttempts, userProgress } from "@db/schema";
 import { eq } from "drizzle-orm";
 import { analyzePerformance, generateAdaptiveQuestions, getStudyRecommendations, getPharmacologyHelp } from "../client/src/lib/ai-services";
+import OpenAI from 'openai';
+
+// Initialize OpenAI
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+// Pre-integrated case studies
+const preIntegratedCases = [
+  {
+    id: "case1",
+    title: "Complex Heart Failure Management",
+    description: "Elderly patient presenting with acute decompensated heart failure and multiple comorbidities.",
+    difficulty: "intermediate",
+    type: "cardiology",
+    content: `
+      <h3>Patient Information</h3>
+      <p>73-year-old female with history of CHF (EF 35%), diabetes, and hypertension presents with increasing dyspnea and peripheral edema over 5 days.</p>
+
+      <h3>Current Presentation</h3>
+      <ul>
+        <li>Vitals: BP 158/92, HR 92, RR 24, O2 sat 91% on RA</li>
+        <li>Bilateral crackles to mid-lung fields</li>
+        <li>3+ peripheral edema</li>
+        <li>Recent medication non-compliance due to cost</li>
+      </ul>
+
+      <h3>Laboratory Data</h3>
+      <ul>
+        <li>BNP: 1250 pg/mL</li>
+        <li>Creatinine: 1.8 mg/dL (baseline 1.2)</li>
+        <li>Potassium: 4.8 mEq/L</li>
+        <li>Troponin: Negative</li>
+      </ul>
+    `
+  },
+  {
+    id: "case2",
+    title: "Sepsis with Multiorgan Dysfunction",
+    description: "Young adult presenting with severe sepsis and developing organ dysfunction.",
+    difficulty: "advanced",
+    type: "critical_care",
+    content: `
+      <h3>Patient Information</h3>
+      <p>28-year-old male presents with fever, confusion, and hypotension. History of recent dental procedure.</p>
+
+      <h3>Current Presentation</h3>
+      <ul>
+        <li>Vitals: BP 82/45, HR 125, RR 28, Temp 39.8°C</li>
+        <li>Glasgow Coma Scale: 13</li>
+        <li>Delayed capillary refill</li>
+        <li>Mottled skin on extremities</li>
+      </ul>
+
+      <h3>Laboratory Data</h3>
+      <ul>
+        <li>WBC: 22,000 with 18% bands</li>
+        <li>Lactate: 4.8 mmol/L</li>
+        <li>Creatinine: 2.1 mg/dL</li>
+        <li>Platelets: 95,000</li>
+      </ul>
+    `
+  },
+  {
+    id: "case3",
+    title: "Acute Respiratory Distress",
+    description: "Middle-aged patient with rapidly progressing respiratory symptoms.",
+    difficulty: "intermediate",
+    type: "pulmonology",
+    content: `
+      <h3>Patient Information</h3>
+      <p>45-year-old female with asthma presents with acute onset of severe dyspnea and chest tightness.</p>
+
+      <h3>Current Presentation</h3>
+      <ul>
+        <li>Vitals: BP 142/88, HR 118, RR 32, O2 sat 88% on RA</li>
+        <li>Using accessory muscles</li>
+        <li>Diffuse wheezing with prolonged expiration</li>
+        <li>Unable to speak in full sentences</li>
+      </ul>
+
+      <h3>Laboratory Data</h3>
+      <ul>
+        <li>ABG: pH 7.32, pCO2 48, pO2 58</li>
+        <li>Peak flow: 35% of personal best</li>
+        <li>Chest X-ray: Hyperinflation</li>
+      </ul>
+    `
+  }
+];
 
 export function registerRoutes(app: Express): Server {
   // Modules routes
@@ -165,6 +255,56 @@ export function registerRoutes(app: Express): Server {
       res.json(help);
     } catch (error) {
       res.status(500).json({ message: "Failed to get AI help" });
+    }
+  });
+
+  // Enhanced case generation endpoint
+  app.post("/api/generate-case", async (req, res) => {
+    try {
+      // First, return a pre-integrated case if available and not seen
+      const seenCases = req.body.seenCases || [];
+      const availablePreIntegrated = preIntegratedCases.filter(c => !seenCases.includes(c.id));
+
+      if (availablePreIntegrated.length > 0) {
+        const randomCase = availablePreIntegrated[Math.floor(Math.random() * availablePreIntegrated.length)];
+        return res.json(randomCase);
+      }
+
+      // If all pre-integrated cases have been seen, generate a new one using OpenAI
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [
+          {
+            role: "system",
+            content: "You are a medical educator generating detailed clinical case studies for nursing students. Include patient history, current presentation, vital signs, and relevant laboratory data."
+          },
+          {
+            role: "user",
+            content: "Generate a detailed clinical case study with realistic vital signs and lab values. Include patient presentation, history, and current status."
+          }
+        ],
+        max_tokens: 1000,
+      });
+
+      const generatedContent = completion.choices[0]?.message?.content;
+      if (!generatedContent) {
+        throw new Error("Failed to generate case content");
+      }
+
+      // Format the generated case
+      const generatedCase = {
+        id: `gen_${Date.now()}`,
+        title: "Complex Clinical Scenario",
+        description: "AI-generated clinical case for advanced practice",
+        difficulty: "advanced",
+        type: "generated",
+        content: generatedContent
+      };
+
+      res.json(generatedCase);
+    } catch (error) {
+      console.error("Case generation error:", error);
+      res.status(500).json({ message: "Failed to generate case study" });
     }
   });
 
