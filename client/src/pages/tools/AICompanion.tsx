@@ -32,6 +32,18 @@ export default function AICompanion() {
   // Check microphone availability on component mount
   useEffect(() => {
     const checkMicrophoneAccess = async () => {
+      // Check if we're in a secure context
+      if (!window.isSecureContext) {
+        setMicrophoneAvailable(false);
+        toast({
+          variant: "destructive",
+          title: "Security Error",
+          description: "Microphone access requires a secure (HTTPS) connection.",
+        });
+        return;
+      }
+
+      // Check browser compatibility
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         setMicrophoneAvailable(false);
         toast({
@@ -43,11 +55,14 @@ export default function AICompanion() {
       }
 
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
+        // Request microphone with specific constraints
+        const stream = await navigator.mediaDevices.getUserMedia({
           audio: {
             echoCancellation: true,
             noiseSuppression: true,
-            autoGainControl: true
+            autoGainControl: true,
+            sampleRate: 44100,
+            channelCount: 1
           }
         });
         stream.getTracks().forEach(track => track.stop()); // Clean up the test stream
