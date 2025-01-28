@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import NavBar from "@/components/layout/NavBar";
 import Home from "@/pages/Home";
+import Dashboard from "@/pages/Dashboard";
 
 // Dashboard Components
 import Analytics from "@/components/dashboard/Analytics";
