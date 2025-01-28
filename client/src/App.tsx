@@ -8,6 +8,10 @@ import Home from "@/pages/Home";
 import Modules from "@/pages/Modules";
 import MockExams from "@/pages/practice/MockExams";
 import Exam from "@/pages/practice/Exam";
+import Quizzes from "@/pages/practice/Quizzes";
+import PatientScenarios from "@/pages/practice/PatientScenarios";
+import Simulation from "@/pages/practice/Simulation";
+import StudyGuide from "@/pages/StudyGuide";
 
 function Router() {
   return (
@@ -20,10 +24,14 @@ function Router() {
 
           {/* Study Routes */}
           <Route path="/modules" component={Modules} />
+          <Route path="/study-guide" component={StudyGuide} />
 
           {/* Practice Routes */}
           <Route path="/practice/mock-exams" component={MockExams} />
           <Route path="/practice/exam/:type" component={Exam} />
+          <Route path="/practice/quizzes" component={Quizzes} />
+          <Route path="/practice/scenarios" component={PatientScenarios} />
+          <Route path="/practice/simulation" component={Simulation} />
 
           {/* Fallback to 404 */}
           <Route component={NotFound} />
