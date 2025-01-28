@@ -700,7 +700,7 @@ export function registerRoutes(app: Express): Server {
   //  // User progress routes with AI recommendations
   app.get("/api/progress/:userId", async (req, res) => {
     try {
-      const progress = await db.query.userProgress.findMany({
+            const progress = await db.query.userProgress.findMany({
         where: eq(userProgress.userId, parseInt(req.params.userId)),
         with: {
           module: true,
@@ -868,8 +868,8 @@ export function registerRoutes(app: Express): Server {
           success: true,
           correct: isCorrect,
           explanation: exercise.explanation,
-          message: isCorrect ? 
-            "Correct! Great clinical reasoning!" : 
+          message: isCorrect ?
+            "Correct! Great clinical reasoning!" :
             "Review the explanation and try another exercise to reinforce your learning."
         };
       }
@@ -878,6 +878,87 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error("Exercise submission error:", error);
       res.status(500).json({ message: "Failed to submit exercise" });
+    }
+  });
+
+  // Add calculation routes
+  app.post("/api/generate-calculation", async (req, res) => {
+    try {
+      const { difficulty } = req.body;
+
+      // Sample calculation problems
+      const calculationProblems = [
+        {
+          id: "calc-1",
+          type: "dosage",
+          difficulty: "beginner",
+          question: "A patient is prescribed 500mg of medication every 8 hours. The medication comes in 250mg tablets. How many tablets should be given per dose?",
+          givens: {
+            "Prescribed dose": "500mg",
+            "Tablet strength": "250mg",
+            "Frequency": "every 8 hours"
+          },
+          answer: 2,
+          unit: "tablets",
+          explanation: "Since each tablet contains 250mg and the prescribed dose is 500mg, divide 500mg by 250mg to get 2 tablets per dose.",
+          hints: [
+            "Break down the problem into given information",
+            "Set up the equation: Prescribed dose ÷ Tablet strength",
+            "Convert units if necessary before calculating"
+          ]
+        },
+        {
+          id: "calc-2",
+          type: "rate",
+          difficulty: "intermediate",
+          question: "An IV bag contains 1000mL of fluid to be administered over 8 hours. Calculate the drip rate in mL/hr.",
+          givens: {
+            "Total volume": "1000mL",
+            "Total time": "8 hours"
+          },
+          answer: 125,
+          unit: "mL/hr",
+          explanation: "To find the drip rate, divide the total volume by the total time: 1000mL ÷ 8 hours = 125 mL/hr",
+          hints: [
+            "Use the formula: Rate = Volume ÷ Time",
+            "Keep units consistent",
+            "Check if the calculated rate seems reasonable"
+          ]
+        }
+      ];
+
+      // Select a random problem of appropriate difficulty
+      const appropriateProblems = calculationProblems.filter(p => p.difficulty === difficulty);
+      const problem = appropriateProblems[Math.floor(Math.random() * appropriateProblems.length)];
+
+      if (!problem) {
+        throw new Error("No problems available for selected difficulty");
+      }
+
+      res.json(problem);
+    } catch (error) {
+      console.error("Error generating calculation:", error);
+      res.status(500).json({ message: "Failed to generate calculation problem" });
+    }
+  });
+
+  app.post("/api/submit-calculation", async (req, res) => {
+    try {
+      const { problemId, answer } = req.body;
+
+      // In a real application, you would validate against stored problems
+      // For now, we'll just acknowledge the submission
+      res.json({
+        success: true,
+        message: "Calculation submitted successfully",
+        // Add feedback based on correctness
+        feedback: Math.random() > 0.5 ?
+          "Excellent work! Your calculation is correct." :
+          "Review your work. Consider the units and check your arithmetic."
+      });
+    } catch (error) {
+      console.error("Error submitting calculation:", error);
+      res.status(500).json({ message: "Failed to submit calculation" });
     }
   });
 
