@@ -3,14 +3,35 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import QuestionCard from "@/components/nclex/QuestionCard";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Book, Activity, BarChart3 } from "lucide-react";
+import { Clock, Book, Activity, BarChart3, HelpCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Quizzes() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [timeRemaining, setTimeRemaining] = useState(1800); // 30 minutes in seconds
+  const [showAIHelp, setShowAIHelp] = useState(false);
+  const [aiResponse, setAiResponse] = useState("");
 
-  // Mock data for demonstration
+  // Format time as mm:ss
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Timer effect
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeRemaining((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  // Mock questions with diverse content
   const mockQuestions = [
     {
       id: 1,
@@ -25,8 +46,58 @@ export default function Quizzes() {
       explanation: "For a client with type 2 diabetes, a blood glucose level of 180 mg/dL before a meal is not unusually high and does not require immediate intervention. The nurse should document the finding and allow the client to eat lunch as scheduled.",
       category: "Endocrine",
       difficulty: "Medium"
+    },
+    {
+      id: 2,
+      text: "A nurse is caring for a client with heart failure who has been prescribed furosemide (Lasix). Which assessment finding requires immediate notification of the healthcare provider?",
+      options: [
+        { id: "a", text: "Blood pressure 118/72 mmHg" },
+        { id: "b", text: "Urine output 2500 mL/24 hours" },
+        { id: "c", text: "Serum potassium 2.9 mEq/L" },
+        { id: "d", text: "Heart rate 82 beats/minute" }
+      ],
+      correctAnswer: "c",
+      explanation: "A serum potassium level of 2.9 mEq/L indicates hypokalemia, which is a serious side effect of furosemide that requires immediate intervention.",
+      category: "Cardiovascular",
+      difficulty: "Hard"
+    },
+    {
+      id: 3,
+      text: "A nurse is preparing to administer a medication via the intramuscular route. Which of the following sites is most appropriate for an adult client?",
+      options: [
+        { id: "a", text: "Deltoid muscle" },
+        { id: "b", text: "Vastus lateralis muscle" },
+        { id: "c", text: "Ventrogluteal site" },
+        { id: "d", text: "Dorsogluteal site" }
+      ],
+      correctAnswer: "c",
+      explanation: "The ventrogluteal site is considered the safest for IM injections in adults because it is free from major nerves and blood vessels.",
+      category: "Pharmacology",
+      difficulty: "Medium"
     }
   ];
+
+  const handleAIHelp = async () => {
+    setShowAIHelp(true);
+    // In a real implementation, this would make an API call to get AI assistance
+    setAiResponse("Loading AI explanation...");
+    // Simulate API call
+    setTimeout(() => {
+      setAiResponse(`Here's a detailed explanation of the concept:
+
+1. Key Points to Remember:
+- Normal blood glucose ranges before meals: 80-130 mg/dL
+- Post-meal target: <180 mg/dL
+- Consider individual patient factors
+
+2. Clinical Reasoning:
+- 180 mg/dL is slightly elevated but not critical
+- No immediate intervention needed
+- Important to maintain regular meal schedule
+
+Would you like me to elaborate on any of these points?`);
+    }, 1500);
+  };
 
   return (
     <div className="space-y-6">
@@ -63,24 +134,45 @@ export default function Quizzes() {
               <div className="flex justify-between items-center mb-4">
                 <div>
                   <Badge variant="secondary">Question {currentQuestion + 1}</Badge>
-                  <Badge variant="outline" className="ml-2">Endocrine</Badge>
-                  <Badge variant="outline" className="ml-2">Medium</Badge>
+                  <Badge variant="outline" className="ml-2">
+                    {mockQuestions[currentQuestion]?.category || "General"}
+                  </Badge>
+                  <Badge variant="outline" className="ml-2">
+                    {mockQuestions[currentQuestion]?.difficulty || "Medium"}
+                  </Badge>
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  Time: 02:45
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    <span className="text-sm text-muted-foreground">
+                      Time: {formatTime(timeRemaining)}
+                    </span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAIHelp}
+                    className="flex items-center gap-2"
+                  >
+                    <HelpCircle className="h-4 w-4" />
+                    AI Help
+                  </Button>
                 </div>
               </div>
 
               <QuestionCard
-                question={mockQuestions[0]}
-                onNext={() => setCurrentQuestion(c => c + 1)}
+                question={mockQuestions[currentQuestion % mockQuestions.length]}
+                onNext={() => setCurrentQuestion(c => (c + 1) % mockQuestions.length)}
               />
 
               <div className="mt-4">
-                <Progress value={(currentQuestion + 1) * 10} className="h-2" />
+                <Progress 
+                  value={(currentQuestion + 1) * (100 / mockQuestions.length)} 
+                  className="h-2" 
+                />
                 <div className="flex justify-between text-sm text-muted-foreground mt-2">
                   <span>Progress</span>
-                  <span>{currentQuestion + 1}/10 Questions</span>
+                  <span>{currentQuestion + 1}/{mockQuestions.length} Questions</span>
                 </div>
               </div>
             </CardContent>
@@ -201,6 +293,21 @@ export default function Quizzes() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={showAIHelp} onOpenChange={setShowAIHelp}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>AI Learning Assistant</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Alert>
+              <AlertDescription>
+                {aiResponse}
+              </AlertDescription>
+            </Alert>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
