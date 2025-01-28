@@ -215,7 +215,21 @@ const CaseStudiesSection = () => {
     queryKey: ['/api/pre-integrated-cases'],
   });
 
-  // This is the only place where we reset state
+  // Reset all state
+  const resetCaseState = () => {
+    setCurrentCase(null);
+    setUserAnswers({});
+    setShowFeedback(false);
+    setCurrentQuestionIndex(0);
+    setPerformance({
+      correctCount: 0,
+      totalAttempted: 0,
+      strengths: [],
+      weaknesses: []
+    });
+  };
+
+  // This is the only place where we start a new case
   const startNewCase = async (caseId: string) => {
     try {
       const response = await fetch("/api/generate-case", {
@@ -229,17 +243,7 @@ const CaseStudiesSection = () => {
       }
 
       const caseData = await response.json();
-
-      // Reset all state only when explicitly starting a new case
-      setUserAnswers({});
-      setShowFeedback(false);
-      setCurrentQuestionIndex(0);
-      setPerformance({
-        correctCount: 0,
-        totalAttempted: 0,
-        strengths: [],
-        weaknesses: []
-      });
+      resetCaseState(); // Only reset when explicitly starting a new case
       setCurrentCase(caseData);
     } catch (error) {
       toast({
@@ -277,7 +281,7 @@ const CaseStudiesSection = () => {
       };
     });
 
-    // Show detailed feedback with suggestions - increased duration
+    // Show detailed feedback with suggestions
     const feedbackTitle = selectedOption.correct ? "Correct! 🎉" : "Review Needed";
     const feedbackDescription = selectedOption.correct
       ? selectedOption.explanation
@@ -286,7 +290,7 @@ const CaseStudiesSection = () => {
     toast({
       title: feedbackTitle,
       description: feedbackDescription,
-      duration: 15000, // Increased to 15 seconds
+      duration: 15000, // 15 seconds
     });
 
     // If incorrect, show additional resources toast after a delay
@@ -295,7 +299,7 @@ const CaseStudiesSection = () => {
         toast({
           title: "Learning Resources",
           description: "Click 'AI Help' for targeted assistance with: " + selectedOption.topics.join(", "),
-          duration: 15000, // Increased to 15 seconds
+          duration: 15000,
         });
       }, 1000);
     }
@@ -304,7 +308,7 @@ const CaseStudiesSection = () => {
   const handleNextQuestion = () => {
     if (!currentCase) return;
 
-    // Simply move to next question, preserving all state
+    // Simply move to next question without resetting anything
     if (currentQuestionIndex < currentCase.questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
       setShowFeedback(false);
@@ -315,7 +319,7 @@ const CaseStudiesSection = () => {
       toast({
         title: "Case Study Completed! 🎉",
         description: `You got ${performance.correctCount} out of ${performance.totalAttempted} questions correct (${successRate.toFixed(1)}%).`,
-        duration: 15000, // Increased to 15 seconds
+        duration: 15000,
       });
 
       if (performance.weaknesses.length > 0) {
@@ -323,7 +327,7 @@ const CaseStudiesSection = () => {
           toast({
             title: "Areas to Review",
             description: "Consider reviewing: " + performance.weaknesses.slice(0, 3).join(", "),
-            duration: 15000, // Increased to 15 seconds
+            duration: 15000,
           });
         }, 1000);
       }
@@ -455,16 +459,7 @@ const CaseStudiesSection = () => {
                           variant="outline"
                           onClick={() => {
                             if (confirm("Are you sure you want to exit? Your progress will be lost.")) {
-                              setCurrentCase(null);
-                              setUserAnswers({});
-                              setShowFeedback(false);
-                              setCurrentQuestionIndex(0);
-                              setPerformance({
-                                correctCount: 0,
-                                totalAttempted: 0,
-                                strengths: [],
-                                weaknesses: []
-                              });
+                              resetCaseState();
                             }
                           }}
                         >
