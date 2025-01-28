@@ -277,7 +277,7 @@ const CaseStudiesSection = () => {
       };
     });
 
-    // Show detailed feedback with suggestions
+    // Show detailed feedback with suggestions - increased duration
     const feedbackTitle = selectedOption.correct ? "Correct! 🎉" : "Review Needed";
     const feedbackDescription = selectedOption.correct
       ? selectedOption.explanation
@@ -286,7 +286,7 @@ const CaseStudiesSection = () => {
     toast({
       title: feedbackTitle,
       description: feedbackDescription,
-      duration: 6000,
+      duration: 15000, // Increased to 15 seconds
     });
 
     // If incorrect, show additional resources toast after a delay
@@ -295,7 +295,7 @@ const CaseStudiesSection = () => {
         toast({
           title: "Learning Resources",
           description: "Click 'AI Help' for targeted assistance with: " + selectedOption.topics.join(", "),
-          duration: 8000,
+          duration: 15000, // Increased to 15 seconds
         });
       }, 1000);
     }
@@ -314,7 +314,8 @@ const CaseStudiesSection = () => {
 
       toast({
         title: "Case Study Completed! 🎉",
-        description: `You got ${performance.correctCount} out of ${performance.totalAttempted} questions correct (${successRate.toFixed(1)}%).`
+        description: `You got ${performance.correctCount} out of ${performance.totalAttempted} questions correct (${successRate.toFixed(1)}%).`,
+        duration: 15000, // Increased to 15 seconds
       });
 
       if (performance.weaknesses.length > 0) {
@@ -322,7 +323,7 @@ const CaseStudiesSection = () => {
           toast({
             title: "Areas to Review",
             description: "Consider reviewing: " + performance.weaknesses.slice(0, 3).join(", "),
-            duration: 6000,
+            duration: 15000, // Increased to 15 seconds
           });
         }, 1000);
       }
