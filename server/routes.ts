@@ -20,9 +20,100 @@ const practiceExercises = {
       title: "Vital Signs Pattern Recognition",
       description: "Identify patterns in vital sign changes that indicate clinical deterioration",
       content: "Review the following vital sign trends over 24 hours and identify concerning patterns:\n\nBP: 120/80 → 110/70 → 90/60\nHR: 80 → 95 → 110\nRR: 16 → 20 → 24\nTemp: 37.0°C → 37.5°C → 38.2°C",
-      options: ["Early signs of sepsis", "Medication side effect", "Volume depletion", "Anxiety response"]
+      options: ["Early signs of sepsis", "Medication side effect", "Volume depletion", "Anxiety response"],
+      correctAnswer: 0,
+      explanation: "This pattern shows progressive deterioration consistent with early sepsis: decreasing BP, increasing HR and RR, and rising temperature."
     },
-    // Add more pattern exercises
+    {
+      id: "pattern-2",
+      type: "pattern",
+      title: "Lab Value Trend Analysis",
+      description: "Analyze trending laboratory values in acute kidney injury",
+      content: "Review the following lab trends over 48 hours:\n\nCreatinine: 1.0 → 1.8 → 2.5\nBUN: 15 → 25 → 35\nK+: 3.8 → 4.5 → 5.2\nHCO3: 24 → 20 → 17",
+      options: ["Pre-renal AKI", "Intrinsic renal failure", "Post-renal obstruction", "Medication-induced nephropathy"],
+      correctAnswer: 0,
+      explanation: "The rapid rise in creatinine and BUN with proportional changes suggests pre-renal AKI, potentially due to volume depletion or decreased renal perfusion."
+    },
+    {
+      id: "pattern-3",
+      type: "pattern",
+      title: "Respiratory Pattern Interpretation",
+      description: "Identify abnormal respiratory patterns",
+      content: "Observe the following respiratory pattern:\n\nRR: 12 → 8 → 4 → 16 → 12 → 8 → 4\nO2 Sat: 98% → 95% → 92% → 97% → 98% → 95% → 92%",
+      options: ["Cheyne-Stokes respiration", "Kussmaul breathing", "Biot's respiration", "Normal variation"],
+      correctAnswer: 0,
+      explanation: "This cyclic pattern of gradually decreasing then increasing respiratory rate is characteristic of Cheyne-Stokes respiration."
+    },
+    {
+      id: "pattern-4",
+      type: "pattern",
+      title: "Cardiac Rhythm Recognition",
+      description: "Identify patterns in cardiac monitoring",
+      content: "Review the following heart rate and rhythm pattern:\n\nHR: 76 → 150 → 75 → 148 → 74\nRhythm: Regular → Regular → Regular → Regular → Regular",
+      options: ["Paroxysmal SVT", "Sinus tachycardia", "Ventricular tachycardia", "Atrial flutter"],
+      correctAnswer: 0,
+      explanation: "The sudden onset and offset of tachycardia with regular rhythm suggests paroxysmal SVT."
+    },
+    {
+      id: "pattern-5",
+      type: "pattern",
+      title: "Blood Sugar Pattern Analysis",
+      description: "Analyze blood glucose patterns",
+      content: "Review 24-hour blood glucose readings:\n\nFasting: 180\nPre-lunch: 250\nPost-lunch: 320\nPre-dinner: 220\nPost-dinner: 300\nBedtime: 260",
+      options: ["Insulin resistance", "Insufficient basal insulin", "Dawn phenomenon", "Medication timing issue"],
+      correctAnswer: 1,
+      explanation: "Consistently elevated blood glucose throughout the day suggests insufficient basal insulin coverage."
+    },
+    {
+      id: "pattern-6",
+      type: "pattern",
+      title: "Neurological Status Changes",
+      description: "Identify patterns in neurological assessment",
+      content: "Review GCS scores over 6 hours:\n\nHour 0: 15 (4,5,6)\nHour 2: 14 (4,4,6)\nHour 4: 12 (3,4,5)\nHour 6: 10 (2,3,5)",
+      options: ["Progressive deterioration", "Normal fluctuation", "Medication effect", "Sleep pattern"],
+      correctAnswer: 0,
+      explanation: "The steadily decreasing GCS scores indicate progressive neurological deterioration requiring immediate attention."
+    },
+    {
+      id: "pattern-7",
+      type: "pattern",
+      title: "Pain Pattern Recognition",
+      description: "Analyze pain patterns and characteristics",
+      content: "Review pain scores and characteristics:\nMorning: 7/10 (sharp)\nAfternoon: 3/10 (dull)\nEvening: 8/10 (sharp)\nNight: 2/10 (dull)",
+      options: ["Chronic pain pattern", "Acute intermittent pain", "Medication wearing off", "Activity-related pain"],
+      correctAnswer: 2,
+      explanation: "The pattern of pain increasing as medication effectiveness decreases suggests a medication wearing off pattern."
+    },
+    {
+      id: "pattern-8",
+      type: "pattern",
+      title: "Fluid Balance Trend",
+      description: "Analyze fluid balance patterns",
+      content: "24-hour fluid balance:\nIntake: 2500mL\nUrine output: 400mL\nInsensible losses: ~500mL\nWeight: +2.5kg from baseline",
+      options: ["Fluid overload", "Normal balance", "Dehydration", "Third-spacing"],
+      correctAnswer: 0,
+      explanation: "Positive fluid balance with weight gain and decreased urine output indicates fluid overload."
+    },
+    {
+      id: "pattern-9",
+      type: "pattern",
+      title: "Mental Status Changes",
+      description: "Identify patterns in mental status changes",
+      content: "Mental status observations over 12 hours:\n7am: Alert, oriented\n11am: Confused, agitated\n3pm: Drowsy, disoriented\n7pm: Alert, oriented",
+      options: ["Sundowning", "Metabolic encephalopathy", "ICU psychosis", "Medication side effect"],
+      correctAnswer: 1,
+      explanation: "The fluctuating pattern of consciousness and orientation suggests metabolic encephalopathy."
+    },
+    {
+      id: "pattern-10",
+      type: "pattern",
+      title: "Wound Healing Pattern",
+      description: "Analyze wound healing progression",
+      content: "Weekly wound assessment:\nWeek 1: 5cm x 4cm, moderate exudate\nWeek 2: 4.5cm x 3.5cm, minimal exudate\nWeek 3: 4.5cm x 3.5cm, moderate exudate\nWeek 4: 5cm x 4cm, heavy exudate",
+      options: ["Wound deterioration", "Normal healing", "Mechanical irritation", "Infection development"],
+      correctAnswer: 3,
+      explanation: "The pattern of increasing wound size and exudate after initial improvement suggests wound infection."
+    }
   ],
   hypothesis: [
     {
@@ -31,9 +122,100 @@ const practiceExercises = {
       title: "Clinical Hypothesis Formation",
       description: "Develop and test clinical hypotheses based on patient presentation",
       content: "Patient presents with sudden onset chest pain, shortness of breath, and anxiety. Recent long flight from Europe. No cardiac history.",
-      options: ["Pulmonary embolism", "Acute coronary syndrome", "Panic attack", "Pneumothorax"]
+      options: ["Pulmonary embolism", "Acute coronary syndrome", "Panic attack", "Pneumothorax"],
+      correctAnswer: 0,
+      explanation: "Recent long flight (risk factor) combined with sudden onset chest pain and SOB strongly suggests PE as the primary hypothesis."
     },
-    // Add more hypothesis exercises
+    {
+      id: "hypothesis-2",
+      type: "hypothesis",
+      title: "Neurological Presentation",
+      description: "Form hypotheses for acute neurological changes",
+      content: "65-year-old with sudden right-sided weakness, slurred speech, and confusion. History of hypertension and diabetes.",
+      options: ["Acute ischemic stroke", "Hypoglycemia", "Bell's palsy", "Conversion disorder"],
+      correctAnswer: 0,
+      explanation: "Sudden onset unilateral weakness with speech changes in a patient with vascular risk factors suggests acute stroke."
+    },
+    {
+      id: "hypothesis-3",
+      type: "hypothesis",
+      title: "Metabolic Disturbance",
+      description: "Analyze metabolic presentation",
+      content: "Diabetic patient presents with excessive thirst, frequent urination, abdominal pain, and fruity breath.",
+      options: ["Diabetic ketoacidosis", "Hyperglycemic hyperosmolar state", "Gastroenteritis", "Pancreatitis"],
+      correctAnswer: 0,
+      explanation: "Classic symptoms of DKA including polydipsia, polyuria, abdominal pain, and ketotic breath."
+    },
+    {
+      id: "hypothesis-4",
+      type: "hypothesis",
+      title: "Respiratory Distress",
+      description: "Evaluate acute respiratory presentation",
+      content: "Young adult with sudden onset wheezing, chest tightness, and cough after exercise in cold weather.",
+      options: ["Exercise-induced asthma", "Cardiac event", "Vocal cord dysfunction", "Anxiety attack"],
+      correctAnswer: 0,
+      explanation: "Typical presentation of exercise-induced asthma triggered by cold air exposure."
+    },
+    {
+      id: "hypothesis-5",
+      type: "hypothesis",
+      title: "Abdominal Emergency",
+      description: "Analyze acute abdominal presentation",
+      content: "Elderly patient with sudden severe RLQ pain, fever, anorexia, and elevated WBC count.",
+      options: ["Acute appendicitis", "Diverticulitis", "Gastroenteritis", "Mesenteric ischemia"],
+      correctAnswer: 0,
+      explanation: "Classic presentation of acute appendicitis with typical location, symptoms, and lab findings."
+    },
+    {
+      id: "hypothesis-6",
+      type: "hypothesis",
+      title: "Cardiac Evaluation",
+      description: "Form hypotheses for cardiac symptoms",
+      content: "Middle-aged female with atypical chest pain, fatigue, and dyspnea on exertion. Normal ECG.",
+      options: ["Microvascular angina", "Anxiety disorder", "GERD", "Musculoskeletal pain"],
+      correctAnswer: 0,
+      explanation: "Presentation suggests microvascular angina, common in women with atypical symptoms and normal ECG."
+    },
+    {
+      id: "hypothesis-7",
+      type: "hypothesis",
+      title: "Endocrine Assessment",
+      description: "Evaluate endocrine presentation",
+      content: "Patient presents with weight loss, heat intolerance, anxiety, and tremors.",
+      options: ["Hyperthyroidism", "Anxiety disorder", "Pheochromocytoma", "Depression"],
+      correctAnswer: 0,
+      explanation: "Constellation of symptoms strongly suggests hyperthyroidism as the underlying cause."
+    },
+    {
+      id: "hypothesis-8",
+      type: "hypothesis",
+      title: "Infectious Process",
+      description: "Analyze infectious disease presentation",
+      content: "Young adult with fever, severe headache, neck stiffness, and photophobia.",
+      options: ["Meningitis", "Migraine", "Viral syndrome", "Tension headache"],
+      correctAnswer: 0,
+      explanation: "Classic meningeal signs and symptoms suggest bacterial meningitis requiring immediate attention."
+    },
+    {
+      id: "hypothesis-9",
+      type: "hypothesis",
+      title: "Renal Function",
+      description: "Evaluate renal presentation",
+      content: "Patient with decreased urine output, peripheral edema, and elevated creatinine following contrast study.",
+      options: ["Contrast-induced nephropathy", "Heart failure", "Nephrotic syndrome", "Medication effect"],
+      correctAnswer: 0,
+      explanation: "Temporal relationship with contrast exposure and symptoms suggests contrast-induced nephropathy."
+    },
+    {
+      id: "hypothesis-10",
+      type: "hypothesis",
+      title: "Psychiatric Emergency",
+      description: "Analyze acute behavioral changes",
+      content: "Previously stable patient becomes suddenly agitated, confused, with visual hallucinations and vital sign changes.",
+      options: ["Delirium", "Acute psychosis", "Anxiety attack", "Depression with psychosis"],
+      correctAnswer: 0,
+      explanation: "Acute onset with fluctuating mental status and vital sign changes suggests delirium rather than primary psychiatric condition."
+    }
   ],
   decision: [
     {
@@ -41,10 +223,101 @@ const practiceExercises = {
       type: "decision",
       title: "Clinical Decision Making",
       description: "Make evidence-based clinical decisions in complex scenarios",
-      content: "elderly patient with UTI symptoms shows signs of confusion. History of chronic kidney disease. Current medications include ACE inhibitor and diuretic.",
-      options: ["Start empiric antibiotics", "Adjust current medications", "Order additional tests", "Immediate hospitalization"]
+      content: "Elderly patient with UTI symptoms shows signs of confusion. History of chronic kidney disease. Current medications include ACE inhibitor and diuretic.",
+      options: ["Start empiric antibiotics", "Adjust current medications", "Order additional tests", "Immediate hospitalization"],
+      correctAnswer: 2,
+      explanation: "Additional testing is needed to assess renal function and electrolytes before changing medications or starting antibiotics."
     },
-    // Add more decision exercises
+    {
+      id: "decision-2",
+      type: "decision",
+      title: "Emergency Response",
+      description: "Make rapid decisions in emergency situations",
+      content: "Patient develops acute respiratory distress, SpO2 88%, after receiving new medication. History of allergies.",
+      options: ["Stop medication and start emergency protocol", "Continue monitoring only", "Adjust medication dose", "Order chest x-ray"],
+      correctAnswer: 0,
+      explanation: "Immediate cessation of medication and initiation of emergency protocol is required for suspected anaphylaxis."
+    },
+    {
+      id: "decision-3",
+      type: "decision",
+      title: "Medication Management",
+      description: "Make decisions about medication therapy",
+      content: "Diabetic patient on insulin with recurrent morning hypoglycemia. Otherwise well-controlled diabetes.",
+      options: ["Adjust evening insulin dose", "Change insulin type", "Increase monitoring only", "Add oral medication"],
+      correctAnswer: 0,
+      explanation: "Adjusting evening insulin dose is the most appropriate first step to prevent morning hypoglycemia."
+    },
+    {
+      id: "decision-4",
+      type: "decision",
+      title: "Pain Management",
+      description: "Make decisions in pain control",
+      content: "Post-operative patient reporting 8/10 pain despite scheduled pain medication. Vital signs stable.",
+      options: ["Assess pain characteristics and add PRN dose", "Switch to different medication", "Increase scheduled dose", "Order imaging"],
+      correctAnswer: 0,
+      explanation: "Complete pain assessment and using prescribed PRN medication is the appropriate first step."
+    },
+    {
+      id: "decision-5",
+      type: "decision",
+      title: "Wound Care",
+      description: "Make decisions in wound management",
+      content: "Pressure ulcer shows signs of infection with surrounding erythema and purulent drainage.",
+      options: ["Obtain wound culture and start empiric antibiotics", "Change dressing type only", "Surgical consultation", "Continue current care"],
+      correctAnswer: 0,
+      explanation: "Evidence of infection requires culture and empiric antibiotic treatment."
+    },
+    {
+      id: "decision-6",
+      type: "decision",
+      title: "Respiratory Care",
+      description: "Make decisions in respiratory management",
+      content: "COPD patient with worsening shortness of breath and decreased SpO2. Using rescue inhaler frequently.",
+      options: ["Start oral steroids and adjust bronchodilator therapy", "Immediate intubation", "Chest physiotherapy only", "Order chest x-ray only"],
+      correctAnswer: 0,
+      explanation: "COPD exacerbation requires intensification of bronchodilator therapy and addition of systemic steroids."
+    },
+    {
+      id: "decision-7",
+      type: "decision",
+      title: "Cardiac Management",
+      description: "Make decisions in cardiac care",
+      content: "Patient with new onset atrial fibrillation, HR 150, BP 100/60. Symptomatic but stable.",
+      options: ["Rate control and anticoagulation", "Immediate cardioversion", "Observation only", "EP consultation"],
+      correctAnswer: 0,
+      explanation: "Initial management should focus on rate control and prevention of thromboembolism."
+    },
+    {
+      id: "decision-8",
+      type: "decision",
+      title: "Neurological Care",
+      description: "Make decisions in neurological management",
+      content: "Patient with known seizure disorder misses two doses of anticonvulsant. Now reports aura.",
+      options: ["Administer loading dose of anticonvulsant", "Restart regular dose only", "Neurological consultation", "Observation"],
+      correctAnswer: 0,
+      explanation: "Loading dose needed to quickly achieve therapeutic levels and prevent seizure."
+    },
+    {
+      id: "decision-9",
+      type: "decision",
+      title: "Nutritional Support",
+      description: "Make decisions about nutritional care",
+      content: "Post-operative patient with prolonged ileus and declining nutritional status.",
+      options: ["Start TPN and continue NPO", "Clear liquid diet", "Regular diet", "Enteral nutrition"],
+      correctAnswer: 0,
+      explanation: "TPN indicated for prolonged ileus with declining nutritional status when enteral feeding not possible."
+    },
+    {
+      id: "decision-10",
+      type: "decision",
+      title: "Mental Health Crisis",
+      description: "Make decisions in psychiatric emergencies",
+      content: "Patient expresses suicidal ideation with specific plan and means available.",
+      options: ["Implement suicide precautions and psychiatric consultation", "Outpatient referral", "Medication adjustment", "Family conference"],
+      correctAnswer: 0,
+      explanation: "Immediate implementation of suicide precautions and psychiatric evaluation required for patient safety."
+    }
   ],
   documentation: [
     {
@@ -53,8 +326,80 @@ const practiceExercises = {
       title: "Clinical Documentation Practice",
       description: "Practice clear and accurate clinical documentation",
       content: "Document your assessment and plan for a patient admitted with diabetic ketoacidosis, including relevant lab values, current treatment, and monitoring parameters.",
+      promptGuide: "Include: Initial presentation, Lab values (glucose, pH, bicarbonate, anion gap), Current treatment (IV fluids, insulin), Monitoring plan"
     },
-    // Add more documentation exercises
+    {
+      id: "documentation-2",
+      type: "documentation",
+      title: "Post-Operative Documentation",
+      description: "Document post-operative patient status",
+      content: "Document the immediate post-operative assessment of a patient following appendectomy, including vital signs, pain level, and wound status.",
+      promptGuide: "Include: Vital signs, Pain assessment, Wound appearance, Drainage, Activity level, Diet status"
+    },
+    {
+      id: "documentation-3",
+      type: "documentation",
+      title: "Medication Error Documentation",
+      description: "Document a medication administration error",
+      content: "Document the occurrence, immediate actions taken, and follow-up plan for a medication error involving wrong dose administration.",
+      promptGuide: "Include: Error description, Immediate actions, Patient assessment, Notifications made, Follow-up plan"
+    },
+    {
+      id: "documentation-4",
+      type: "documentation",
+      title: "Critical Incident Documentation",
+      description: "Document a rapid response team activation",
+      content: "Document the events, interventions, and outcomes of a rapid response team activation for a patient with acute respiratory distress.",
+      promptGuide: "Include: Reason for activation, Initial assessment, Interventions performed, Patient response, Disposition"
+    },
+    {
+      id: "documentation-5",
+      type: "documentation",
+      title: "Care Plan Documentation",
+      description: "Document a comprehensive care plan",
+      content: "Create a care plan for a patient with newly diagnosed heart failure, including education needs and discharge planning.",
+      promptGuide: "Include: Assessment findings, Goals, Interventions, Patient education, Follow-up plan"
+    },
+    {
+      id: "documentation-6",
+      type: "documentation",
+      title: "Change of Condition Documentation",
+      description: "Document significant changes in patient condition",
+      content: "Document the assessment and interventions for a patient who developed acute confusion and agitation during the night shift.",
+      promptGuide: "Include: Baseline status, New symptoms, Assessment findings, Interventions, Physician notification"
+    },
+    {
+      id: "documentation-7",
+      type: "documentation",
+      title: "Wound Care Documentation",
+      description: "Document wound assessment and treatment",
+      content: "Document the assessment and treatment of a stage 3 pressure ulcer, including measurements and wound characteristics.",
+      promptGuide: "Include: Wound measurements, Appearance, Drainage, Treatment performed, Pain assessment"
+    },
+    {
+      id: "documentation-8",
+      type: "documentation",
+      title: "Patient Education Documentation",
+      description: "Document patient teaching session",
+      content: "Document the diabetes education provided to a newly diagnosed type 2 diabetic patient, including topics covered and patient comprehension.",
+      promptGuide: "Include: Topics covered, Teaching methods used, Patient response, Return demonstration, Follow-up needs"
+    },
+    {
+      id: "documentation-9",
+      type: "documentation",
+      title: "Pain Management Documentation",
+      description: "Document pain assessment and interventions",
+      content: "Document the assessment and management of breakthrough pain in a post-operative patient, including interventions and outcomes.",
+      promptGuide: "Include: Pain characteristics, Interventions tried, Effectiveness, Side effects, Follow-up assessment"
+    },
+    {
+      id: "documentation-10",
+      type: "documentation",
+      title: "End-of-Shift Documentation",
+      description: "Document end-of-shift summary",
+      content: "Complete an end-of-shift summary for a complex medical patient, including significant events and pending items.",
+      promptGuide: "Include: Key events, Changes in condition, Pending tests/consults, Important follow-up items, Patient status"
+    }
   ]
 };
 
@@ -352,7 +697,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // User progress routes with AI recommendations
+  //  // User progress routes with AI recommendations
   app.get("/api/progress/:userId", async (req, res) => {
     try {
       const progress = await db.query.userProgress.findMany({
@@ -496,14 +841,40 @@ export function registerRoutes(app: Express): Server {
   // Add route for submitting exercises
   app.post("/api/submit-exercise", async (req, res) => {
     try {
-      const { exerciseId, type, response } = req.body;
+      const { exerciseId, type, response, selectedAnswer } = req.body;
+      const exercises = practiceExercises[type as keyof typeof practiceExercises];
+      const exercise = exercises.find(ex => ex.id === exerciseId);
 
-      // Here we would typically validate the response and provide feedback
-      // For now, we'll just acknowledge the submission
-      res.json({
-        success: true,
-        feedback: "Exercise submitted successfully. Keep practicing to improve your clinical reasoning skills!"
-      });
+      if (!exercise) {
+        return res.status(404).json({ message: "Exercise not found" });
+      }
+
+      let feedback;
+      if (type === 'documentation') {
+        // For documentation exercises, provide general feedback
+        feedback = {
+          success: true,
+          message: "Documentation submitted successfully. Keep practicing to improve your clinical documentation skills!",
+          suggestions: [
+            "Remember to include all relevant clinical findings",
+            "Use objective language when describing observations",
+            "Ensure documentation follows institutional format"
+          ]
+        };
+      } else {
+        // For multiple choice exercises, check against correct answer
+        const isCorrect = selectedAnswer === exercise.correctAnswer;
+        feedback = {
+          success: true,
+          correct: isCorrect,
+          explanation: exercise.explanation,
+          message: isCorrect ? 
+            "Correct! Great clinical reasoning!" : 
+            "Review the explanation and try another exercise to reinforce your learning."
+        };
+      }
+
+      res.json(feedback);
     } catch (error) {
       console.error("Exercise submission error:", error);
       res.status(500).json({ message: "Failed to submit exercise" });
