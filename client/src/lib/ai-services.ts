@@ -11,22 +11,22 @@ interface AIAnalysisResult {
   confidence: number;
 }
 
-// Helper function for module-specific AI assistance
-export async function getPharmacologyHelp(
+// Helper function for pathophysiology-specific AI assistance
+export async function getPathophysiologyHelp(
   section: string,
   context?: string
 ): Promise<{ content: string }> {
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4",
       messages: [
         {
           role: "system",
-          content: "You are an expert pharmacology instructor helping nursing students prepare for the NCLEX exam. Provide detailed explanations with clinical examples."
+          content: "You are an expert pathophysiology instructor helping nursing students prepare for the NCLEX exam. Provide detailed explanations of disease processes, mechanisms, and systemic effects with clinical examples."
         },
         {
           role: "user",
-          content: `Provide a detailed explanation for the ${section} section in pharmacology${context ? `. Context: ${context}` : ''}`
+          content: `Explain the ${section} section in pathophysiology${context ? `. Context: ${context}` : ''}`
         }
       ]
     });
@@ -35,7 +35,7 @@ export async function getPharmacologyHelp(
       content: response.choices[0].message.content || 'No explanation available'
     };
   } catch (error) {
-    console.error('Error getting pharmacology help:', error);
+    console.error('Error getting pathophysiology help:', error);
     throw new Error('Failed to get AI assistance');
   }
 }
@@ -52,11 +52,11 @@ export async function analyzePerformance(
 ): Promise<AIAnalysisResult> {
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4",
       messages: [
         {
           role: "system",
-          content: "You are an NCLEX expert AI analyzing student performance."
+          content: "You are an NCLEX expert AI analyzing student performance in pathophysiology and clinical concepts."
         },
         {
           role: "user",
@@ -85,11 +85,11 @@ interface QuestionGenerationParams {
 export async function generateAdaptiveQuestions(params: QuestionGenerationParams) {
   try {
     const message = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-3-sonnet-20240229',
       max_tokens: 1024,
       messages: [{
         role: 'user',
-        content: `Generate NCLEX-style questions focusing on these topics: ${params.topics.join(', ')}. 
+        content: `Generate NCLEX-style pathophysiology questions focusing on these topics: ${params.topics.join(', ')}. 
         Adjust difficulty (1-10): ${params.difficulty}
         Previous performance: ${JSON.stringify(params.previousPerformance)}
         Output in JSON format with array of questions, each containing:
@@ -98,11 +98,12 @@ export async function generateAdaptiveQuestions(params: QuestionGenerationParams
         - correct answer
         - explanation
         - topic
-        - difficulty rating`
+        - difficulty rating
+        Focus on disease processes, mechanisms, and systemic manifestations.`
       }]
     });
 
-    return JSON.parse(message.content[0].value);
+    return JSON.parse(message.content[0].text);
   } catch (error) {
     console.error('Error generating questions:', error);
     throw new Error('Failed to generate questions');
@@ -118,11 +119,11 @@ export async function getStudyRecommendations(
 ) {
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4",
       messages: [
         {
           role: "system",
-          content: "Generate personalized NCLEX study recommendations based on performance data."
+          content: "Generate personalized pathophysiology study recommendations based on performance data, focusing on understanding disease mechanisms and systemic effects."
         },
         {
           role: "user",

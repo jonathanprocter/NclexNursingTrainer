@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { db } from "@db";
 import { modules, questions, quizAttempts, userProgress } from "@db/schema";
 import { eq } from "drizzle-orm";
-import { analyzePerformance, generateAdaptiveQuestions, getStudyRecommendations, getPharmacologyHelp } from "../client/src/lib/ai-services";
+import { analyzePerformance, generateAdaptiveQuestions, getStudyRecommendations, getPathophysiologyHelp } from "../client/src/lib/ai-services";
 import OpenAI from 'openai';
 
 // Initialize OpenAI
@@ -677,8 +677,7 @@ export function registerRoutes(app: Express): Server {
             },
             {
               text: "Administer medications basedon room number",
-              iscorrect: false,
-              explanation: "Room numbers are not a reliable patient identifier and should never beusedalone. This approach risks serious medication errors."
+              iscorrect: false,explanation: "Room numbers are not a reliable patient identifier and should never beusedalone. This approach risks serious medication errors."
             }
           ]
         },
@@ -880,12 +879,35 @@ export function registerRoutes(app: Express): Server {
 
   // AI Help endpoint
   app.post("/api/ai-help", async (req, res) => {
+    const { topic, context, question } = req.body;
+
     try {
-      const { section, context } = req.body;
-      const help = await getPharmacologyHelp(section, context);
-      res.json(help);
+      let response;
+      if (question) {
+        // Handle specific questions about pathophysiology topics
+        const result = await openai.chat.completions.create({
+          model: "gpt-4",
+          messages: [
+            {
+              role: "system",
+              content: "You are an expert pathophysiology instructor helping nursing students understand complex disease processes and mechanisms. Focus on providing clear, detailed explanations with clinical correlations."
+            },
+            {
+              role: "user",
+              content: question
+            }
+          ]
+        });
+        response = { content: result.choices[0].message.content };
+      } else {
+        // Get general pathophysiology help for a topic
+        response = await getPathophysiologyHelp(topic, context);
+      }
+
+      res.json(response);
     } catch (error) {
-      res.status(500).json({ message: "Failed to get AI help" });
+      console.error("Error in AI help endpoint:", error);
+      res.status(500).json({ message: "Failed to get AI assistance" });
     }
   });
 
