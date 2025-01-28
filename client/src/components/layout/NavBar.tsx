@@ -139,14 +139,14 @@ export default function NavBar() {
   const [isOpen, setIsOpen] = useState(false);
 
   const MobileNavItem = ({ href, children, onClick }: { href: string; children: React.ReactNode; onClick?: () => void }) => (
-    <div
-      className="block px-4 py-2 text-sm hover:bg-accent rounded-md"
-      onClick={() => {window.location.href = href; onClick && onClick();}}
-      role="button"
-      tabIndex={0}
-    >
-      {children}
-    </div>
+    <Link href={href}>
+      <a
+        className="block px-4 py-2 text-sm hover:bg-accent rounded-md"
+        onClick={onClick}
+      >
+        {children}
+      </a>
+    </Link>
   );
 
   return (

@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import NavBar from "@/components/layout/NavBar";
 import Home from "@/pages/Home";
-import Dashboard from "@/pages/Dashboard";
 
 // Dashboard Components
 import Analytics from "@/components/dashboard/Analytics";
@@ -38,11 +37,8 @@ function Router() {
         <Switch>
           {/* Home Route */}
           <Route path="/" component={Home} />
-          
-          {/* Dashboard Route */}
-          <Route path="/dashboard" component={Dashboard} />
-          
-          {/* Dashboard Sub-Routes */}
+
+          {/* Dashboard Routes */}
           <Route path="/dashboard/analytics" component={Analytics} />
           <Route path="/dashboard/performance" component={PerformanceMetrics} />
           <Route path="/dashboard/instructor" component={InstructorDashboard} />
