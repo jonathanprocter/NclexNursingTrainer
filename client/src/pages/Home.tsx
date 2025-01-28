@@ -8,6 +8,7 @@ import { Link } from "wouter";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Clock } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 interface StudyTimeFormData {
   duration: string;
@@ -50,6 +51,10 @@ export default function Home() {
       Keep going, Bianca! You're making great progress! 🌟
     `;
     setStudyPlan(mockStudyPlan);
+  };
+
+  const showToast = () => {
+    toast.success("Welcome to NCLEX Prep!");
   };
 
   return (
