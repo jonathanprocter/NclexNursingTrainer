@@ -27,7 +27,6 @@ import {
   Bot,
   Clock,
   Menu,
-  X
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useState } from "react";
@@ -140,12 +139,12 @@ export default function NavBar() {
 
   const MobileNavItem = ({ href, children, onClick }: { href: string; children: React.ReactNode; onClick?: () => void }) => (
     <Link href={href}>
-      <a
-        className="block px-4 py-2 text-sm hover:bg-accent rounded-md"
+      <div
+        className="block px-4 py-2 text-sm hover:bg-accent rounded-md cursor-pointer"
         onClick={onClick}
       >
         {children}
-      </a>
+      </div>
     </Link>
   );
 
@@ -249,8 +248,8 @@ export default function NavBar() {
                   <div className="px-4 py-2">
                     <h2 className="text-lg font-semibold mb-2">Dashboards</h2>
                     {dashboardItems.map((item) => (
-                      <MobileNavItem 
-                        key={item.title} 
+                      <MobileNavItem
+                        key={item.title}
                         href={item.href}
                         onClick={() => setIsOpen(false)}
                       >
@@ -265,8 +264,8 @@ export default function NavBar() {
                   <div className="px-4 py-2">
                     <h2 className="text-lg font-semibold mb-2">Learning Modules</h2>
                     {learningModules.map((item) => (
-                      <MobileNavItem 
-                        key={item.title} 
+                      <MobileNavItem
+                        key={item.title}
                         href={item.href}
                         onClick={() => setIsOpen(false)}
                       >
@@ -281,8 +280,8 @@ export default function NavBar() {
                   <div className="px-4 py-2">
                     <h2 className="text-lg font-semibold mb-2">Practice & Simulation</h2>
                     {practiceItems.map((item) => (
-                      <MobileNavItem 
-                        key={item.title} 
+                      <MobileNavItem
+                        key={item.title}
                         href={item.href}
                         onClick={() => setIsOpen(false)}
                       >
@@ -297,8 +296,8 @@ export default function NavBar() {
                   <div className="px-4 py-2">
                     <h2 className="text-lg font-semibold mb-2">Study Tools</h2>
                     {studyTools.map((item) => (
-                      <MobileNavItem 
-                        key={item.title} 
+                      <MobileNavItem
+                        key={item.title}
                         href={item.href}
                         onClick={() => setIsOpen(false)}
                       >
@@ -331,9 +330,9 @@ function ListItem({ title, href, children, icon: Icon }: ListItemProps) {
     <li>
       <NavigationMenuLink asChild>
         <Link href={href}>
-          <a
+          <div
             className={cn(
-              "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+              "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground cursor-pointer"
             )}
           >
             <div className="flex items-center gap-2 text-sm font-medium leading-none">
@@ -343,7 +342,7 @@ function ListItem({ title, href, children, icon: Icon }: ListItemProps) {
             <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
               {children}
             </p>
-          </a>
+          </div>
         </Link>
       </NavigationMenuLink>
     </li>
