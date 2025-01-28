@@ -33,12 +33,22 @@ export default function AICompanion() {
   // Check microphone availability on component mount
   useEffect(() => {
     const checkMicrophoneAccess = async () => {
+      if (!window.isSecureContext) {
+        setMicrophoneAvailable(false);
+        toast({
+          variant: "destructive",
+          title: "Security Error",
+          description: "Microphone access requires a secure (HTTPS) connection."
+        });
+        return;
+      }
+
       if (!navigator.mediaDevices?.getUserMedia) {
         setMicrophoneAvailable(false);
         toast({
           variant: "destructive",
           title: "Browser Not Supported",
-          description: "Your browser doesn't support microphone access",
+          description: "Your browser doesn't support microphone access"
         });
         return;
       }
@@ -48,19 +58,20 @@ export default function AICompanion() {
         stream.getTracks().forEach(track => track.stop());
         setMicrophoneAvailable(true);
       } catch (error) {
+        console.error('Microphone access error:', error);
         setMicrophoneAvailable(false);
         if (error instanceof DOMException) {
           if (error.name === 'NotAllowedError') {
             toast({
               variant: "destructive",
               title: "Permission Required",
-              description: "Please allow microphone access in your browser settings",
+              description: "Please allow microphone access in your browser settings"
             });
           } else {
             toast({
               variant: "destructive",
               title: "Microphone Error",
-              description: `Error: ${error.name}`,
+              description: `Error: ${error.name}`
             });
           }
         }
@@ -68,9 +79,6 @@ export default function AICompanion() {
     };
 
     checkMicrophoneAccess();
-          variant: "destructive",
-          title: "Security Error",
-          description: "Microphone access requires a secure (HTTPS) connection.",
         });
         return;
       }
