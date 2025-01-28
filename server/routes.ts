@@ -11,12 +11,20 @@ async function generateNewQuestions(userId: number, topic?: string) {
     // Get all available questions for the topic
     let availableQuestions = [];
     if (topic) {
-      const topicKey = topic.toLowerCase().replace("/", "-") as keyof typeof practiceQuestions;
+      // Convert topic to match our data structure keys
+      const topicKey = topic.toLowerCase()
+        .replace(/[^a-z0-9-]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '') as keyof typeof practiceQuestions;
+
+      console.log("Looking for questions with topic key:", topicKey);
       availableQuestions = practiceQuestions[topicKey] || [];
     } else {
       // If no topic specified, get all questions
       availableQuestions = Object.values(practiceQuestions).flat();
     }
+
+    console.log("Available questions:", JSON.stringify(availableQuestions, null, 2));
 
     if (availableQuestions.length === 0) {
       throw new Error("No questions available for the selected topic.");
@@ -57,6 +65,13 @@ async function generateNewQuestions(userId: number, topic?: string) {
           id: option.id,
           text: option.text
         }));
+
+        console.log("Formatted question:", {
+          id: i + 1,
+          text: question.text,
+          options: formattedOptions,
+          correctAnswer: question.correctAnswer
+        });
 
         selectedQuestions.push({
           id: i + 1,
@@ -645,8 +660,8 @@ export function registerRoutes(app: Express): Server {
       res.json(newQuestions);
     } catch (error) {
       console.error("Error in generate-questions endpoint:", error);
-      res.status(500).json({ 
-        message: error instanceof Error ? error.message : "Failed to generate questions" 
+      res.status(500).json({
+        message: error instanceof Error ? error.message : "Failed to generate questions"
       });
     }
   });
@@ -802,7 +817,7 @@ export function registerRoutes(app: Express): Server {
         model: "gpt-4",
         messages: [
           {
-            role: "system",
+            role:"system",
             content: `You are an expert nursing educator specializing in risk reduction and patient safety. 
           Focus on providing clear, practical advice related to ${topic}. Include NCLEX-style considerations 
           and real-world applications in your responses.`
@@ -840,8 +855,8 @@ export function registerRoutes(app: Express): Server {
       res.json(newQuestions);
     } catch (error) {
       console.error("Error in generate-questions endpoint:", error);
-      res.status(500).json({ 
-        message: error instanceof Error ? error.message : "Failed to generate questions" 
+      res.status(500).json({
+        message: error instanceof Error ? error.message : "Failed to generate questions"
       });
     }
   });
