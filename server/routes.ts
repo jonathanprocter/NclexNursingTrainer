@@ -612,7 +612,21 @@ function generateNewQuestions(topic?: string) {
 
   while (selectedQuestions.length < 10 && questionsCopy.length > 0) {
     const randomIndex = Math.floor(Math.random() * questionsCopy.length);
-    selectedQuestions.push(questionsCopy.splice(randomIndex, 1)[0]);
+    const question = questionsCopy.splice(randomIndex, 1)[0];
+
+    // Transform question format to match frontend expectations
+    selectedQuestions.push({
+      id: parseInt(question.id.split('-')[1]),
+      text: question.content,
+      options: question.options.map((text, index) => ({
+        id: String.fromCharCode(97 + index), // a, b, c, d
+        text
+      })),
+      correctAnswer: String.fromCharCode(97 + question.correctAnswer), // Convert number to letter
+      explanation: question.explanation,
+      category: question.type.charAt(0).toUpperCase() + question.type.slice(1),
+      difficulty: "Medium"
+    });
   }
 
   return selectedQuestions;
