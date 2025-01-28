@@ -2,7 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 
 // the newest Anthropic model is "claude-3-5-sonnet-20241022" which was released October 22, 2024. do not change this unless explicitly requested by the user
 const anthropic = new Anthropic({
-  apiKey: import.meta.env.VITE_ANTHROPIC_API_KEY,
+  apiKey: import.meta.env.VITE_ANTHROPIC_API_KEY || '',
   dangerouslyAllowBrowser: true // Required for client-side usage
 });
 
