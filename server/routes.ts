@@ -2,102 +2,61 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { db } from "@db";
 import { modules, questions, quizAttempts, userProgress, questionHistory } from "@db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { practiceQuestions } from "./data/practice-questions";
 
 // Question generation helper function
-async function generateNewQuestions(userId: number, topic?: string) {
+async function generateNewQuestions(userId: number, examType: string) {
   try {
-    // Get all available questions for the topic
-    let availableQuestions = [];
-    if (topic) {
-      // Convert topic to match our data structure keys
-      const topicKey = topic.toLowerCase()
-        .replace(/[^a-z0-9-]/g, '-')
-        .replace(/-+/g, '-')
-        .replace(/^-|-$/g, '') as keyof typeof practiceQuestions;
-
-      console.log("Looking for questions with topic key:", topicKey);
-      availableQuestions = practiceQuestions[topicKey] || [];
-    } else {
-      // If no topic specified, get all questions
-      availableQuestions = Object.values(practiceQuestions).flat();
-    }
-
-    console.log("Available questions:", JSON.stringify(availableQuestions, null, 2));
+    // Get all available questions
+    const availableQuestions = Object.values(practiceQuestions).flat();
 
     if (availableQuestions.length === 0) {
-      throw new Error("No questions available for the selected topic.");
+      throw new Error("No questions available");
     }
 
-    // Get previously used questions for this user
-    const usedQuestions = await db.select().from(questionHistory).where(eq(questionHistory.userId, userId));
-    const usedQuestionIds = new Set(usedQuestions.map(q => q.questionId));
+    // For CAT exam, select questions based on difficulty
+    if (examType === 'cat') {
+      // Sort questions by difficulty
+      const sortedQuestions = availableQuestions.sort((a, b) => {
+        const difficultyMap = { Easy: 1, Medium: 2, Hard: 3 };
+        return difficultyMap[a.difficulty as keyof typeof difficultyMap] - 
+               difficultyMap[b.difficulty as keyof typeof difficultyMap];
+      });
 
-    // Filter out used questions
-    let unusedQuestions = availableQuestions.filter(q => !usedQuestionIds.has(q.id));
-
-    // If we don't have enough unused questions, reset the history
-    if (unusedQuestions.length < 5) {
-      await db.delete(questionHistory).where(eq(questionHistory.userId, userId));
-      unusedQuestions = availableQuestions;
-    }
-
-    // Select random questions
-    const selectedQuestions = [];
-    const maxQuestions = Math.min(5, unusedQuestions.length);
-
-    for (let i = 0; i < maxQuestions; i++) {
-      const randomIndex = Math.floor(Math.random() * unusedQuestions.length);
-      const question = unusedQuestions[randomIndex];
-      unusedQuestions.splice(randomIndex, 1);
-
-      try {
-        // Record this question as used
-        await db.insert(questionHistory).values({
-          userId,
-          questionId: question.id,
-          type: question.category.toLowerCase()
-        });
-
-        // Ensure question options are properly structured
-        const formattedOptions = question.options.map(option => ({
-          id: option.id,
-          text: option.text
-        }));
-
-        console.log("Formatted question:", {
-          id: i + 1,
-          text: question.text,
-          options: formattedOptions,
-          correctAnswer: question.correctAnswer
-        });
-
-        selectedQuestions.push({
-          id: i + 1,
-          text: question.text,
-          options: formattedOptions,
-          correctAnswer: question.correctAnswer,
-          explanation: question.explanation,
-          category: question.category,
-          difficulty: question.difficulty
-        });
-      } catch (error) {
-        console.error("Error recording question history:", error);
-        // Continue with next question if one fails
-        continue;
+      // Start with medium difficulty
+      const mediumQuestions = sortedQuestions.filter(q => q.difficulty === 'Medium');
+      if (mediumQuestions.length === 0) {
+        throw new Error("No medium difficulty questions available");
       }
+
+      const selectedQuestion = mediumQuestions[Math.floor(Math.random() * mediumQuestions.length)];
+      return formatQuestion(selectedQuestion);
     }
 
-    if (selectedQuestions.length === 0) {
-      throw new Error("Failed to generate any valid questions.");
-    }
-
-    return selectedQuestions;
+    // For standard exam, select random question
+    const randomQuestion = availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
+    return formatQuestion(randomQuestion);
   } catch (error) {
     console.error("Error generating questions:", error);
-    throw new Error(error instanceof Error ? error.message : "Failed to generate questions. Please try again.");
+    throw new Error("Failed to generate questions");
   }
+}
+
+function formatQuestion(question: any) {
+  console.log("Formatted question:", {
+    id: 1,
+    text: question.text,
+    options: question.options,
+    correctAnswer: question.correctAnswer
+  });
+
+  return {
+    id: 1,
+    text: question.text,
+    options: question.options,
+    correctAnswer: question.correctAnswer
+  };
 }
 
 export function registerRoutes(app: Express): Server {
@@ -248,7 +207,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Questions routes
   app.get("/api/questions/:moduleId", async (req, res) => {
     try {
       const moduleQuestions = await db.query.questions.findMany({
@@ -857,6 +815,25 @@ export function registerRoutes(app: Express): Server {
       console.error("Error in generate-questions endpoint:", error);
       res.status(500).json({
         message: error instanceof Error ? error.message : "Failed to generate questions"
+      });
+    }
+  });
+
+  // Add exam question endpoint
+  app.post("/api/exam/:type/question", async (req, res) => {
+    try {
+      const { type } = req.params;
+      const { previousAnswer } = req.body;
+
+      // For demo purposes using userId 1
+      const userId = 1;
+      const question = await generateNewQuestions(userId, type);
+
+      res.json(question);
+    } catch (error) {
+      console.error("Error generating exam question:", error);
+      res.status(500).json({ 
+        message: error instanceof Error ? error.message : "Failed to generate question" 
       });
     }
   });
