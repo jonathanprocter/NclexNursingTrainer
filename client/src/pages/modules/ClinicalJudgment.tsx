@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Bot, Brain, FileCheck, Users, AlertTriangle, Lightbulb, Plus } from "lucide-react";
+import { Bot, Brain, FileCheck, Users, AlertTriangle, Lightbulb, Plus, Mic, MicOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import ReactMarkdown from 'react-markdown';
@@ -24,6 +24,62 @@ export default function ClinicalJudgment() {
   const [aiContent, setAiContent] = useState("");
   const [currentTopic, setCurrentTopic] = useState("");
   const [question, setQuestion] = useState("");
+  const [isListening, setIsListening] = useState(false);
+  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+
+  // Initialize speech recognition
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+
+      recognition.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map(result => result[0])
+          .map(result => result.transcript)
+          .join('');
+
+        setQuestion(prev => transcript);
+      };
+
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error', event.error);
+        setIsListening(false);
+        toast({
+          title: "Error",
+          description: "Failed to record speech. Please try again.",
+          variant: "destructive",
+        });
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      setRecognition(recognition);
+    }
+  }, []);
+
+  const toggleListening = () => {
+    if (!recognition) {
+      toast({
+        title: "Error",
+        description: "Speech recognition is not supported in your browser.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isListening) {
+      recognition.stop();
+      setIsListening(false);
+    } else {
+      recognition.start();
+      setIsListening(true);
+    }
+  };
 
   // Helper function to format topic names
   const formatTopicName = (topic: string): string => {
@@ -48,22 +104,6 @@ export default function ClinicalJudgment() {
       return response.json();
     },
   });
-
-  const handleAIHelp = async (topic: string, context?: string) => {
-    setCurrentTopic(formatTopicName(topic));
-    setIsDialogOpen(true);
-
-    try {
-      const result = await aiHelpMutation.mutateAsync({ topic, context });
-      setAiContent(result.content);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to get AI assistance. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
 
   const handleAskQuestion = async () => {
     if (!question.trim()) {
@@ -102,6 +142,10 @@ export default function ClinicalJudgment() {
         if (!open) {
           // Only reset question when dialog is explicitly closed
           setQuestion("");
+          if (isListening) {
+            recognition?.stop();
+            setIsListening(false);
+          }
         }
       }}
     >
@@ -116,17 +160,32 @@ export default function ClinicalJudgment() {
           </DialogDescription>
         </DialogHeader>
         <div className="flex gap-4">
-          <Input
-            placeholder="Type your question here..."
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleAskQuestion();
-              }
-            }}
-          />
+          <div className="flex-1 relative">
+            <Input
+              placeholder="Type your question here..."
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleAskQuestion();
+                }
+              }}
+              className="pr-10"
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2"
+              onClick={toggleListening}
+            >
+              {isListening ? (
+                <MicOff className="h-4 w-4 text-red-500" />
+              ) : (
+                <Mic className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
           <Button onClick={handleAskQuestion}>Ask</Button>
         </div>
       </DialogContent>
