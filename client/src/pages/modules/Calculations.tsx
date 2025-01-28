@@ -119,7 +119,7 @@ export default function Calculations() {
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold mb-2">Drug Calculations</h1>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          Master medication dosage calculations and conversions
+          Master medication dosage calculations and conversions for NCLEX success
         </p>
       </div>
 
@@ -132,49 +132,146 @@ export default function Calculations() {
         </TabsList>
 
         <TabsContent value="overview">
-          <Card>
-            <CardHeader>
-              <CardTitle>Course Progress</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Overall Progress</span>
-                  <span>0%</span>
+          <div className="grid gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>NCLEX Preparation Guide</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {/* Key Topics */}
+                  <div>
+                    <h3 className="font-semibold text-lg mb-3">Essential NCLEX Calculation Topics</h3>
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      <div className="bg-muted/50 p-4 rounded-lg">
+                        <h4 className="font-medium mb-2 flex items-center">
+                          <Calculator className="h-4 w-4 mr-2" />
+                          Medication Administration
+                        </h4>
+                        <ul className="text-sm space-y-1">
+                          <li>• Oral Medications</li>
+                          <li>• Injectable Medications</li>
+                          <li>• Weight-Based Dosing</li>
+                          <li>• Pediatric Calculations</li>
+                        </ul>
+                      </div>
+                      <div className="bg-muted/50 p-4 rounded-lg">
+                        <h4 className="font-medium mb-2 flex items-center">
+                          <Bot className="h-4 w-4 mr-2" />
+                          IV Therapy
+                        </h4>
+                        <ul className="text-sm space-y-1">
+                          <li>• IV Flow Rates</li>
+                          <li>• Drip Rate Calculations</li>
+                          <li>• IV Push Medications</li>
+                          <li>• Complex Titrations</li>
+                        </ul>
+                      </div>
+                      <div className="bg-muted/50 p-4 rounded-lg">
+                        <h4 className="font-medium mb-2 flex items-center">
+                          <Calculator className="h-4 w-4 mr-2" />
+                          Critical Care
+                        </h4>
+                        <ul className="text-sm space-y-1">
+                          <li>• Continuous Infusions</li>
+                          <li>• Drug Titration Rates</li>
+                          <li>• Emergency Medications</li>
+                          <li>• Critical Drips</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Study Strategy */}
+                  <div className="bg-muted/50 p-4 rounded-lg">
+                    <h3 className="font-semibold text-lg mb-3">NCLEX Success Strategy</h3>
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-3">
+                        <div className="bg-primary/10 p-2 rounded-full">
+                          <CheckCircle2 className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <h4 className="font-medium">Master Core Concepts</h4>
+                          <p className="text-sm text-muted-foreground">Focus on unit conversions and basic calculations before advancing to complex problems</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="bg-primary/10 p-2 rounded-full">
+                          <CheckCircle2 className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <h4 className="font-medium">Systematic Practice</h4>
+                          <p className="text-sm text-muted-foreground">Work through each calculation type methodically, increasing difficulty gradually</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="bg-primary/10 p-2 rounded-full">
+                          <CheckCircle2 className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <h4 className="font-medium">Time Management</h4>
+                          <p className="text-sm text-muted-foreground">Practice completing calculations within 2 minutes to build speed and accuracy</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="bg-primary/10 p-2 rounded-full">
+                          <CheckCircle2 className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <h4 className="font-medium">Double-Check Work</h4>
+                          <p className="text-sm text-muted-foreground">Verify units, decimal points, and final answers using different methods</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Progress Tracking */}
+                  <div>
+                    <h3 className="font-semibold text-lg mb-3">Your Progress</h3>
+                    <div className="space-y-4">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Overall Mastery</span>
+                        <span>0%</span>
+                      </div>
+                      <Progress value={0} className="h-2" />
+
+                      <div className="grid gap-4 md:grid-cols-3">
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="text-lg">Problems Solved</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-2xl font-bold">0/100</p>
+                            <p className="text-sm text-muted-foreground">Target: 100 problems</p>
+                          </CardContent>
+                        </Card>
+
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="text-lg">Success Rate</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-2xl font-bold">0%</p>
+                            <p className="text-sm text-muted-foreground">Target: {'>'}90%</p>
+                          </CardContent>
+                        </Card>
+
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="text-lg">Time per Problem</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-2xl font-bold">0m</p>
+                            <p className="text-sm text-muted-foreground">Target: less than 2 minutes</p>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <Progress value={0} className="h-2" />
-
-                <div className="grid gap-4 md:grid-cols-3">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">Problems Solved</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-2xl font-bold">0/100</p>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">Current Streak</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-2xl font-bold">0 days</p>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">Accuracy</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-2xl font-bold">0%</p>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="practice">
