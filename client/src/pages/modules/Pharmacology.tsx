@@ -57,7 +57,7 @@ export default function Pharmacology() {
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold mb-2">Pharmacology & Parenteral</h1>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          Master drug classifications, mechanisms of action, and nursing implications
+          Master drug classifications, mechanisms of action, and nursing implications through comprehensive study of pharmacological principles and clinical applications.
         </p>
       </div>
 
@@ -72,93 +72,143 @@ export default function Pharmacology() {
         <TabsContent value="overview">
           <Card>
             <CardHeader>
-              <CardTitle>Course Progress</CardTitle>
+              <CardTitle>Learning Path Overview</CardTitle>
+              <p className="text-muted-foreground mt-2">
+                This module is designed to build your understanding progressively, from foundational concepts to complex clinical applications. Each section includes interactive elements and real-world scenarios to reinforce your learning.
+              </p>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Overall Progress</span>
-                  <span>0%</span>
-                </div>
-                <Progress value={0} className="h-2" />
-
-                <div className="grid gap-4 md:grid-cols-3">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">Topics Covered</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-2xl font-bold">0/12</p>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">Practice Questions</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-2xl font-bold">0/50</p>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">Time Spent</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-2xl font-bold">0h</p>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                <div className="mt-6">
-                  <h3 className="text-lg font-semibold mb-4">Learning Objectives</h3>
-                  <div className="grid gap-4">
-                    <div className="bg-muted/50 p-4 rounded-lg">
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="font-medium">Knowledge</h4>
-                        <Button variant="outline" size="sm" onClick={() => handleAIHelp("knowledge_objectives")}>
-                          <Bot className="h-4 w-4 mr-2" />
-                          AI Help
-                        </Button>
-                      </div>
+              <div className="space-y-6">
+                <div className="bg-muted/50 p-6 rounded-lg">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-lg font-semibold">Knowledge Development</h3>
+                      <p className="text-muted-foreground mt-1 mb-4">
+                        Build a strong foundation in pharmacological principles through structured learning objectives and comprehensive understanding of drug mechanisms.
+                      </p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("knowledge_objectives")}>
+                      <Bot className="h-4 w-4 mr-2" />
+                      AI Help
+                    </Button>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-medium mb-2">Core Understanding</h4>
+                      <p className="text-muted-foreground mb-2">
+                        Master these fundamental concepts that form the basis of safe medication administration:
+                      </p>
                       <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-                        <li>Understand drug classifications and their clinical implications</li>
-                        <li>Master pharmacokinetics and pharmacodynamics principles</li>
-                        <li>Comprehend medication safety protocols and guidelines</li>
-                        <li>Know drug interactions and contraindications</li>
+                        <li>Drug Classifications and Clinical Implications
+                          <p className="ml-6 mt-1">
+                            Learn to categorize medications based on their therapeutic effects, understanding how different drug classes interact with body systems.
+                          </p>
+                        </li>
+                        <li>Pharmacokinetics & Pharmacodynamics
+                          <p className="ml-6 mt-1">
+                            Understand how drugs move through and affect the body, including absorption, distribution, metabolism, and excretion processes.
+                          </p>
+                        </li>
+                        <li>Safety Protocols and Guidelines
+                          <p className="ml-6 mt-1">
+                            Master essential safety measures, including proper medication verification, documentation, and error prevention strategies.
+                          </p>
+                        </li>
+                        <li>Drug Interactions and Contraindications
+                          <p className="ml-6 mt-1">
+                            Develop expertise in identifying potential drug interactions and understanding when medications should not be administered.
+                          </p>
+                        </li>
                       </ul>
                     </div>
+                  </div>
+                </div>
 
-                    <div className="bg-muted/50 p-4 rounded-lg">
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="font-medium">Skills</h4>
-                        <Button variant="outline" size="sm" onClick={() => handleAIHelp("skills_objectives")}>
-                          <Bot className="h-4 w-4 mr-2" />
-                          AI Help
-                        </Button>
-                      </div>
+                <div className="bg-muted/50 p-6 rounded-lg">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-lg font-semibold">Skills Application</h3>
+                      <p className="text-muted-foreground mt-1 mb-4">
+                        Develop practical skills essential for safe and effective medication administration through hands-on practice and scenario-based learning.
+                      </p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("skills_objectives")}>
+                      <Bot className="h-4 w-4 mr-2" />
+                      AI Help
+                    </Button>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-medium mb-2">Clinical Competencies</h4>
+                      <p className="text-muted-foreground mb-2">
+                        Master these essential skills through progressive practice scenarios:
+                      </p>
                       <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-                        <li>Perform accurate drug calculations</li>
-                        <li>Demonstrate proper medication administration techniques</li>
-                        <li>Apply critical thinking in medication management</li>
-                        <li>Execute proper documentation procedures</li>
+                        <li>Medication Calculations
+                          <p className="ml-6 mt-1">
+                            Practice complex calculations including weight-based dosing, IV drip rates, and unit conversions using real-world scenarios.
+                          </p>
+                        </li>
+                        <li>Administration Techniques
+                          <p className="ml-6 mt-1">
+                            Master various administration routes including oral, parenteral, and specialized delivery methods, understanding the nuances of each.
+                          </p>
+                        </li>
+                        <li>Critical Thinking in Medication Management
+                          <p className="ml-6 mt-1">
+                            Develop decision-making skills through case studies that challenge you to apply pharmacological knowledge in complex clinical situations.
+                          </p>
+                        </li>
+                        <li>Documentation and Communication
+                          <p className="ml-6 mt-1">
+                            Learn proper documentation techniques and effective communication strategies with healthcare team members regarding medication therapy.
+                          </p>
+                        </li>
                       </ul>
                     </div>
+                  </div>
+                </div>
 
-                    <div className="bg-muted/50 p-4 rounded-lg">
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="font-medium">Awareness</h4>
-                        <Button variant="outline" size="sm" onClick={() => handleAIHelp("awareness_objectives")}>
-                          <Bot className="h-4 w-4 mr-2" />
-                          AI Help
-                        </Button>
-                      </div>
+                <div className="bg-muted/50 p-6 rounded-lg">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-lg font-semibold">Clinical Awareness</h3>
+                      <p className="text-muted-foreground mt-1 mb-4">
+                        Develop advanced clinical judgment and situation awareness needed for complex medication management scenarios.
+                      </p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("awareness_objectives")}>
+                      <Bot className="h-4 w-4 mr-2" />
+                      AI Help
+                    </Button>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-medium mb-2">Safety and Risk Management</h4>
+                      <p className="text-muted-foreground mb-2">
+                        Develop advanced awareness of medication safety considerations:
+                      </p>
                       <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-                        <li>Recognize high-alert medications and special precautions</li>
-                        <li>Identify potential medication errors and prevention strategies</li>
-                        <li>Understand cultural considerations in medication therapy</li>
-                        <li>Stay current with medication safety updates and guidelines</li>
+                        <li>High-Alert Medications
+                          <p className="ml-6 mt-1">
+                            Understand special precautions for medications that carry heightened risk, including insulin, anticoagulants, and concentrated electrolytes.
+                          </p>
+                        </li>
+                        <li>Error Prevention Strategies
+                          <p className="ml-6 mt-1">
+                            Learn to identify potential medication errors before they occur and implement preventive measures in high-risk situations.
+                          </p>
+                        </li>
+                        <li>Cultural Considerations
+                          <p className="ml-6 mt-1">
+                            Understand how cultural factors influence medication therapy, including dietary restrictions, beliefs about medicine, and communication preferences.
+                          </p>
+                        </li>
+                        <li>Current Guidelines
+                          <p className="ml-6 mt-1">
+                            Stay informed about the latest medication safety updates, including new medications, black box warnings, and practice guidelines.
+                          </p>
+                        </li>
                       </ul>
                     </div>
                   </div>
@@ -171,7 +221,12 @@ export default function Pharmacology() {
         <TabsContent value="medications">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Medication Overview</CardTitle>
+              <div>
+                <CardTitle>Medication Overview</CardTitle>
+                <p className="text-muted-foreground mt-2">
+                  Master drug classifications and their clinical implications through comprehensive study of commonly tested medications, including those frequently featured in next-generation NCLEX examinations.
+                </p>
+              </div>
               <Button variant="outline" size="icon" onClick={() => handleAIHelp("medications_overview")}>
                 <Bot className="h-4 w-4" />
               </Button>
@@ -180,40 +235,121 @@ export default function Pharmacology() {
               <div className="grid gap-6">
                 <section>
                   <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-lg font-semibold">Drug Classifications</h3>
-                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("drug_classifications")}>
+                    <div>
+                      <h3 className="text-lg font-semibold">Complex Drug Classifications</h3>
+                      <p className="text-muted-foreground mt-1 mb-4">
+                        Focus on medications that require careful consideration of multiple factors, including timing, monitoring, and patient-specific considerations.
+                      </p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("complex_drug_classifications")}>
                       <Bot className="h-4 w-4 mr-2" />
                       AI Help
                     </Button>
                   </div>
                   <div className="space-y-4">
                     <div className="bg-muted/50 p-4 rounded-lg">
-                      <h4 className="font-medium mb-2">Antimicrobials</h4>
+                      <h4 className="font-medium mb-2">High-Risk Antimicrobials</h4>
+                      <p className="text-muted-foreground mb-2">
+                        Understanding complex antimicrobial therapy requires knowledge of resistance patterns, monitoring parameters, and potential adverse effects:
+                      </p>
                       <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-                        <li>Antibiotics: penicillins, cephalosporins, macrolides</li>
-                        <li>Antifungals: azoles, polyenes</li>
-                        <li>Antivirals: nucleoside analogs, protease inhibitors</li>
-                        <li>Clinical implications and resistance patterns</li>
+                        <li>Advanced Antibiotics
+                          <ul className="list-disc list-inside ml-4 mt-2">
+                            <li>Vancomycin: therapeutic monitoring, nephrotoxicity risks</li>
+                            <li>Carbapenems: spectrum of activity, seizure precautions</li>
+                            <li>Aminoglycosides: ototoxicity monitoring, peak/trough levels</li>
+                          </ul>
+                        </li>
+                        <li>Antifungal Considerations
+                          <ul className="list-disc list-inside ml-4 mt-2">
+                            <li>Azoles: drug interactions, hepatic monitoring</li>
+                            <li>Echinocandins: cost considerations, resistance patterns</li>
+                            <li>Amphotericin B: infusion reactions, electrolyte monitoring</li>
+                          </ul>
+                        </li>
+                        <li>Complex Antivirals
+                          <ul className="list-disc list-inside ml-4 mt-2">
+                            <li>HIV medications: adherence importance, resistance development</li>
+                            <li>Hepatitis treatments: viral load monitoring, duration concerns</li>
+                            <li>Neuraminidase inhibitors: timing of administration, resistance</li>
+                          </ul>
+                        </li>
                       </ul>
                     </div>
 
                     <div className="bg-muted/50 p-4 rounded-lg">
-                      <h4 className="font-medium mb-2">Cardiovascular Medications</h4>
+                      <h4 className="font-medium mb-2">Critical Cardiovascular Medications</h4>
+                      <p className="text-muted-foreground mb-2">
+                        Managing cardiovascular medications requires understanding of complex pathophysiology and careful monitoring:
+                      </p>
                       <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-                        <li>Antihypertensives: ACE inhibitors, beta blockers, calcium channel blockers</li>
-                        <li>Anticoagulants: heparins, direct oral anticoagulants</li>
-                        <li>Antiarrhythmics: sodium channel blockers, potassium channel blockers</li>
-                        <li>Heart failure medications: diuretics, inotropes</li>
+                        <li>Advanced Antihypertensives
+                          <ul className="list-disc list-inside ml-4 mt-2">
+                            <li>ACE inhibitors/ARBs: renal function monitoring, angioedema risks</li>
+                            <li>Beta blockers: heart rate/blood pressure targets, withdrawal risks</li>
+                            <li>Calcium channel blockers: gingival hyperplasia, interaction with statins</li>
+                          </ul>
+                        </li>
+                        <li>Anticoagulation Therapy
+                          <ul className="list-disc list-inside ml-4 mt-2">
+                            <li>Direct oral anticoagulants: reversal agents, bridging therapy</li>
+                            <li>Heparin protocols: weight-based dosing, monitoring parameters</li>
+                            <li>Antithrombotic combinations: bleeding risk assessment</li>
+                          </ul>
+                        </li>
+                        <li>Heart Failure Medications
+                          <ul className="list-disc list-inside ml-4 mt-2">
+                            <li>SGLT2 inhibitors: new indications, monitoring requirements</li>
+                            <li>Sacubitril/valsartan: timing with ACE inhibitors, monitoring</li>
+                            <li>Inotropes: continuous monitoring requirements, weaning protocols</li>
+                          </ul>
+                        </li>
                       </ul>
                     </div>
 
                     <div className="bg-muted/50 p-4 rounded-lg">
-                      <h4 className="font-medium mb-2">Pain Management</h4>
+                      <h4 className="font-medium mb-2">Complex Pain Management</h4>
+                      <p className="text-muted-foreground mb-2">
+                        Understanding multimodal pain management and risk mitigation strategies:
+                      </p>
                       <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-                        <li>Opioids: morphine, fentanyl, hydromorphone</li>
-                        <li>NSAIDs: mechanisms, contraindications</li>
-                        <li>Adjuvant analgesics: gabapentinoids, antidepressants</li>
-                        <li>Pain assessment and documentation requirements</li>
+                        <li>Opioid Considerations
+                          <ul className="list-disc list-inside ml-4 mt-2">
+                            <li>Patient-controlled analgesia: programming, safety limits</li>
+                            <li>Methadone: QT prolongation, conversion calculations</li>
+                            <li>Fentanyl patches: heat exposure risks, proper disposal</li>
+                          </ul>
+                        </li>
+                        <li>Non-opioid Approaches
+                          <ul className="list-disc list-inside ml-4 mt-2">
+                            <li>COX-2 inhibitors: cardiovascular risks, renal monitoring</li>
+                            <li>Ketamine: emergence phenomena, monitoring requirements</li>
+                            <li>Cannabinoids: legal considerations, drug interactions</li>
+                          </ul>
+                        </li>
+                      </ul>
+                    </div>
+
+                    <div className="bg-muted/50 p-4 rounded-lg">
+                      <h4 className="font-medium mb-2">High-Alert Medications</h4>
+                      <p className="text-muted-foreground mb-2">
+                        Critical medications requiring extra safety precautions and monitoring:
+                      </p>
+                      <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                        <li>Insulin Management
+                          <ul className="list-disc list-inside ml-4 mt-2">
+                            <li>U-500 insulin: documentation requirements, safety checks</li>
+                            <li>Insulin pumps: troubleshooting, site rotation</li>
+                            <li>Sliding scale protocols: individualization, monitoring</li>
+                          </ul>
+                        </li>
+                        <li>Chemotherapy Agents
+                          <ul className="list-disc list-inside ml-4 mt-2">
+                            <li>Vesicant medications: extravasation protocols</li>
+                            <li>Oral chemotherapy: handling precautions, adherence</li>
+                            <li>Targeted therapies: specific side effect monitoring</li>
+                          </ul>
+                        </li>
                       </ul>
                     </div>
                   </div>
