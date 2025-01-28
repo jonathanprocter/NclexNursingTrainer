@@ -889,7 +889,7 @@ export function registerRoutes(app: Express): Server {
       // Sample calculation problems
       const calculationProblems = [
         {
-          id: "calc-1",
+          id: "P001",
           type: "dosage",
           difficulty: "beginner",
           question: "A patient is prescribed 500mg of medication every 8 hours. The medication comes in 250mg tablets. How many tablets should be given per dose?",
@@ -908,7 +908,7 @@ export function registerRoutes(app: Express): Server {
           ]
         },
         {
-          id: "calc-2",
+          id: "P002",
           type: "rate",
           difficulty: "intermediate",
           question: "An IV bag contains 1000mL of fluid to be administered over 8 hours. Calculate the drip rate in mL/hr.",

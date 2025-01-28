@@ -229,7 +229,7 @@ export default function Calculations() {
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>
-                      <CardTitle>Problem #{currentProblem.id}</CardTitle>
+                      <CardTitle>Problem {currentProblem.id}</CardTitle>
                       <div className="flex gap-2 mt-2">
                         <Badge>{currentProblem.type}</Badge>
                         <Badge variant="outline">{currentProblem.difficulty}</Badge>
