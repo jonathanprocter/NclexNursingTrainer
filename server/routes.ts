@@ -44,112 +44,67 @@ const preIntegratedCases = [
       {
         type: "assessment",
         question: "What are the key assessment findings that indicate heart failure exacerbation?",
-        explanation: "Focus on identifying cardinal symptoms and relating them to pathophysiology."
+        options: [
+          {
+            text: "Elevated blood pressure and tachycardia only",
+            correct: false,
+            explanation: "While these are concerning signs, they alone are not sufficient to indicate heart failure exacerbation.",
+            topics: ["Vital Signs", "Cardiovascular Assessment"]
+          },
+          {
+            text: "Bilateral crackles, peripheral edema, and increased BNP",
+            correct: true,
+            explanation: "These findings together strongly indicate fluid overload and heart failure exacerbation. The bilateral crackles suggest pulmonary edema, peripheral edema indicates systemic fluid retention, and elevated BNP is a specific marker for heart failure.",
+            topics: ["Pulmonary Assessment", "Cardiovascular Assessment", "Lab Values", "Heart Failure"]
+          },
+          {
+            text: "Elevated creatinine and medication non-compliance",
+            correct: false,
+            explanation: "While medication non-compliance may contribute to exacerbation, and elevated creatinine suggests renal involvement, these are not the primary indicators of heart failure exacerbation.",
+            topics: ["Medication Management", "Renal Function", "Patient Compliance"]
+          },
+          {
+            text: "Negative troponin and normal potassium",
+            correct: false,
+            explanation: "These lab values, while important for ruling out acute cardiac injury, do not specifically indicate heart failure exacerbation.",
+            topics: ["Lab Values", "Differential Diagnosis"]
+          }
+        ],
+        keyTopics: ["Heart Failure Pathophysiology", "Clinical Assessment", "Lab Interpretation"]
       },
       {
         type: "analysis",
-        question: "How do the laboratory values support your clinical findings?",
-        explanation: "Connect laboratory data with clinical presentation."
-      },
-      {
-        type: "planning",
-        question: "What immediate nursing interventions are priorities for this patient?",
-        explanation: "Consider both immediate safety needs and underlying causes."
+        question: "Which combination of findings best explains the patient's current clinical status?",
+        options: [
+          {
+            text: "Medication non-compliance → fluid retention → increased preload → decreased cardiac output",
+            correct: true,
+            explanation: "This sequence correctly shows how medication non-compliance leads to the current exacerbation through a cascade of physiological changes, ultimately resulting in decreased cardiac output.",
+            topics: ["Pathophysiology", "Medication Effects", "Cardiac Function"]
+          },
+          {
+            text: "Hypertension → increased afterload → renal failure → edema",
+            correct: false,
+            explanation: "While hypertension can contribute to heart failure, this sequence doesn't fully explain the acute exacerbation in this case.",
+            topics: ["Hypertension", "Renal Function", "Fluid Balance"]
+          },
+          {
+            text: "Diabetes → peripheral neuropathy → decreased mobility → edema",
+            correct: false,
+            explanation: "Although diabetes is a comorbidity, this sequence doesn't explain the acute heart failure exacerbation.",
+            topics: ["Diabetes", "Comorbidities", "Mobility"]
+          },
+          {
+            text: "Elevated BNP → fluid overload → increased blood pressure",
+            correct: false,
+            explanation: "This reverses the cause and effect relationship; BNP elevation is a result of fluid overload, not its cause.",
+            topics: ["Lab Values", "Pathophysiology", "Clinical Correlation"]
+          }
+        ],
+        keyTopics: ["Heart Failure Pathophysiology", "Medication Management", "Clinical Reasoning"]
       }
     ],
     nextCaseHints: ["Consider how comorbidities affect heart failure management"]
-  },
-  {
-    id: "case2",
-    title: "Complex Heart Failure Management",
-    description: "Building on basic heart failure concepts with comorbidity management",
-    difficulty: "intermediate",
-    type: "cardiology",
-    prerequisites: ["case1"],
-    content: `
-      <h3>Patient Information</h3>
-      <p>Same patient returns after 3 months with worsening symptoms despite medication adjustment. New onset atrial fibrillation noted.</p>
-
-      <h3>Current Presentation</h3>
-      <ul>
-        <li>Vitals: BP 145/88, HR 110 irregular, RR 26, O2 sat 89% on RA</li>
-        <li>Increased work of breathing</li>
-        <li>4+ peripheral edema</li>
-        <li>New onset confusion</li>
-      </ul>
-
-      <h3>Laboratory Data</h3>
-      <ul>
-        <li>BNP: 2200 pg/mL</li>
-        <li>Creatinine: 2.1 mg/dL</li>
-        <li>Potassium: 5.2 mEq/L</li>
-        <li>INR: 1.1</li>
-      </ul>
-    `,
-    questions: [
-      {
-        type: "analysis",
-        question: "How has the patient's condition changed from the previous presentation?",
-        explanation: "Compare current findings with previous case to identify deterioration patterns."
-      },
-      {
-        type: "synthesis",
-        question: "What are the potential interactions between the patient's heart failure and new onset atrial fibrillation?",
-        explanation: "Analyze the relationship between multiple cardiac conditions."
-      },
-      {
-        type: "evaluation",
-        question: "Develop a comprehensive care plan that addresses both acute and chronic management needs.",
-        explanation: "Integrate multiple aspects of care into a cohesive plan."
-      }
-    ],
-    nextCaseHints: ["Consider advanced heart failure management strategies"]
-  },
-  {
-    id: "case3",
-    title: "Advanced Heart Failure Complications",
-    description: "Complex case involving multiple system complications",
-    difficulty: "advanced",
-    type: "cardiology",
-    prerequisites: ["case1", "case2"],
-    content: `
-      <h3>Patient Information</h3>
-      <p>Patient now presents with signs of cardiorenal syndrome and requiring advanced heart failure management consideration.</p>
-
-      <h3>Current Presentation</h3>
-      <ul>
-        <li>Vitals: BP 132/84, HR 96 irregular, RR 28, O2 sat 87% on 2L NC</li>
-        <li>Bilateral pleural effusions</li>
-        <li>Hepatomegaly</li>
-        <li>Decreased urine output</li>
-      </ul>
-
-      <h3>Laboratory Data</h3>
-      <ul>
-        <li>BNP: 3500 pg/mL</li>
-        <li>Creatinine: 2.8 mg/dL</li>
-        <li>GFR: 25 mL/min</li>
-        <li>Liver function tests: elevated</li>
-      </ul>
-    `,
-    questions: [
-      {
-        type: "synthesis",
-        question: "Analyze the pathophysiological relationships between cardiac and renal dysfunction in this patient.",
-        explanation: "Demonstrate understanding of complex system interactions."
-      },
-      {
-        type: "evaluation",
-        question: "What factors would you consider in determining if this patient needs advanced heart failure therapies?",
-        explanation: "Evaluate criteria for advanced interventions."
-      },
-      {
-        type: "creation",
-        question: "Develop a comprehensive transition of care plan for this patient.",
-        explanation: "Create a detailed plan incorporating all aspects of care."
-      }
-    ],
-    nextCaseHints: ["Consider palliative care integration in advanced heart failure"]
   }
 ];
 

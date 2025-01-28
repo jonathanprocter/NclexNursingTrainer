@@ -33,10 +33,18 @@ import cn from 'classnames';
 // Types for practice exercises
 type ExerciseType = 'pattern' | 'hypothesis' | 'decision' | 'documentation';
 
+type AnswerOption = {
+  text: string;
+  correct: boolean;
+  explanation: string;
+  topics: string[];
+};
+
 interface CaseQuestion {
   type: 'assessment' | 'analysis' | 'synthesis' | 'evaluation' | 'creation';
   question: string;
-  explanation: string;
+  options: AnswerOption[];
+  keyTopics: string[];
 }
 
 interface CaseStudy {
@@ -184,8 +192,8 @@ export default function ClinicalAnalysis() {
 
   const CaseStudiesSection = () => {
     const [currentCase, setCurrentCase] = useState<CaseStudy | null>(null);
-    const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
-    const [showFeedback, setShowFeedback] = useState(false);
+    const [userAnswers, setUserAnswers] = useState<Record<string, number>>({});
+    const [showFeedback, setShowFeedback] = useState<Record<string, boolean>>({});
     const { toast } = useToast();
 
     // Query for completed cases
@@ -216,7 +224,7 @@ export default function ClinicalAnalysis() {
     });
 
     const submitCaseMutation = useMutation({
-      mutationFn: async (answers: Record<string, string>) => {
+      mutationFn: async (answers: Record<string, number>) => {
         const response = await fetch("/api/case-completion", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -239,7 +247,7 @@ export default function ClinicalAnalysis() {
         const result = await generateCaseMutation.mutateAsync(caseId);
         setCurrentCase(result);
         setUserAnswers({});
-        setShowFeedback(false);
+        setShowFeedback({});
       } catch (error) {
         toast({
           title: "Error",
@@ -252,7 +260,7 @@ export default function ClinicalAnalysis() {
     const handleAnswerSubmit = async () => {
       try {
         await submitCaseMutation.mutateAsync(userAnswers);
-        setShowFeedback(true);
+        setShowFeedback(Object.fromEntries(Object.keys(userAnswers).map(key => [key, true])));
         toast({
           title: "Success",
           description: "Case study answers submitted successfully!",
@@ -266,8 +274,22 @@ export default function ClinicalAnalysis() {
       }
     };
 
-    const handleAnswerChange = (index: number, value: string) => {
-      setUserAnswers((prev) => ({ ...prev, [index]: value }));
+
+    const handleAnswerSelect = (questionIndex: number, optionIndex: number) => {
+      setUserAnswers(prev => ({ ...prev, [questionIndex]: optionIndex }));
+      setShowFeedback(prev => ({ ...prev, [questionIndex]: true }));
+
+      // Show immediate feedback toast
+      const question = currentCase?.questions[questionIndex];
+      const selectedOption = question?.options[optionIndex];
+
+      if (selectedOption) {
+        toast({
+          title: selectedOption.correct ? "Correct! 🎉" : "Incorrect",
+          description: selectedOption.explanation,
+          variant: selectedOption.correct ? "default" : "destructive",
+        });
+      }
     };
 
     return (
@@ -349,42 +371,82 @@ export default function ClinicalAnalysis() {
                         <div dangerouslySetInnerHTML={{ __html: currentCase.content }} />
                       </div>
 
-                      <div className="space-y-6">
-                        {currentCase.questions.map((question, index) => (
-                          <div key={index} className="space-y-2">
-                            <p className="font-medium">{index + 1}. {question.question}</p>
-                            <Textarea
-                              value={userAnswers[index] || ''}
-                              onChange={(e) => handleAnswerChange(index, e.target.value)}
-                              placeholder="Enter your answer..."
-                              className="min-h-[100px]"
-                            />
-                            {showFeedback && (
-                              <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded">
-                                <p>{question.explanation}</p>
+                      <div className="space-y-8">
+                        {currentCase.questions.map((question, qIndex) => (
+                          <div key={qIndex} className="space-y-4">
+                            <div>
+                              <h3 className="text-lg font-semibold mb-2">
+                                Question {qIndex + 1}: {question.question}
+                              </h3>
+                              <div className="grid gap-3">
+                                {question.options.map((option, oIndex) => (
+                                  <div key={oIndex} className="space-y-2">
+                                    <Button
+                                      variant={userAnswers[qIndex] === oIndex ?
+                                        (option.correct ? "default" : "destructive") :
+                                        "outline"
+                                      }
+                                      className="w-full justify-start text-left h-auto p-4"
+                                      onClick={() => handleAnswerSelect(qIndex, oIndex)}
+                                      disabled={showFeedback[qIndex]}
+                                    >
+                                      {option.text}
+                                    </Button>
+
+                                    {showFeedback[qIndex] && userAnswers[qIndex] === oIndex && (
+                                      <div className="bg-muted/30 p-4 rounded-md space-y-2">
+                                        <p className="font-medium">Explanation:</p>
+                                        <p className="text-sm text-muted-foreground">{option.explanation}</p>
+                                        <div className="mt-2">
+                                          <p className="font-medium text-sm">Related Topics:</p>
+                                          <div className="flex flex-wrap gap-2 mt-1">
+                                            {option.topics.map((topic, tIndex) => (
+                                              <Badge key={tIndex} variant="outline">{topic}</Badge>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            {showFeedback[qIndex] && (
+                              <div className="mt-4">
+                                <p className="font-medium text-sm">Key Topics Covered:</p>
+                                <div className="flex flex-wrap gap-2 mt-1">
+                                  {question.keyTopics.map((topic, tIndex) => (
+                                    <Badge key={tIndex} variant="secondary">{topic}</Badge>
+                                  ))}
+                                </div>
                               </div>
                             )}
                           </div>
                         ))}
+                      </div>
 
-                        <div className="flex justify-end gap-2">
+                      <div className="flex justify-end gap-2 mt-6">
+                        <Button
+                          onClick={() => {
+                            setCurrentCase(null);
+                            setUserAnswers({});
+                            setShowFeedback({});
+                          }}
+                          variant="outline"
+                        >
+                          Close Case
+                        </Button>
+                        {!Object.keys(showFeedback).every(key => showFeedback[key]) && (
                           <Button
                             onClick={() => {
-                              setCurrentCase(null);
-                              setUserAnswers({});
-                              setShowFeedback(false);
+                              const allQuestionsAnswered = Object.fromEntries(Object.keys(userAnswers).map(key => [key, true]));
+                              setShowFeedback(allQuestionsAnswered);
                             }}
-                            variant="outline"
                           >
-                            Close Case
+                            Show All Answers
                           </Button>
-                          <Button
-                            onClick={handleAnswerSubmit}
-                            disabled={!Object.keys(userAnswers).length || showFeedback || submitCaseMutation.isPending}
-                          >
-                            {submitCaseMutation.isPending ? 'Submitting...' : 'Submit Answers'}
-                          </Button>
-                        </div>
+                        )}
                       </div>
                     </div>
                   </CardContent>
