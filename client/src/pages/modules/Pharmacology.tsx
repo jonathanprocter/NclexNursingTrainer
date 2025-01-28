@@ -570,7 +570,12 @@ export default function Pharmacology() {
         <TabsContent value="calculations">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Drug Calculations</CardTitle>
+              <div>
+                <CardTitle>Drug Calculations</CardTitle>
+                <p className="text-muted-foreground mt-2">
+                  Master essential medication calculations through progressive learning, from basic unit conversions to complex IV drip rates. Each section includes detailed explanations and interactive practice scenarios.
+                </p>
+              </div>
               <Button variant="outline" size="icon" onClick={() => handleAIHelp("calculations_overview")}>
                 <Bot className="h-4 w-4" />
               </Button>
@@ -579,7 +584,12 @@ export default function Pharmacology() {
               <div className="grid gap-6">
                 <section>
                   <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-lg font-semibold">Basic Calculations</h3>
+                    <div>
+                      <h3 className="text-lg font-semibold">Basic Calculations</h3>
+                      <p className="text-muted-foreground mt-1 mb-4">
+                        Develop proficiency in foundational medication calculations essential for safe medication administration. Start with simple conversions and progress to more complex scenarios.
+                      </p>
+                    </div>
                     <Button variant="outline" size="sm" onClick={() => handleAIHelp("basic_calculations")}>
                       <Bot className="h-4 w-4 mr-2" />
                       AI Help
@@ -588,53 +598,140 @@ export default function Pharmacology() {
                   <div className="space-y-4">
                     <div className="bg-muted/50 p-4 rounded-lg">
                       <h4 className="font-medium mb-2">Tablet and Capsule Calculations</h4>
+                      <p className="text-muted-foreground mb-4">
+                        Understanding how to calculate correct dosages from available medication forms is crucial for safe administration. Begin with:
+                      </p>
                       <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-                        <li>Converting between units (mg, g, mcg)</li>
-                        <li>Calculating doses from available strengths</li>
-                        <li>Multiple tablet calculations</li>
-                        <li>Practice problems with solutions</li>
+                        <li>Unit Conversions
+                          <p className="ml-6 mt-1">
+                            Practice converting between milligrams (mg), grams (g), and micrograms (mcg). Understanding these conversions is fundamental for accurate dosing.
+                          </p>
+                        </li>
+                        <li>Available Strength Calculations
+                          <p className="ml-6 mt-1">
+                            Learn to determine the number of tablets or capsules needed when the ordered dose differs from the available medication strength.
+                          </p>
+                        </li>
+                        <li>Multiple Tablet Calculations
+                          <p className="ml-6 mt-1">
+                            Master complex scenarios where multiple tablets of different strengths may be needed to achieve the prescribed dose.
+                          </p>
+                        </li>
                       </ul>
+                      <Button 
+                        className="mt-4" 
+                        onClick={() => handleAIHelp("practice_basic_calculations", "tablet_calculations")}
+                      >
+                        Practice Scenarios
+                      </Button>
                     </div>
 
                     <div className="bg-muted/50 p-4 rounded-lg">
                       <h4 className="font-medium mb-2">Weight-Based Dosing</h4>
+                      <p className="text-muted-foreground mb-4">
+                        Mastering weight-based calculations is essential for pediatric and specialized medication administration:
+                      </p>
                       <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-                        <li>mg/kg calculations</li>
-                        <li>Body Surface Area (BSA) calculations</li>
-                        <li>Pediatric dosing considerations</li>
-                        <li>Maximum/minimum dose limits</li>
+                        <li>mg/kg Calculations
+                          <p className="ml-6 mt-1">
+                            Learn to calculate precise doses based on patient weight, considering safe dosing ranges and maximum limits.
+                          </p>
+                        </li>
+                        <li>Body Surface Area (BSA) Calculations
+                          <p className="ml-6 mt-1">
+                            Understand how to use BSA for medication dosing, particularly important in chemotherapy and pediatric medications.
+                          </p>
+                        </li>
+                        <li>Pediatric Considerations
+                          <p className="ml-6 mt-1">
+                            Special focus on safe dosing ranges for pediatric patients, including weight-based calculations and age-specific considerations.
+                          </p>
+                        </li>
                       </ul>
+                      <Button 
+                        className="mt-4" 
+                        onClick={() => handleAIHelp("practice_weight_based", "pediatric_calculations")}
+                      >
+                        Practice Cases
+                      </Button>
                     </div>
                   </div>
                 </section>
 
                 <section>
                   <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-lg font-semibold">IV Calculations</h3>
-                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("iv_calculations")}>
+                    <div>
+                      <h3 className="text-lg font-semibold">IV Calculations</h3>
+                      <p className="text-muted-foreground mt-1 mb-4">
+                        Master intravenous medication calculations through progressive complexity, from basic flow rates to advanced critical care infusions.
+                      </p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("IV_calculations")}>
                       <Bot className="h-4 w-4 mr-2" />
                       AI Help
                     </Button>
                   </div>
                   <div className="space-y-4">
                     <div className="bg-muted/50 p-4 rounded-lg">
-                      <h4 className="font-medium mb-2">Flow Rates</h4>
+                      <h4 className="font-medium mb-2">IV Flow Rate Calculations</h4>
+                      <p className="text-muted-foreground mb-4">
+                        Understand the principles of IV flow rates and their clinical applications:
+                      </p>
                       <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-                        <li>mL/hr calculations</li>
-                        <li>Drops per minute conversion</li>
-                        <li>Weight-based IV rates</li>
-                        <li>Critical care drip rates</li>
+                        <li>Basic Flow Rates
+                          <p className="ml-6 mt-1">
+                            Calculate mL/hr rates for standard IV solutions, considering concentration and ordered dose.
+                          </p>
+                        </li>
+                        <li>Complex IV Calculations
+                          <p className="ml-6 mt-1">
+                            Master advanced calculations for critical medications, including vasoactive drugs and continuous infusions.
+                          </p>
+                        </li>
+                        <li>Weight-Based IV Rates
+                          <p className="ml-6 mt-1">
+                            Calculate mcg/kg/min and other weight-based IV medication rates commonly used in critical care.
+                          </p>
+                        </li>
                       </ul>
+                      <div className="flex gap-2 mt-4">
+                        <Button onClick={() => handleAIHelp("practice_IV_basic", "flow_rates")}>
+                          Basic Scenarios
+                        </Button>
+                        <Button onClick={() => handleAIHelp("practice_IV_advanced", "critical_care")}>
+                          Advanced Cases
+                        </Button>
+                      </div>
                     </div>
 
                     <div className="bg-muted/50 p-4 rounded-lg">
-                      <h4 className="font-medium mb-2">Complex IV Calculations</h4>
+                      <h4 className="font-medium mb-2">Complex IV Therapy</h4>
+                      <p className="text-muted-foreground mb-4">
+                        Advanced concepts in IV therapy calculations:
+                      </p>
                       <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-                        <li>Multiple medication infusions</li>
-                        <li>Concentration calculations</li>
-                        <li>Time duration calculations</li>
-                        <li>Practice scenarios with rationales</li>
+                        <li>Multiple IV Medications
+                          <p className="ml-6 mt-1">
+                            Calculate total fluid rates when multiple IV medications are running simultaneously.
+                          </p>
+                        </li>
+                        <li>Titration Calculations
+                          <p className="ml-6 mt-1">
+                            Learn to adjust IV rates based on patient response and prescribed titration parameters.
+                          </p>
+                        </li>
+                        <li>Advanced Critical Care
+                          <p className="ml-6 mt-1">
+                            Master complex calculations for high-risk medications in critical care settings.
+                          </p>
+                        </li>
                       </ul>
+                      <Button 
+                        className="mt-4" 
+                        onClick={() => handleAIHelp("practice_complex_IV", "critical_scenarios")}
+                      >
+                        Practice Complex Cases
+                      </Button>
                     </div>
                   </div>
                 </section>
