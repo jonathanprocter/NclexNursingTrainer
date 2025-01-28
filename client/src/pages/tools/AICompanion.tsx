@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Mic, StopCircle, History, Lightbulb } from "lucide-react";
+import { Mic, StopCircle, History, Lightbulb, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -15,6 +15,7 @@ const openai = new OpenAI({
 export default function AICompanion() {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [microphoneAvailable, setMicrophoneAvailable] = useState<boolean | null>(null);
   const [conversations, setConversations] = useState<Array<{
     question: string;
     answer: string;
@@ -28,7 +29,64 @@ export default function AICompanion() {
   const audioChunks = useRef<Blob[]>([]);
   const { toast } = useToast();
 
+  // Check microphone availability on component mount
   useEffect(() => {
+    const checkMicrophoneAccess = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach(track => track.stop()); // Clean up the test stream
+        setMicrophoneAvailable(true);
+      } catch (error) {
+        console.error('Microphone access error:', error);
+        setMicrophoneAvailable(false);
+
+        // Provide specific error messages based on the error type
+        if (error instanceof DOMException) {
+          switch (error.name) {
+            case 'NotAllowedError':
+              toast({
+                variant: "destructive",
+                title: "Microphone Access Denied",
+                description: "Please allow microphone access in your browser settings to use voice features.",
+              });
+              break;
+            case 'NotFoundError':
+              toast({
+                variant: "destructive",
+                title: "No Microphone Found",
+                description: "Please connect a microphone to use voice features.",
+              });
+              break;
+            case 'NotReadableError':
+              toast({
+                variant: "destructive",
+                title: "Microphone Error",
+                description: "Unable to access your microphone. It might be in use by another application.",
+              });
+              break;
+            default:
+              toast({
+                variant: "destructive",
+                title: "Microphone Error",
+                description: "An error occurred while accessing your microphone. Please check your settings.",
+              });
+          }
+        }
+      }
+    };
+
+    // Check if we're in a secure context (HTTPS or localhost)
+    if (window.isSecureContext) {
+      checkMicrophoneAccess();
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Security Error",
+        description: "Voice features require a secure (HTTPS) connection.",
+      });
+      setMicrophoneAvailable(false);
+    }
+
     return () => {
       // Cleanup on component unmount
       if (silenceTimeout.current) {
@@ -38,7 +96,7 @@ export default function AICompanion() {
         audioContext.current.close();
       }
     };
-  }, []);
+  }, [toast]);
 
   const checkForSilence = useCallback((dataArray: Uint8Array) => {
     const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
@@ -57,6 +115,15 @@ export default function AICompanion() {
   }, []);
 
   const startRecording = useCallback(async () => {
+    if (!microphoneAvailable) {
+      toast({
+        variant: "destructive",
+        title: "Microphone Not Available",
+        description: "Please check your microphone permissions and try again.",
+      });
+      return;
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
@@ -72,7 +139,7 @@ export default function AICompanion() {
       const source = audioContext.current.createMediaStreamSource(stream);
       source.connect(analyser.current);
       analyser.current.fftSize = 256;
-      analyser.current.smoothingTimeConstant = 0.8; // Added smoothing for better detection
+      analyser.current.smoothingTimeConstant = 0.8;
 
       const bufferLength = analyser.current.frequencyBinCount;
       const dataArray = new Uint8Array(bufferLength);
@@ -184,7 +251,7 @@ export default function AICompanion() {
         }
       };
 
-      mediaRecorder.current.start(100); // Reduced chunk size for better responsiveness
+      mediaRecorder.current.start(100);
       setIsRecording(true);
       checkAudioLevel();
 
@@ -194,13 +261,14 @@ export default function AICompanion() {
       });
     } catch (error) {
       console.error('Error accessing microphone:', error);
+      setMicrophoneAvailable(false);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Could not access microphone. Please check your permissions."
+        title: "Microphone Error",
+        description: "Could not access microphone. Please check your permissions in the browser settings.",
       });
     }
-  }, [toast, isRecording, checkForSilence]);
+  }, [toast, isRecording, checkForSilence, microphoneAvailable]);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorder.current && isRecording) {
@@ -237,6 +305,19 @@ export default function AICompanion() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
+                {!microphoneAvailable && (
+                  <div className="bg-destructive/10 text-destructive p-4 rounded-lg mb-4 flex items-start gap-2">
+                    <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="font-semibold">Microphone Access Required</p>
+                      <p className="text-sm mt-1">
+                        Please allow microphone access in your browser settings to use voice features.
+                        Usually, you can click the camera icon in your browser's address bar to manage permissions.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 <p className="text-muted-foreground">
                   Ask questions, request explanations, or start practice sessions using your voice.
                 </p>
@@ -246,7 +327,7 @@ export default function AICompanion() {
                     size="lg" 
                     className={`w-16 h-16 rounded-full ${isRecording ? 'bg-red-500 hover:bg-red-600' : ''}`}
                     onClick={startRecording}
-                    disabled={isRecording || isProcessing}
+                    disabled={isRecording || isProcessing || !microphoneAvailable}
                   >
                     <Mic className="h-8 w-8" />
                   </Button>
@@ -270,7 +351,6 @@ export default function AICompanion() {
               </div>
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader>
               <CardTitle>Conversation History</CardTitle>
