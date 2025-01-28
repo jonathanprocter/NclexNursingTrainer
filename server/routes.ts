@@ -26,19 +26,16 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/analytics/user/:userId", async (req, res) => {
     try {
       // Fetch all performance data
-      const attempts = await db.query.quizAttempts.findMany({
-        where: eq(quizAttempts.userId, parseInt(req.params.userId)),
-        orderBy: (quizAttempts, { desc }) => [desc(quizAttempts.startedAt)],
-      });
+      const attempts = await db.select().from(quizAttempts)
+        .where(eq(quizAttempts.userId, parseInt(req.params.userId)))
+        .orderBy(desc(quizAttempts.startedAt));
 
-      const progress = await db.query.userProgress.findMany({
-        where: eq(userProgress.userId, parseInt(req.params.userId)),
-      });
+      const progress = await db.select().from(userProgress)
+        .where(eq(userProgress.userId, parseInt(req.params.userId)));
 
-      const studyPlansData = await db.query.studyPlans.findMany({
-        where: eq(studyPlans.userId, parseInt(req.params.userId)),
-        orderBy: (studyPlans, { desc }) => [desc(studyPlans.createdAt)],
-      });
+      const studyPlansData = await db.select().from(studyPlans)
+        .where(eq(studyPlans.userId, parseInt(req.params.userId)))
+        .orderBy(desc(studyPlans.createdAt));
 
       // Calculate comprehensive analytics
       const summary = {
@@ -56,6 +53,7 @@ export function registerRoutes(app: Express): Server {
         summary,
       });
     } catch (error) {
+      console.error('Analytics error:', error);
       res.status(500).json({ message: "Failed to fetch analytics" });
     }
   });
@@ -78,6 +76,7 @@ export function registerRoutes(app: Express): Server {
       }).returning();
       res.json(newQuestion[0]);
     } catch (error) {
+      console.error('Question generation error:', error);
       res.status(500).json({ message: "Failed to generate question" });
     }
   });
@@ -96,6 +95,7 @@ export function registerRoutes(app: Express): Server {
       }).returning();
       res.json(interaction[0]);
     } catch (error) {
+      console.error('AI interaction error:', error);
       res.status(500).json({ message: "Failed to log AI interaction" });
     }
   });
@@ -105,82 +105,102 @@ export function registerRoutes(app: Express): Server {
     try {
       const { userId, moduleId, strengthAreas, weakAreas, metrics } = req.body;
 
-      const updatedProgress = await db.update(userProgress)
-        .set({
+      const existingProgress = await db.select().from(userProgress)
+        .where(and(
+          eq(userProgress.userId, userId),
+          eq(userProgress.moduleId, moduleId)
+        ));
+
+      if (existingProgress.length === 0) {
+        const newProgress = await db.insert(userProgress).values({
+          userId,
+          moduleId,
           strengthAreas,
           weakAreas,
           averageResponseTime: metrics.averageResponseTime,
           currentDifficulty: metrics.suggestedDifficulty,
           updatedAt: new Date(),
-        })
-        .where(and(
-          eq(userProgress.userId, userId),
-          eq(userProgress.moduleId, moduleId)
-        ))
-        .returning();
-
-      res.json(updatedProgress[0]);
+        }).returning();
+        res.json(newProgress[0]);
+      } else {
+        const updatedProgress = await db.update(userProgress)
+          .set({
+            strengthAreas,
+            weakAreas,
+            averageResponseTime: metrics.averageResponseTime,
+            currentDifficulty: metrics.suggestedDifficulty,
+            updatedAt: new Date(),
+          })
+          .where(and(
+            eq(userProgress.userId, userId),
+            eq(userProgress.moduleId, moduleId)
+          ))
+          .returning();
+        res.json(updatedProgress[0]);
+      }
     } catch (error) {
+      console.error('Progress update error:', error);
       res.status(500).json({ message: "Failed to update progress" });
     }
   });
 
-  // Keep existing routes
+  // Modules Routes
   app.get("/api/modules", async (_req, res) => {
     try {
-      const allModules = await db.query.modules.findMany({
-        orderBy: (modules, { asc }) => [asc(modules.orderIndex)],
-      });
+      const allModules = await db.select().from(modules)
+        .orderBy(modules.orderIndex);
       res.json(allModules);
     } catch (error) {
+      console.error('Modules fetch error:', error);
       res.status(500).json({ message: "Failed to fetch modules" });
     }
   });
 
+  // Questions Routes
   app.get("/api/questions/:moduleId", async (req, res) => {
     try {
-      const moduleQuestions = await db.query.questions.findMany({
-        where: eq(questions.moduleId, parseInt(req.params.moduleId)),
-      });
+      const moduleQuestions = await db.select().from(questions)
+        .where(eq(questions.moduleId, parseInt(req.params.moduleId)));
       res.json(moduleQuestions);
     } catch (error) {
+      console.error('Questions fetch error:', error);
       res.status(500).json({ message: "Failed to fetch questions" });
     }
   });
 
+  // Quiz Attempts Routes
   app.post("/api/quiz-attempts", async (req, res) => {
     try {
       const { userId, moduleId, type, answers, performanceMetrics } = req.body;
+      const score = answers.filter((a: any) => a.correct).length;
       const newAttempt = await db.insert(quizAttempts).values({
         userId,
         moduleId,
         type,
         answers,
         performanceMetrics,
-        score: 0, // Calculate score based on answers
+        score,
         totalQuestions: answers.length,
         startedAt: new Date(),
       }).returning();
       res.json(newAttempt[0]);
     } catch (error) {
+      console.error('Quiz attempt error:', error);
       res.status(500).json({ message: "Failed to save quiz attempt" });
     }
   });
 
+  // User Progress Routes
   app.get("/api/progress/:userId", async (req, res) => {
     try {
-      const progress = await db.query.userProgress.findMany({
-        where: eq(userProgress.userId, parseInt(req.params.userId)),
-        with: {
-          module: true,
-        },
-      });
-      res.json(progress);
+      const userProgressData = await db.select().from(userProgress)
+        .where(eq(userProgress.userId, parseInt(req.params.userId)));
+      res.json(userProgressData);
     } catch (error) {
+      console.error('Progress fetch error:', error);
       res.status(500).json({ message: "Failed to fetch user progress" });
     }
   });
-
 
   const httpServer = createServer(app);
   return httpServer;
