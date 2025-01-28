@@ -31,7 +31,13 @@ import { Badge } from "@/components/ui/badge";
 import cn from 'classnames';
 
 // Types for practice exercises
-type ExerciseType = 'pattern' | 'hypothesis' | 'decision' | 'documentation';
+interface ExerciseType {
+  type: 'pattern' | 'hypothesis' | 'decision' | 'documentation';
+  title: string;
+  description: string;
+  content: string;
+  options?: string[];
+}
 
 type AnswerOption = {
   text: string;
@@ -59,6 +65,7 @@ interface CaseStudy {
   nextCaseHints?: string[];
 }
 
+
 interface PracticeExercise {
   id: string;
   type: ExerciseType;
@@ -68,19 +75,47 @@ interface PracticeExercise {
   options?: string[];
 }
 
-const exerciseTypes: ExerciseType[] = ['pattern', 'hypothesis', 'decision', 'documentation'];
+interface DecisionNode {
+  id: string;
+  content: string;
+  options: {
+    text: string;
+    nextId: string;
+    feedback?: string;
+  }[];
+}
+
+interface ReasoningModel {
+  title: string;
+  description: string;
+  steps: {
+    title: string;
+    description: string;
+    example: string;
+  }[];
+}
+
+interface FormValues {
+  patientAssessment: string;
+  clinicalHypothesis: string;
+  interventionPlan: string;
+  expectedOutcomes: string;
+  response: string;
+}
+
+const exerciseTypes: string[] = ['pattern', 'hypothesis', 'decision', 'documentation'];
 
 export default function ClinicalAnalysis() {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [aiContent, setAiContent] = useState("");
   const [currentSection, setCurrentSection] = useState("");
-  const [selectedExerciseType, setSelectedExerciseType] = useState<ExerciseType>("pattern");
-  const [currentExercise, setCurrentExercise] = useState<PracticeExercise | null>(null);
+  const [selectedExerciseType, setSelectedExerciseType] = useState<string>("pattern");
+  const [currentExercise, setCurrentExercise] = useState<ExerciseType | null>(null);
   const [isLoading, setIsLoading] = useState(false); // Added loading state
 
   // Form for clinical documentation
-  const form = useForm({
+  const form = useForm<FormValues>({
     defaultValues: {
       patientAssessment: "",
       clinicalHypothesis: "",
@@ -109,7 +144,7 @@ export default function ClinicalAnalysis() {
 
   // Mutation for practice exercises
   const generateExerciseMutation = useMutation({
-    mutationFn: async (type: ExerciseType) => {
+    mutationFn: async (type: string) => {
       const response = await fetch("/api/generate-exercise", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -133,21 +168,18 @@ export default function ClinicalAnalysis() {
 
   // Handle AI help request
   const handleAIHelp = async (section: string, context?: string) => {
-    setCurrentSection(formatSectionTitle(section));
     setIsDialogOpen(true);
-
+    setCurrentSection(section);
     try {
       const result = await aiHelpMutation.mutateAsync({ section, context });
-      // Remove markdown syntax and format content
       const formattedContent = result.content
-        .replace(/\*\*/g, '')  // Remove bold syntax
-        .replace(/\n\d+\./g, '\n')  // Remove numbered list markers
-        .replace(/^-\s/gm, '')  // Remove bullet points
-        .split('\n\n')  // Split into paragraphs
+        .replace(/\*\*/g, '')
+        .replace(/\n\d+\./g, '\n')
+        .replace(/^-\s/gm, '')
+        .split('\n\n')
         .map(para => para.trim())
         .filter(para => para.length > 0)
         .join('\n\n');
-
       setAiContent(formattedContent);
     } catch (error) {
       toast({
@@ -159,7 +191,7 @@ export default function ClinicalAnalysis() {
   };
 
   // Generate practice exercise
-  const handleGenerateExercise = async (type: ExerciseType) => {
+  const handleGenerateExercise = async (type: string) => {
     setSelectedExerciseType(type);
     setIsLoading(true);
     try {
@@ -181,7 +213,7 @@ export default function ClinicalAnalysis() {
   };
 
   // Handle exercise submission
-  const handleExerciseSubmit = async (data: any) => {
+  const handleExerciseSubmit = async (data: FormValues) => {
     try {
       // Submit exercise response to backend
       const response = await fetch("/api/submit-exercise", {
@@ -775,9 +807,33 @@ const ClinicalReasoningSection = () => {
 };
 
 const PracticeSection = () => {
+  const [selectedExerciseType, setSelectedExerciseType] = useState<string>('');
+  const [currentExercise, setCurrentExercise] = useState<ExerciseType | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleGenerateExercise = async (type: ExerciseType) => {
+  const form = useForm<FormValues>({
+    defaultValues: {
+      response: "",
+    },
+  });
+
+  const generateExerciseMutation = useMutation({
+    mutationFn: async (type: string) => {
+      const response = await fetch("/api/generate-exercise", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate exercise");
+      }
+
+      return response.json();
+    },
+  });
+
+  const handleGenerateExercise = async (type: string) => {
     setSelectedExerciseType(type);
     setIsLoading(true);
     try {
@@ -856,7 +912,7 @@ const PracticeSection = () => {
                 <div className="space-y-4">
                   <RadioGroup
                     onValueChange={(value) => {
-                      form.setValue("answer", value);
+                      form.setValue("response", value);
                       form.handleSubmit(handleExerciseSubmit)();
                     }}
                   >
