@@ -140,14 +140,31 @@ export default function ClinicalAnalysis() {
     },
   });
 
+  // Add helper function to format section titles
+  const formatSectionTitle = (title: string) => {
+    return title.split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
   // Handle AI help request
   const handleAIHelp = async (section: string, context?: string) => {
-    setCurrentSection(section);
+    setCurrentSection(formatSectionTitle(section));
     setIsDialogOpen(true);
 
     try {
       const result = await aiHelpMutation.mutateAsync({ section, context });
-      setAiContent(result.content);
+      // Remove markdown syntax and format content
+      const formattedContent = result.content
+        .replace(/\*\*/g, '')  // Remove bold syntax
+        .replace(/\n\d+\./g, '\n')  // Remove numbered list markers
+        .replace(/^-\s/gm, '')  // Remove bullet points
+        .split('\n\n')  // Split into paragraphs
+        .map(para => para.trim())
+        .filter(para => para.length > 0)
+        .join('\n\n');
+
+      setAiContent(formattedContent);
     } catch (error) {
       toast({
         title: "Error",
@@ -923,14 +940,17 @@ const ClinicalReasoningSection = () => {
               <div className="space-y-6">
                 {/* Exercise Type Selection */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {(['pattern', 'hypothesis', 'decision', 'documentation'] as ExerciseType[]).map((type) => (
+                  {exerciseTypes.map((type) => (
                     <Button
                       key={type}
                       variant={selectedExerciseType === type ? "default" : "outline"}
-                      className="w-full"
                       onClick={() => handleGenerateExercise(type)}
+                      className="w-full"
                     >
-                      {type.charAt(0).toUpperCase() + type.slice(1)} Exercise
+                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                      {selectedExerciseType === type && (
+                        <RefreshCw className="ml-2 h-4 w-4" />
+                      )}
                     </Button>
                   ))}
                 </div>
@@ -1056,22 +1076,31 @@ const ClinicalReasoningSection = () => {
 
       {/* AI Help Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{currentSection}</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-xl font-semibold mb-2">
+              {currentSection}
+            </DialogTitle>
+            <DialogDescription className="text-base text-muted-foreground">
               AI-powered learning assistance
             </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="max-h-[60vh]">
-            <div className="space-y-4 p-4">
-              {aiContent ? (
-                <div className="prose prose-sm">
-                  <div dangerouslySetInnerHTML={{ __html: aiContent }} />
+          <ScrollArea className="mt-6">
+            <div className="prose prose-sm max-w-none space-y-6">
+              {aiContent.split('\n\n').map((paragraph, index) => (
+                <div key={index} className="space-y-2">
+                  {paragraph.startsWith('Title:') ? (
+                    <h3 className="text-lg font-semibold">{paragraph.replace('Title:', '').trim()}</h3>
+                  ) : paragraph.includes(':') ? (
+                    <div>
+                      <strong>{paragraph.split(':')[0]}:</strong>
+                      {paragraph.split(':').slice(1).join(':')}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground">{paragraph}</p>
+                  )}
                 </div>
-              ) : (
-                <p className="text-muted-foreground">Loading content...</p>
-              )}
+              ))}
             </div>
           </ScrollArea>
         </DialogContent>
