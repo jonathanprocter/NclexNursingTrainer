@@ -8,12 +8,17 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, Book, Activity, BarChart3, HelpCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Quizzes() {
+  const { toast } = useToast();
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState(1800); // 30 minutes in seconds
   const [showAIHelp, setShowAIHelp] = useState(false);
   const [aiResponse, setAiResponse] = useState("");
+  const [score, setScore] = useState({ correct: 0, total: 0 });
+  const [quizComplete, setQuizComplete] = useState(false);
+  const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
 
   // Format time as mm:ss
   const formatTime = (seconds: number) => {
@@ -74,26 +79,155 @@ export default function Quizzes() {
       explanation: "The ventrogluteal site is considered the safest for IM injections in adults because it is free from major nerves and blood vessels.",
       category: "Pharmacology",
       difficulty: "Medium"
+    },
+    {
+      id: 4,
+      text: "A nurse is assessing a client who has just been admitted with acute pancreatitis. Which of the following findings would the nurse expect to observe?",
+      options: [
+        { id: "a", text: "Sharp pain in the right upper quadrant" },
+        { id: "b", text: "Epigastric pain radiating to the back" },
+        { id: "c", text: "Dull pain in the left lower quadrant" },
+        { id: "d", text: "Intermittent pain around the umbilicus" }
+      ],
+      correctAnswer: "b",
+      explanation: "Classic signs of acute pancreatitis include severe epigastric pain that radiates to the back in a band-like pattern.",
+      category: "Medical-Surgical",
+      difficulty: "Medium"
+    },
+    {
+      id: 5,
+      text: "A nurse is caring for a client with severe burns. Which of the following interventions has the highest priority during the first 24 hours after injury?",
+      options: [
+        { id: "a", text: "Pain management" },
+        { id: "b", text: "Fluid resuscitation" },
+        { id: "c", text: "Wound care" },
+        { id: "d", text: "Nutritional support" }
+      ],
+      correctAnswer: "b",
+      explanation: "During the first 24 hours after a severe burn injury, fluid resuscitation is the highest priority to prevent hypovolemic shock.",
+      category: "Critical Care",
+      difficulty: "Hard"
+    },
+    {
+      id: 6,
+      text: "A nurse is teaching a client about warfarin (Coumadin) therapy. Which food should the client be instructed to avoid due to its high vitamin K content?",
+      options: [
+        { id: "a", text: "Carrots" },
+        { id: "b", text: "Spinach" },
+        { id: "c", text: "Apples" },
+        { id: "d", text: "Potatoes" }
+      ],
+      correctAnswer: "b",
+      explanation: "Spinach is high in vitamin K, which can decrease the effectiveness of warfarin therapy. Clients should maintain consistent vitamin K intake while on warfarin.",
+      category: "Pharmacology",
+      difficulty: "Medium"
+    },
+    {
+      id: 7,
+      text: "A nurse is caring for a client with active tuberculosis. Which type of isolation precautions should be implemented?",
+      options: [
+        { id: "a", text: "Contact" },
+        { id: "b", text: "Droplet" },
+        { id: "c", text: "Airborne" },
+        { id: "d", text: "Standard" }
+      ],
+      correctAnswer: "c",
+      explanation: "Tuberculosis is transmitted through airborne particles, requiring airborne precautions including negative pressure rooms and N95 respirators.",
+      category: "Infection Control",
+      difficulty: "Medium"
+    },
+    {
+      id: 8,
+      text: "A nurse is assessing a client who is 24 hours post-thyroidectomy. Which assessment finding requires immediate intervention?",
+      options: [
+        { id: "a", text: "Hoarseness" },
+        { id: "b", text: "Tingling in fingers and toes" },
+        { id: "c", text: "Slight drainage on dressing" },
+        { id: "d", text: "Mild incisional pain" }
+      ],
+      correctAnswer: "b",
+      explanation: "Tingling in the extremities may indicate hypocalcemia, a serious complication after thyroidectomy due to parathyroid gland damage.",
+      category: "Medical-Surgical",
+      difficulty: "Hard"
+    },
+    {
+      id: 9,
+      text: "A nurse is providing care for a client with major depression. The client states, 'I wish I could go to sleep and never wake up.' What is the nurse's best initial response?",
+      options: [
+        { id: "a", text: "Tell the client to think positive thoughts" },
+        { id: "b", text: "Ask if the client has thoughts of harming themselves" },
+        { id: "c", text: "Notify the healthcare provider immediately" },
+        { id: "d", text: "Reassure the client that everything will be fine" }
+      ],
+      correctAnswer: "b",
+      explanation: "The nurse should first assess for suicidal ideation by asking direct questions about self-harm thoughts to determine the level of risk.",
+      category: "Mental Health",
+      difficulty: "Hard"
+    },
+    {
+      id: 10,
+      text: "A nurse is preparing to administer packed red blood cells. Which of the following actions is most important before initiating the transfusion?",
+      options: [
+        { id: "a", text: "Verify blood type with two nurses" },
+        { id: "b", text: "Premedicate with acetaminophen" },
+        { id: "c", text: "Check vital signs" },
+        { id: "d", text: "Document blood bank number" }
+      ],
+      correctAnswer: "a",
+      explanation: "Verification of blood type and patient identification by two qualified healthcare professionals is crucial to prevent transfusion reactions.",
+      category: "Safety",
+      difficulty: "Hard"
     }
   ];
 
+  const handleAnswer = (questionId: number, selectedAnswer: string) => {
+    setUserAnswers(prev => ({...prev, [questionId]: selectedAnswer}));
+    const correct = selectedAnswer === mockQuestions[currentQuestion].correctAnswer;
+    setScore(prev => ({
+      ...prev,
+      correct: prev.correct + (correct ? 1 : 0),
+      total: prev.total + 1
+    }));
+
+    if (currentQuestion === mockQuestions.length - 1) {
+      setQuizComplete(true);
+      const percentage = Math.round((score.correct / mockQuestions.length) * 100);
+      toast({
+        title: "Quiz Complete!",
+        description: `You scored ${percentage}% (${score.correct}/${mockQuestions.length} correct)`,
+      });
+    } else {
+      setCurrentQuestion(prev => prev + 1);
+    }
+  };
+
+  const generateNewQuestions = () => {
+    // In a real implementation, this would fetch new questions from an API
+    setCurrentQuestion(0);
+    setQuizComplete(false);
+    setScore({ correct: 0, total: 0 });
+    setUserAnswers({});
+    setTimeRemaining(1800);
+    toast({
+      title: "New Questions Generated",
+      description: "Get ready for a new set of questions!",
+    });
+  };
+
   const handleAIHelp = async () => {
     setShowAIHelp(true);
-    // In a real implementation, this would make an API call to get AI assistance
     setAiResponse("Loading AI explanation...");
     // Simulate API call
     setTimeout(() => {
       setAiResponse(`Here's a detailed explanation of the concept:
 
 1. Key Points to Remember:
-- Normal blood glucose ranges before meals: 80-130 mg/dL
-- Post-meal target: <180 mg/dL
-- Consider individual patient factors
+${mockQuestions[currentQuestion].explanation}
 
 2. Clinical Reasoning:
-- 180 mg/dL is slightly elevated but not critical
-- No immediate intervention needed
-- Important to maintain regular meal schedule
+- Consider the patient's condition and vital signs
+- Follow standard protocols and guidelines
+- Always prioritize patient safety
 
 Would you like me to elaborate on any of these points?`);
     }, 1500);
@@ -131,50 +265,72 @@ Would you like me to elaborate on any of these points?`);
         <TabsContent value="questions">
           <Card>
             <CardContent className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <div>
-                  <Badge variant="secondary">Question {currentQuestion + 1}</Badge>
-                  <Badge variant="outline" className="ml-2">
-                    {mockQuestions[currentQuestion]?.category || "General"}
-                  </Badge>
-                  <Badge variant="outline" className="ml-2">
-                    {mockQuestions[currentQuestion]?.difficulty || "Medium"}
-                  </Badge>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
-                    <span className="text-sm text-muted-foreground">
-                      Time: {formatTime(timeRemaining)}
-                    </span>
+              {!quizComplete ? (
+                <>
+                  <div className="flex justify-between items-center mb-4">
+                    <div>
+                      <Badge variant="secondary">Question {currentQuestion + 1}</Badge>
+                      <Badge variant="outline" className="ml-2">
+                        {mockQuestions[currentQuestion]?.category || "General"}
+                      </Badge>
+                      <Badge variant="outline" className="ml-2">
+                        {mockQuestions[currentQuestion]?.difficulty || "Medium"}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4" />
+                        <span className="text-sm text-muted-foreground">
+                          Time: {formatTime(timeRemaining)}
+                        </span>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleAIHelp}
+                        className="flex items-center gap-2"
+                      >
+                        <HelpCircle className="h-4 w-4" />
+                        AI Help
+                      </Button>
+                    </div>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleAIHelp}
-                    className="flex items-center gap-2"
-                  >
-                    <HelpCircle className="h-4 w-4" />
-                    AI Help
-                  </Button>
-                </div>
-              </div>
 
-              <QuestionCard
-                question={mockQuestions[currentQuestion % mockQuestions.length]}
-                onNext={() => setCurrentQuestion(c => (c + 1) % mockQuestions.length)}
-              />
+                  <QuestionCard
+                    question={mockQuestions[currentQuestion]}
+                    onNext={(answer) => handleAnswer(mockQuestions[currentQuestion].id, answer)}
+                  />
 
-              <div className="mt-4">
-                <Progress 
-                  value={(currentQuestion + 1) * (100 / mockQuestions.length)} 
-                  className="h-2" 
-                />
-                <div className="flex justify-between text-sm text-muted-foreground mt-2">
-                  <span>Progress</span>
-                  <span>{currentQuestion + 1}/{mockQuestions.length} Questions</span>
+                  <div className="mt-4">
+                    <Progress 
+                      value={(currentQuestion + 1) * (100 / mockQuestions.length)} 
+                      className="h-2" 
+                    />
+                    <div className="flex justify-between text-sm text-muted-foreground mt-2">
+                      <span>Progress</span>
+                      <span>{currentQuestion + 1}/{mockQuestions.length} Questions</span>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="space-y-6">
+                  <div className="text-center">
+                    <h2 className="text-2xl font-bold mb-2">Quiz Complete! 🎉</h2>
+                    <p className="text-muted-foreground">
+                      You scored {Math.round((score.correct / mockQuestions.length) * 100)}% 
+                      ({score.correct}/{mockQuestions.length} correct)
+                    </p>
+                  </div>
+                  <div className="flex justify-center gap-4">
+                    <Button onClick={generateNewQuestions}>
+                      Generate New Questions
+                    </Button>
+                    <Button variant="outline" onClick={() => setQuizComplete(false)}>
+                      Review Answers
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
