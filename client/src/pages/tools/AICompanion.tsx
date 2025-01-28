@@ -100,11 +100,13 @@ export default function AICompanion() {
 
   const checkForSilence = useCallback((dataArray: Uint8Array) => {
     const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
-    if (average < 10) { // Increased threshold for better silence detection
+    if (average < 15) { // Adjusted threshold for better silence detection
       if (silenceTimeout.current === null) {
         silenceTimeout.current = setTimeout(() => {
-          stopRecording();
-        }, 1500); // Reduced to 1.5 seconds of silence for better responsiveness
+          if (mediaRecorder.current?.state === 'recording') {
+            stopRecording();
+          }
+        }, 1000); // Reduced to 1 second of silence for better responsiveness
       }
     } else {
       if (silenceTimeout.current) {
@@ -112,7 +114,7 @@ export default function AICompanion() {
         silenceTimeout.current = null;
       }
     }
-  }, []);
+  }, [stopRecording]);
 
   const startRecording = useCallback(async () => {
     if (!microphoneAvailable) {
