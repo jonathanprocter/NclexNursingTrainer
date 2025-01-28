@@ -74,6 +74,59 @@ export default function Pharmacology() {
                     </CardContent>
                   </Card>
                 </div>
+
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold mb-4">Learning Objectives</h3>
+                  <div className="grid gap-4">
+                    <div className="bg-muted/50 p-4 rounded-lg">
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="font-medium">Knowledge</h4>
+                        <Button variant="outline" size="sm" onClick={() => handleAIHelp("knowledge_objectives")}>
+                          <Bot className="h-4 w-4 mr-2" />
+                          AI Help
+                        </Button>
+                      </div>
+                      <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                        <li>Understand drug classifications and their clinical implications</li>
+                        <li>Master pharmacokinetics and pharmacodynamics principles</li>
+                        <li>Comprehend medication safety protocols and guidelines</li>
+                        <li>Know drug interactions and contraindications</li>
+                      </ul>
+                    </div>
+
+                    <div className="bg-muted/50 p-4 rounded-lg">
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="font-medium">Skills</h4>
+                        <Button variant="outline" size="sm" onClick={() => handleAIHelp("skills_objectives")}>
+                          <Bot className="h-4 w-4 mr-2" />
+                          AI Help
+                        </Button>
+                      </div>
+                      <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                        <li>Perform accurate drug calculations</li>
+                        <li>Demonstrate proper medication administration techniques</li>
+                        <li>Apply critical thinking in medication management</li>
+                        <li>Execute proper documentation procedures</li>
+                      </ul>
+                    </div>
+
+                    <div className="bg-muted/50 p-4 rounded-lg">
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="font-medium">Awareness</h4>
+                        <Button variant="outline" size="sm" onClick={() => handleAIHelp("awareness_objectives")}>
+                          <Bot className="h-4 w-4 mr-2" />
+                          AI Help
+                        </Button>
+                      </div>
+                      <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                        <li>Recognize high-alert medications and special precautions</li>
+                        <li>Identify potential medication errors and prevention strategies</li>
+                        <li>Understand cultural considerations in medication therapy</li>
+                        <li>Stay current with medication safety updates and guidelines</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -83,37 +136,82 @@ export default function Pharmacology() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Medication Overview</CardTitle>
-              <Button variant="outline" size="icon" onClick={() => handleAIHelp("medications")}>
+              <Button variant="outline" size="icon" onClick={() => handleAIHelp("medications_overview")}>
                 <Bot className="h-4 w-4" />
               </Button>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4">
+            <CardContent className="space-y-6">
+              <div className="grid gap-6">
                 <section>
-                  <h3 className="text-lg font-semibold mb-2">Drug Classifications</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Learn about major drug classes including:
-                  </p>
-                  <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-                    <li>Antimicrobials</li>
-                    <li>Cardiovascular medications</li>
-                    <li>Pain management drugs</li>
-                    <li>Psychiatric medications</li>
-                    <li>Endocrine medications</li>
-                  </ul>
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-lg font-semibold">Drug Classifications</h3>
+                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("drug_classifications")}>
+                      <Bot className="h-4 w-4 mr-2" />
+                      AI Help
+                    </Button>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="bg-muted/50 p-4 rounded-lg">
+                      <h4 className="font-medium mb-2">Antimicrobials</h4>
+                      <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                        <li>Antibiotics: penicillins, cephalosporins, macrolides</li>
+                        <li>Antifungals: azoles, polyenes</li>
+                        <li>Antivirals: nucleoside analogs, protease inhibitors</li>
+                        <li>Clinical implications and resistance patterns</li>
+                      </ul>
+                    </div>
+
+                    <div className="bg-muted/50 p-4 rounded-lg">
+                      <h4 className="font-medium mb-2">Cardiovascular Medications</h4>
+                      <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                        <li>Antihypertensives: ACE inhibitors, beta blockers, calcium channel blockers</li>
+                        <li>Anticoagulants: heparins, direct oral anticoagulants</li>
+                        <li>Antiarrhythmics: sodium channel blockers, potassium channel blockers</li>
+                        <li>Heart failure medications: diuretics, inotropes</li>
+                      </ul>
+                    </div>
+
+                    <div className="bg-muted/50 p-4 rounded-lg">
+                      <h4 className="font-medium mb-2">Pain Management</h4>
+                      <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                        <li>Opioids: morphine, fentanyl, hydromorphone</li>
+                        <li>NSAIDs: mechanisms, contraindications</li>
+                        <li>Adjuvant analgesics: gabapentinoids, antidepressants</li>
+                        <li>Pain assessment and documentation requirements</li>
+                      </ul>
+                    </div>
+                  </div>
                 </section>
 
                 <section>
-                  <h3 className="text-lg font-semibold mb-2">Mechanisms of Action</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Understand how different medications work in the body:
-                  </p>
-                  <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-                    <li>Receptor interactions</li>
-                    <li>Pharmacokinetics</li>
-                    <li>Drug absorption and distribution</li>
-                    <li>Metabolism and excretion</li>
-                  </ul>
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-lg font-semibold">Mechanisms of Action</h3>
+                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("mechanisms_of_action")}>
+                      <Bot className="h-4 w-4 mr-2" />
+                      AI Help
+                    </Button>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="bg-muted/50 p-4 rounded-lg">
+                      <h4 className="font-medium mb-2">Pharmacodynamics</h4>
+                      <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                        <li>Receptor types and drug-receptor interactions</li>
+                        <li>Agonist and antagonist mechanisms</li>
+                        <li>Dose-response relationships</li>
+                        <li>Therapeutic index and safety margins</li>
+                      </ul>
+                    </div>
+
+                    <div className="bg-muted/50 p-4 rounded-lg">
+                      <h4 className="font-medium mb-2">Pharmacokinetics</h4>
+                      <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                        <li>Absorption factors and bioavailability</li>
+                        <li>Distribution and protein binding</li>
+                        <li>Metabolism pathways and drug interactions</li>
+                        <li>Elimination routes and half-life considerations</li>
+                      </ul>
+                    </div>
+                  </div>
                 </section>
               </div>
             </CardContent>
@@ -124,30 +222,72 @@ export default function Pharmacology() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Drug Calculations</CardTitle>
-              <Button variant="outline" size="icon" onClick={() => handleAIHelp("calculations")}>
+              <Button variant="outline" size="icon" onClick={() => handleAIHelp("calculations_overview")}>
                 <Bot className="h-4 w-4" />
               </Button>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4">
+            <CardContent className="space-y-6">
+              <div className="grid gap-6">
                 <section>
-                  <h3 className="text-lg font-semibold mb-2">Basic Calculations</h3>
-                  <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-                    <li>Tablet and capsule calculations</li>
-                    <li>Liquid medication calculations</li>
-                    <li>Weight-based dosing</li>
-                    <li>Conversion between units</li>
-                  </ul>
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-lg font-semibold">Basic Calculations</h3>
+                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("basic_calculations")}>
+                      <Bot className="h-4 w-4 mr-2" />
+                      AI Help
+                    </Button>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="bg-muted/50 p-4 rounded-lg">
+                      <h4 className="font-medium mb-2">Tablet and Capsule Calculations</h4>
+                      <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                        <li>Converting between units (mg, g, mcg)</li>
+                        <li>Calculating doses from available strengths</li>
+                        <li>Multiple tablet calculations</li>
+                        <li>Practice problems with solutions</li>
+                      </ul>
+                    </div>
+
+                    <div className="bg-muted/50 p-4 rounded-lg">
+                      <h4 className="font-medium mb-2">Weight-Based Dosing</h4>
+                      <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                        <li>mg/kg calculations</li>
+                        <li>Body Surface Area (BSA) calculations</li>
+                        <li>Pediatric dosing considerations</li>
+                        <li>Maximum/minimum dose limits</li>
+                      </ul>
+                    </div>
+                  </div>
                 </section>
 
                 <section>
-                  <h3 className="text-lg font-semibold mb-2">IV Calculations</h3>
-                  <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-                    <li>IV flow rates</li>
-                    <li>Drip rates</li>
-                    <li>IV push medications</li>
-                    <li>Complex IV calculations</li>
-                  </ul>
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-lg font-semibold">IV Calculations</h3>
+                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("iv_calculations")}>
+                      <Bot className="h-4 w-4 mr-2" />
+                      AI Help
+                    </Button>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="bg-muted/50 p-4 rounded-lg">
+                      <h4 className="font-medium mb-2">Flow Rates</h4>
+                      <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                        <li>mL/hr calculations</li>
+                        <li>Drops per minute conversion</li>
+                        <li>Weight-based IV rates</li>
+                        <li>Critical care drip rates</li>
+                      </ul>
+                    </div>
+
+                    <div className="bg-muted/50 p-4 rounded-lg">
+                      <h4 className="font-medium mb-2">Complex IV Calculations</h4>
+                      <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                        <li>Multiple medication infusions</li>
+                        <li>Concentration calculations</li>
+                        <li>Time duration calculations</li>
+                        <li>Practice scenarios with rationales</li>
+                      </ul>
+                    </div>
+                  </div>
                 </section>
               </div>
             </CardContent>
@@ -158,30 +298,72 @@ export default function Pharmacology() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Medication Administration</CardTitle>
-              <Button variant="outline" size="icon" onClick={() => handleAIHelp("administration")}>
+              <Button variant="outline" size="icon" onClick={() => handleAIHelp("administration_overview")}>
                 <Bot className="h-4 w-4" />
               </Button>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4">
+            <CardContent className="space-y-6">
+              <div className="grid gap-6">
                 <section>
-                  <h3 className="text-lg font-semibold mb-2">Administration Routes</h3>
-                  <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-                    <li>Oral administration</li>
-                    <li>Parenteral administration</li>
-                    <li>Topical application</li>
-                    <li>Inhalation methods</li>
-                  </ul>
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-lg font-semibold">Administration Routes</h3>
+                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("administration_routes")}>
+                      <Bot className="h-4 w-4 mr-2" />
+                      AI Help
+                    </Button>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="bg-muted/50 p-4 rounded-lg">
+                      <h4 className="font-medium mb-2">Oral Administration</h4>
+                      <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                        <li>Proper techniques for different formulations</li>
+                        <li>Crushing and splitting guidelines</li>
+                        <li>Enteral tube administration</li>
+                        <li>Common errors and prevention</li>
+                      </ul>
+                    </div>
+
+                    <div className="bg-muted/50 p-4 rounded-lg">
+                      <h4 className="font-medium mb-2">Parenteral Administration</h4>
+                      <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                        <li>Subcutaneous injection techniques</li>
+                        <li>Intramuscular injection sites and methods</li>
+                        <li>IV push medication guidelines</li>
+                        <li>Central line medication administration</li>
+                      </ul>
+                    </div>
+                  </div>
                 </section>
 
                 <section>
-                  <h3 className="text-lg font-semibold mb-2">Safety Guidelines</h3>
-                  <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-                    <li>The Rights of Medication Administration</li>
-                    <li>Documentation requirements</li>
-                    <li>Error prevention strategies</li>
-                    <li>Special considerations</li>
-                  </ul>
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-lg font-semibold">Safety Guidelines</h3>
+                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("safety_guidelines")}>
+                      <Bot className="h-4 w-4 mr-2" />
+                      AI Help
+                    </Button>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="bg-muted/50 p-4 rounded-lg">
+                      <h4 className="font-medium mb-2">The Rights of Medication Administration</h4>
+                      <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                        <li>Right patient verification methods</li>
+                        <li>Right medication and dose verification</li>
+                        <li>Right time and frequency considerations</li>
+                        <li>Right route and documentation requirements</li>
+                      </ul>
+                    </div>
+
+                    <div className="bg-muted/50 p-4 rounded-lg">
+                      <h4 className="font-medium mb-2">Error Prevention</h4>
+                      <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                        <li>High-alert medication precautions</li>
+                        <li>Double-check requirements</li>
+                        <li>Environmental considerations</li>
+                        <li>Technology use in medication safety</li>
+                      </ul>
+                    </div>
+                  </div>
                 </section>
               </div>
             </CardContent>
