@@ -34,7 +34,7 @@ function Router() {
     <div className="min-h-screen bg-background">
       <NavBar />
       <main className="container mx-auto px-4 py-8">
-        <Switch>
+        <Switch location={window.location}>
           {/* Home Route */}
           <Route path="/" component={Home} />
 
