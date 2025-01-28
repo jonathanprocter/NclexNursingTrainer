@@ -2,8 +2,33 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Mic, StopCircle, History, Lightbulb } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useState } from 'react';
+import { toast } from "@/components/ui/toast"; // Assuming a toast component exists
+
 
 export default function AICompanion() {
+  const [microphoneEnabled, setMicrophoneEnabled] = useState(false);
+
+  const handleMicClick = async () => {
+    try {
+      if (!microphoneEnabled) {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // Process the audio stream (not implemented here)
+        setMicrophoneEnabled(true);
+      } else {
+        // Stop audio stream (not implemented here)
+        setMicrophoneEnabled(false);
+      }
+    } catch (error) {
+      console.warn("Microphone access denied:", error);
+      toast({
+        title: "Microphone Access Required",
+        description: "Please allow microphone access to use voice features.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
@@ -24,14 +49,12 @@ export default function AICompanion() {
                 <p className="text-muted-foreground">
                   Ask questions, request explanations, or start practice sessions using your voice.
                 </p>
-                
+
                 <div className="flex justify-center gap-4 py-8">
-                  <Button size="lg" className="w-16 h-16 rounded-full">
-                    <Mic className="h-8 w-8" />
+                  <Button size="lg" className="w-16 h-16 rounded-full" onClick={handleMicClick}>
+                    {microphoneEnabled ? <StopCircle className="h-8 w-8" /> : <Mic className="h-8 w-8" />}
                   </Button>
-                  <Button size="lg" variant="outline" className="w-16 h-16 rounded-full">
-                    <StopCircle className="h-8 w-8" />
-                  </Button>
+                  {/*Removed StopCircle button as it's handled by the state*/}
                 </div>
 
                 <div className="bg-muted p-4 rounded-lg">
