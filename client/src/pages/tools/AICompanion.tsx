@@ -32,10 +32,41 @@ export default function AICompanion() {
   // Check microphone availability on component mount
   useEffect(() => {
     const checkMicrophoneAccess = async () => {
-      // Check if we're in a secure context
-      if (!window.isSecureContext) {
+      if (!navigator.mediaDevices?.getUserMedia) {
         setMicrophoneAvailable(false);
         toast({
+          variant: "destructive",
+          title: "Browser Not Supported",
+          description: "Your browser doesn't support microphone access",
+        });
+        return;
+      }
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach(track => track.stop());
+        setMicrophoneAvailable(true);
+      } catch (error) {
+        setMicrophoneAvailable(false);
+        if (error instanceof DOMException) {
+          if (error.name === 'NotAllowedError') {
+            toast({
+              variant: "destructive",
+              title: "Permission Required",
+              description: "Please allow microphone access in your browser settings",
+            });
+          } else {
+            toast({
+              variant: "destructive",
+              title: "Microphone Error",
+              description: `Error: ${error.name}`,
+            });
+          }
+        }
+      }
+    };
+
+    checkMicrophoneAccess();
           variant: "destructive",
           title: "Security Error",
           description: "Microphone access requires a secure (HTTPS) connection.",
