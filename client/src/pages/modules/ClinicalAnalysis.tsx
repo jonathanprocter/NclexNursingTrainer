@@ -68,25 +68,7 @@ interface PracticeExercise {
   options?: string[];
 }
 
-interface DecisionNode {
-  id: string;
-  content: string;
-  options: {
-    text: string;
-    nextId: string;
-    feedback?: string;
-  }[];
-}
-
-interface ReasoningModel {
-  title: string;
-  description: string;
-  steps: {
-    title: string;
-    description: string;
-    example: string;
-  }[];
-}
+const exerciseTypes: ExerciseType[] = ['pattern', 'hypothesis', 'decision', 'documentation'];
 
 export default function ClinicalAnalysis() {
   const { toast } = useToast();
