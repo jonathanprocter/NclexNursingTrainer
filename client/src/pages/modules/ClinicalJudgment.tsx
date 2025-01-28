@@ -105,6 +105,22 @@ export default function ClinicalJudgment() {
     },
   });
 
+  const handleAIHelp = async (topic: string, context?: string) => {
+    setCurrentTopic(formatTopicName(topic));
+    setIsDialogOpen(true);
+
+    try {
+      const result = await aiHelpMutation.mutateAsync({ topic, context });
+      setAiContent(result.content);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to get AI assistance. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleAskQuestion = async () => {
     if (!question.trim()) {
       toast({
