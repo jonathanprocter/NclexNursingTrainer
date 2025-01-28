@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/accordion";
 import { Textarea } from "@/components/ui/textarea";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { AIHelpButton } from "@/components/ui/ai-help-button";
 
 interface RiskScenario {
   id: string;
@@ -48,31 +49,107 @@ interface FormValues {
   answer: string;
   riskAssessment: string;
   preventionQ1: string;
+  // Add fields for all questions
 }
+
+interface PreventionQuestion {
+  id: string;
+  question: string;
+  options: {
+    value: string;
+    label: string;
+  }[];
+  correctAnswer: string;
+  explanation: {
+    main: string;
+    concepts: {
+      title: string;
+      description: string;
+    }[];
+  };
+}
+
+const preventionQuestions: PreventionQuestion[] = [
+  {
+    id: "q1",
+    question: "A patient has been admitted with dizziness and weakness. Which combination of interventions best addresses fall prevention?",
+    options: [
+      { value: "a", label: "Bed alarm and restraints" },
+      { value: "b", label: "Fall risk assessment, bed in low position, non-slip footwear, and scheduled assistance" },
+      { value: "c", label: "Keeping patient in bed and raising all rails" },
+      { value: "d", label: "Telling family to watch patient" }
+    ],
+    correctAnswer: "b",
+    explanation: {
+      main: "Option B provides a comprehensive fall prevention strategy that addresses multiple risk factors while maintaining patient dignity and independence.",
+      concepts: [
+        {
+          title: "Assessment First",
+          description: "Always begin with a thorough risk assessment"
+        },
+        {
+          title: "Multiple Interventions",
+          description: "Fall prevention requires a multi-faceted approach"
+        },
+        {
+          title: "Least Restrictive",
+          description: "Avoid restraints when possible"
+        },
+        {
+          title: "Proactive Planning",
+          description: "Scheduled assistance prevents unplanned activities"
+        }
+      ]
+    }
+  },
+  {
+    id: "q2",
+    question: "Which intervention is most appropriate for preventing pressure injuries in a bedbound patient?",
+    options: [
+      { value: "a", label: "Turning and repositioning every 4 hours" },
+      { value: "b", label: "Applying lotion to bony prominences" },
+      { value: "c", label: "Implementing a turning schedule every 2 hours and conducting skin assessments" },
+      { value: "d", label: "Using a foam mattress only" }
+    ],
+    correctAnswer: "c",
+    explanation: {
+      main: "Regular repositioning every 2 hours combined with skin assessments is the gold standard for pressure injury prevention.",
+      concepts: [
+        {
+          title: "Time Factor",
+          description: "2-hour interval is evidence-based for tissue recovery"
+        },
+        {
+          title: "Assessment Integration",
+          description: "Regular skin checks allow early intervention"
+        },
+        {
+          title: "Comprehensive Care",
+          description: "Combines prevention with monitoring"
+        }
+      ]
+    }
+  },
+  // Add 8 more questions following the same pattern...
+];
 
 export default function RiskReduction() {
   const { toast } = useToast();
   const [selectedScenario, setSelectedScenario] = useState<RiskScenario | null>(null);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [showExplanation, setShowExplanation] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [answeredQuestions, setAnsweredQuestions] = useState<Set<string>>(new Set());
 
   const form = useForm<FormValues>({
     defaultValues: {
       answer: "",
       riskAssessment: "",
-      preventionQ1: ""
+      preventionQ1: "",
+      // Add fields for all questions
     },
   });
 
-  // Mock progress data - will be replaced with actual API call
-  const progress = {
-    scenariosCompleted: 0,
-    totalScenarios: 20,
-    correctResponses: 0,
-    skillLevel: "Beginner",
-  };
-
-  // Mutation for generating new scenarios
   const generateScenarioMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch("/api/generate-risk-scenario", {
@@ -107,11 +184,24 @@ export default function RiskReduction() {
   };
 
   const handleSubmitAssessment = async (data: { riskAssessment: string }) => {
-    // This would typically be validated against an API
     toast({
       title: "Assessment Submitted",
       description: "Your risk assessment has been recorded.",
     });
+  };
+
+  const handleNextQuestion = () => {
+    if (currentQuestionIndex < preventionQuestions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+      setShowExplanation(false);
+    }
+  };
+
+  const handlePrevQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(prev => prev - 1);
+      setShowExplanation(false);
+    }
   };
 
   return (
@@ -134,8 +224,13 @@ export default function RiskReduction() {
         <TabsContent value="overview">
           <div className="grid gap-6">
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>NCLEX Risk Management Framework</CardTitle>
+                <AIHelpButton
+                  title="Risk Management Framework"
+                  description="Get AI assistance with understanding risk management concepts and their application in nursing practice."
+                  topic="risk management framework and NCLEX preparation"
+                />
               </CardHeader>
               <CardContent>
                 <div className="space-y-8">
@@ -311,8 +406,13 @@ export default function RiskReduction() {
 
         <TabsContent value="safety">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Evidence-Based Safety Measures</CardTitle>
+              <AIHelpButton
+                title="Safety Measures"
+                description="Get AI assistance with understanding and implementing safety measures in nursing practice."
+                topic="evidence-based safety measures"
+              />
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
@@ -441,79 +541,106 @@ export default function RiskReduction() {
 
         <TabsContent value="prevention">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Prevention Strategies Assessment</CardTitle>
+              <AIHelpButton
+                title="Prevention Strategies"
+                description="Get AI assistance with understanding prevention strategies and risk reduction techniques."
+                topic="prevention strategies in nursing"
+              />
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
                 <div className="bg-muted/50 p-4 rounded-lg">
-                  <h3 className="font-semibold text-lg mb-3">Risk Prevention Quiz</h3>
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-semibold text-lg">Question {currentQuestionIndex + 1} of {preventionQuestions.length}</h3>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={handlePrevQuestion}
+                        disabled={currentQuestionIndex === 0}
+                      >
+                        Previous
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={handleNextQuestion}
+                        disabled={currentQuestionIndex === preventionQuestions.length - 1}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </div>
+
                   <Form {...form}>
                     <form className="space-y-6">
                       <div className="space-y-4">
                         <div>
-                          <h4 className="font-medium mb-2">Question 1: Fall Prevention</h4>
-                          <p className="text-sm mb-3">
-                            A patient has been admitted with dizziness and weakness. Which combination of interventions best addresses fall prevention?
-                          </p>
+                          <h4 className="font-medium mb-2">{preventionQuestions[currentQuestionIndex].question}</h4>
                           <RadioGroup
                             onValueChange={(value) => {
-                              form.setValue("preventionQ1", value);
+                              form.setValue(`question_${currentQuestionIndex}`, value);
+                              setAnsweredQuestions(prev => new Set(prev).add(preventionQuestions[currentQuestionIndex].id));
                               setShowExplanation(true);
                             }}
                           >
                             <div className="space-y-2">
-                              <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="a" id="q1-a" />
-                                <Label htmlFor="q1-a">Bed alarm and restraints</Label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="b" id="q1-b" />
-                                <Label htmlFor="q1-b">Fall risk assessment, bed in low position, non-slip footwear, and scheduled assistance</Label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="c" id="q1-c" />
-                                <Label htmlFor="q1-c">Keeping patient in bed and raising all rails</Label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="d" id="q1-d" />
-                                <Label htmlFor="q1-d">Telling family to watch patient</Label>
-                              </div>
+                              {preventionQuestions[currentQuestionIndex].options.map((option) => (
+                                <div key={option.value} className="flex items-center space-x-2">
+                                  <RadioGroupItem value={option.value} id={`q${currentQuestionIndex}-${option.value}`} />
+                                  <Label htmlFor={`q${currentQuestionIndex}-${option.value}`}>{option.label}</Label>
+                                </div>
+                              ))}
                             </div>
                           </RadioGroup>
 
-                          {form.watch("preventionQ1") && (
+                          {showExplanation && (
                             <div className="mt-4 p-4 bg-background/50 rounded-lg">
                               <div className="flex items-center gap-2 mb-2">
                                 <CheckCircle2 className="h-5 w-5 text-green-500" />
                                 <h4 className="font-medium">Explanation</h4>
                               </div>
                               <p className="text-sm">
-                                Option B is correct. This approach provides a comprehensive fall prevention strategy that:
-                                <ul className="list-disc list-inside mt-2 space-y-1">
-                                  <li>Identifies specific risk factors through assessment</li>
-                                  <li>Implements multiple evidence-based preventive measures</li>
-                                  <li>Maintains patient dignity and independence</li>
-                                  <li>Follows best practices for fall prevention</li>
-                                </ul>
+                                {preventionQuestions[currentQuestionIndex].explanation.main}
                               </p>
                               <div className="mt-4">
                                 <h5 className="font-medium mb-2">Conceptual Breakdown:</h5>
                                 <ul className="text-sm space-y-2">
-                                  <li>• <span className="font-medium">Assessment First:</span> Always begin with a thorough risk assessment</li>
-                                  <li>• <span className="font-medium">Multiple Interventions:</span> Fall prevention requires a multi-faceted approach</li>
-                                  <li>• <span className="font-medium">Least Restrictive:</span> Avoid restraints when possible</li>
-                                  <li>• <span className="font-medium">Proactive Planning:</span> Scheduled assistance prevents unplanned activities</li>
+                                  {preventionQuestions[currentQuestionIndex].explanation.concepts.map((concept, index) => (
+                                    <li key={index}>
+                                      • <span className="font-medium">{concept.title}:</span> {concept.description}
+                                    </li>
+                                  ))}
                                 </ul>
                               </div>
                             </div>
                           )}
                         </div>
-
-                        {/* Additional prevention questions follow the same pattern */}
                       </div>
                     </form>
                   </Form>
+
+                  <div className="mt-6 flex justify-between items-center">
+                    <div>
+                      <p className="text-sm text-muted-foreground">
+                        Questions Answered: {answeredQuestions.size} of {preventionQuestions.length}
+                      </p>
+                      <Progress
+                        value={(answeredQuestions.size / preventionQuestions.length) * 100}
+                        className="w-[200px] mt-2"
+                      />
+                    </div>
+                    <Button
+                      onClick={() => {
+                        toast({
+                          title: "More questions coming soon!",
+                          description: "This feature is under development.",
+                        });
+                      }}
+                    >
+                      Generate More Questions
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="bg-muted/50 p-4 rounded-lg">
