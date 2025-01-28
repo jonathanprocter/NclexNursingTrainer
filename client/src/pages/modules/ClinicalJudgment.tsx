@@ -83,6 +83,7 @@ export default function ClinicalJudgment() {
       setAiContent(result.content);
       setIsQuestionDialogOpen(false);
       setIsDialogOpen(true);
+      // Only reset question after successful submission
       setQuestion("");
     } catch (error) {
       toast({
@@ -94,7 +95,16 @@ export default function ClinicalJudgment() {
   };
 
   const QuestionDialog = () => (
-    <Dialog open={isQuestionDialogOpen} onOpenChange={setIsQuestionDialogOpen}>
+    <Dialog 
+      open={isQuestionDialogOpen} 
+      onOpenChange={(open) => {
+        setIsQuestionDialogOpen(open);
+        if (!open) {
+          // Only reset question when dialog is explicitly closed
+          setQuestion("");
+        }
+      }}
+    >
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -111,7 +121,8 @@ export default function ClinicalJudgment() {
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
                 handleAskQuestion();
               }
             }}
