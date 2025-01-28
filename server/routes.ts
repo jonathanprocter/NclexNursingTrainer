@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { db } from "@db";
 import { modules, questions, quizAttempts, userProgress } from "@db/schema";
 import { eq } from "drizzle-orm";
+import { analyzePerformance, generateAdaptiveQuestions, getStudyRecommendations } from "../client/src/lib/ai-services";
 
 export function registerRoutes(app: Express): Server {
   // Modules routes
@@ -29,26 +30,71 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Quiz attempts routes
+  // AI-powered adaptive questions
+  app.post("/api/questions/adaptive", async (req, res) => {
+    try {
+      const { topics, difficulty, userId } = req.body;
+
+      // Get user's previous performance
+      const progress = await db.query.userProgress.findMany({
+        where: eq(userProgress.userId, parseInt(userId)),
+      });
+
+      const previousPerformance = progress.map(p => ({
+        topic: p.moduleId.toString(),
+        successRate: p.correctAnswers / p.completedQuestions || 0
+      }));
+
+      const adaptiveQuestions = await generateAdaptiveQuestions({
+        topics,
+        difficulty,
+        previousPerformance
+      });
+
+      res.json(adaptiveQuestions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to generate adaptive questions" });
+    }
+  });
+
+  // Quiz attempts routes with AI analysis
   app.post("/api/quiz-attempts", async (req, res) => {
     try {
       const { userId, moduleId, type, answers } = req.body;
+
+      // Analyze performance using AI
+      const aiAnalysis = await analyzePerformance(answers);
+
       const newAttempt = await db.insert(quizAttempts).values({
         userId,
         moduleId,
         type,
         answers,
-        score: 0, // Calculate score based on answers
+        score: answers.filter(a => a.correct).length / answers.length * 100,
         totalQuestions: answers.length,
         startedAt: new Date(),
+        aiAnalysis,
+        strengthAreas: aiAnalysis.strengths,
+        weaknessAreas: aiAnalysis.weaknesses
       }).returning();
+
+      // Update user progress with AI insights
+      await db.update(userProgress)
+        .set({
+          completedQuestions: userProgress.completedQuestions + answers.length,
+          correctAnswers: userProgress.correctAnswers + answers.filter(a => a.correct).length,
+          lastAttempt: new Date(),
+          performanceMetrics: aiAnalysis
+        })
+        .where(eq(userProgress.userId, userId));
+
       res.json(newAttempt[0]);
     } catch (error) {
       res.status(500).json({ message: "Failed to save quiz attempt" });
     }
   });
 
-  // User progress routes
+  // User progress routes with AI recommendations
   app.get("/api/progress/:userId", async (req, res) => {
     try {
       const progress = await db.query.userProgress.findMany({
@@ -57,13 +103,27 @@ export function registerRoutes(app: Express): Server {
           module: true,
         },
       });
-      res.json(progress);
+
+      // Get AI study recommendations based on progress
+      const performanceData = progress.map(p => ({
+        topic: p.module?.type || "",
+        score: (p.correctAnswers / p.completedQuestions) * 100 || 0,
+        timeSpent: p.lastAttempt ? 
+          (new Date(p.lastAttempt).getTime() - new Date(p.updatedAt).getTime()) / 1000 : 0
+      }));
+
+      const recommendations = await getStudyRecommendations(performanceData);
+
+      res.json({
+        progress,
+        recommendations,
+      });
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch user progress" });
     }
   });
 
-  // Analytics routes
+  // Analytics routes with AI insights
   app.get("/api/analytics/user/:userId", async (req, res) => {
     try {
       const attempts = await db.query.quizAttempts.findMany({
@@ -75,12 +135,21 @@ export function registerRoutes(app: Express): Server {
         where: eq(userProgress.userId, parseInt(req.params.userId)),
       });
 
+      // Analyze overall performance
+      const overallAnalysis = await analyzePerformance(
+        attempts.flatMap(a => a.answers as any[])
+      );
+
       res.json({
         attempts,
         progress,
+        analysis: overallAnalysis,
         summary: {
           totalAttempts: attempts.length,
           averageScore: attempts.reduce((acc, curr) => acc + curr.score, 0) / attempts.length || 0,
+          strengths: overallAnalysis.strengths,
+          weaknesses: overallAnalysis.weaknesses,
+          confidence: overallAnalysis.confidence
         },
       });
     } catch (error) {

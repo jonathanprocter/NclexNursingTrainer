@@ -15,6 +15,7 @@ export const modules = pgTable("modules", {
   description: text("description"),
   type: text("type").notNull(), // 'pharmacology', 'fundamentals', etc.
   orderIndex: integer("order_index").notNull(),
+  aiGeneratedContent: json("ai_generated_content"), // AI-generated study materials
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -27,6 +28,8 @@ export const questions = pgTable("questions", {
   correctAnswer: text("correct_answer").notNull(),
   explanation: text("explanation"),
   difficulty: integer("difficulty").notNull(), // 1-5 scale
+  aiGenerated: boolean("ai_generated").default(false),
+  topicTags: json("topic_tags"), // Array of related topics for AI analysis
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -38,6 +41,9 @@ export const quizAttempts = pgTable("quiz_attempts", {
   score: integer("score").notNull(),
   totalQuestions: integer("total_questions").notNull(),
   answers: json("answers").notNull(), // Array of user answers
+  aiAnalysis: json("ai_analysis"), // AI-generated performance analysis
+  strengthAreas: json("strength_areas"), // Topics where user performed well
+  weaknessAreas: json("weakness_areas"), // Topics needing improvement
   startedAt: timestamp("started_at").notNull(),
   completedAt: timestamp("completed_at"),
 });
@@ -49,6 +55,8 @@ export const userProgress = pgTable("user_progress", {
   completedQuestions: integer("completed_questions").notNull().default(0),
   correctAnswers: integer("correct_answers").notNull().default(0),
   lastAttempt: timestamp("last_attempt"),
+  learningPath: json("learning_path"), // AI-recommended study path
+  performanceMetrics: json("performance_metrics"), // Detailed analytics
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
