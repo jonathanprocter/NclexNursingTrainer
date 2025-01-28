@@ -7,6 +7,7 @@ import Home from "@/pages/Home";
 import QuestionBank from "@/pages/QuestionBank";
 import StudyGuide from "@/pages/StudyGuide";
 import Modules from "@/pages/Modules";
+import Dashboard from "@/pages/Dashboard";
 import NavBar from "@/components/layout/NavBar";
 
 function Router() {
@@ -19,6 +20,7 @@ function Router() {
           <Route path="/modules" component={Modules} />
           <Route path="/questions" component={QuestionBank} />
           <Route path="/study-guide" component={StudyGuide} />
+          <Route path="/dashboard" component={Dashboard} />
           <Route component={NotFound} />
         </Switch>
       </main>
