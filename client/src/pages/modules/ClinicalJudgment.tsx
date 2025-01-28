@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Bot, Brain, FileCheck, Users, AlertTriangle, Lightbulb, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
+import ReactMarkdown from 'react-markdown';
 import {
   Dialog,
   DialogContent,
@@ -20,6 +21,14 @@ export default function ClinicalJudgment() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [aiContent, setAiContent] = useState("");
   const [currentTopic, setCurrentTopic] = useState("");
+
+  // Helper function to format topic names
+  const formatTopicName = (topic: string): string => {
+    return topic
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
 
   const aiHelpMutation = useMutation({
     mutationFn: async ({ topic, context }: { topic: string; context?: string }) => {
@@ -38,7 +47,7 @@ export default function ClinicalJudgment() {
   });
 
   const handleAIHelp = async (topic: string, context?: string) => {
-    setCurrentTopic(topic);
+    setCurrentTopic(formatTopicName(topic));
     setIsDialogOpen(true);
 
     try {
@@ -447,21 +456,21 @@ export default function ClinicalJudgment() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Bot className="h-5 w-5" />
-              AI Assistant - {currentTopic}
+              Clinical Judgment Assistant - {currentTopic}
             </DialogTitle>
             <DialogDescription>
-              Personalized guidance and explanations to help you master clinical judgment
+              Receive personalized guidance to enhance your clinical judgment skills
             </DialogDescription>
           </DialogHeader>
           <ScrollArea className="max-h-[60vh]">
             <div className="p-4 space-y-4">
               {aiContent ? (
-                <div className="prose prose-sm max-w-none">
-                  <div dangerouslySetInnerHTML={{ __html: aiContent }} />
+                <div className="prose prose-sm max-w-none dark:prose-invert">
+                  <ReactMarkdown>{aiContent}</ReactMarkdown>
                 </div>
               ) : (
                 <p className="text-center text-muted-foreground">
-                  Loading AI assistance...
+                  Preparing your personalized guidance...
                 </p>
               )}
             </div>
