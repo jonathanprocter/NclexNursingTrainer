@@ -24,13 +24,31 @@ const formatSectionName = (section: string): string => {
 
 // Helper function to format AI response content
 const formatAIContent = (content: string): string => {
-  // Remove markdown formatting if present
-  return content
-    .replace(/#{1,6}\s/g, '') // Remove heading markers
-    .replace(/\*\*/g, '')     // Remove bold markers
-    .replace(/\*/g, '')       // Remove italic markers
-    .replace(/`/g, '')        // Remove code markers
+  // Remove LaTeX formatting
+  content = content
+    .replace(/\\\[|\\\]/g, '')                  // Remove LaTeX block markers
+    .replace(/\\text{([^}]+)}/g, '$1')          // Convert \text{} to plain text
+    .replace(/\\frac{([^}]+)}{([^}]+)}/g, '$1/$2') // Convert fractions to plain text
+    .replace(/\\cdot/g, '*')                    // Convert multiplication dots
+    .replace(/\s*=\s*/g, ' = ')                // Standardize equals signs
+    // Remove other mathematical formatting
+    .replace(/#{1,6}\s/g, '')                  // Remove heading markers
+    .replace(/\*\*/g, '')                      // Remove bold markers
+    .replace(/\*/g, '')                        // Remove italic markers
+    .replace(/`/g, '')                         // Remove code markers
+    .replace(/\\[a-zA-Z]+/g, '')               // Remove other LaTeX commands
+    .replace(/\n{3,}/g, '\n\n')                // Normalize multiple newlines
     .trim();
+
+  // Convert bullet points to clearer format
+  content = content.split('\n').map(line => {
+    if (line.trim().startsWith('- ')) {
+      return '• ' + line.trim().substring(2);
+    }
+    return line;
+  }).join('\n');
+
+  return content;
 };
 
 export default function Pharmacology() {
@@ -72,7 +90,7 @@ export default function Pharmacology() {
   };
 
   return (
-    <div className="space-y-6">
+    <div>
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold mb-2">Pharmacology & Parenteral</h1>
         <p className="text-muted-foreground max-w-2xl mx-auto">
@@ -618,8 +636,8 @@ export default function Pharmacology() {
                           </p>
                         </li>
                       </ul>
-                      <Button 
-                        className="mt-4" 
+                      <Button
+                        className="mt-4"
                         onClick={() => handleAIHelp("practice_basic_calculations", "tablet_calculations")}
                       >
                         Practice Scenarios
@@ -648,8 +666,8 @@ export default function Pharmacology() {
                           </p>
                         </li>
                       </ul>
-                      <Button 
-                        className="mt-4" 
+                      <Button
+                        className="mt-4"
                         onClick={() => handleAIHelp("practice_weight_based", "pediatric_calculations")}
                       >
                         Practice Cases
@@ -726,8 +744,8 @@ export default function Pharmacology() {
                           </p>
                         </li>
                       </ul>
-                      <Button 
-                        className="mt-4" 
+                      <Button
+                        className="mt-4"
                         onClick={() => handleAIHelp("practice_complex_IV", "critical_scenarios")}
                       >
                         Practice Complex Cases
