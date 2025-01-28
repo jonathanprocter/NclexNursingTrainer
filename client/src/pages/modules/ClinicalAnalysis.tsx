@@ -207,40 +207,39 @@ const CaseStudiesSection = () => {
     weaknesses: []
   });
 
-  // Query for completed cases
+  // Query for completed cases and pre-integrated cases
   const { data: completedCases = [] } = useQuery<string[]>({
     queryKey: ['/api/user/completed-cases'],
   });
 
-  // Query for pre-integrated cases
   const { data: casesData = [] } = useQuery<CaseStudy[]>({
     queryKey: ['/api/pre-integrated-cases'],
   });
 
-  const handleGenerateCase = async (caseId?: string) => {
+  const startNewCase = async (caseId: string) => {
     try {
-      const result = await fetch("/api/generate-case", {
+      const response = await fetch("/api/generate-case", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ caseId }),
-      }).then(res => {
-        if (!res.ok) throw new Error("Failed to generate case");
-        return res.json();
       });
 
-      // Only initialize state when starting a completely new case
-      if (!currentCase) {
-        setUserAnswers({});
-        setShowFeedback(false);
-        setCurrentQuestionIndex(0);
-        setPerformance({
-          correctCount: 0,
-          totalAttempted: 0,
-          strengths: [],
-          weaknesses: []
-        });
+      if (!response.ok) {
+        throw new Error("Failed to load case study");
       }
 
+      const result = await response.json();
+
+      // Reset state only when starting a new case from the list
+      setUserAnswers({});
+      setShowFeedback(false);
+      setCurrentQuestionIndex(0);
+      setPerformance({
+        correctCount: 0,
+        totalAttempted: 0,
+        strengths: [],
+        weaknesses: []
+      });
       setCurrentCase(result);
     } catch (error) {
       toast({
@@ -251,7 +250,7 @@ const CaseStudiesSection = () => {
     }
   };
 
-  const handleAnswerSelect = async (questionIndex: number, optionIndex: number) => {
+  const handleAnswerSelect = (questionIndex: number, optionIndex: number) => {
     if (!currentCase) return;
 
     const question = currentCase.questions[questionIndex];
@@ -259,27 +258,28 @@ const CaseStudiesSection = () => {
 
     if (!question || !selectedOption) return;
 
-    // Store the answer and show feedback
+    // Update answers without resetting anything
     setUserAnswers(prev => ({ ...prev, [questionIndex]: optionIndex }));
     setShowFeedback(true);
 
     // Update performance metrics
     const isCorrect = selectedOption.correct;
-    const newPerformance = {
-      correctCount: performance.correctCount + (isCorrect ? 1 : 0),
-      totalAttempted: performance.totalAttempted + 1,
-      strengths: [...performance.strengths],
-      weaknesses: [...performance.weaknesses]
-    };
+    setPerformance(prev => {
+      const newPerformance = {
+        correctCount: prev.correctCount + (isCorrect ? 1 : 0),
+        totalAttempted: prev.totalAttempted + 1,
+        strengths: [...prev.strengths],
+        weaknesses: [...prev.weaknesses]
+      };
 
-    // Update strengths and weaknesses based on answer
-    if (isCorrect) {
-      newPerformance.strengths = [...new Set([...newPerformance.strengths, ...selectedOption.topics])];
-    } else {
-      newPerformance.weaknesses = [...new Set([...newPerformance.weaknesses, ...selectedOption.topics])];
-    }
+      if (isCorrect) {
+        newPerformance.strengths = [...new Set([...newPerformance.strengths, ...selectedOption.topics])];
+      } else {
+        newPerformance.weaknesses = [...new Set([...newPerformance.weaknesses, ...selectedOption.topics])];
+      }
 
-    setPerformance(newPerformance);
+      return newPerformance;
+    });
 
     // Show feedback toast
     toast({
@@ -292,13 +292,12 @@ const CaseStudiesSection = () => {
   const handleNextQuestion = () => {
     if (!currentCase) return;
 
-    // Move to next question while preserving all progress
+    // Simply move to the next question, preserving all state
     setShowFeedback(false);
-
     if (currentQuestionIndex < currentCase.questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
     } else {
-      // Case completed
+      // Only show completion summary at the very end
       const successRate = (performance.correctCount / performance.totalAttempted) * 100;
 
       toast({
@@ -318,7 +317,6 @@ const CaseStudiesSection = () => {
     }
   };
 
-  // Rest of the component implementation remains the same
   return (
     <div className="space-y-6">
       <Card>
@@ -363,7 +361,7 @@ const CaseStudiesSection = () => {
                           (index === 0 || completedCases.includes(casesData[index - 1]?.id)) && (
                             <Button
                               className="w-full mt-4"
-                              onClick={() => handleGenerateCase(caseStudy.id)}
+                              onClick={() => startNewCase(caseStudy.id)}
                             >
                               Start Case
                             </Button>
