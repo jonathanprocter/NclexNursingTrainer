@@ -188,4 +188,5 @@ function useToast() {
   }
 }
 
-export { useToast, toast }
+export { useToast }
+export const toast = useToast().toast
