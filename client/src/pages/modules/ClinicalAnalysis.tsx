@@ -217,55 +217,31 @@ export default function ClinicalAnalysis() {
       queryKey: ['/api/pre-integrated-cases'],
     });
 
-    const generateCaseMutation = useMutation({
-      mutationFn: async (caseId?: string) => {
-        const response = await fetch("/api/generate-case", {
+    const handleGenerateCase = async (caseId?: string) => {
+      try {
+        const result = await fetch("/api/generate-case", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ caseId }),
+        }).then(res => {
+          if (!res.ok) throw new Error("Failed to generate case");
+          return res.json();
         });
 
-        if (!response.ok) {
-          throw new Error("Failed to generate case study");
+        // Only initialize state when starting a new case
+        if (!currentCase) {
+          setUserAnswers({});
+          setShowFeedback(false);
+          setCurrentQuestionIndex(0);
+          setPerformance({
+            correctCount: 0,
+            totalAttempted: 0,
+            strengths: [],
+            weaknesses: []
+          });
         }
 
-        const data = await response.json();
-        return data as CaseStudy;
-      },
-    });
-
-    const submitCaseMutation = useMutation({
-      mutationFn: async (answers: Record<string, number>) => {
-        const response = await fetch("/api/case-completion", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            caseId: currentCase?.id,
-            answers,
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to submit case study");
-        }
-
-        return response.json();
-      },
-    });
-
-    const handleGenerateCase = async (caseId?: string) => {
-      try {
-        const result = await generateCaseMutation.mutateAsync(caseId);
         setCurrentCase(result);
-        setUserAnswers({});
-        setShowFeedback(false);
-        setCurrentQuestionIndex(0);
-        setPerformance({
-          correctCount: 0,
-          totalAttempted: 0,
-          strengths: [],
-          weaknesses: []
-        });
       } catch (error) {
         toast({
           title: "Error",
@@ -276,11 +252,14 @@ export default function ClinicalAnalysis() {
     };
 
     const handleAnswerSelect = async (questionIndex: number, optionIndex: number) => {
-      const question = currentCase?.questions[questionIndex];
+      if (!currentCase) return;
+
+      const question = currentCase.questions[questionIndex];
       const selectedOption = question?.options[optionIndex];
 
       if (!question || !selectedOption) return;
 
+      // Record the answer without clearing other answers
       setUserAnswers(prev => ({ ...prev, [questionIndex]: optionIndex }));
       setShowFeedback(true);
 
@@ -302,42 +281,43 @@ export default function ClinicalAnalysis() {
 
       setPerformance(newPerformance);
 
-      // Show feedback toast with explanation
+      // Show feedback toast
       toast({
         title: selectedOption.correct ? "Correct! 🎉" : "Review Needed",
         description: selectedOption.explanation,
         variant: selectedOption.correct ? "default" : "secondary",
       });
 
-      // If incorrect, provide additional context
       if (!isCorrect) {
+        // Provide additional guidance for incorrect answers
         toast({
           title: "Learning Opportunity",
-          description: "Take time to review the explanation before moving to the next question.",
+          description: "Take time to review the explanation. You can still continue with the case study.",
           duration: 5000,
         });
       }
     };
 
     const handleNextQuestion = () => {
-      // Always proceed to next question, regardless of correctness
+      if (!currentCase) return;
+
       setShowFeedback(false);
 
-      if (currentCase && currentQuestionIndex < currentCase.questions.length - 1) {
+      if (currentQuestionIndex < currentCase.questions.length - 1) {
+        // Move to next question while preserving current progress
         setCurrentQuestionIndex(prev => prev + 1);
 
         // Provide adaptive guidance based on performance
         const currentSuccessRate = (performance.correctCount / performance.totalAttempted) * 100;
-
         if (currentSuccessRate < 60) {
           toast({
             title: "Study Tip",
-            description: "Take a moment to review the key concepts before answering. Focus on understanding the rationale for each option.",
+            description: "Take a moment to review the key concepts before answering.",
             duration: 5000,
           });
         }
-      } else if (currentCase) {
-        // Case completed, show comprehensive summary
+      } else {
+        // Case completed, show summary
         const finalSuccessRate = (performance.correctCount / performance.totalAttempted) * 100;
 
         toast({
@@ -345,13 +325,11 @@ export default function ClinicalAnalysis() {
           description: `You got ${performance.correctCount} out of ${performance.totalAttempted} questions correct (${finalSuccessRate.toFixed(1)}%).`,
         });
 
-        // Provide targeted feedback based on overall performance
         if (performance.weaknesses.length > 0) {
           setTimeout(() => {
             toast({
-              title: "Focused Review Recommended",
-              description: "Consider reviewing these topics: " +
-                performance.weaknesses.slice(0, 3).join(", "),
+              title: "Areas to Review",
+              description: "Consider reviewing: " + performance.weaknesses.slice(0, 3).join(", "),
               duration: 6000,
             });
           }, 1000);
@@ -359,6 +337,7 @@ export default function ClinicalAnalysis() {
       }
     };
 
+    // Rest of the component remains the same
     return (
       <div className="space-y-6">
         <Card>
@@ -403,19 +382,10 @@ export default function ClinicalAnalysis() {
                             (index === 0 || completedCases.includes(casesData[index - 1]?.id)) && (
                               <Button
                                 className="w-full mt-4"
-                                onClick={() => {
-                                  handleGenerateCase(caseStudy.id);
-                                  setCurrentQuestionIndex(0);
-                                  setPerformance({
-                                    correctCount: 0,
-                                    totalAttempted: 0,
-                                    strengths: [],
-                                    weaknesses: []
-                                  });
-                                }}
-                                disabled={generateCaseMutation.isPending}
+                                onClick={() => handleGenerateCase(caseStudy.id)}
+                                disabled={false}
                               >
-                                {generateCaseMutation.isPending ? 'Loading...' : 'Start Case'}
+                                Start Case
                               </Button>
                             )}
                         </div>
@@ -493,10 +463,18 @@ export default function ClinicalAnalysis() {
                           <Button
                             variant="outline"
                             onClick={() => {
-                              setCurrentCase(null);
-                              setUserAnswers({});
-                              setShowFeedback(false);
-                              setCurrentQuestionIndex(0);
+                              if (confirm("Are you sure you want to exit? Your progress will be lost.")) {
+                                setCurrentCase(null);
+                                setUserAnswers({});
+                                setShowFeedback(false);
+                                setCurrentQuestionIndex(0);
+                                setPerformance({
+                                  correctCount: 0,
+                                  totalAttempted: 0,
+                                  strengths: [],
+                                  weaknesses: []
+                                });
+                              }
                             }}
                           >
                             Exit Case
