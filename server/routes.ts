@@ -924,17 +924,55 @@ export function registerRoutes(app: Express): Server {
             "Keep units consistent",
             "Check if the calculated rate seems reasonable"
           ]
+        },
+        {
+          id: "P003",
+          type: "concentration",
+          difficulty: "advanced",
+          question: "A patient needs dopamine at 5 mcg/kg/min. The patient weighs 70 kg. The standard concentration is 1600 mcg/mL. Calculate the infusion rate in mL/hr.",
+          givens: {
+            "Dose ordered": "5 mcg/kg/min",
+            "Patient weight": "70 kg",
+            "Standard concentration": "1600 mcg/mL"
+          },
+          answer: 13.125,
+          unit: "mL/hr",
+          explanation: "1. Calculate mcg/min: 5 mcg/kg/min × 70 kg = 350 mcg/min\n2. Convert to mL/min: 350 mcg/min ÷ 1600 mcg/mL = 0.21875 mL/min\n3. Convert to mL/hr: 0.21875 mL/min × 60 min/hr = 13.125 mL/hr",
+          hints: [
+            "First calculate the total mcg/min needed",
+            "Convert the rate to mL/min using the concentration",
+            "Convert the final answer to mL/hr"
+          ]
+        },
+        {
+          id: "P004",
+          type: "conversion",
+          difficulty: "advanced",
+          question: "A patient requires TPN at 2500 kcal/day. The solution provides 1.5 kcal/mL. Calculate the hourly rate in mL/hr for continuous 24-hour infusion.",
+          givens: {
+            "Daily calories": "2500 kcal/day",
+            "Solution concentration": "1.5 kcal/mL",
+            "Infusion duration": "24 hours"
+          },
+          answer: 69.44,
+          unit: "mL/hr",
+          explanation: "1. Calculate total volume needed: 2500 kcal ÷ 1.5 kcal/mL = 1666.67 mL\n2. Calculate hourly rate: 1666.67 mL ÷ 24 hr = 69.44 mL/hr",
+          hints: [
+            "First convert calories to total volume needed",
+            "Then divide by hours to get hourly rate",
+            "Round to 2 decimal places for practical administration"
+          ]
         }
       ];
 
       // Select a random problem of appropriate difficulty
       const appropriateProblems = calculationProblems.filter(p => p.difficulty === difficulty);
-      const problem = appropriateProblems[Math.floor(Math.random() * appropriateProblems.length)];
 
-      if (!problem) {
+      if (appropriateProblems.length === 0) {
         throw new Error("No problems available for selected difficulty");
       }
 
+      const problem = appropriateProblems[Math.floor(Math.random() * appropriateProblems.length)];
       res.json(problem);
     } catch (error) {
       console.error("Error generating calculation:", error);
