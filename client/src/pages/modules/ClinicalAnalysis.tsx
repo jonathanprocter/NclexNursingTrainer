@@ -27,6 +27,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useForm } from "react-hook-form";
+import { Badge } from "@/components/ui/badge";
+import cn from 'classnames';
 
 // Types for practice exercises
 type ExerciseType = 'pattern' | 'hypothesis' | 'decision' | 'documentation';
@@ -185,17 +187,24 @@ export default function ClinicalAnalysis() {
     const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
     const [showFeedback, setShowFeedback] = useState(false);
     const { toast } = useToast();
-
+    const [preIntegratedCases, setPreIntegratedCases] = useState<CaseStudy[]>([]); //Added state
     const { data: completedCases = [] } = useQuery({
       queryKey: ['/api/user/completed-cases'],
+      onSuccess: (data) => {
+        //Fetch pre-integrated cases only once when completedCases is fetched.
+        fetch('/api/pre-integrated-cases')
+          .then(res => res.json())
+          .then(data => setPreIntegratedCases(data));
+      }
     });
 
+
     const generateCaseMutation = useMutation({
-      mutationFn: async () => {
+      mutationFn: async (caseId?: string) => {
         const response = await fetch("/api/generate-case", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ completedCases }),
+          body: JSON.stringify({ completedCases, caseId }),
         });
 
         if (!response.ok) {
@@ -225,9 +234,9 @@ export default function ClinicalAnalysis() {
       },
     });
 
-    const handleGenerateCase = async () => {
+    const handleGenerateCase = async (caseId?: string) => {
       try {
-        const result = await generateCaseMutation.mutateAsync();
+        const result = await generateCaseMutation.mutateAsync(caseId);
         setCurrentCase(result);
         setUserAnswers({});
         setShowFeedback(false);
@@ -246,7 +255,7 @@ export default function ClinicalAnalysis() {
 
     const handleAnswerSubmit = async () => {
       try {
-        const result = await submitCaseMutation.mutateAsync(userAnswers);
+        await submitCaseMutation.mutateAsync(userAnswers);
         setShowFeedback(true);
         toast({
           title: "Success",
@@ -261,108 +270,155 @@ export default function ClinicalAnalysis() {
       }
     };
 
+    const handleAnswerChange = (index: number, value: string) => {
+      setUserAnswers((prev) => ({ ...prev, [index]: value }));
+    };
+
     return (
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold">Current Case Study</h3>
-          <Button
-            onClick={handleGenerateCase}
-            className="gap-2"
-            disabled={generateCaseMutation.isPending}
-          >
-            <RefreshCw className="h-4 w-4" />
-            Generate New Case
-          </Button>
-        </div>
-
-        {currentCase ? (
-          <div className="space-y-6">
-            {/* Prerequisites Section */}
-            {currentCase.prerequisites.length > 0 && (
-              <div className="bg-muted/30 p-4 rounded-lg">
-                <h4 className="font-medium mb-2">Prerequisites</h4>
-                <ul className="list-disc list-inside space-y-1">
-                  {currentCase.prerequisites.map(prereq => (
-                    <li key={prereq} className="text-sm">
-                      <span className={completedCases.includes(prereq) ? "text-green-600" : "text-red-600"}>
-                        {completedCases.includes(prereq) ? "✓" : "×"}
-                      </span>
-                      {" "}Case: {prereq}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Case Content */}
-            <div className="bg-muted/50 p-6 rounded-lg">
-              <div className="flex justify-between items-start mb-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Interactive Case Studies</CardTitle>
+            <p className="text-muted-foreground mt-2">
+              Apply clinical reasoning skills to real-world scenarios through progressive case studies.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {/* Progress Overview */}
+              <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-medium mb-2">{currentCase.title}</h4>
-                  <p className="text-muted-foreground mb-4">{currentCase.description}</p>
-                  <span className="inline-block px-2 py-1 text-xs rounded-full bg-primary/10 text-primary">
-                    {currentCase.difficulty}
-                  </span>
+                  <h3 className="text-lg font-semibold">Your Progress</h3>
+                  <p className="text-sm text-muted-foreground">Complete cases in sequence to unlock advanced scenarios</p>
                 </div>
-              </div>
-
-              <div className="prose prose-sm max-w-none mb-6">
-                <div dangerouslySetInnerHTML={{ __html: currentCase.content }} />
-              </div>
-
-              {/* Questions Section */}
-              <div className="space-y-6 mt-8">
-                <h5 className="font-medium">Analysis Questions</h5>
-                {currentCase.questions.map((q, index) => (
-                  <div key={index} className="space-y-3">
-                    <p className="font-medium">{index + 1}. {q.question}</p>
-                    <Textarea
-                      placeholder="Enter your answer..."
-                      value={userAnswers[index] || ''}
-                      onChange={(e) => setUserAnswers(prev => ({
-                        ...prev,
-                        [index]: e.target.value
-                      }))}
-                      className="min-h-[100px]"
-                    />
-                    {showFeedback && (
-                      <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg">
-                        <p className="font-medium">Guidance:</p>
-                        <p>{q.explanation}</p>
-                      </div>
-                    )}
-                  </div>
-                ))}
-
-                <Button
-                  onClick={handleAnswerSubmit}
-                  className="w-full mt-4"
-                  disabled={submitCaseMutation.isPending}
-                >
-                  Submit Answers
+                <Button onClick={() => handleGenerateCase()} className="gap-2">
+                  <RefreshCw className="h-4 w-4" />
+                  Start Next Case
                 </Button>
               </div>
 
-              {/* Next Steps */}
-              {showFeedback && currentCase.nextCaseHints && (
-                <div className="mt-6 p-4 bg-muted/30 rounded-lg">
-                  <h5 className="font-medium mb-2">Next Steps</h5>
-                  <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-                    {currentCase.nextCaseHints.map((hint, index) => (
-                      <li key={index}>{hint}</li>
-                    ))}
-                  </ul>
-                </div>
+              {/* Cases List */}
+              <div className="grid gap-4 md:grid-cols-3">
+                {preIntegratedCases.map((caseStudy, index) => (
+                  <Card key={caseStudy.id} className={cn(
+                    "relative",
+                    !completedCases.includes(caseStudy.id) && index > 0 &&
+                    !completedCases.includes(preIntegratedCases[index - 1].id) &&
+                    "opacity-50"
+                  )}>
+                    <CardHeader>
+                      <CardTitle className="text-lg">{caseStudy.title}</CardTitle>
+                      <p className="text-sm text-muted-foreground">{caseStudy.description}</p>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Badge variant={caseStudy.difficulty === 'beginner' ? 'default' :
+                            caseStudy.difficulty === 'intermediate' ? 'secondary' : 'destructive'}>
+                            {caseStudy.difficulty}
+                          </Badge>
+                          {completedCases.includes(caseStudy.id) && (
+                            <Badge variant="outline" className="gap-1">
+                              <CheckCircle className="h-3 w-3" />
+                              Completed
+                            </Badge>
+                          )}
+                        </div>
+
+                        {currentCase?.id === caseStudy.id && (
+                          <div className="mt-4">
+                            <div className="prose prose-sm max-w-none mb-4">
+                              <div dangerouslySetInnerHTML={{ __html: currentCase.content }} />
+                            </div>
+
+                            {currentCase.questions.map((question, qIndex) => (
+                              <div key={qIndex} className="mt-4 space-y-2">
+                                <p className="font-medium">{qIndex + 1}. {question.question}</p>
+                                <Textarea
+                                  value={userAnswers[qIndex] || ''}
+                                  onChange={(e) => handleAnswerChange(qIndex, e.target.value)}
+                                  placeholder="Enter your answer..."
+                                  className="min-h-[100px]"
+                                />
+                                {showFeedback && (
+                                  <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded">
+                                    <p>{question.explanation}</p>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+
+                            <div className="mt-4 flex justify-end gap-2">
+                              <Button
+                                onClick={() => handleAnswerSubmit()}
+                                disabled={!Object.keys(userAnswers).length || showFeedback}
+                              >
+                                Submit Answers
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+
+                        {!currentCase && !completedCases.includes(caseStudy.id) &&
+                          (index === 0 || completedCases.includes(preIntegratedCases[index - 1].id)) && (
+                            <Button
+                              className="w-full mt-4"
+                              onClick={() => handleGenerateCase(caseStudy.id)}
+                            >
+                              Start Case
+                            </Button>
+                          )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Current Case Display */}
+              {currentCase && (
+                <Card className="mt-6">
+                  <CardHeader>
+                    <CardTitle>Current Case: {currentCase.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="prose prose-sm max-w-none">
+                        <div dangerouslySetInnerHTML={{ __html: currentCase.content }} />
+                      </div>
+
+                      <div className="space-y-6">
+                        {currentCase.questions.map((question, index) => (
+                          <div key={index} className="space-y-2">
+                            <p className="font-medium">{index + 1}. {question.question}</p>
+                            <Textarea
+                              value={userAnswers[index] || ''}
+                              onChange={(e) => handleAnswerChange(index, e.target.value)}
+                              placeholder="Enter your answer..."
+                              className="min-h-[100px]"
+                            />
+                            {showFeedback && (
+                              <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded">
+                                <p>{question.explanation}</p>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+
+                        <Button
+                          onClick={handleAnswerSubmit}
+                          disabled={!Object.keys(userAnswers).length || showFeedback}
+                          className="w-full"
+                        >
+                          Submit Answers
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               )}
             </div>
-          </div>
-        ) : (
-          <div className="bg-muted/50 p-6 rounded-lg text-center">
-            <p className="text-muted-foreground">
-              Click the button above to generate a case study.
-            </p>
-          </div>
-        )}
+          </CardContent>
+        </Card>
       </div>
     );
   };

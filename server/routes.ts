@@ -166,6 +166,11 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Add endpoint to get pre-integrated cases
+  app.get("/api/pre-integrated-cases", (_req, res) => {
+    res.json(preIntegratedCases);
+  });
+
   // Questions routes
   app.get("/api/questions/:moduleId", async (req, res) => {
     try {
