@@ -171,6 +171,16 @@ export function registerRoutes(app: Express): Server {
     res.json(preIntegratedCases);
   });
 
+  // Add endpoint to get completed cases
+  app.get("/api/user/completed-cases", async (_req, res) => {
+    try {
+      // For now, return an empty array as we haven't implemented user authentication yet
+      res.json([]);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch completed cases" });
+    }
+  });
+
   // Questions routes
   app.get("/api/questions/:moduleId", async (req, res) => {
     try {
@@ -321,84 +331,27 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Enhanced case generation endpoint
+  // Generate case endpoint (Simplified from original)
   app.post("/api/generate-case", async (req, res) => {
     try {
-      const { userId, completedCases = [] } = req.body;
+      const { caseId } = req.body;
 
-      // Find the next appropriate case based on user's progress
-      const availableCases = preIntegratedCases.filter(c => {
-        // Check if user meets prerequisites
-        if (c.prerequisites.length === 0) return true;
-        return c.prerequisites.every(prereq => completedCases.includes(prereq));
-      });
-
-      if (availableCases.length > 0) {
-        // Return the most appropriate case based on difficulty progression
-        const nextCase = availableCases.find(c => !completedCases.includes(c.id)) || availableCases[0];
-        return res.json(nextCase);
+      if (caseId) {
+        // Return the specific pre-integrated case if requested
+        const requestedCase = preIntegratedCases.find(c => c.id === caseId);
+        if (requestedCase) {
+          return res.json(requestedCase);
+        }
       }
 
-      // If all pre-integrated cases completed, generate a new advanced case
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4",
-        messages: [
-          {
-            role: "system",
-            content: `You are a medical educator generating advanced clinical case studies for nursing students who have completed fundamental cases. Include:
-              - Complex patient scenarios with multiple comorbidities
-              - Detailed vital signs and laboratory values
-              - Progressive complexity building on previous knowledge
-              - Integration of multiple system pathophysiology
-              - Structured analysis questions that promote critical thinking`
-          },
-          {
-            role: "user",
-            content: "Generate an advanced clinical case study with follow-up questions that test deeper understanding and synthesis skills."
-          }
-        ],
-        max_tokens: 1500,
-      });
-
-      const generatedContent = completion.choices[0]?.message?.content;
-      if (!generatedContent) {
-        throw new Error("Failed to generate case content");
-      }
-
-      // Format the generated case with structured questions
-      const generatedCase = {
-        id: `gen_${Date.now()}`,
-        title: "Advanced Clinical Integration",
-        description: "AI-generated complex case for advanced practice",
-        difficulty: "advanced",
-        type: "integrated",
-        prerequisites: preIntegratedCases.map(c => c.id),
-        content: generatedContent,
-        questions: [
-          {
-            type: "synthesis",
-            question: "Analyze the complex interactions between multiple system pathologies in this case.",
-            explanation: "Demonstrate advanced understanding of system interactions."
-          },
-          {
-            type: "evaluation",
-            question: "Evaluate the effectiveness of current interventions and propose evidence-based alternatives.",
-            explanation: "Show critical thinking in treatment evaluation."
-          },
-          {
-            type: "creation",
-            question: "Develop a comprehensive care plan that addresses all identified issues.",
-            explanation: "Create an integrated care approach."
-          }
-        ]
-      };
-
-      res.json(generatedCase);
+      // If no specific case requested or not found, return the first case
+      return res.json(preIntegratedCases[0]);
     } catch (error) {
       console.error("Case generation error:", error);
       res.status(500).json({ message: "Failed to generate case study" });
     }
   });
+
 
   // Track case completion and progress
   app.post("/api/case-completion", async (req, res) => {
