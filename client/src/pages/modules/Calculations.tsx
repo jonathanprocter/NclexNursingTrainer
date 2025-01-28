@@ -41,12 +41,53 @@ export default function Calculations() {
   const [showSolution, setShowSolution] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Form for calculation answers
+  // Form for all calculations answers
   const form = useForm({
     defaultValues: {
       answer: "",
+      weightAnswer: "",
+      mgAnswer: "",
+      volumeAnswer: "",
     },
   });
+
+  // Handle conversion practice answers
+  const handleConversionSubmit = (data: any, type: string) => {
+    let isCorrect = false;
+    let correctAnswer = 0;
+    let unit = "";
+
+    switch(type) {
+      case 'weight':
+        correctAnswer = 2.5 * 2.2; // kg to lb
+        unit = "lb";
+        isCorrect = Math.abs(parseFloat(data.weightAnswer) - correctAnswer) < 0.1;
+        break;
+      case 'mg':
+        correctAnswer = 0.5; // 500mg to g
+        unit = "g";
+        isCorrect = Math.abs(parseFloat(data.mgAnswer) - correctAnswer) < 0.001;
+        break;
+      case 'volume':
+        correctAnswer = 2000; // 2L to mL
+        unit = "mL";
+        isCorrect = Math.abs(parseFloat(data.volumeAnswer) - correctAnswer) < 1;
+        break;
+    }
+
+    if (isCorrect) {
+      toast({
+        title: "Correct! 🎉",
+        description: "Great job on the conversion!",
+      });
+    } else {
+      toast({
+        title: "Not quite right",
+        description: `The correct answer is ${correctAnswer} ${unit}. Try again!`,
+        variant: "destructive",
+      });
+    }
+  };
 
   // Query for user progress
   const { data: progress } = useQuery({
@@ -495,6 +536,8 @@ export default function Calculations() {
                     <li>1 kilogram (kg) = 1000 grams (g)</li>
                     <li>1 gram (g) = 1000 milligrams (mg)</li>
                     <li>1 milligram (mg) = 1000 micrograms (mcg)</li>
+                    <li>1 pound (lb) = 0.454 kilograms (kg)</li>
+                    <li>1 kilogram (kg) = 2.2 pounds (lb)</li>
                   </ul>
                 </div>
 
@@ -505,6 +548,8 @@ export default function Calculations() {
                     <li>1 milliliter (mL) = 1 cubic centimeter (cc)</li>
                     <li>1 teaspoon = 5 mL</li>
                     <li>1 tablespoon = 15 mL</li>
+                    <li>1 ounce (oz) = 30 mL</li>
+                    <li>1 cup = 240 mL</li>
                   </ul>
                 </div>
 
@@ -515,6 +560,114 @@ export default function Calculations() {
                     <li>1 minute = 60 seconds</li>
                     <li>1 day = 24 hours</li>
                   </ul>
+                </div>
+
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold mb-4">Practice Unit Conversions</h3>
+                  <div className="grid gap-4">
+                    <Card className="p-4">
+                      <h4 className="font-medium mb-2">Weight Conversion Practice</h4>
+                      <div className="space-y-4">
+                        <div className="p-4 bg-muted rounded-lg">
+                          <p className="mb-2">Convert 2.5 kg to pounds (lb)</p>
+                          <Form {...form}>
+                            <form onSubmit={form.handleSubmit((data) => handleConversionSubmit(data, 'weight'))} className="space-y-4">
+                              <FormField
+                                control={form.control}
+                                name="weightAnswer"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormControl>
+                                      <div className="flex gap-2">
+                                        <Input
+                                          type="number"
+                                          step="0.1"
+                                          placeholder="Enter your answer"
+                                          {...field}
+                                        />
+                                        <span className="flex items-center text-sm text-muted-foreground">
+                                          lb
+                                        </span>
+                                      </div>
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <Button type="submit">Check Answer</Button>
+                            </form>
+                          </Form>
+                        </div>
+
+                        <div className="p-4 bg-muted rounded-lg">
+                          <p className="mb-2">Convert 500 mg to grams (g)</p>
+                          <Form {...form}>
+                            <form onSubmit={form.handleSubmit((data) => handleConversionSubmit(data, 'mg'))} className="space-y-4">
+                              <FormField
+                                control={form.control}
+                                name="mgAnswer"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormControl>
+                                      <div className="flex gap-2">
+                                        <Input
+                                          type="number"
+                                          step="0.001"
+                                          placeholder="Enter your answer"
+                                          {...field}
+                                        />
+                                        <span className="flex items-center text-sm text-muted-foreground">
+                                          g
+                                        </span>
+                                      </div>
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <Button type="submit">Check Answer</Button>
+                            </form>
+                          </Form>
+                        </div>
+                      </div>
+                    </Card>
+
+                    <Card className="p-4">
+                      <h4 className="font-medium mb-2">Volume Conversion Practice</h4>
+                      <div className="space-y-4">
+                        <div className="p-4 bg-muted rounded-lg">
+                          <p className="mb-2">Convert 2 L to milliliters (mL)</p>
+                          <Form {...form}>
+                            <form onSubmit={form.handleSubmit((data) => handleConversionSubmit(data, 'volume'))} className="space-y-4">
+                              <FormField
+                                control={form.control}
+                                name="volumeAnswer"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormControl>
+                                      <div className="flex gap-2">
+                                        <Input
+                                          type="number"
+                                          step="1"
+                                          placeholder="Enter your answer"
+                                          {...field}
+                                        />
+                                        <span className="flex items-center text-sm text-muted-foreground">
+                                          mL
+                                        </span>
+                                      </div>
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <Button type="submit">Check Answer</Button>
+                            </form>
+                          </Form>
+                        </div>
+                      </div>
+                    </Card>
+                  </div>
                 </div>
               </div>
             </CardContent>
