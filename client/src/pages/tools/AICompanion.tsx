@@ -98,6 +98,24 @@ export default function AICompanion() {
     };
   }, [toast]);
 
+  const stopRecording = useCallback(() => {
+    if (mediaRecorder.current && isRecording) {
+      if (silenceTimeout.current) {
+        clearTimeout(silenceTimeout.current);
+        silenceTimeout.current = null;
+      }
+
+      mediaRecorder.current.stop();
+      mediaRecorder.current.stream.getTracks().forEach(track => track.stop());
+      setIsRecording(false);
+
+      toast({
+        title: "Recording stopped",
+        description: "Processing your question..."
+      });
+    }
+  }, [isRecording, toast]);
+
   const checkForSilence = useCallback((dataArray: Uint8Array) => {
     const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
     if (average < 15) { // Adjusted threshold for better silence detection
