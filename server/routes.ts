@@ -611,6 +611,124 @@ export function registerRoutes(app: Express): Server {
     res.json(preIntegratedCases);
   });
 
+  app.post("/api/generate-risk-scenario", async (_req, res) => {
+    try {
+      const scenarios = [
+        {
+          id: "risk-1",
+          title: "Fall Prevention in Post-Operative Care",
+          description: "A 72-year-old patient is recovering from hip replacement surgery. They are on pain medication and attempting to get out of bed for the first time post-surgery.",
+          riskFactors: [
+            "Recent surgery affecting mobility",
+            "Advanced age",
+            "Pain medication effects",
+            "Unfamiliar environment",
+            "Potential orthostatic hypotension"
+          ],
+          options: [
+            {
+              text: "Conduct a thorough fall risk assessment and implement multiple preventive measures",
+              isCorrect: true,
+              explanation: "This is the most comprehensive approach that addresses multiple risk factors. The fall risk assessment helps identify specific risks, while implementing multiple preventive measures (proper positioning, assistive devices, clear pathways, etc.) creates a safer environment. This aligns with evidence-based fall prevention protocols."
+            },
+            {
+              text: "Tell the patient to wait for assistance before getting up",
+              isCorrect: false,
+              explanation: "While patient education is important, this passive approach doesn't address the underlying risk factors or implement necessary preventive measures. A more comprehensive strategy is needed."
+            },
+            {
+              text: "Place a fall risk band on the patient",
+              isCorrect: false,
+              explanation: "While identification of fall risk is important, it alone doesn't actively prevent falls. A more comprehensive approach including assessment and multiple preventive measures is needed."
+            },
+            {
+              text: "Raise all bed rails and keep the patient in bed",
+              isCorrect: false,
+              explanation: "This overly restrictive approach may increase risks (climbing over rails) and delays necessary mobilization. Early mobilization with proper safety measures is important for recovery."
+            }
+          ]
+        },
+        {
+          id: "risk-2",
+          title: "Medication Administration Safety",
+          description: "You are preparing to administer multiple medications to a patient during your morning medication rounds. The patient has similar name to another patient on the unit.",
+          riskFactors: [
+            "Similar patient names",
+            "Multiple medications",
+            "Morning rush period",
+            "Potential for interruptions",
+            "Complex medication regimen"
+          ],
+          options: [
+            {
+              text: "Implement the full 'Five Rights' check and use two patient identifiers",
+              isCorrect: true,
+              explanation: "This approach ensures medication safety by verifying: right patient (using two identifiers), right drug, right dose, right route, and right time. This systematic process helps prevent medication errors and aligns with Joint Commission safety goals."
+            },
+            {
+              text: "Ask another nurse to double-check the medications",
+              isCorrect: false,
+              explanation: "While peer checking can be helpful, it doesn't replace the need for systematic verification using the 'Five Rights' and proper patient identification."
+            },
+            {
+              text: "Check the patient's wristband only",
+              isCorrect: false,
+              explanation: "Using only one identifier is insufficient. Best practice requires two patient identifiers and implementation of all 'Five Rights' of medication administration."
+            },
+            {
+              text: "Administer medications based on room number",
+              isCorrect: false,
+              explanation: "Room numbers are not a reliable patient identifier and should never be used alone. This approach risks serious medication errors."
+            }
+          ]
+        },
+        {
+          id: "risk-3",
+          title: "Infection Prevention in Central Line Care",
+          description: "You are caring for a patient with a central venous catheter who has been hospitalized for 5 days. The dressing is slightly soiled but still intact.",
+          riskFactors: [
+            "Invasive device present",
+            "Extended hospitalization",
+            "Compromised dressing integrity",
+            "Risk of bloodstream infection",
+            "Multiple access points"
+          ],
+          options: [
+            {
+              text: "Change the dressing using sterile technique and complete a thorough site assessment",
+              isCorrect: true,
+              explanation: "This option maintains the highest level of infection prevention by addressing the compromised dressing while following evidence-based central line care protocols. The site assessment allows early detection of complications."
+            },
+            {
+              text: "Reinforce the current dressing",
+              isCorrect: false,
+              explanation: "Reinforcing a soiled dressing is never appropriate as it can trap moisture and bacteria, increasing infection risk. The dressing should be completely changed using sterile technique."
+            },
+            {
+              text: "Monitor the site and wait until the next scheduled change",
+              isCorrect: false,
+              explanation: "Waiting with a soiled dressing increases infection risk. Central line dressings should be changed when soiled, loose, or wet, regardless of schedule."
+            },
+            {
+              text: "Clean around the edges of the current dressing",
+              isCorrect: false,
+              explanation: "This approach doesn't address the underlying issue and may introduce contamination. A complete sterile dressing change is needed."
+            }
+          ]
+        }
+      ];
+
+      const randomScenario = scenarios[Math.floor(Math.random() * scenarios.length)];
+      res.json(randomScenario);
+    } catch (error) {
+      console.error("Error generating risk scenario:", error);
+      res.status(500).json({
+        message: "Failed to generate scenario",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Add endpoint to get completed cases
   app.get("/api/user/completed-cases", async (_req, res) => {
     try {
@@ -700,7 +818,7 @@ export function registerRoutes(app: Express): Server {
   //  // User progress routes with AI recommendations
   app.get("/api/progress/:userId", async (req, res) => {
     try {
-            const progress = await db.query.userProgress.findMany({
+      const progress = await db.query.userProgress.findMany({
         where: eq(userProgress.userId, parseInt(req.params.userId)),
         with: {
           module: true,
