@@ -210,23 +210,8 @@ export default function ClinicalAnalysis() {
           throw new Error("Failed to generate case study");
         }
 
-        return response.json() as Promise<CaseStudy>;
-      },
-      onSuccess: (data) => {
-        setCurrentCase(data);
-        setUserAnswers({});
-        setShowFeedback(false);
-        toast({
-          title: "Success",
-          description: "Case study loaded successfully!",
-        });
-      },
-      onError: (error) => {
-        toast({
-          title: "Error",
-          description: "Failed to load case study. Please try again.",
-          variant: "destructive",
-        });
+        const data = await response.json();
+        return data as CaseStudy;
       },
     });
 
@@ -247,28 +232,38 @@ export default function ClinicalAnalysis() {
 
         return response.json();
       },
-      onSuccess: () => {
+    });
+
+    const handleGenerateCase = async (caseId?: string) => {
+      try {
+        const result = await generateCaseMutation.mutateAsync(caseId);
+        setCurrentCase(result);
+        setUserAnswers({});
+        setShowFeedback(false);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to load case study. Please try again.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    const handleAnswerSubmit = async () => {
+      try {
+        await submitCaseMutation.mutateAsync(userAnswers);
         setShowFeedback(true);
         toast({
           title: "Success",
           description: "Case study answers submitted successfully!",
         });
-      },
-      onError: (error) => {
+      } catch (error) {
         toast({
           title: "Error",
-          description: "Failed to submit case study. Please try again.",
+          description: "Failed to submit answers. Please try again.",
           variant: "destructive",
         });
       }
-    });
-
-    const handleGenerateCase = async (caseId?: string) => {
-      await generateCaseMutation.mutateAsync(caseId);
-    };
-
-    const handleAnswerSubmit = async () => {
-      await submitCaseMutation.mutateAsync(userAnswers);
     };
 
     const handleAnswerChange = (index: number, value: string) => {
@@ -314,7 +309,7 @@ export default function ClinicalAnalysis() {
                           )}
                         </div>
 
-                        {!currentCase && !completedCases.includes(caseStudy.id) &&
+                        {!completedCases.includes(caseStudy.id) &&
                           (index === 0 || completedCases.includes(casesData[index - 1]?.id)) && (
                             <Button
                               className="w-full mt-4"
@@ -331,7 +326,18 @@ export default function ClinicalAnalysis() {
               </div>
 
               {/* Current Case Display */}
-              {currentCase && (
+              {generateCaseMutation.isPending && (
+                <Card className="mt-6">
+                  <CardContent className="p-8">
+                    <div className="flex items-center justify-center">
+                      <RefreshCw className="h-6 w-6 animate-spin" />
+                      <span className="ml-2">Loading case study...</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {currentCase && !generateCaseMutation.isPending && (
                 <Card className="mt-6">
                   <CardHeader>
                     <CardTitle>Current Case: {currentCase.title}</CardTitle>
