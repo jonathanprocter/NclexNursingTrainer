@@ -11,7 +11,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
 
 // Helper function to format section names for display
@@ -835,32 +834,29 @@ export default function Pharmacology() {
         </TabsContent>
       </Tabs>
 
+      {/* Dialog for AI Help */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold">
               {currentSection}
             </DialogTitle>
-            <DialogDescription>
-              <div className="mt-4">
-                {aiHelpMutation.isPending ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                  </div>
-                ) : (
-                  <div className="prose prose-sm max-w-none">
-                    {aiContent.split('\n').map((paragraph, index) => (
-                      paragraph.trim() && (
-                        <p key={index} className="mb-4 text-foreground">
-                          {paragraph}
-                        </p>
-                      )
-                    ))}
-                  </div>
-                )}
-              </div>
-            </DialogDescription>
           </DialogHeader>
+          {aiHelpMutation.isPending ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : (
+            <div className="prose prose-sm max-w-none">
+              {aiContent.split('\n').map((paragraph, index) => (
+                paragraph.trim() && (
+                  <p key={index} className="mb-4 text-foreground">
+                    {paragraph}
+                  </p>
+                )
+              ))}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
