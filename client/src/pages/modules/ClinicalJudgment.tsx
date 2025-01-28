@@ -15,12 +15,15 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
 
 export default function ClinicalJudgment() {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isQuestionDialogOpen, setIsQuestionDialogOpen] = useState(false);
   const [aiContent, setAiContent] = useState("");
   const [currentTopic, setCurrentTopic] = useState("");
+  const [question, setQuestion] = useState("");
 
   // Helper function to format topic names
   const formatTopicName = (topic: string): string => {
@@ -31,11 +34,11 @@ export default function ClinicalJudgment() {
   };
 
   const aiHelpMutation = useMutation({
-    mutationFn: async ({ topic, context }: { topic: string; context?: string }) => {
+    mutationFn: async ({ topic, context, question }: { topic: string; context?: string; question?: string }) => {
       const response = await fetch("/api/ai-help", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic, context }),
+        body: JSON.stringify({ topic, context, question }),
       });
 
       if (!response.ok) {
@@ -61,6 +64,63 @@ export default function ClinicalJudgment() {
       });
     }
   };
+
+  const handleAskQuestion = async () => {
+    if (!question.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a question first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const result = await aiHelpMutation.mutateAsync({ 
+        topic: currentTopic.toLowerCase().replace(/\s+/g, '_'),
+        question
+      });
+      setAiContent(result.content);
+      setIsQuestionDialogOpen(false);
+      setIsDialogOpen(true);
+      setQuestion("");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to get an answer. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const QuestionDialog = () => (
+    <Dialog open={isQuestionDialogOpen} onOpenChange={setIsQuestionDialogOpen}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Bot className="h-5 w-5" />
+            Ask About {currentTopic}
+          </DialogTitle>
+          <DialogDescription>
+            Ask any specific questions about {currentTopic.toLowerCase()}. Our AI expert will provide detailed guidance.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex gap-4">
+          <Input
+            placeholder="Type your question here..."
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleAskQuestion();
+              }
+            }}
+          />
+          <Button onClick={handleAskQuestion}>Ask</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto px-4 py-8">
@@ -475,8 +535,22 @@ export default function ClinicalJudgment() {
               )}
             </div>
           </ScrollArea>
+          <div className="mt-4 flex justify-end">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setIsDialogOpen(false);
+                setIsQuestionDialogOpen(true);
+              }}
+            >
+              <Bot className="h-4 w-4 mr-2" />
+              Ask a Question
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
+
+      <QuestionDialog />
     </div>
   );
 }
