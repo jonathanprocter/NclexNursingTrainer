@@ -52,10 +52,16 @@ async function generateNewQuestions(userId: number, topic?: string) {
           type: question.category.toLowerCase()
         });
 
+        // Ensure question options are properly structured
+        const formattedOptions = question.options.map(option => ({
+          id: option.id,
+          text: option.text
+        }));
+
         selectedQuestions.push({
           id: i + 1,
           text: question.text,
-          options: question.options,
+          options: formattedOptions,
           correctAnswer: question.correctAnswer,
           explanation: question.explanation,
           category: question.category,
@@ -80,6 +86,8 @@ async function generateNewQuestions(userId: number, topic?: string) {
 }
 
 export function registerRoutes(app: Express): Server {
+  const httpServer = createServer(app);
+
   // Modules routes
   app.get("/api/modules", async (_req, res) => {
     try {
@@ -838,6 +846,5 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  const httpServer = createServer(app);
   return httpServer;
 }
