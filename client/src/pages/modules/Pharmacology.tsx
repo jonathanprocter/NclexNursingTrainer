@@ -195,21 +195,179 @@ export default function Pharmacology() {
                     <div className="bg-muted/50 p-4 rounded-lg">
                       <h4 className="font-medium mb-2">Pharmacodynamics</h4>
                       <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-                        <li>Receptor types and drug-receptor interactions</li>
-                        <li>Agonist and antagonist mechanisms</li>
-                        <li>Dose-response relationships</li>
-                        <li>Therapeutic index and safety margins</li>
+                        <li>Receptor types and drug-receptor interactions
+                          <ul className="list-disc list-inside ml-4 mt-2">
+                            <li>G-protein coupled receptors</li>
+                            <li>Ion channels and transporters</li>
+                            <li>Nuclear receptors</li>
+                            <li>Enzyme-linked receptors</li>
+                          </ul>
+                        </li>
+                        <li>Agonist and antagonist mechanisms
+                          <ul className="list-disc list-inside ml-4 mt-2">
+                            <li>Full vs. partial agonists</li>
+                            <li>Competitive vs. non-competitive antagonists</li>
+                            <li>Inverse agonists</li>
+                            <li>Allosteric modulators</li>
+                          </ul>
+                        </li>
+                        <li>Dose-response relationships
+                          <ul className="list-disc list-inside ml-4 mt-2">
+                            <li>ED50 and LD50 concepts</li>
+                            <li>Therapeutic window determination</li>
+                            <li>Potency vs. efficacy</li>
+                            <li>Concentration-effect curves</li>
+                          </ul>
+                        </li>
+                        <li>Signal transduction pathways
+                          <ul className="list-disc list-inside ml-4 mt-2">
+                            <li>Second messenger systems</li>
+                            <li>Cellular response mechanisms</li>
+                            <li>Receptor regulation and desensitization</li>
+                            <li>Cross-talk between pathways</li>
+                          </ul>
+                        </li>
                       </ul>
+                      <Button variant="outline" size="sm" className="mt-4" onClick={() => handleAIHelp("pharmacodynamics_details")}>
+                        <Bot className="h-4 w-4 mr-2" />
+                        Get Detailed Examples
+                      </Button>
                     </div>
 
                     <div className="bg-muted/50 p-4 rounded-lg">
-                      <h4 className="font-medium mb-2">Pharmacokinetics</h4>
+                      <h4 className="font-medium mb-2">Pharmacokinetics (ADME)</h4>
                       <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-                        <li>Absorption factors and bioavailability</li>
-                        <li>Distribution and protein binding</li>
-                        <li>Metabolism pathways and drug interactions</li>
-                        <li>Elimination routes and half-life considerations</li>
+                        <li>Absorption
+                          <ul className="list-disc list-inside ml-4 mt-2">
+                            <li>Passive diffusion mechanisms
+                              <ul className="list-disc list-inside ml-4">
+                                <li>pH-dependent ionization</li>
+                                <li>Lipid solubility factors</li>
+                                <li>Surface area effects</li>
+                              </ul>
+                            </li>
+                            <li>Active transport systems
+                              <ul className="list-disc list-inside ml-4">
+                                <li>P-glycoprotein role</li>
+                                <li>Carrier-mediated transport</li>
+                                <li>Ion channels</li>
+                              </ul>
+                            </li>
+                            <li>Bioavailability factors
+                              <ul className="list-disc list-inside ml-4">
+                                <li>First-pass metabolism</li>
+                                <li>Food effects</li>
+                                <li>Drug formulation impact</li>
+                              </ul>
+                            </li>
+                          </ul>
+                        </li>
+                        <li>Distribution
+                          <ul className="list-disc list-inside ml-4 mt-2">
+                            <li>Plasma protein binding
+                              <ul className="list-disc list-inside ml-4">
+                                <li>Albumin interactions</li>
+                                <li>Alpha-1 acid glycoprotein</li>
+                                <li>Binding competition</li>
+                              </ul>
+                            </li>
+                            <li>Tissue distribution patterns
+                              <ul className="list-disc list-inside ml-4">
+                                <li>Blood-brain barrier</li>
+                                <li>Placental transfer</li>
+                                <li>Fat solubility effects</li>
+                              </ul>
+                            </li>
+                            <li>Volume of distribution
+                              <ul className="list-disc list-inside ml-4">
+                                <li>Clinical significance</li>
+                                <li>Calculation methods</li>
+                                <li>Impact on dosing</li>
+                              </ul>
+                            </li>
+                          </ul>
+                        </li>
+                        <li>Metabolism
+                          <ul className="list-disc list-inside ml-4 mt-2">
+                            <li>Phase I reactions
+                              <ul className="list-disc list-inside ml-4">
+                                <li>Cytochrome P450 system</li>
+                                <li>Oxidation processes</li>
+                                <li>Reduction mechanisms</li>
+                              </ul>
+                            </li>
+                            <li>Phase II reactions
+                              <ul className="list-disc list-inside ml-4">
+                                <li>Conjugation types</li>
+                                <li>Glucuronidation</li>
+                                <li>Sulfation pathways</li>
+                              </ul>
+                            </li>
+                            <li>Metabolic interactions
+                              <ul className="list-disc list-inside ml-4">
+                                <li>Enzyme induction</li>
+                                <li>Enzyme inhibition</li>
+                                <li>Genetic polymorphisms</li>
+                              </ul>
+                            </li>
+                          </ul>
+                        </li>
+                        <li>Excretion
+                          <ul className="list-disc list-inside ml-4 mt-2">
+                            <li>Renal elimination
+                              <ul className="list-disc list-inside ml-4">
+                                <li>Glomerular filtration</li>
+                                <li>Tubular secretion</li>
+                                <li>Reabsorption factors</li>
+                              </ul>
+                            </li>
+                            <li>Biliary excretion
+                              <ul className="list-disc list-inside ml-4">
+                                <li>Enterohepatic circulation</li>
+                                <li>Conjugate elimination</li>
+                                <li>Transport proteins</li>
+                              </ul>
+                            </li>
+                            <li>Other routes
+                              <ul className="list-disc list-inside ml-4">
+                                <li>Pulmonary excretion</li>
+                                <li>Sweat and saliva</li>
+                                <li>Breast milk transfer</li>
+                              </ul>
+                            </li>
+                          </ul>
+                        </li>
                       </ul>
+                      <Button variant="outline" size="sm" className="mt-4" onClick={() => handleAIHelp("pharmacokinetics_case_studies")}>
+                        <Bot className="h-4 w-4 mr-2" />
+                        Explore Clinical Cases
+                      </Button>
+                    </div>
+
+                    <div className="bg-muted/50 p-4 rounded-lg">
+                      <h4 className="font-medium mb-2">Clinical Applications</h4>
+                      <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                        <li>Therapeutic Drug Monitoring
+                          <ul className="list-disc list-inside ml-4 mt-2">
+                            <li>Peak and trough levels</li>
+                            <li>Steady-state concepts</li>
+                            <li>Loading dose calculations</li>
+                            <li>Maintenance dose adjustments</li>
+                          </ul>
+                        </li>
+                        <li>Special Populations
+                          <ul className="list-disc list-inside ml-4 mt-2">
+                            <li>Pediatric considerations</li>
+                            <li>Geriatric adaptations</li>
+                            <li>Pregnancy categories</li>
+                            <li>Organ dysfunction impact</li>
+                          </ul>
+                        </li>
+                      </ul>
+                      <Button variant="outline" size="sm" className="mt-4" onClick={() => handleAIHelp("clinical_applications")}>
+                        <Bot className="h-4 w-4 mr-2" />
+                        Practice Scenarios
+                      </Button>
                     </div>
                   </div>
                 </section>
