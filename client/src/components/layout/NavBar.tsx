@@ -26,7 +26,11 @@ import {
   Stethoscope,
   Bot,
   Clock,
+  Menu,
+  X
 } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useState } from "react";
 
 const dashboardItems = [
   {
@@ -132,6 +136,18 @@ const studyTools = [
 
 export default function NavBar() {
   const [location] = useLocation();
+  const [isOpen, setIsOpen] = useState(false);
+
+  const MobileNavItem = ({ href, children, onClick }: { href: string; children: React.ReactNode; onClick?: () => void }) => (
+    <Link href={href}>
+      <a
+        className="block px-4 py-2 text-sm hover:bg-accent rounded-md"
+        onClick={onClick}
+      >
+        {children}
+      </a>
+    </Link>
+  );
 
   return (
     <nav className="border-b bg-white">
@@ -141,81 +157,162 @@ export default function NavBar() {
             <h1 className="text-xl font-bold text-primary cursor-pointer">NCLEX Prep</h1>
           </Link>
 
-          <NavigationMenu>
-            <NavigationMenuList>
-              <NavigationMenuItem>
-                <NavigationMenuTrigger>Dashboards</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+          {/* Desktop Navigation */}
+          <div className="hidden md:block">
+            <NavigationMenu>
+              <NavigationMenuList>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger>Dashboards</NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                      {dashboardItems.map((item) => (
+                        <ListItem
+                          key={item.title}
+                          title={item.title}
+                          href={item.href}
+                          icon={item.icon}
+                        >
+                          {item.description}
+                        </ListItem>
+                      ))}
+                    </ul>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger>Learning Modules</NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                      {learningModules.map((item) => (
+                        <ListItem
+                          key={item.title}
+                          title={item.title}
+                          href={item.href}
+                          icon={item.icon}
+                        >
+                          {item.description}
+                        </ListItem>
+                      ))}
+                    </ul>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger>Practice & Simulation</NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                      {practiceItems.map((item) => (
+                        <ListItem
+                          key={item.title}
+                          title={item.title}
+                          href={item.href}
+                          icon={item.icon}
+                        >
+                          {item.description}
+                        </ListItem>
+                      ))}
+                    </ul>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger>Study Tools</NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                      {studyTools.map((item) => (
+                        <ListItem
+                          key={item.title}
+                          title={item.title}
+                          href={item.href}
+                          icon={item.icon}
+                        >
+                          {item.description}
+                        </ListItem>
+                      ))}
+                    </ul>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
+          </div>
+
+          {/* Mobile Navigation */}
+          <div className="md:hidden">
+            <Sheet open={isOpen} onOpenChange={setIsOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-6 w-6" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                <nav className="flex flex-col gap-4">
+                  <div className="px-4 py-2">
+                    <h2 className="text-lg font-semibold mb-2">Dashboards</h2>
                     {dashboardItems.map((item) => (
-                      <ListItem
-                        key={item.title}
-                        title={item.title}
+                      <MobileNavItem 
+                        key={item.title} 
                         href={item.href}
-                        icon={item.icon}
+                        onClick={() => setIsOpen(false)}
                       >
-                        {item.description}
-                      </ListItem>
+                        <div className="flex items-center gap-2">
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.title}</span>
+                        </div>
+                      </MobileNavItem>
                     ))}
-                  </ul>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
+                  </div>
 
-              <NavigationMenuItem>
-                <NavigationMenuTrigger>Learning Modules</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                  <div className="px-4 py-2">
+                    <h2 className="text-lg font-semibold mb-2">Learning Modules</h2>
                     {learningModules.map((item) => (
-                      <ListItem
-                        key={item.title}
-                        title={item.title}
+                      <MobileNavItem 
+                        key={item.title} 
                         href={item.href}
-                        icon={item.icon}
+                        onClick={() => setIsOpen(false)}
                       >
-                        {item.description}
-                      </ListItem>
+                        <div className="flex items-center gap-2">
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.title}</span>
+                        </div>
+                      </MobileNavItem>
                     ))}
-                  </ul>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
+                  </div>
 
-              <NavigationMenuItem>
-                <NavigationMenuTrigger>Practice & Simulation</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                  <div className="px-4 py-2">
+                    <h2 className="text-lg font-semibold mb-2">Practice & Simulation</h2>
                     {practiceItems.map((item) => (
-                      <ListItem
-                        key={item.title}
-                        title={item.title}
+                      <MobileNavItem 
+                        key={item.title} 
                         href={item.href}
-                        icon={item.icon}
+                        onClick={() => setIsOpen(false)}
                       >
-                        {item.description}
-                      </ListItem>
+                        <div className="flex items-center gap-2">
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.title}</span>
+                        </div>
+                      </MobileNavItem>
                     ))}
-                  </ul>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
+                  </div>
 
-              <NavigationMenuItem>
-                <NavigationMenuTrigger>Study Tools</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                  <div className="px-4 py-2">
+                    <h2 className="text-lg font-semibold mb-2">Study Tools</h2>
                     {studyTools.map((item) => (
-                      <ListItem
-                        key={item.title}
-                        title={item.title}
+                      <MobileNavItem 
+                        key={item.title} 
                         href={item.href}
-                        icon={item.icon}
+                        onClick={() => setIsOpen(false)}
                       >
-                        {item.description}
-                      </ListItem>
+                        <div className="flex items-center gap-2">
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.title}</span>
+                        </div>
+                      </MobileNavItem>
                     ))}
-                  </ul>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
-            </NavigationMenuList>
-          </NavigationMenu>
+                  </div>
+                </nav>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </div>
     </nav>

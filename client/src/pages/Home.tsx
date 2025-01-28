@@ -53,16 +53,16 @@ export default function Home() {
   };
 
   return (
-    <div className="space-y-6">
-      <section className="text-center py-12">
+    <div className="space-y-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <section className="text-center py-8 sm:py-12">
         <div className="mb-6">
-          <h1 className="text-4xl font-bold mb-2">
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2">
             Welcome Back, Bianca! 👋
           </h1>
-          <p className="text-2xl text-primary mb-4">
+          <p className="text-xl sm:text-2xl text-primary mb-4">
             Ready to ace your NCLEX? Let's do this! 💪
           </p>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base">
             Your personalized study guide for the National Council Licensure Examination. 
             Track your progress, practice with questions, and master key nursing concepts. 
             You've got this! ⭐
@@ -70,8 +70,8 @@ export default function Home() {
         </div>
       </section>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        <Card>
+      <div className="grid gap-6 sm:grid-cols-2">
+        <Card className="h-full">
           <CardHeader>
             <CardTitle>Your Progress 📊</CardTitle>
           </CardHeader>
@@ -85,7 +85,7 @@ export default function Home() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="h-full">
           <CardHeader>
             <CardTitle>Practice Questions 📝</CardTitle>
           </CardHeader>
@@ -109,8 +109,8 @@ export default function Home() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="w-full">
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   <FormField
@@ -120,12 +120,19 @@ export default function Home() {
                       <FormItem>
                         <FormLabel>How much time do you have to study? (minutes)</FormLabel>
                         <FormControl>
-                          <Input type="number" placeholder="30" {...field} />
+                          <Input 
+                            type="number" 
+                            placeholder="30" 
+                            {...field} 
+                            className="w-full"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                          />
                         </FormControl>
                       </FormItem>
                     )}
                   />
-                  <Button type="submit">Generate Study Plan 🎯</Button>
+                  <Button type="submit" className="w-full sm:w-auto">Generate Study Plan 🎯</Button>
                 </form>
               </Form>
             </div>
