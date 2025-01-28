@@ -192,9 +192,20 @@ export default function ClinicalAnalysis() {
 
   const CaseStudiesSection = () => {
     const [currentCase, setCurrentCase] = useState<CaseStudy | null>(null);
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [userAnswers, setUserAnswers] = useState<Record<string, number>>({});
-    const [showFeedback, setShowFeedback] = useState<Record<string, boolean>>({});
-    const { toast } = useToast();
+    const [showFeedback, setShowFeedback] = useState(false);
+    const [performance, setPerformance] = useState<{
+      correctCount: number;
+      totalAttempted: number;
+      strengths: string[];
+      weaknesses: string[];
+    }>({
+      correctCount: 0,
+      totalAttempted: 0,
+      strengths: [],
+      weaknesses: []
+    });
 
     // Query for completed cases
     const { data: completedCases = [] } = useQuery<string[]>({
@@ -247,7 +258,14 @@ export default function ClinicalAnalysis() {
         const result = await generateCaseMutation.mutateAsync(caseId);
         setCurrentCase(result);
         setUserAnswers({});
-        setShowFeedback({});
+        setShowFeedback(false);
+        setCurrentQuestionIndex(0);
+        setPerformance({
+          correctCount: 0,
+          totalAttempted: 0,
+          strengths: [],
+          weaknesses: []
+        });
       } catch (error) {
         toast({
           title: "Error",
@@ -257,37 +275,50 @@ export default function ClinicalAnalysis() {
       }
     };
 
-    const handleAnswerSubmit = async () => {
-      try {
-        await submitCaseMutation.mutateAsync(userAnswers);
-        setShowFeedback(Object.fromEntries(Object.keys(userAnswers).map(key => [key, true])));
-        toast({
-          title: "Success",
-          description: "Case study answers submitted successfully!",
-        });
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to submit answers. Please try again.",
-          variant: "destructive",
-        });
-      }
-    };
-
-
-    const handleAnswerSelect = (questionIndex: number, optionIndex: number) => {
-      setUserAnswers(prev => ({ ...prev, [questionIndex]: optionIndex }));
-      setShowFeedback(prev => ({ ...prev, [questionIndex]: true }));
-
-      // Show immediate feedback toast
+    const handleAnswerSelect = async (questionIndex: number, optionIndex: number) => {
       const question = currentCase?.questions[questionIndex];
       const selectedOption = question?.options[optionIndex];
 
-      if (selectedOption) {
+      if (!question || !selectedOption) return;
+
+      setUserAnswers(prev => ({ ...prev, [questionIndex]: optionIndex }));
+      setShowFeedback(true);
+
+      // Update performance metrics
+      const isCorrect = selectedOption.correct;
+      const newPerformance = {
+        correctCount: performance.correctCount + (isCorrect ? 1 : 0),
+        totalAttempted: performance.totalAttempted + 1,
+        strengths: [...performance.strengths],
+        weaknesses: [...performance.weaknesses]
+      };
+
+      // Update strengths and weaknesses based on answer
+      if (isCorrect) {
+        newPerformance.strengths = [...new Set([...newPerformance.strengths, ...selectedOption.topics])];
+      } else {
+        newPerformance.weaknesses = [...new Set([...newPerformance.weaknesses, ...selectedOption.topics])];
+      }
+
+      setPerformance(newPerformance);
+
+      // Show feedback toast
+      toast({
+        title: selectedOption.correct ? "Correct! 🎉" : "Incorrect",
+        description: selectedOption.explanation,
+        variant: selectedOption.correct ? "default" : "destructive",
+      });
+    };
+
+    const handleNextQuestion = () => {
+      setShowFeedback(false);
+      if (currentCase && currentQuestionIndex < currentCase.questions.length - 1) {
+        setCurrentQuestionIndex(prev => prev + 1);
+      } else {
+        // Case completed, show summary
         toast({
-          title: selectedOption.correct ? "Correct! 🎉" : "Incorrect",
-          description: selectedOption.explanation,
-          variant: selectedOption.correct ? "default" : "destructive",
+          title: "Case Study Completed!",
+          description: `You got ${performance.correctCount} out of ${performance.totalAttempted} questions correct.`,
         });
       }
     };
@@ -298,154 +329,179 @@ export default function ClinicalAnalysis() {
           <CardHeader>
             <CardTitle>Interactive Case Studies</CardTitle>
             <p className="text-muted-foreground mt-2">
-              Apply clinical reasoning skills to real-world scenarios through progressive case studies.
+              Apply clinical reasoning skills through progressive case studies.
             </p>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
               {/* Cases List */}
-              <div className="grid gap-4 md:grid-cols-3">
-                {casesData.map((caseStudy, index) => (
-                  <Card key={caseStudy.id} className={cn(
-                    "relative",
-                    !completedCases.includes(caseStudy.id) && index > 0 &&
-                    !completedCases.includes(casesData[index - 1]?.id) &&
-                    "opacity-50"
-                  )}>
-                    <CardHeader>
-                      <CardTitle className="text-lg">{caseStudy.title}</CardTitle>
-                      <p className="text-sm text-muted-foreground">{caseStudy.description}</p>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Badge variant={caseStudy.difficulty === 'beginner' ? 'default' :
-                            caseStudy.difficulty === 'intermediate' ? 'secondary' : 'destructive'}>
-                            {caseStudy.difficulty}
-                          </Badge>
-                          {completedCases.includes(caseStudy.id) && (
-                            <Badge variant="outline" className="gap-1">
-                              <CheckCircle className="h-3 w-3" />
-                              Completed
+              {!currentCase && (
+                <div className="grid gap-4 md:grid-cols-3">
+                  {casesData.map((caseStudy, index) => (
+                    <Card key={caseStudy.id} className={cn(
+                      "relative",
+                      !completedCases.includes(caseStudy.id) && index > 0 &&
+                      !completedCases.includes(casesData[index - 1]?.id) &&
+                      "opacity-50"
+                    )}>
+                      <CardHeader>
+                        <CardTitle className="text-lg">{caseStudy.title}</CardTitle>
+                        <p className="text-sm text-muted-foreground">{caseStudy.description}</p>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Badge variant={caseStudy.difficulty === 'beginner' ? 'default' :
+                              caseStudy.difficulty === 'intermediate' ? 'secondary' : 'destructive'}>
+                              {caseStudy.difficulty}
                             </Badge>
-                          )}
+                            {completedCases.includes(caseStudy.id) && (
+                              <Badge variant="outline" className="gap-1">
+                                <CheckCircle className="h-3 w-3" />
+                                Completed
+                              </Badge>
+                            )}
+                          </div>
+
+                          {!completedCases.includes(caseStudy.id) &&
+                            (index === 0 || completedCases.includes(casesData[index - 1]?.id)) && (
+                              <Button
+                                className="w-full mt-4"
+                                onClick={() => {
+                                  handleGenerateCase(caseStudy.id);
+                                  setCurrentQuestionIndex(0);
+                                  setPerformance({
+                                    correctCount: 0,
+                                    totalAttempted: 0,
+                                    strengths: [],
+                                    weaknesses: []
+                                  });
+                                }}
+                                disabled={generateCaseMutation.isPending}
+                              >
+                                {generateCaseMutation.isPending ? 'Loading...' : 'Start Case'}
+                              </Button>
+                            )}
                         </div>
-
-                        {!completedCases.includes(caseStudy.id) &&
-                          (index === 0 || completedCases.includes(casesData[index - 1]?.id)) && (
-                            <Button
-                              className="w-full mt-4"
-                              onClick={() => handleGenerateCase(caseStudy.id)}
-                              disabled={generateCaseMutation.isPending}
-                            >
-                              {generateCaseMutation.isPending ? 'Loading...' : 'Start Case'}
-                            </Button>
-                          )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              {/* Current Case Display */}
-              {generateCaseMutation.isPending && (
-                <Card className="mt-6">
-                  <CardContent className="p-8">
-                    <div className="flex items-center justify-center">
-                      <RefreshCw className="h-6 w-6 animate-spin" />
-                      <span className="ml-2">Loading case study...</span>
-                    </div>
-                  </CardContent>
-                </Card>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               )}
 
-              {currentCase && !generateCaseMutation.isPending && (
-                <Card className="mt-6">
+              {/* Current Case Display */}
+              {currentCase && (
+                <Card>
                   <CardHeader>
-                    <CardTitle>Current Case: {currentCase.title}</CardTitle>
-                    <p className="text-sm text-muted-foreground mt-2">{currentCase.description}</p>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <CardTitle>{currentCase.title}</CardTitle>
+                        <p className="text-sm text-muted-foreground mt-2">{currentCase.description}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium">Question {currentQuestionIndex + 1} of {currentCase.questions.length}</p>
+                        <Progress 
+                          value={(currentQuestionIndex + 1) / currentCase.questions.length * 100} 
+                          className="w-[200px] mt-2"
+                        />
+                      </div>
+                    </div>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-6">
+                      {/* Case Content */}
                       <div className="prose prose-sm max-w-none">
                         <div dangerouslySetInnerHTML={{ __html: currentCase.content }} />
                       </div>
 
-                      <div className="space-y-8">
-                        {currentCase.questions.map((question, qIndex) => (
-                          <div key={qIndex} className="space-y-4">
-                            <div>
-                              <h3 className="text-lg font-semibold mb-2">
-                                Question {qIndex + 1}: {question.question}
-                              </h3>
-                              <div className="grid gap-3">
-                                {question.options.map((option, oIndex) => (
-                                  <div key={oIndex} className="space-y-2">
-                                    <Button
-                                      variant={userAnswers[qIndex] === oIndex ?
-                                        (option.correct ? "default" : "destructive") :
-                                        "outline"
-                                      }
-                                      className="w-full justify-start text-left h-auto p-4"
-                                      onClick={() => handleAnswerSelect(qIndex, oIndex)}
-                                      disabled={showFeedback[qIndex]}
-                                    >
-                                      {option.text}
-                                    </Button>
+                      {/* Current Question */}
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold">
+                          {currentCase.questions[currentQuestionIndex].question}
+                        </h3>
+                        <div className="grid gap-3">
+                          {currentCase.questions[currentQuestionIndex].options.map((option, oIndex) => (
+                            <div key={oIndex} className="space-y-2">
+                              <Button
+                                variant={userAnswers[currentQuestionIndex] === oIndex ?
+                                  (option.correct ? "default" : "destructive") :
+                                  "outline"
+                                }
+                                className="w-full justify-start text-left h-auto p-4"
+                                onClick={() => handleAnswerSelect(currentQuestionIndex, oIndex)}
+                                disabled={showFeedback}
+                              >
+                                {option.text}
+                              </Button>
 
-                                    {showFeedback[qIndex] && userAnswers[qIndex] === oIndex && (
-                                      <div className="bg-muted/30 p-4 rounded-md space-y-2">
-                                        <p className="font-medium">Explanation:</p>
-                                        <p className="text-sm text-muted-foreground">{option.explanation}</p>
-                                        <div className="mt-2">
-                                          <p className="font-medium text-sm">Related Topics:</p>
-                                          <div className="flex flex-wrap gap-2 mt-1">
-                                            {option.topics.map((topic, tIndex) => (
-                                              <Badge key={tIndex} variant="outline">{topic}</Badge>
-                                            ))}
-                                          </div>
-                                        </div>
-                                      </div>
-                                    )}
+                              {showFeedback && userAnswers[currentQuestionIndex] === oIndex && (
+                                <div className="bg-muted/30 p-4 rounded-md space-y-2">
+                                  <p className="font-medium">Explanation:</p>
+                                  <p className="text-sm text-muted-foreground">{option.explanation}</p>
+                                  <div className="mt-2">
+                                    <p className="font-medium text-sm">Related Topics:</p>
+                                    <div className="flex flex-wrap gap-2 mt-1">
+                                      {option.topics.map((topic, tIndex) => (
+                                        <Badge key={tIndex} variant="outline">{topic}</Badge>
+                                      ))}
+                                    </div>
                                   </div>
-                                ))}
-                              </div>
-                            </div>
-
-                            {showFeedback[qIndex] && (
-                              <div className="mt-4">
-                                <p className="font-medium text-sm">Key Topics Covered:</p>
-                                <div className="flex flex-wrap gap-2 mt-1">
-                                  {question.keyTopics.map((topic, tIndex) => (
-                                    <Badge key={tIndex} variant="secondary">{topic}</Badge>
-                                  ))}
                                 </div>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
 
-                      <div className="flex justify-end gap-2 mt-6">
-                        <Button
-                          onClick={() => {
-                            setCurrentCase(null);
-                            setUserAnswers({});
-                            setShowFeedback({});
-                          }}
-                          variant="outline"
-                        >
-                          Close Case
-                        </Button>
-                        {!Object.keys(showFeedback).every(key => showFeedback[key]) && (
+                        {/* Navigation Buttons */}
+                        <div className="flex justify-between mt-6">
                           <Button
+                            variant="outline"
                             onClick={() => {
-                              const allQuestionsAnswered = Object.fromEntries(Object.keys(userAnswers).map(key => [key, true]));
-                              setShowFeedback(allQuestionsAnswered);
+                              setCurrentCase(null);
+                              setUserAnswers({});
+                              setShowFeedback(false);
+                              setCurrentQuestionIndex(0);
                             }}
                           >
-                            Show All Answers
+                            Exit Case
                           </Button>
+                          {showFeedback && (
+                            <Button onClick={handleNextQuestion}>
+                              {currentQuestionIndex < currentCase.questions.length - 1 
+                                ? "Next Question" 
+                                : "Complete Case"}
+                            </Button>
+                          )}
+                        </div>
+
+                        {/* Performance Summary (shown after last question) */}
+                        {showFeedback && currentQuestionIndex === currentCase.questions.length - 1 && (
+                          <div className="mt-6 p-4 bg-muted/30 rounded-lg">
+                            <h4 className="font-semibold mb-2">Case Study Summary</h4>
+                            <div className="space-y-2">
+                              <p>Score: {performance.correctCount} / {performance.totalAttempted}</p>
+                              {performance.strengths.length > 0 && (
+                                <div>
+                                  <p className="font-medium">Strengths:</p>
+                                  <div className="flex flex-wrap gap-2 mt-1">
+                                    {performance.strengths.map((topic, index) => (
+                                      <Badge key={index} variant="default">{topic}</Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              {performance.weaknesses.length > 0 && (
+                                <div>
+                                  <p className="font-medium">Areas for Review:</p>
+                                  <div className="flex flex-wrap gap-2 mt-1">
+                                    {performance.weaknesses.map((topic, index) => (
+                                      <Badge key={index} variant="secondary">{topic}</Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         )}
                       </div>
                     </div>
