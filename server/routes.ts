@@ -11,14 +11,15 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// Pre-integrated case studies
+// Pre-integrated case studies with progressive complexity
 const preIntegratedCases = [
   {
     id: "case1",
-    title: "Complex Heart Failure Management",
-    description: "Elderly patient presenting with acute decompensated heart failure and multiple comorbidities.",
-    difficulty: "intermediate",
+    title: "Basic Heart Failure Assessment",
+    description: "Initial case focusing on fundamental assessment skills",
+    difficulty: "beginner",
     type: "cardiology",
+    prerequisites: [],
     content: `
       <h3>Patient Information</h3>
       <p>73-year-old female with history of CHF (EF 35%), diabetes, and hypertension presents with increasing dyspnea and peripheral edema over 5 days.</p>
@@ -38,60 +39,117 @@ const preIntegratedCases = [
         <li>Potassium: 4.8 mEq/L</li>
         <li>Troponin: Negative</li>
       </ul>
-    `
+    `,
+    questions: [
+      {
+        type: "assessment",
+        question: "What are the key assessment findings that indicate heart failure exacerbation?",
+        explanation: "Focus on identifying cardinal symptoms and relating them to pathophysiology."
+      },
+      {
+        type: "analysis",
+        question: "How do the laboratory values support your clinical findings?",
+        explanation: "Connect laboratory data with clinical presentation."
+      },
+      {
+        type: "planning",
+        question: "What immediate nursing interventions are priorities for this patient?",
+        explanation: "Consider both immediate safety needs and underlying causes."
+      }
+    ],
+    nextCaseHints: ["Consider how comorbidities affect heart failure management"]
   },
   {
     id: "case2",
-    title: "Sepsis with Multiorgan Dysfunction",
-    description: "Young adult presenting with severe sepsis and developing organ dysfunction.",
-    difficulty: "advanced",
-    type: "critical_care",
+    title: "Complex Heart Failure Management",
+    description: "Building on basic heart failure concepts with comorbidity management",
+    difficulty: "intermediate",
+    type: "cardiology",
+    prerequisites: ["case1"],
     content: `
       <h3>Patient Information</h3>
-      <p>28-year-old male presents with fever, confusion, and hypotension. History of recent dental procedure.</p>
+      <p>Same patient returns after 3 months with worsening symptoms despite medication adjustment. New onset atrial fibrillation noted.</p>
 
       <h3>Current Presentation</h3>
       <ul>
-        <li>Vitals: BP 82/45, HR 125, RR 28, Temp 39.8°C</li>
-        <li>Glasgow Coma Scale: 13</li>
-        <li>Delayed capillary refill</li>
-        <li>Mottled skin on extremities</li>
+        <li>Vitals: BP 145/88, HR 110 irregular, RR 26, O2 sat 89% on RA</li>
+        <li>Increased work of breathing</li>
+        <li>4+ peripheral edema</li>
+        <li>New onset confusion</li>
       </ul>
 
       <h3>Laboratory Data</h3>
       <ul>
-        <li>WBC: 22,000 with 18% bands</li>
-        <li>Lactate: 4.8 mmol/L</li>
+        <li>BNP: 2200 pg/mL</li>
         <li>Creatinine: 2.1 mg/dL</li>
-        <li>Platelets: 95,000</li>
+        <li>Potassium: 5.2 mEq/L</li>
+        <li>INR: 1.1</li>
       </ul>
-    `
+    `,
+    questions: [
+      {
+        type: "analysis",
+        question: "How has the patient's condition changed from the previous presentation?",
+        explanation: "Compare current findings with previous case to identify deterioration patterns."
+      },
+      {
+        type: "synthesis",
+        question: "What are the potential interactions between the patient's heart failure and new onset atrial fibrillation?",
+        explanation: "Analyze the relationship between multiple cardiac conditions."
+      },
+      {
+        type: "evaluation",
+        question: "Develop a comprehensive care plan that addresses both acute and chronic management needs.",
+        explanation: "Integrate multiple aspects of care into a cohesive plan."
+      }
+    ],
+    nextCaseHints: ["Consider advanced heart failure management strategies"]
   },
   {
     id: "case3",
-    title: "Acute Respiratory Distress",
-    description: "Middle-aged patient with rapidly progressing respiratory symptoms.",
-    difficulty: "intermediate",
-    type: "pulmonology",
+    title: "Advanced Heart Failure Complications",
+    description: "Complex case involving multiple system complications",
+    difficulty: "advanced",
+    type: "cardiology",
+    prerequisites: ["case1", "case2"],
     content: `
       <h3>Patient Information</h3>
-      <p>45-year-old female with asthma presents with acute onset of severe dyspnea and chest tightness.</p>
+      <p>Patient now presents with signs of cardiorenal syndrome and requiring advanced heart failure management consideration.</p>
 
       <h3>Current Presentation</h3>
       <ul>
-        <li>Vitals: BP 142/88, HR 118, RR 32, O2 sat 88% on RA</li>
-        <li>Using accessory muscles</li>
-        <li>Diffuse wheezing with prolonged expiration</li>
-        <li>Unable to speak in full sentences</li>
+        <li>Vitals: BP 132/84, HR 96 irregular, RR 28, O2 sat 87% on 2L NC</li>
+        <li>Bilateral pleural effusions</li>
+        <li>Hepatomegaly</li>
+        <li>Decreased urine output</li>
       </ul>
 
       <h3>Laboratory Data</h3>
       <ul>
-        <li>ABG: pH 7.32, pCO2 48, pO2 58</li>
-        <li>Peak flow: 35% of personal best</li>
-        <li>Chest X-ray: Hyperinflation</li>
+        <li>BNP: 3500 pg/mL</li>
+        <li>Creatinine: 2.8 mg/dL</li>
+        <li>GFR: 25 mL/min</li>
+        <li>Liver function tests: elevated</li>
       </ul>
-    `
+    `,
+    questions: [
+      {
+        type: "synthesis",
+        question: "Analyze the pathophysiological relationships between cardiac and renal dysfunction in this patient.",
+        explanation: "Demonstrate understanding of complex system interactions."
+      },
+      {
+        type: "evaluation",
+        question: "What factors would you consider in determining if this patient needs advanced heart failure therapies?",
+        explanation: "Evaluate criteria for advanced interventions."
+      },
+      {
+        type: "creation",
+        question: "Develop a comprehensive transition of care plan for this patient.",
+        explanation: "Create a detailed plan incorporating all aspects of care."
+      }
+    ],
+    nextCaseHints: ["Consider palliative care integration in advanced heart failure"]
   }
 ];
 
@@ -261,29 +319,40 @@ export function registerRoutes(app: Express): Server {
   // Enhanced case generation endpoint
   app.post("/api/generate-case", async (req, res) => {
     try {
-      // First, return a pre-integrated case if available and not seen
-      const seenCases = req.body.seenCases || [];
-      const availablePreIntegrated = preIntegratedCases.filter(c => !seenCases.includes(c.id));
+      const { userId, completedCases = [] } = req.body;
 
-      if (availablePreIntegrated.length > 0) {
-        const randomCase = availablePreIntegrated[Math.floor(Math.random() * availablePreIntegrated.length)];
-        return res.json(randomCase);
+      // Find the next appropriate case based on user's progress
+      const availableCases = preIntegratedCases.filter(c => {
+        // Check if user meets prerequisites
+        if (c.prerequisites.length === 0) return true;
+        return c.prerequisites.every(prereq => completedCases.includes(prereq));
+      });
+
+      if (availableCases.length > 0) {
+        // Return the most appropriate case based on difficulty progression
+        const nextCase = availableCases.find(c => !completedCases.includes(c.id)) || availableCases[0];
+        return res.json(nextCase);
       }
 
-      // If all pre-integrated cases have been seen, generate a new one using OpenAI
+      // If all pre-integrated cases completed, generate a new advanced case
       const completion = await openai.chat.completions.create({
         model: "gpt-4",
         messages: [
           {
             role: "system",
-            content: "You are a medical educator generating detailed clinical case studies for nursing students. Include patient history, current presentation, vital signs, and relevant laboratory data."
+            content: `You are a medical educator generating advanced clinical case studies for nursing students who have completed fundamental cases. Include:
+              - Complex patient scenarios with multiple comorbidities
+              - Detailed vital signs and laboratory values
+              - Progressive complexity building on previous knowledge
+              - Integration of multiple system pathophysiology
+              - Structured analysis questions that promote critical thinking`
           },
           {
             role: "user",
-            content: "Generate a detailed clinical case study with realistic vital signs and lab values. Include patient presentation, history, and current status."
+            content: "Generate an advanced clinical case study with follow-up questions that test deeper understanding and synthesis skills."
           }
         ],
-        max_tokens: 1000,
+        max_tokens: 1500,
       });
 
       const generatedContent = completion.choices[0]?.message?.content;
@@ -291,20 +360,64 @@ export function registerRoutes(app: Express): Server {
         throw new Error("Failed to generate case content");
       }
 
-      // Format the generated case
+      // Format the generated case with structured questions
       const generatedCase = {
         id: `gen_${Date.now()}`,
-        title: "Complex Clinical Scenario",
-        description: "AI-generated clinical case for advanced practice",
+        title: "Advanced Clinical Integration",
+        description: "AI-generated complex case for advanced practice",
         difficulty: "advanced",
-        type: "generated",
-        content: generatedContent
+        type: "integrated",
+        prerequisites: preIntegratedCases.map(c => c.id),
+        content: generatedContent,
+        questions: [
+          {
+            type: "synthesis",
+            question: "Analyze the complex interactions between multiple system pathologies in this case.",
+            explanation: "Demonstrate advanced understanding of system interactions."
+          },
+          {
+            type: "evaluation",
+            question: "Evaluate the effectiveness of current interventions and propose evidence-based alternatives.",
+            explanation: "Show critical thinking in treatment evaluation."
+          },
+          {
+            type: "creation",
+            question: "Develop a comprehensive care plan that addresses all identified issues.",
+            explanation: "Create an integrated care approach."
+          }
+        ]
       };
 
       res.json(generatedCase);
     } catch (error) {
       console.error("Case generation error:", error);
       res.status(500).json({ message: "Failed to generate case study" });
+    }
+  });
+
+  // Track case completion and progress
+  app.post("/api/case-completion", async (req, res) => {
+    try {
+      const { userId, caseId, answers } = req.body;
+
+      // Analyze answers and provide feedback
+      const analysis = await analyzePerformance(answers);
+
+      // Update user progress
+      await db.update(userProgress)
+        .set({
+          completedCases: db.fn.array_append("completedCases", caseId),
+          performanceMetrics: analysis
+        })
+        .where(eq(userProgress.userId, userId));
+
+      res.json({
+        success: true,
+        analysis,
+        nextSteps: preIntegratedCases.find(c => c.id === caseId)?.nextCaseHints || []
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to record case completion" });
     }
   });
 

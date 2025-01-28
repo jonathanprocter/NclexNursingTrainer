@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Bot, Download, Play, RefreshCw } from "lucide-react";
+import { Bot, RefreshCw, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
@@ -31,13 +31,22 @@ import { useForm } from "react-hook-form";
 // Types for practice exercises
 type ExerciseType = 'pattern' | 'hypothesis' | 'decision' | 'documentation';
 
+interface CaseQuestion {
+  type: 'assessment' | 'analysis' | 'synthesis' | 'evaluation' | 'creation';
+  question: string;
+  explanation: string;
+}
+
 interface CaseStudy {
   id: string;
   title: string;
   description: string;
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   type: string;
+  prerequisites: string[];
   content: string;
+  questions: CaseQuestion[];
+  nextCaseHints?: string[];
 }
 
 interface PracticeExercise {
@@ -55,7 +64,6 @@ export default function ClinicalAnalysis() {
   const [aiContent, setAiContent] = useState("");
   const [currentSection, setCurrentSection] = useState("");
   const [selectedExerciseType, setSelectedExerciseType] = useState<ExerciseType>("pattern");
-  const [currentCase, setCurrentCase] = useState<CaseStudy | null>(null);
   const [currentExercise, setCurrentExercise] = useState<PracticeExercise | null>(null);
 
   // Form for clinical documentation
@@ -79,22 +87,6 @@ export default function ClinicalAnalysis() {
 
       if (!response.ok) {
         throw new Error("Failed to get AI help");
-      }
-
-      return response.json();
-    },
-  });
-
-  // Mutation for generating case studies
-  const generateCaseMutation = useMutation({
-    mutationFn: async () => {
-      const response = await fetch("/api/generate-case", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to generate case study");
       }
 
       return response.json();
@@ -130,24 +122,6 @@ export default function ClinicalAnalysis() {
       toast({
         title: "Error",
         description: "Failed to get AI assistance. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Generate new case study
-  const handleGenerateCase = async () => {
-    try {
-      const result = await generateCaseMutation.mutateAsync();
-      setCurrentCase(result);
-      toast({
-        title: "Success",
-        description: "New case study generated successfully!",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to generate case study. Please try again.",
         variant: "destructive",
       });
     }
@@ -205,6 +179,194 @@ export default function ClinicalAnalysis() {
       });
     }
   };
+
+  const CaseStudiesSection = () => {
+    const [currentCase, setCurrentCase] = useState<CaseStudy | null>(null);
+    const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
+    const [showFeedback, setShowFeedback] = useState(false);
+    const { toast } = useToast();
+
+    const { data: completedCases = [] } = useQuery({
+      queryKey: ['/api/user/completed-cases'],
+    });
+
+    const generateCaseMutation = useMutation({
+      mutationFn: async () => {
+        const response = await fetch("/api/generate-case", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ completedCases }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to generate case study");
+        }
+
+        return response.json();
+      },
+    });
+
+    const submitCaseMutation = useMutation({
+      mutationFn: async (answers: Record<string, string>) => {
+        const response = await fetch("/api/case-completion", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            caseId: currentCase?.id,
+            answers,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to submit case study");
+        }
+
+        return response.json();
+      },
+    });
+
+    const handleGenerateCase = async () => {
+      try {
+        const result = await generateCaseMutation.mutateAsync();
+        setCurrentCase(result);
+        setUserAnswers({});
+        setShowFeedback(false);
+        toast({
+          title: "Success",
+          description: "New case study generated successfully!",
+        });
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to generate case study. Please try again.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    const handleAnswerSubmit = async () => {
+      try {
+        const result = await submitCaseMutation.mutateAsync(userAnswers);
+        setShowFeedback(true);
+        toast({
+          title: "Success",
+          description: "Case study answers submitted successfully!",
+        });
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to submit answers. Please try again.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h3 className="text-lg font-semibold">Current Case Study</h3>
+          <Button
+            onClick={handleGenerateCase}
+            className="gap-2"
+            disabled={generateCaseMutation.isPending}
+          >
+            <RefreshCw className="h-4 w-4" />
+            Generate New Case
+          </Button>
+        </div>
+
+        {currentCase ? (
+          <div className="space-y-6">
+            {/* Prerequisites Section */}
+            {currentCase.prerequisites.length > 0 && (
+              <div className="bg-muted/30 p-4 rounded-lg">
+                <h4 className="font-medium mb-2">Prerequisites</h4>
+                <ul className="list-disc list-inside space-y-1">
+                  {currentCase.prerequisites.map(prereq => (
+                    <li key={prereq} className="text-sm">
+                      <span className={completedCases.includes(prereq) ? "text-green-600" : "text-red-600"}>
+                        {completedCases.includes(prereq) ? "✓" : "×"}
+                      </span>
+                      {" "}Case: {prereq}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Case Content */}
+            <div className="bg-muted/50 p-6 rounded-lg">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h4 className="font-medium mb-2">{currentCase.title}</h4>
+                  <p className="text-muted-foreground mb-4">{currentCase.description}</p>
+                  <span className="inline-block px-2 py-1 text-xs rounded-full bg-primary/10 text-primary">
+                    {currentCase.difficulty}
+                  </span>
+                </div>
+              </div>
+
+              <div className="prose prose-sm max-w-none mb-6">
+                <div dangerouslySetInnerHTML={{ __html: currentCase.content }} />
+              </div>
+
+              {/* Questions Section */}
+              <div className="space-y-6 mt-8">
+                <h5 className="font-medium">Analysis Questions</h5>
+                {currentCase.questions.map((q, index) => (
+                  <div key={index} className="space-y-3">
+                    <p className="font-medium">{index + 1}. {q.question}</p>
+                    <Textarea
+                      placeholder="Enter your answer..."
+                      value={userAnswers[index] || ''}
+                      onChange={(e) => setUserAnswers(prev => ({
+                        ...prev,
+                        [index]: e.target.value
+                      }))}
+                      className="min-h-[100px]"
+                    />
+                    {showFeedback && (
+                      <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg">
+                        <p className="font-medium">Guidance:</p>
+                        <p>{q.explanation}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                <Button
+                  onClick={handleAnswerSubmit}
+                  className="w-full mt-4"
+                  disabled={submitCaseMutation.isPending}
+                >
+                  Submit Answers
+                </Button>
+              </div>
+
+              {/* Next Steps */}
+              {showFeedback && currentCase.nextCaseHints && (
+                <div className="mt-6 p-4 bg-muted/30 rounded-lg">
+                  <h5 className="font-medium mb-2">Next Steps</h5>
+                  <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+                    {currentCase.nextCaseHints.map((hint, index) => (
+                      <li key={index}>{hint}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="bg-muted/50 p-6 rounded-lg text-center">
+            <p className="text-muted-foreground">
+              Click the button above to generate a case study.
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  };
+
 
   return (
     <div className="space-y-6">
@@ -338,47 +500,7 @@ export default function ClinicalAnalysis() {
 
         {/* Case Studies Tab */}
         <TabsContent value="case-studies">
-          <Card>
-            <CardHeader>
-              <CardTitle>Interactive Case Studies</CardTitle>
-              <p className="text-muted-foreground mt-2">
-                Apply clinical reasoning skills to real-world scenarios through AI-generated, adaptive case studies.
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold">Current Case Study</h3>
-                  <Button onClick={handleGenerateCase} className="gap-2">
-                    <RefreshCw className="h-4 w-4" />
-                    Generate New Case
-                  </Button>
-                </div>
-
-                {currentCase ? (
-                  <div className="space-y-4">
-                    <div className="bg-muted/50 p-6 rounded-lg">
-                      <h4 className="font-medium mb-2">{currentCase.title}</h4>
-                      <p className="text-muted-foreground mb-4">{currentCase.description}</p>
-                      <div className="prose prose-sm max-w-none">
-                        <div dangerouslySetInnerHTML={{ __html: currentCase.content }} />
-                      </div>
-                      <div className="mt-4 flex justify-end gap-2">
-                        <Button variant="outline" onClick={() => handleAIHelp("case_analysis", currentCase.id)}>
-                          <Bot className="h-4 w-4 mr-2" />
-                          AI Analysis Help
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-muted/50 p-6 rounded-lg text-center">
-                    <p className="text-muted-foreground">Click the button above to generate a case study.</p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <CaseStudiesSection />
         </TabsContent>
 
         {/* Clinical Reasoning Tab */}
