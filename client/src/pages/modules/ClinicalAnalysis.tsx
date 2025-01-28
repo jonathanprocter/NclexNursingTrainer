@@ -258,51 +258,45 @@ const CaseStudiesSection = () => {
 
     if (!question || !selectedOption) return;
 
-    // Update answers without resetting anything
+    // Just store the answer and show feedback, no state resets
     setUserAnswers(prev => ({ ...prev, [questionIndex]: optionIndex }));
     setShowFeedback(true);
 
-    // Update performance metrics
-    const isCorrect = selectedOption.correct;
-    setPerformance(prev => {
-      const newPerformance = {
-        correctCount: prev.correctCount + (isCorrect ? 1 : 0),
-        totalAttempted: prev.totalAttempted + 1,
-        strengths: [...prev.strengths],
-        weaknesses: [...prev.weaknesses]
-      };
+    // Update performance metrics without affecting the case progress
+    setPerformance(prev => ({
+      ...prev,
+      correctCount: prev.correctCount + (selectedOption.correct ? 1 : 0),
+      totalAttempted: prev.totalAttempted + 1,
+      strengths: selectedOption.correct 
+        ? [...new Set([...prev.strengths, ...selectedOption.topics])]
+        : prev.strengths,
+      weaknesses: !selectedOption.correct
+        ? [...new Set([...prev.weaknesses, ...selectedOption.topics])]
+        : prev.weaknesses
+    }));
 
-      if (isCorrect) {
-        newPerformance.strengths = [...new Set([...newPerformance.strengths, ...selectedOption.topics])];
-      } else {
-        newPerformance.weaknesses = [...new Set([...newPerformance.weaknesses, ...selectedOption.topics])];
-      }
-
-      return newPerformance;
-    });
-
-    // Show feedback toast
+    // Show feedback without any state changes
     toast({
       title: selectedOption.correct ? "Correct! 🎉" : "Let's Review",
       description: selectedOption.explanation,
-      variant: selectedOption.correct ? "default" : "secondary",
+      duration: 5000,
     });
   };
 
   const handleNextQuestion = () => {
     if (!currentCase) return;
 
-    // Simply move to the next question, preserving all state
-    setShowFeedback(false);
+    // Always move to next question regardless of answer correctness
     if (currentQuestionIndex < currentCase.questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
+      setShowFeedback(false); // Only reset feedback, preserve all other state
     } else {
-      // Only show completion summary at the very end
+      // Show completion summary without resetting state
       const successRate = (performance.correctCount / performance.totalAttempted) * 100;
 
       toast({
         title: "Case Study Completed! 🎉",
-        description: `You got ${performance.correctCount} out of ${performance.totalAttempted} questions correct (${successRate.toFixed(1)}%).`,
+        description: `You got ${performance.correctCount} out of ${performance.totalAttempted} questions correct (${successRate.toFixed(1)}%).`
       });
 
       if (performance.weaknesses.length > 0) {
