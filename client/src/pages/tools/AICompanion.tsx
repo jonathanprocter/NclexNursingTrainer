@@ -32,8 +32,24 @@ export default function AICompanion() {
   // Check microphone availability on component mount
   useEffect(() => {
     const checkMicrophoneAccess = async () => {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setMicrophoneAvailable(false);
+        toast({
+          variant: "destructive",
+          title: "Browser Support Error",
+          description: "Your browser doesn't support microphone access.",
+        });
+        return;
+      }
+
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          }
+        });
         stream.getTracks().forEach(track => track.stop()); // Clean up the test stream
         setMicrophoneAvailable(true);
       } catch (error) {
@@ -212,7 +228,7 @@ export default function AICompanion() {
 
           // Generate initial response using GPT-4
           const completion = await openai.chat.completions.create({
-            model: "gpt-4o",
+            model: "gpt-4",
             messages: [
               {
                 role: "system",
