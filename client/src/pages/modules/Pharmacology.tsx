@@ -14,6 +14,25 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 
+// Helper function to format section names for display
+const formatSectionName = (section: string): string => {
+  return section
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
+// Helper function to format AI response content
+const formatAIContent = (content: string): string => {
+  // Remove markdown formatting if present
+  return content
+    .replace(/#{1,6}\s/g, '') // Remove heading markers
+    .replace(/\*\*/g, '')     // Remove bold markers
+    .replace(/\*/g, '')       // Remove italic markers
+    .replace(/`/g, '')        // Remove code markers
+    .trim();
+};
+
 export default function Pharmacology() {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -37,12 +56,12 @@ export default function Pharmacology() {
   });
 
   const handleAIHelp = async (section: string, context?: string) => {
-    setCurrentSection(section);
+    setCurrentSection(formatSectionName(section));
     setIsDialogOpen(true);
 
     try {
       const result = await aiHelpMutation.mutateAsync({ section, context });
-      setAiContent(result.content);
+      setAiContent(formatAIContent(result.content));
     } catch (error) {
       toast({
         title: "Error",
@@ -704,19 +723,27 @@ export default function Pharmacology() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>AI Assistant - {currentSection}</DialogTitle>
+            <DialogTitle className="text-2xl font-bold">
+              {currentSection}
+            </DialogTitle>
             <DialogDescription>
-              {aiHelpMutation.isPending ? (
-                <div className="flex items-center justify-center py-4">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                </div>
-              ) : (
-                <div className="prose prose-sm max-w-none">
-                  {aiContent.split('\n').map((paragraph, index) => (
-                    <p key={index}>{paragraph}</p>
-                  ))}
-                </div>
-              )}
+              <div className="mt-4">
+                {aiHelpMutation.isPending ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  </div>
+                ) : (
+                  <div className="prose prose-sm max-w-none">
+                    {aiContent.split('\n').map((paragraph, index) => (
+                      paragraph.trim() && (
+                        <p key={index} className="mb-4 text-foreground">
+                          {paragraph}
+                        </p>
+                      )
+                    ))}
+                  </div>
+                )}
+              </div>
             </DialogDescription>
           </DialogHeader>
         </DialogContent>
