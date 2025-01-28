@@ -1249,8 +1249,50 @@ export function registerRoutes(app: Express): Server {
       res.json(questions);
     } catch (error) {
       console.error('Error generating prevention questions:', error);
-      res.status(500).json({ 
+      res.status(500).json({
         message: "Failed to generate questions",
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Add AI chat endpoint
+  app.post("/api/chat/risk-reduction", async (req, res) => {
+    try {
+      const { topic, question } = req.body;
+
+      if (!process.env.OPENAI_API_KEY) {
+        throw new Error("OpenAI API key is not configured");
+      }
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [
+          {
+            role: "system",
+            content: `You are an expert nursing educator specializing in risk reduction and patient safety. 
+          Focus on providing clear, practical advice related to ${topic}. Include NCLEX-style considerations 
+          and real-world applications in your responses.`
+          },
+          {
+            role: "user",
+            content: question
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 500,
+      });
+
+      const response = completion.choices[0]?.message?.content;
+      if (!response) {
+        throw new Error("No response generated");
+      }
+
+      res.json({ response });
+    } catch (error) {
+      console.error('AI chat error:', error);
+      res.status(500).json({
+        message: "Failed to generate AI response",
         error: error instanceof Error ? error.message : 'Unknown error'
       });
     }

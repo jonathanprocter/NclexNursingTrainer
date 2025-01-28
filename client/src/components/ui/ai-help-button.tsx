@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Brain } from "lucide-react";
+import { Brain, Send } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -8,6 +9,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
+
+interface Message {
+  role: "user" | "assistant";
+  content: string;
+}
 
 interface AIHelpButtonProps {
   title: string;
@@ -16,6 +25,44 @@ interface AIHelpButtonProps {
 }
 
 export function AIHelpButton({ title, description, topic }: AIHelpButtonProps) {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
+
+    const userMessage = input.trim();
+    setInput("");
+    setMessages(prev => [...prev, { role: "user", content: userMessage }]);
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/chat/risk-reduction", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic, question: userMessage }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to get AI response");
+      }
+
+      const data = await response.json();
+      setMessages(prev => [...prev, { role: "assistant", content: data.response }]);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to get AI response. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -24,25 +71,48 @@ export function AIHelpButton({ title, description, topic }: AIHelpButtonProps) {
           AI Help
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="text-sm">
-            <p>Ask me anything about {topic}, such as:</p>
-            <ul className="list-disc list-inside mt-2 space-y-1">
-              <li>Clarification on concepts</li>
-              <li>Real-world applications</li>
-              <li>NCLEX-style question breakdowns</li>
-              <li>Evidence-based practices</li>
-            </ul>
-          </div>
-          {/* AI chat interface will be implemented here */}
-          <p className="text-sm text-muted-foreground">
-            Coming soon: Interactive AI assistance for personalized learning
-          </p>
+          <ScrollArea className="h-[300px] pr-4">
+            {messages.map((message, i) => (
+              <div
+                key={i}
+                className={`mb-4 ${
+                  message.role === "assistant"
+                    ? "bg-muted p-3 rounded-lg"
+                    : "border-l-4 border-primary pl-3"
+                }`}
+              >
+                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+              </div>
+            ))}
+            {messages.length === 0 && (
+              <div className="text-sm">
+                <p>Ask me anything about {topic}, such as:</p>
+                <ul className="list-disc list-inside mt-2 space-y-1">
+                  <li>Clarification on concepts</li>
+                  <li>Real-world applications</li>
+                  <li>NCLEX-style question breakdowns</li>
+                  <li>Evidence-based practices</li>
+                </ul>
+              </div>
+            )}
+          </ScrollArea>
+          <form onSubmit={handleSubmit} className="flex gap-2">
+            <Input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Type your question..."
+              disabled={isLoading}
+            />
+            <Button type="submit" size="icon" disabled={isLoading}>
+              <Send className="h-4 w-4" />
+            </Button>
+          </form>
         </div>
       </DialogContent>
     </Dialog>
