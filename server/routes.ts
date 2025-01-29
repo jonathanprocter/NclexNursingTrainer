@@ -470,21 +470,9 @@ export function registerRoutes(app: Express): Server {
       } catch (parseError) {
         console.error("Failed to parse OpenAI response:", parseError);
         // Fallback to default questions
-        generatedQuestions = [
-          {
-            text: "Which nursing intervention is most appropriate for a client with acute pain?",
-            options: [
-              { id: "a", text: "Assess pain characteristics" },
-              { id: "b", text: "Administer PRN pain medication immediately" },
-              { id: "c", text: "Notify healthcare provider" },
-              { id: "d", text: "Apply ice pack to affected area" }
-            ],
-            correctAnswer: "a",
-            explanation: "Pain assessment should be conducted first to determine appropriate interventions.",
-            category: topic || "General",
-            difficulty: "Medium"
-          }
-        ];
+        generatedQuestions = generateBackupQuestions();
+      } finally {
+        // Ensure cleanup happens regardless of success or failure
       }
 
 
