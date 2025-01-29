@@ -98,17 +98,27 @@ export default function Calculations() {
   // Mutation for generating new problems
   const generateProblemMutation = useMutation({
     mutationFn: async (difficulty: Difficulty) => {
-      const response = await fetch("/api/generate-calculation", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ difficulty }),
-      });
+      try {
+        const response = await fetch("/api/generate-calculation", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ difficulty }),
+        });
 
-      if (!response.ok) {
-        throw new Error("Failed to generate problem");
+        if (!response.ok) {
+          throw new Error("Failed to generate problem");
+        }
+
+        const data = await response.json();
+        if (!data) {
+          throw new Error("No problem data received");
+        }
+
+        return data;
+      } catch (error) {
+        console.error("Error generating problem:", error);
+        throw error;
       }
-
-      return response.json();
     },
   });
 

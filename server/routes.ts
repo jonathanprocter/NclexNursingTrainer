@@ -242,7 +242,39 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Questions routes
-  app.get("/api/questions/:moduleId", async (req, res) => {
+  // Drug calculation generation endpoint
+app.post("/api/generate-calculation", async (req, res) => {
+  try {
+    const { difficulty } = req.body;
+    
+    // Generate a sample calculation problem based on difficulty
+    const problem = {
+      id: `calc_${Date.now()}`,
+      type: ['dosage', 'rate', 'conversion', 'concentration'][Math.floor(Math.random() * 4)],
+      difficulty,
+      question: "Calculate the correct dosage for a patient weighing 70kg who needs 5mg/kg of medication X.",
+      givens: {
+        "Patient Weight": "70 kg",
+        "Required Dose": "5 mg/kg",
+        "Available Concentration": "100 mg/mL"
+      },
+      answer: 3.5,
+      unit: "mL",
+      explanation: "To calculate the volume needed: (70 kg × 5 mg/kg) ÷ 100 mg/mL = 3.5 mL",
+      hints: [
+        "First calculate the total dose needed in mg",
+        "Then convert to volume using the available concentration"
+      ]
+    };
+
+    res.json(problem);
+  } catch (error) {
+    console.error("Error generating calculation:", error);
+    res.status(500).json({ message: "Failed to generate calculation problem" });
+  }
+});
+
+app.get("/api/questions/:moduleId", async (req, res) => {
     try {
       const moduleQuestions = await db.query.questions.findMany({
         where: eq(questions.moduleId, parseInt(req.params.moduleId)),
