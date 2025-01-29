@@ -846,7 +846,11 @@ export function registerRoutes(app: Express): Server {
 
     // Ensure we have enough questions by duplicating if necessary
     while (allQuestions.length < Number(min)) {
-      allQuestions = [...allQuestions, ...Object.values(practiceQuestions).flat()];
+      const additionalQuestions = Object.values(practiceQuestions).flat().map(q => ({
+        ...q,
+        id: `${q.id}_${Date.now()}_${Math.random().toString(36).substring(7)}`
+      }));
+      allQuestions = [...allQuestions, ...additionalQuestions];
     }
 
     // Shuffle questions randomly
