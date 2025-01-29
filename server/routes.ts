@@ -158,6 +158,45 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Clinical Judgment AI endpoint
+  app.post("/api/chat/clinical-judgment", async (req, res) => {
+    const { topic, context, question, type } = req.body;
+
+    try {
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [
+          {
+            role: "system",
+            content: `You are an expert nursing educator specializing in clinical judgment and critical thinking.
+            Focus on the NCSBN Clinical Judgment Measurement Model (NCJMM) and its application in nursing practice.
+            Provide detailed, practical guidance that helps nurses develop their clinical reasoning skills.`
+          },
+          {
+            role: "user",
+            content: question || `Explain key considerations for ${topic} in clinical judgment.`
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 1000,
+      });
+
+      const response = completion.choices[0]?.message?.content;
+      
+      if (!response) {
+        throw new Error("No response generated");
+      }
+
+      res.json({ response });
+    } catch (error) {
+      console.error("Error in Clinical Judgment AI endpoint:", error);
+      res.status(500).json({
+        message: "Failed to get AI assistance",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // AI Help endpoint with enhanced safety measures context
   app.post("/api/chat/risk-reduction", async (req, res) => {
     const { topic, question } = req.body;

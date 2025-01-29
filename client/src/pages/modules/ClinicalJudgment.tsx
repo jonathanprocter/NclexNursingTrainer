@@ -92,32 +92,37 @@ export default function ClinicalJudgment() {
   const aiHelpMutation = useMutation({
     mutationFn: async ({ topic, context, question }: { topic: string; context?: string; question?: string }) => {
       try {
-        const response = await fetch("/api/ai-help", {
+        const response = await fetch("/api/chat/clinical-judgment", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ 
             topic, 
             context, 
             question,
-            type: "nursing_process" 
+            type: "clinical_judgment" 
           }),
         });
 
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || "Failed to get AI assistance");
+          const errorData = await response.text();
+          console.error("AI Help Error Response:", errorData);
+          throw new Error("Failed to get AI assistance");
         }
 
-        return response.json();
+        const data = await response.json();
+        return {
+          content: data.response || data.content || "No content available",
+          error: null
+        };
       } catch (error) {
-        console.error("AI Help error:", error);
-        throw error;
+        console.error("Error in AI help mutation:", error);
+        throw new Error(error instanceof Error ? error.message : "Failed to get AI assistance");
       }
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to get AI assistance. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to get AI assistance",
         variant: "destructive",
       });
     }
