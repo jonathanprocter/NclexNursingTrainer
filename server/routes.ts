@@ -329,6 +329,7 @@ export function registerRoutes(app: Express): Server {
   // Add exam question endpoint
   app.post("/api/exam/prevention/questions", async (req, res) => {
     try {
+      console.log('Received request for more prevention questions'); // Add logging
       const { previousQuestions } = req.body;
 
       const completion = await openai.chat.completions.create({
@@ -355,6 +356,7 @@ export function registerRoutes(app: Express): Server {
       });
 
       const response = completion.choices[0]?.message?.content;
+      console.log('Generated response from OpenAI'); // Add logging
 
       if (!response) {
         throw new Error("Failed to generate questions");
@@ -362,6 +364,7 @@ export function registerRoutes(app: Express): Server {
 
       // Parse and format the response into question objects
       const formattedQuestions = parseAIResponseToQuestions(response);
+      console.log(`Formatted ${formattedQuestions.length} questions`); // Add logging
       res.json(formattedQuestions);
     } catch (error) {
       console.error("Error generating prevention questions:", error);

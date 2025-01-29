@@ -341,11 +341,15 @@ export default function RiskReduction() {
 
   const generateMoreQuestionsMutation = useMutation({
     mutationFn: async () => {
+      // Get the IDs of current questions
+      const currentQuestionIds = preventionQuestions.map(q => q.id);
+      console.log('Sending request with previous questions:', currentQuestionIds);
+
       const response = await fetch("/api/exam/prevention/questions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          previousQuestions: preventionQuestions.map(q => q.id)
+          previousQuestions: currentQuestionIds
         }),
       });
 
@@ -380,16 +384,19 @@ export default function RiskReduction() {
     },
   });
 
-  const handleGenerateMoreQuestions = () => {
+  const handleGenerateMoreQuestions = async () => {
     if (!isMounted.current || isGeneratingQuestions) return;
     setIsGeneratingQuestions(true);
-    generateMoreQuestionsMutation.mutate(undefined, {
-      onSettled: () => {
-        if (isMounted.current) {
-          setIsGeneratingQuestions(false);
-        }
-      },
-    });
+    console.log('Generating new questions...'); 
+    try {
+      await generateMoreQuestionsMutation.mutateAsync();
+    } catch (error) {
+      console.error('Error generating questions:', error);
+    } finally {
+      if (isMounted.current) {
+        setIsGeneratingQuestions(false);
+      }
+    }
   };
 
   const handleNextQuestion = () => {
@@ -632,11 +639,11 @@ export default function RiskReduction() {
         </TabsList>
 
         <TabsContent value="overview">
-          {/* ... Overview content ... */}
+          {/* Overview content */}
         </TabsContent>
 
         <TabsContent value="safety">
-          {/* ... Safety Measures content ... */}
+          {/* Safety Measures content */}
         </TabsContent>
 
         <TabsContent value="prevention">
@@ -644,7 +651,7 @@ export default function RiskReduction() {
         </TabsContent>
 
         <TabsContent value="practice">
-          {/* ... Practice Scenarios content ... */}
+          {/* Practice Scenarios content */}
         </TabsContent>
       </Tabs>
     </div>
