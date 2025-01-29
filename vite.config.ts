@@ -27,6 +27,6 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
-    allowedHosts: 'all'
+    allowedHosts: ['28283d82-bfbd-491e-8711-8e29be387da7-00-29i5ngdyjh860.spock.replit.dev', 'all']
   },
 })
