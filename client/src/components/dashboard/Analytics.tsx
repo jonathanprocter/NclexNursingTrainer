@@ -17,22 +17,15 @@ interface AnalyticsProps {
 }
 
 export default function Analytics({ data }: AnalyticsProps) {
-  const mockPerformanceData = [
+  const performanceData = data?.performanceData ?? [
     { module: "Pharmacology", score: 85 },
     { module: "Pathophysiology", score: 75 },
     { module: "Med-Surg", score: 78 },
     { module: "Mental Health", score: 82 }
   ];
-
-  const performanceData = Array.isArray(data?.performanceData) && data.performanceData.length > 0 
-    ? data.performanceData.map((item, index) => ({
-        ...item,
-        id: item.id || `performance-${index}`,
-      }))
-    : mockPerformanceData;
-  const totalStudyTime = typeof data?.totalStudyTime === 'string' ? data.totalStudyTime : "45.5";
-  const questionsAttempted = typeof data?.questionsAttempted === 'number' ? data.questionsAttempted : 428;
-  const averageScore = typeof data?.averageScore === 'number' ? data.averageScore : 82;
+  const totalStudyTime = data?.totalStudyTime ?? "45.5";
+  const questionsAttempted = data?.questionsAttempted ?? 428;
+  const averageScore = data?.averageScore ?? 82;
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
@@ -43,7 +36,7 @@ export default function Analytics({ data }: AnalyticsProps) {
         <CardContent>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={performanceData || []} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+              <BarChart data={performanceData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="module" tick={{ fontSize: 12 }} />
                 <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />

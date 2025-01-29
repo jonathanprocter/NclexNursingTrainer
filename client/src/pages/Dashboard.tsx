@@ -8,12 +8,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Progress } from "../components/ui/progress";
 
 export default function Dashboard() {
-  const { data: analytics = {
-    performanceData: [],
-    totalStudyTime: "0",
-    questionsAttempted: 0,
-    averageScore: 0
-  }, isError, isLoading } = useQuery({
+  const { data: analytics, isError, isLoading } = useQuery({
     queryKey: ["analytics"],
     queryFn: async () => {
       const response = await fetch("/api/analytics/user/1");
@@ -114,7 +109,7 @@ export default function Dashboard() {
                   <XAxis dataKey="week" />
                   <YAxis domain={[0, 100]} />
                   <Tooltip />
-                  <Line type="monotone" dataKey="score" stroke="#8884d8" />
+                  <Line type="monotone" dataKey="score" stroke="#8884d8" name="Weekly Score" />
                 </LineChart>
               </ResponsiveContainer>
             </div>
