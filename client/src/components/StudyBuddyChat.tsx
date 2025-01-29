@@ -172,7 +172,13 @@ export function StudyBuddyChat() {
                     : "bg-muted"
                 }`}
               >
-                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                <div className="text-sm">
+                  {message.content.split('\n').map((line, i) => (
+                    <p key={i} className="mb-2">
+                      {line.replace(/[#*`]/g, '').trim()}
+                    </p>
+                  ))}
+                </div>
                 <span className="text-xs opacity-50">
                   {new Date(message.timestamp).toLocaleTimeString()}
                 </span>
