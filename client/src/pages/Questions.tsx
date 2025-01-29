@@ -118,7 +118,7 @@ export default function Questions() {
         <ScrollArea className="h-[600px]">
           <div className="space-y-6">
             {questions?.map((question) => (
-              <Card key={question.id} className="border-l-4" style={{
+              <Card key={`question-${question.id}`} className="border-l-4" style={{
                 borderLeftColor: 
                   question.difficulty === 'easy' ? '#4ade80' :
                   question.difficulty === 'medium' ? '#fbbf24' : '#ef4444'
@@ -147,7 +147,7 @@ export default function Questions() {
                   <div className="space-y-4">
                     {question.options.map((option) => (
                       <Button
-                        key={option.id}
+                        key={`${question.id}-option-${option.id}`}
                         variant={
                           answeredQuestions.has(question.id)
                             ? option.id === question.correctAnswer
