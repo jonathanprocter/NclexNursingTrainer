@@ -1,28 +1,21 @@
 
-import { Card, CardContent } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
-import { ErrorBoundary } from "react-error-boundary";
+import QuestionCard from "../components/QuestionCard";
+import { ScrollArea } from "../components/ui/scroll-area";
+import { Button } from "../components/ui/button";
+import { RefreshCw } from "lucide-react";
 
 interface Question {
   id: string;
-  question: string;
-  answer: string;
-  explanation?: string;
-  category: string;
+  type: string;
+  content: string;
+  options: string[];
+  correctAnswer: string;
+  explanation: string;
 }
 
-function ErrorFallback({ error }: { error: Error }) {
-  return (
-    <div className="p-4 text-red-500">
-      <h2>Something went wrong:</h2>
-      <pre>{error.message}</pre>
-    </div>
-  );
-}
-
-function QuestionsList() {
-  const { data, isLoading, isError, error } = useQuery<Question[]>({
+export default function Questions() {
+  const { data: questions, isLoading, isError, refetch } = useQuery<Question[]>({
     queryKey: ["questions"],
     queryFn: async () => {
       const response = await fetch("/api/questions");
@@ -30,40 +23,46 @@ function QuestionsList() {
         throw new Error("Failed to fetch questions");
       }
       return response.json();
-    },
-    retry: 3,
-    refetchOnWindowFocus: false
+    }
   });
 
-  if (isLoading) return <div>Loading questions...</div>;
-  if (isError) return <div>Error: {(error as Error).message}</div>;
-  if (!data) return <div>No questions available</div>;
-
-  return (
-    <ScrollArea className="h-[600px] pr-4">
-      <div className="space-y-4">
-        {data.map((question) => (
-          <Card key={`question-${question.id}`} className="p-4">
-            <h3 className="font-medium mb-2">{question.question}</h3>
-            <p className="text-muted-foreground mb-2">{question.answer}</p>
-            {question.explanation && (
-              <p className="text-sm text-muted-foreground">{question.explanation}</p>
-            )}
-          </Card>
-        ))}
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+        <RefreshCw className="animate-spin h-8 w-8" />
       </div>
-    </ScrollArea>
-  );
-}
+    );
+  }
 
-export default function Questions() {
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)] gap-4">
+        <p>Error loading questions</p>
+        <Button onClick={() => refetch()}>Try Again</Button>
+      </div>
+    );
+  }
+
   return (
-    <Card>
-      <CardContent className="p-6">
-        <ErrorBoundary FallbackComponent={ErrorFallback}>
-          <QuestionsList />
-        </ErrorBoundary>
-      </CardContent>
-    </Card>
+    <div className="container mx-auto py-6 space-y-8">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Practice Questions</h1>
+        <Button onClick={() => refetch()}>
+          <RefreshCw className="mr-2 h-4 w-4" />
+          Refresh Questions
+        </Button>
+      </div>
+      
+      <ScrollArea className="h-[calc(100vh-12rem)]">
+        <div className="space-y-6">
+          {questions?.map((question, index) => (
+            <QuestionCard
+              key={`${question.id}-${index}`}
+              question={question}
+            />
+          ))}
+        </div>
+      </ScrollArea>
+    </div>
   );
 }
