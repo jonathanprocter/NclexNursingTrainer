@@ -24,20 +24,30 @@ export default function AICompanion() {
       const response = await fetch('/api/ai/pathophysiology-help', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ section: 'pharmacology', context: question })
+        body: JSON.stringify({ 
+          section: 'pharmacology', 
+          context: question.trim() 
+        })
       });
 
       if (!response.ok) {
-        throw new Error('Failed to get AI response');
+        const errorData = await response.text();
+        console.error('Server error:', errorData);
+        throw new Error(`Server error: ${response.status}`);
       }
 
       const data = await response.json();
+      if (!data || !data.content) {
+        throw new Error('Invalid response format');
+      }
+
       setAiResponse(data.content);
     } catch (error) {
       console.error('Error getting AI response:', error);
+      setAiResponse('');
       toast({
         title: "Error",
-        description: "Failed to get AI response. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to get AI response. Please try again.",
         variant: "destructive",
       });
     }
