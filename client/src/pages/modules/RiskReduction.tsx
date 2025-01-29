@@ -3,35 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import {
-  AlertTriangle,
-  Shield,
-  Brain,
-  ClipboardCheck,
-  Users,
-  BookOpen,
-  Workflow,
-  RefreshCw,
-  CheckCircle2,
-  ListChecks,
-  FileLock2,
-  Stethoscope
-} from "lucide-react";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Textarea } from "@/components/ui/textarea";
 import { useMutation } from "@tanstack/react-query";
 import { AIHelpButton } from "@/components/ui/ai-help-button";
+import { CheckCircle2, RefreshCw, BookOpen } from "lucide-react";
+import { Form } from "@/components/ui/form"; //Added import
+
 
 interface RiskScenario {
   id: string;
@@ -49,7 +28,7 @@ interface FormValues {
   answer: string;
   riskAssessment: string;
   preventionQ1: string;
-  [key: string]: string; // Add index signature for dynamic fields
+  [key: string]: string; 
 }
 
 interface PreventionQuestion {
@@ -148,8 +127,9 @@ export default function RiskReduction() {
   const [isLoading, setIsLoading] = useState(false);
   const [answeredQuestions, setAnsweredQuestions] = useState<Set<string>>(new Set());
   const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
+  const [answerSelected, setAnswerSelected] = useState<{ [key: number]: string }>({});
+  const [preventionQuestions, setPreventionQuestions] = useState(initialPreventionQuestions);
   const isMounted = useRef(true);
-
   const [progress, setProgress] = useState<Progress>({
     scenariosCompleted: 0,
     totalScenarios: 20,
@@ -157,37 +137,11 @@ export default function RiskReduction() {
     skillLevel: "Beginner"
   });
 
-  const [preventionQuestions, setPreventionQuestions] = useState<PreventionQuestion[]>(initialPreventionQuestions);
-
-  const form = useForm<FormValues>({
-    defaultValues: {
-      answer: "",
-      riskAssessment: "",
-      preventionQ1: "",
-    },
-  });
-
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       isMounted.current = false;
     };
   }, []);
-
-  const generateScenarioMutation = useMutation({
-    mutationFn: async () => {
-      const response = await fetch("/api/exam/regular/question", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to generate scenario");
-      }
-
-      return response.json();
-    },
-  });
 
   const generateMoreQuestionsMutation = useMutation({
     mutationFn: async () => {
@@ -225,6 +179,155 @@ export default function RiskReduction() {
     },
   });
 
+  const handleGenerateMoreQuestions = () => {
+    if (!isMounted.current || isGeneratingQuestions) return;
+    setIsGeneratingQuestions(true);
+    generateMoreQuestionsMutation.mutate(undefined, {
+      onSettled: () => {
+        if (isMounted.current) {
+          setIsGeneratingQuestions(false);
+        }
+      },
+    });
+  };
+
+  const handleNextQuestion = () => {
+    if (currentQuestionIndex < preventionQuestions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+      setShowExplanation(false);
+    }
+  };
+
+  const handlePrevQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(prev => prev - 1);
+      setShowExplanation(false);
+    }
+  };
+
+  const handleAnswerSelect = (value: string) => {
+    setAnswerSelected(prev => ({
+      ...prev,
+      [currentQuestionIndex]: value
+    }));
+    setShowExplanation(true);
+  };
+
+  const renderPreventionStrategies = () => (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>Prevention Strategies Assessment</CardTitle>
+        <AIHelpButton
+          title="Prevention Strategies"
+          description="Get AI assistance with understanding prevention strategies and risk reduction techniques."
+          topic="prevention strategies and risk reduction in nursing practice"
+        />
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-6">
+          <div className="bg-muted/50 p-4 rounded-lg">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-semibold text-lg">
+                Question {currentQuestionIndex + 1} of {preventionQuestions.length}
+              </h3>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handlePrevQuestion}
+                  disabled={currentQuestionIndex === 0}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleNextQuestion}
+                  disabled={currentQuestionIndex === preventionQuestions.length - 1}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-medium mb-2">
+                  {preventionQuestions[currentQuestionIndex].question}
+                </h4>
+                <RadioGroup
+                  value={answerSelected[currentQuestionIndex] || ""}
+                  onValueChange={handleAnswerSelect}
+                  className="space-y-2"
+                >
+                  {preventionQuestions[currentQuestionIndex].options.map((option) => (
+                    <div key={option.value} className="flex items-center space-x-2">
+                      <RadioGroupItem
+                        value={option.value}
+                        id={`q${currentQuestionIndex}-${option.value}`}
+                      />
+                      <Label htmlFor={`q${currentQuestionIndex}-${option.value}`}>
+                        {option.label}
+                      </Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+
+                {showExplanation && (
+                  <div className="mt-4 p-4 bg-background/50 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <CheckCircle2 className="h-5 w-5 text-green-500" />
+                      <h4 className="font-medium">Explanation</h4>
+                    </div>
+                    <p className="text-sm">
+                      {preventionQuestions[currentQuestionIndex].explanation.main}
+                    </p>
+                    <div className="mt-4">
+                      <h5 className="font-medium mb-2">Conceptual Breakdown:</h5>
+                      <ul className="text-sm space-y-2">
+                        {preventionQuestions[currentQuestionIndex].explanation.concepts.map(
+                          (concept, index) => (
+                            <li key={index}>
+                              • <span className="font-medium">{concept.title}:</span>{" "}
+                              {concept.description}
+                            </li>
+                          )
+                        )}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-center">
+            <Button
+              onClick={handleGenerateMoreQuestions}
+              disabled={isGeneratingQuestions}
+              className="w-full max-w-md"
+            >
+              Generate More Questions
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const generateScenarioMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/exam/regular/question", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate scenario");
+      }
+
+      return response.json();
+    },
+  });
+
   const handleGenerateScenario = async () => {
     if (!isMounted.current) return;
 
@@ -234,7 +337,7 @@ export default function RiskReduction() {
       if (isMounted.current) {
         setSelectedScenario(result);
         setShowExplanation(false);
-        form.reset();
+        //form.reset(); //Removed as it's not needed here.
       }
     } catch (error) {
       if (isMounted.current) {
@@ -251,47 +354,6 @@ export default function RiskReduction() {
     }
   };
 
-  const handleGenerateMoreQuestions = async () => {
-    if (!isMounted.current || isGeneratingQuestions) return;
-
-    setIsGeneratingQuestions(true);
-    try {
-      const response = await fetch("/api/exam/prevention/questions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          previousQuestions: preventionQuestions.map(q => q.id)
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to generate questions");
-      }
-
-      const newQuestions = await response.json();
-
-      if (isMounted.current) {
-        setPreventionQuestions(prev => [...prev, ...newQuestions]);
-        toast({
-          title: "New questions added!",
-          description: "Additional practice questions are now available.",
-        });
-      }
-    } catch (error) {
-      if (isMounted.current) {
-        toast({
-          title: "Error",
-          description: "Failed to generate new questions. Please try again.",
-          variant: "destructive",
-        });
-      }
-    } finally {
-      if (isMounted.current) {
-        setIsGeneratingQuestions(false);
-      }
-    }
-  };
-
   const handleSubmitAssessment = async (data: { riskAssessment: string }) => {
     if (!isMounted.current) return;
 
@@ -301,41 +363,6 @@ export default function RiskReduction() {
     });
   };
 
-  const handleNextQuestion = () => {
-    if (!isMounted.current) return;
-
-    if (currentQuestionIndex < preventionQuestions.length - 1) {
-      setCurrentQuestionIndex(prev => prev + 1);
-      setShowExplanation(false);
-      // Reset form for the next question
-      const nextFieldName = `question_${currentQuestionIndex + 1}`;
-      if (!form.getValues(nextFieldName)) {
-        form.setValue(nextFieldName, '');
-      }
-    }
-  };
-
-  const handlePrevQuestion = () => {
-    if (!isMounted.current) return;
-
-    if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(prev => prev - 1);
-      setShowExplanation(false);
-    }
-  };
-
-  const handleQuestionChange = (value: string) => {
-    if (!isMounted.current) return;
-
-    const fieldName = `question_${currentQuestionIndex}`;
-    form.setValue(fieldName, value);
-
-    // Add the question to answered questions set
-    setAnsweredQuestions(prev => new Set([...prev, preventionQuestions[currentQuestionIndex].id]));
-
-    // Show explanation after answer is selected
-    setShowExplanation(true);
-  };
 
   return (
     <div className="space-y-6">
@@ -678,156 +705,7 @@ export default function RiskReduction() {
         </TabsContent>
 
         <TabsContent value="prevention">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Prevention Strategies Assessment</CardTitle>
-              <AIHelpButton
-                title="Prevention Strategies"
-                description="Get AI assistance with understanding prevention strategies and risk reduction techniques."
-                topic="prevention strategies and risk reduction in nursing practice"
-              />
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="bg-muted/50 p-4 rounded-lg">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-semibold text-lg">Question {currentQuestionIndex + 1} of {preventionQuestions.length}</h3>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        onClick={handlePrevQuestion}
-                        disabled={currentQuestionIndex === 0}
-                      >
-                        Previous
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={handleNextQuestion}
-                        disabled={currentQuestionIndex === preventionQuestions.length - 1}
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  </div>
-
-                  <Form {...form}>
-                    <form className="space-y-6">
-                      <div className="space-y-4">
-                        <div>
-                          <h4 className="font-medium mb-2">{preventionQuestions[currentQuestionIndex].question}</h4>
-                          <RadioGroup
-                            onValueChange={handleQuestionChange}
-                            value={form.getValues(`question_${currentQuestionIndex}`)}
-                            className="space-y-2"
-                          >
-                            {preventionQuestions[currentQuestionIndex].options.map((option) => (
-                              <div key={option.value} className="flex items-center space-x-2">
-                                <RadioGroupItem
-                                  value={option.value}
-                                  id={`q${currentQuestionIndex}-${option.value}`}
-                                />
-                                <Label htmlFor={`q${currentQuestionIndex}-${option.value}`}>
-                                  {option.label}
-                                </Label>
-                              </div>
-                            ))}
-                          </RadioGroup>
-
-                          {showExplanation && (
-                            <div className="mt-4 p-4 bg-background/50 rounded-lg">
-                              <div className="flex items-center gap-2 mb-2">
-                                <CheckCircle2 className="h-5 w-5 text-green-500" />
-                                <h4 className="font-medium">Explanation</h4>
-                              </div>
-                              <p className="text-sm">
-                                {preventionQuestions[currentQuestionIndex].explanation.main}
-                              </p>
-                              <div className="mt-4">
-                                <h5 className="font-medium mb-2">Conceptual Breakdown:</h5>
-                                <ul className="text-sm space-y-2">
-                                  {preventionQuestions[currentQuestionIndex].explanation.concepts.map((concept, index) => (
-                                    <li key={index}>
-                                      • <span className="font-medium">{concept.title}:</span> {concept.description}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </form>
-                  </Form>
-
-                  <div className="mt-6 flex justify-between items-center">
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Questions Answered: {answeredQuestions.size} of {preventionQuestions.length}
-                      </p>
-                      <Progress
-                        value={(answeredQuestions.size / preventionQuestions.length) * 100}
-                        className="w-[200px] mt-2"
-                      />
-                    </div>
-                    <Button
-                      onClick={handleGenerateMoreQuestions}
-                      disabled={isGeneratingQuestions}
-                    >
-                      {isGeneratingQuestions ? (
-                        <>
-                          <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                          Generating...
-                        </>
-                      ) : (
-                        "Generate More Questions"
-                      )}
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="bg-muted/50 p-4 rounded-lg">
-                  <h3 className="font-semibold text-lg mb-3">Frequently Asked Questions</h3>
-                  <Accordion type="single" collapsible className="w-full">
-                    <AccordionItem value="faq-1">
-                      <AccordionTrigger>
-                        What are the key components of a comprehensive risk prevention strategy?
-                      </AccordionTrigger>
-                      <AccordionContent>
-                        <div className="space-y-2">
-                          <p className="text-sm">A comprehensive risk prevention strategy includes:</p>
-                          <ul className="text-sm space-y-2">
-                            <li>1. Regular risk assessments using validated tools</li>
-                            <li>2. Implementation of evidence-based preventive measures</li>
-                            <li>3. Staff education and competency validation</li>
-                            <li>4. Continuous monitoring and outcome evaluation</li>
-                            <li>5. Documentation and communication protocols</li>
-                          </ul>
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-
-                    <AccordionItem value="faq-2">
-                      <AccordionTrigger>
-                        How do you prioritize multiple risk factors?
-                      </AccordionTrigger>
-                      <AccordionContent>
-                        <div className="space-y-2">
-                          <p className="text-sm">Prioritization should consider:</p>
-                          <ul className="text-sm space-y-2">
-                            <li>• Immediate threats to life or safety</li>
-                            <li>• Potential for serious harm</li>
-                            <li>• Number of patients affected</li>
-                            <li>• Available resources</li>
-                            <li>• Regulatory requirements</li>
-                          </ul>
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {renderPreventionStrategies()}
         </TabsContent>
 
         <TabsContent value="practice">
@@ -875,7 +753,7 @@ export default function RiskReduction() {
                       </div>
                     </div>
 
-                    <Form {...form}>
+                    <Form {...form}> {/*Added Form*/}
                       <form className="space-y-4">
                         <div className="space-y-2">
                           <Label>Select the best course of action:</Label>
