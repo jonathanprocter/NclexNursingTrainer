@@ -36,8 +36,8 @@ export default function Questions() {
       <CardContent className="p-6">
         <ScrollArea className="h-[600px] pr-4">
           <div className="space-y-4">
-            {questions.map((question, index) => (
-              <Card key={`q-${question.id}-${index}`} className="p-4">
+            {questions.map((question) => (
+              <Card key={question.id} className="p-4">
                 <h3 className="font-medium mb-2">{question.question}</h3>
                 <p className="text-muted-foreground mb-2">{question.answer}</p>
                 {question.explanation && (

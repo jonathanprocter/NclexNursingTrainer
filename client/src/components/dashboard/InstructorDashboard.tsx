@@ -188,7 +188,21 @@ export default function InstructorDashboard() {
             <CardContent>
               <div className="h-[400px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={performanceData[0]?.data || []}>
+                  <LineChart>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="day" />
+                    <YAxis domain={[0, 100]} />
+                    <Tooltip />
+                    {performanceData.map((student) => (
+                      <Line
+                        key={student.name}
+                        data={student.data}
+                        name={student.name}
+                        dataKey="score"
+                        stroke={`hsl(${performanceData.indexOf(student) * 120}, 70%, 50%)`}
+                        strokeWidth={2}
+                      />
+                    ))}
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="day" />
                     <YAxis domain={[0, 100]} />

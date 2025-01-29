@@ -24,7 +24,9 @@ export default function Analytics({ data }: AnalyticsProps) {
     { module: "Mental Health", score: 82 }
   ];
 
-  const performanceData = Array.isArray(data?.performanceData) ? data.performanceData : mockPerformanceData;
+  const performanceData = data?.performanceData && Array.isArray(data.performanceData) && data.performanceData.length > 0 
+    ? data.performanceData 
+    : mockPerformanceData;
   const totalStudyTime = typeof data?.totalStudyTime === 'string' ? data.totalStudyTime : "45.5";
   const questionsAttempted = typeof data?.questionsAttempted === 'number' ? data.questionsAttempted : 428;
   const averageScore = typeof data?.averageScore === 'number' ? data.averageScore : 82;
