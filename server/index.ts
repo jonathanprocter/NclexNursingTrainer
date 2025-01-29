@@ -16,6 +16,9 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
+// Explicitly handle OPTIONS requests
+app.options("*", cors());
+
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -64,20 +67,24 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   try {
     const server = registerRoutes(app);
 
-    if (process.env.NODE_ENV === "development") {
-      await setupVite(app, server);
-    } else {
-      serveStatic(app);
-    }
-
     // Catch-all route handler for SPA
     app.use("*", (req, res, next) => {
       if (req.path.startsWith("/api")) {
         next();
       } else {
-        res.sendFile("index.html", { root: "./client" });
+        if (process.env.NODE_ENV === "development") {
+          next();
+        } else {
+          res.sendFile("index.html", { root: "./dist/public" });
+        }
       }
     });
+
+    if (process.env.NODE_ENV === "development") {
+      await setupVite(app, server);
+    } else {
+      serveStatic(app);
+    }
 
     const PORT = parseInt(process.env.PORT || "5000", 10);
     server.listen(PORT, "0.0.0.0", () => {

@@ -16,42 +16,22 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-const practiceQuestionsConst: Record<string, PracticeQuestion[]> = {
-  standard: [
-    {
-      id: "std_1",
-      text: "Which nursing intervention is most appropriate for a client with acute pain?",
-      options: [
-        { id: "a", text: "Assess pain characteristics" },
-        { id: "b", text: "Administer PRN pain medication immediately" },
-        { id: "c", text: "Notify healthcare provider" },
-        { id: "d", text: "Apply ice pack to affected area" }
-      ],
-      correctAnswer: "a",
-      explanation: "Pain assessment should be conducted first to determine appropriate interventions.",
-      category: "Patient Care",
-      difficulty: "Medium"
-    }
-  ]
-};
-
-function formatQuestion(question: PracticeQuestion) {
-  return {
-    id: question.id,
-    text: question.text,
-    options: question.options,
-    correctAnswer: question.correctAnswer,
-    explanation: question.explanation,
-    category: question.category,
-    difficulty: question.difficulty
-  };
-}
-
 export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
 
   // Study guide routes
   app.use('/api/study-guide', studyGuideRouter);
+
+  // Error handling middleware
+  app.use((err: Error, req: any, res: any, next: any) => {
+    console.error('Error:', err);
+
+    // Send appropriate error response
+    res.status(err.status || 500).json({
+      message: process.env.NODE_ENV === 'development' ? err.message : 'Internal Server Error',
+      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    });
+  });
 
   // Study buddy chat endpoints
   app.post("/api/study-buddy/start", async (req, res) => {
@@ -762,7 +742,7 @@ export function registerRoutes(app: Express): Server {
   return httpServer;
 }
 
-// Helper functions
+// Helper functions remain unchanged
 async function analyzePerformance(answers: any[]) {
   try {
     const completion = await openai.chat.completions.create({
@@ -838,7 +818,7 @@ async function getStudyRecommendations(performanceData: {
 // Fix the generateNewQuestions function
 async function generateNewQuestions(userId: number, examType: string) {
   try {
-    const availableQuestions = Object.values(practiceQuestionsConst).flat();
+    const availableQuestions = Object.values(practiceQuestions).flat();
 
     if (availableQuestions.length === 0) {
       throw new Error("No questions available");
@@ -871,3 +851,46 @@ function difficultyToNumber(difficulty: string): number {
     default: return 2;
   }
 }
+
+function formatQuestion(question: PracticeQuestion) {
+  return {
+    id: question.id,
+    text: question.text,
+    options: question.options,
+    correctAnswer: question.correctAnswer,
+    explanation: question.explanation,
+    category: question.category,
+    difficulty: question.difficulty
+  };
+}
+
+function generateBackupQuestions() {
+  return [{
+    id: 'backup_1',
+    question: 'What is the capital of France?',
+    options: [{id: 'a', text: 'Berlin'}, {id: 'b', text: 'Paris'}, {id: 'c', text: 'Rome'}, {id: 'd', text: 'Madrid'}],
+    correctAnswer: 'b',
+    explanation: 'Paris is the capital of France.',
+    category: 'Geography',
+    difficulty: 'Easy'
+  }]
+}
+
+const practiceQuestionsConst: Record<string, PracticeQuestion[]> = {
+  standard: [
+    {
+      id: "std_1",
+      text: "Which nursing intervention is most appropriate for a client with acute pain?",
+      options: [
+        { id: "a", text: "Assess pain characteristics" },
+        { id: "b", text: "Administer PRN pain medication immediately" },
+        { id: "c", text: "Notify healthcare provider" },
+        { id: "d", text: "Apply ice pack to affected area" }
+      ],
+      correctAnswer: "a",
+      explanation: "Pain assessment should be conducted first to determine appropriate interventions.",
+      category: "Patient Care",
+      difficulty: "Medium"
+    }
+  ]
+};
