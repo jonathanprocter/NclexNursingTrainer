@@ -6,17 +6,30 @@ import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 
+declare global {
+  interface Window {
+    SpeechRecognition: typeof SpeechRecognition;
+    webkitSpeechRecognition: typeof SpeechRecognition;
+  }
+}
+
 export default function AICompanion() {
   const { toast } = useToast();
   const [microphoneEnabled, setMicrophoneEnabled] = useState(false);
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+  const [transcript, setTranscript] = useState('');
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const recognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
+    try {
+      if (typeof window !== 'undefined') {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+          throw new Error('Speech recognition not supported');
+        }
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
       
       recognition.onresult = (event) => {
         const transcript = Array.from(event.results)
@@ -105,6 +118,12 @@ export default function AICompanion() {
                     Try saying: "Explain the pathophysiology of diabetes" or
                     "Start a practice quiz on pharmacology"
                   </p>
+                  {transcript && (
+                    <div className="mt-4 p-3 bg-white rounded">
+                      <p className="font-medium">Transcript:</p>
+                      <p className="text-sm">{transcript}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>
