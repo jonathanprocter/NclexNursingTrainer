@@ -10,7 +10,6 @@ if (!process.env.OPENAI_API_KEY) {
   throw new Error("OPENAI_API_KEY must be set in environment variables");
 }
 
-// Initialize OpenAI with error handling
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
@@ -280,38 +279,38 @@ export function registerRoutes(app: Express): Server {
 
   // Questions routes
   // Drug calculation generation endpoint
-app.post("/api/generate-calculation", async (req, res) => {
-  try {
-    const { difficulty } = req.body;
-    
-    // Generate a sample calculation problem based on difficulty
-    const problem = {
-      id: `calc_${Date.now()}`,
-      type: ['dosage', 'rate', 'conversion', 'concentration'][Math.floor(Math.random() * 4)],
-      difficulty,
-      question: "Calculate the correct dosage for a patient weighing 70kg who needs 5mg/kg of medication X.",
-      givens: {
-        "Patient Weight": "70 kg",
-        "Required Dose": "5 mg/kg",
-        "Available Concentration": "100 mg/mL"
-      },
-      answer: 3.5,
-      unit: "mL",
-      explanation: "To calculate the volume needed: (70 kg × 5 mg/kg) ÷ 100 mg/mL = 3.5 mL",
-      hints: [
-        "First calculate the total dose needed in mg",
-        "Then convert to volume using the available concentration"
-      ]
-    };
+  app.post("/api/generate-calculation", async (req, res) => {
+    try {
+      const { difficulty } = req.body;
+      
+      // Generate a sample calculation problem based on difficulty
+      const problem = {
+        id: `calc_${Date.now()}`,
+        type: ['dosage', 'rate', 'conversion', 'concentration'][Math.floor(Math.random() * 4)],
+        difficulty,
+        question: "Calculate the correct dosage for a patient weighing 70kg who needs 5mg/kg of medication X.",
+        givens: {
+          "Patient Weight": "70 kg",
+          "Required Dose": "5 mg/kg",
+          "Available Concentration": "100 mg/mL"
+        },
+        answer: 3.5,
+        unit: "mL",
+        explanation: "To calculate the volume needed: (70 kg × 5 mg/kg) ÷ 100 mg/mL = 3.5 mL",
+        hints: [
+          "First calculate the total dose needed in mg",
+          "Then convert to volume using the available concentration"
+        ]
+      };
 
-    res.json(problem);
-  } catch (error) {
-    console.error("Error generating calculation:", error);
-    res.status(500).json({ message: "Failed to generate calculation problem" });
-  }
-});
+      res.json(problem);
+    } catch (error) {
+      console.error("Error generating calculation:", error);
+      res.status(500).json({ message: "Failed to generate calculation problem" });
+    }
+  });
 
-app.get("/api/questions/:moduleId", async (req, res) => {
+  app.get("/api/questions/:moduleId", async (req, res) => {
     try {
       const moduleQuestions = await db.query.questions.findMany({
         where: eq(questions.moduleId, parseInt(req.params.moduleId)),
@@ -646,6 +645,147 @@ app.get("/api/questions/:moduleId", async (req, res) => {
       }
     ];
   }
+
+  // Patient Scenarios Routes
+  app.post("/api/scenarios/generate", async (req, res) => {
+    const { difficulty, previousScenarios } = req.body;
+
+    try {
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o", 
+        messages: [
+          {
+            role: "system",
+            content: `You are an expert nursing educator creating detailed patient scenarios for NCLEX preparation.
+            Generate realistic scenarios that test clinical judgment and decision-making skills.
+            Include vital signs, symptoms, medical history, and current presentation.
+            Structure the response as a JSON object with the following format:
+            {
+              "id": "unique_string",
+              "title": "scenario title",
+              "description": "detailed patient presentation",
+              "vitalSigns": { ... },
+              "medicalHistory": [ ... ],
+              "currentSymptoms": [ ... ],
+              "requiredAssessments": [ ... ],
+              "expectedInterventions": [ ... ],
+              "criticalThinkingPoints": [ ... ],
+              "difficulty": "Easy|Medium|Hard"
+            }`
+          },
+          {
+            role: "user",
+            content: `Generate a ${difficulty || 'Medium'} difficulty nursing scenario. Previous scenario IDs to avoid: ${previousScenarios?.join(', ') || 'none'}`
+          }
+        ],
+        response_format: { type: "json_object" }
+      });
+
+      const scenarioContent = completion.choices[0]?.message?.content;
+      if (!scenarioContent) {
+        throw new Error("Failed to generate scenario");
+      }
+
+      const scenario = JSON.parse(scenarioContent);
+      res.json(scenario);
+    } catch (error) {
+      console.error("Error generating scenario:", error);
+      res.status(500).json({
+        message: "Failed to generate scenario",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  app.post("/api/scenarios/evaluate", async (req, res) => {
+    const { scenarioId, actions, assessments } = req.body;
+
+    try {
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o", 
+        messages: [
+          {
+            role: "system",
+            content: `You are an expert nursing educator evaluating student performance in patient scenarios.
+            Analyze the student's actions and assessments against expected nursing interventions.
+            Provide detailed feedback and scoring. Response format:
+            {
+              "score": number (0-100),
+              "feedback": {
+                "strengths": [ ... ],
+                "areasForImprovement": [ ... ]
+              },
+              "criticalThinkingAnalysis": string,
+              "recommendedStudyTopics": [ ... ]
+            }`
+          },
+          {
+            role: "user",
+            content: `Evaluate these nursing actions and assessments for scenario ${scenarioId}:
+            Actions: ${JSON.stringify(actions)}
+            Assessments: ${JSON.stringify(assessments)}`
+          }
+        ],
+        response_format: { type: "json_object" }
+      });
+
+      const evaluationContent = completion.choices[0]?.message?.content;
+      if (!evaluationContent) {
+        throw new Error("Failed to evaluate scenario");
+      }
+
+      const evaluation = JSON.parse(evaluationContent);
+      res.json(evaluation);
+    } catch (error) {
+      console.error("Error evaluating scenario:", error);
+      res.status(500).json({
+        message: "Failed to evaluate scenario",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  app.post("/api/scenarios/hint", async (req, res) => {
+    const { scenarioId, currentState } = req.body;
+
+    try {
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o", 
+        messages: [
+          {
+            role: "system",
+            content: `You are an expert nursing educator providing guidance during patient scenarios.
+            Offer hints that promote critical thinking without giving away answers directly.
+            Format response as:
+            {
+              "hint": "detailed guidance",
+              "relevantConcepts": [ ... ],
+              "thingsToConsider": [ ... ]
+            }`
+          },
+          {
+            role: "user",
+            content: `Provide a hint for scenario ${scenarioId} at current state: ${JSON.stringify(currentState)}`
+          }
+        ],
+        response_format: { type: "json_object" }
+      });
+
+      const hintContent = completion.choices[0]?.message?.content;
+      if (!hintContent) {
+        throw new Error("Failed to generate hint");
+      }
+
+      const hint = JSON.parse(hintContent);
+      res.json(hint);
+    } catch (error) {
+      console.error("Error generating hint:", error);
+      res.status(500).json({
+        message: "Failed to generate hint",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
 
   return httpServer;
 }
