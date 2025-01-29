@@ -22,6 +22,11 @@ export default function Home() {
     },
   });
 
+  const studentProgress = {
+    name: "Bianca",
+    areasForGrowth: ["Pharmacology", "Risk Management"],
+  };
+
   const onSubmit = async (data: StudyTimeFormData) => {
     try {
       const response = await fetch('/api/study-guide/generate', {
