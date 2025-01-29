@@ -94,13 +94,20 @@ export async function generateSimulationScenario(
     });
 
     if (!response.ok) {
-      throw new Error('Failed to generate simulation scenario');
+      const errorText = await response.text();
+      console.error('Server response:', errorText);
+      throw new Error(`Failed to generate simulation scenario: ${response.status}`);
     }
 
-    return await response.json();
+    const data = await response.json();
+    if (!data || typeof data !== 'object') {
+      throw new Error('Invalid response format');
+    }
+
+    return data;
   } catch (error) {
     console.error('Error generating simulation scenario:', error);
-    throw new Error('Failed to generate simulation scenario');
+    throw error instanceof Error ? error : new Error('Failed to generate simulation scenario');
   }
 }
 
