@@ -153,7 +153,7 @@ export const practiceQuestions = {
   ],
   "standard": [
     {
-      id: "std_anxiety_1",
+      id: "std_anxiety_management",
       text: "Which nursing intervention is most appropriate for a patient experiencing acute anxiety?",
       options: [
         { id: "a", text: "Administer PRN medication immediately" },
@@ -171,7 +171,7 @@ export const practiceQuestions = {
       faqs: []
     },
     {
-      id: "std_dka_1",
+      id: "std_dka_management",
       text: "A patient presents with symptoms of diabetic ketoacidosis. What is the priority nursing action?",
       options: [
         { id: "a", text: "Administer insulin as ordered" },
