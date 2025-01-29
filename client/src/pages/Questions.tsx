@@ -12,7 +12,7 @@ interface Question {
 }
 
 export default function Questions() {
-  const { data = [], isLoading, isError } = useQuery<Question[]>({
+  const { data: questionsData, isLoading, isError } = useQuery<Question[]>({
     queryKey: ["questions"],
     queryFn: async () => {
       const response = await fetch("/api/questions");
@@ -22,10 +22,14 @@ export default function Questions() {
       const questions = await response.json();
       return questions.map((q: any, index: number) => ({
         ...q,
-        uniqueId: `q-${index}-${q.id || Math.random()}`
+        uniqueId: `question-${index}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
       }));
-    }
+    },
+    retry: 3,
+    refetchOnWindowFocus: false
   });
+
+  const questions = questionsData || [];
 
   if (isLoading) {
     return <div>Loading questions...</div>;

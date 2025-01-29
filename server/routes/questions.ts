@@ -7,24 +7,18 @@ const router = express.Router();
 
 router.get("/", async (req, res) => {
   try {
-    const { difficulty, category, min = 25 } = req.query;
-    
-    let query = db.select().from(questions);
-    
-    if (difficulty && difficulty !== "all") {
-      query = query.where(eq(questions.difficulty, parseInt(difficulty as string)));
+    const questions = await db.query.questions.findMany();
+    if (!questions || questions.length === 0) {
+      return res.json([{
+        id: "sample_1",
+        question: "Sample Question",
+        answer: "Sample Answer",
+        category: "General"
+      }]);
     }
-    
-    if (category && category !== "all") {
-      query = query.where(eq(questions.category, category as string));
-    }
-
-    const questionsList = await query.limit(parseInt(min as string));
-    const shuffled = [...questionsList].sort(() => Math.random() - 0.5);
-
-    res.json(shuffled);
+    res.json(questions);
   } catch (error) {
-    console.error("Error fetching questions:", error);
+    console.error("Questions fetch error:", error);
     res.status(500).json({ error: "Failed to fetch questions" });
   }
 });
