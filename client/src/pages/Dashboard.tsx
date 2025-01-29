@@ -8,7 +8,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Progress } from "../components/ui/progress";
 
 export default function Dashboard() {
-  const { data: analytics, isError } = useQuery({
+  const { data: analytics, isError, isLoading } = useQuery({
     queryKey: ["analytics"],
     queryFn: async () => {
       try {
@@ -19,10 +19,19 @@ export default function Dashboard() {
         return response.json();
       } catch (error) {
         console.error('Analytics fetch error:', error);
-        return null;
+        return {};
       }
-    }
+    },
+    initialData: {}
   });
+
+  if (isLoading) {
+    return <div>Loading dashboard data...</div>;
+  }
+
+  if (isError) {
+    return <div>Error loading dashboard data. Please try again.</div>;
+  }
 
   const studentProgress = {
     name: "Bianca",

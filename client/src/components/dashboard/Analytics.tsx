@@ -2,9 +2,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
+interface AnalyticsData {
+  module: string;
+  score: number;
+}
+
 interface AnalyticsProps {
   data?: {
-    performanceData?: Array<{ module: string; score: number }>;
+    performanceData?: AnalyticsData[];
     totalStudyTime?: string;
     questionsAttempted?: number;
     averageScore?: number;
@@ -36,7 +41,7 @@ export default function Analytics({ data }: AnalyticsProps) {
               <BarChart data={performanceData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="module" />
-                <YAxis />
+                <YAxis domain={[0, 100]} />
                 <Tooltip />
                 <Bar dataKey="score" fill="hsl(var(--primary))" />
               </BarChart>
