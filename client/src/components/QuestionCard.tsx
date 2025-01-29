@@ -28,12 +28,12 @@ interface QuestionCardProps {
   showExplanation?: boolean;
 }
 
-export default function QuestionCard({
-  question,
-  onAnswerSelect,
-  showExplanation = false
-}: QuestionCardProps) {
-  const [selectedAnswer, setSelectedAnswer] = useState<string>("");
+export default function QuestionCard({ question = {} }: QuestionCardProps) {
+  const [selectedAnswer, setSelectedAnswer] = useState("");
+
+  if (!question.id) {
+    return <div>No question data available</div>;
+  }
 
   const handleAnswerSelect = (value: string) => {
     setSelectedAnswer(value);

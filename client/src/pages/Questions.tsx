@@ -19,17 +19,15 @@ export default function Questions() {
       if (!response.ok) {
         throw new Error("Failed to fetch questions");
       }
-      const questions = await response.json();
-      return questions.map((q: any, index: number) => ({
+      const data = await response.json();
+      return data.map((q: any, index: number) => ({
         ...q,
-        uniqueId: `question-${index}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        uniqueId: `question-${q.id}-${index}-${Date.now()}`
       }));
     },
     retry: 3,
     refetchOnWindowFocus: false
   });
-
-  const questions = questionsData || [];
 
   if (isLoading) {
     return <div>Loading questions...</div>;
@@ -39,14 +37,12 @@ export default function Questions() {
     return <div>Error loading questions. Please try again.</div>;
   }
 
-  const questions = data || [];
-
   return (
     <Card>
       <CardContent className="p-6">
         <ScrollArea className="h-[600px] pr-4">
           <div className="space-y-4">
-            {questions.map((question) => (
+            {questionsData?.map((question) => (
               <Card key={question.uniqueId} className="p-4">
                 <h3 className="font-medium mb-2">{question.question}</h3>
                 <p className="text-muted-foreground mb-2">{question.answer}</p>
