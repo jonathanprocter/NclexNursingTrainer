@@ -93,8 +93,7 @@ export default function Home() {
 
       Keep going, Bianca! You're making great progress! 🌟
 
-      ${plan.additionalTips || ''}
-      `;
+      ${plan.additionalTips || ''}`);
 
     setStudyPlan(plan.personalizedPlan || personalizedPlan);
   };
