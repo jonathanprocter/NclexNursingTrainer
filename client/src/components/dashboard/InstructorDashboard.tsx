@@ -203,17 +203,7 @@ export default function InstructorDashboard() {
                         strokeWidth={2}
                       />
                     ))}
-                    <Tooltip />
-                    {performanceData.map((student, index) => (
-                      <Line
-                        key={student.name}
-                        data={student.data}
-                        dataKey="score"
-                        name={student.name}
-                        stroke={`hsl(${index * 120}, 70%, 50%)`}
-                        strokeWidth={2}
-                      />
-                    ))}
+                    
                   </LineChart>
                 </ResponsiveContainer>
               </div>

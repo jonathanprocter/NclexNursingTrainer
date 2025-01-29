@@ -15,12 +15,19 @@ export default function Questions() {
   const { data, isLoading, isError } = useQuery<Question[]>({
     queryKey: ["questions"],
     queryFn: async () => {
-      const response = await fetch("/api/questions");
-      if (!response.ok) {
-        throw new Error("Failed to fetch questions");
+      try {
+        const response = await fetch("/api/questions");
+        if (!response.ok) {
+          throw new Error("Failed to fetch questions");
+        }
+        const data = await response.json();
+        return Array.isArray(data) ? data : [];
+      } catch (error) {
+        console.error("Question loading error:", error);
+        return [];
       }
-      return response.json();
-    }
+    },
+    initialData: []
   });
 
   if (isLoading) {
