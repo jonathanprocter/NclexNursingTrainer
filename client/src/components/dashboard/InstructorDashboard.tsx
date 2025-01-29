@@ -1,10 +1,8 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Badge } from "../ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 
 export default function InstructorDashboard() {
   const mockStudents = [
@@ -37,7 +35,7 @@ export default function InstructorDashboard() {
     },
   ];
 
-  const performanceData = mockStudents.map((student, index) => ({
+  const performanceData = mockStudents.map((student) => ({
     name: student.name,
     data: student.recentScores.map((score, i) => ({
       day: `Day ${i + 1}`,
@@ -74,7 +72,7 @@ export default function InstructorDashboard() {
                 <p className="text-sm text-muted-foreground">Active Enrollments</p>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Class Average</CardTitle>
@@ -84,7 +82,7 @@ export default function InstructorDashboard() {
                 <p className="text-sm text-muted-foreground">Overall Progress</p>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">At-Risk Students</CardTitle>
@@ -151,12 +149,12 @@ export default function InstructorDashboard() {
                       <TableCell>{student.lastActive}</TableCell>
                       <TableCell>
                         <Badge
-                          variant={
+                          className={
                             student.status === "Excellent"
-                              ? "default"
+                              ? "bg-green-100 text-green-800"
                               : student.status === "On Track"
-                              ? "secondary"
-                              : "destructive"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-red-100 text-red-800"
                           }
                         >
                           {student.status}
@@ -165,7 +163,10 @@ export default function InstructorDashboard() {
                       <TableCell>
                         <div className="flex gap-1 flex-wrap">
                           {student.weakAreas.map((area) => (
-                            <Badge key={area} variant="outline">
+                            <Badge
+                              key={area}
+                              className="bg-gray-100 text-gray-800"
+                            >
                               {area}
                             </Badge>
                           ))}

@@ -1,12 +1,11 @@
-
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Analytics from "@/components/dashboard/Analytics";
-import PerformanceMetrics from "@/components/dashboard/PerformanceMetrics";
-import InstructorDashboard from "@/components/dashboard/InstructorDashboard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import Analytics from "../components/dashboard/Analytics";
+import PerformanceMetrics from "../components/dashboard/PerformanceMetrics";
+import InstructorDashboard from "../components/dashboard/InstructorDashboard";
 import { useQuery } from "@tanstack/react-query";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
-import { Progress } from "@/components/ui/progress";
+import { Progress } from "../components/ui/progress";
 
 export default function Dashboard() {
   const { data: analytics } = useQuery({
@@ -50,7 +49,7 @@ export default function Dashboard() {
               You're making excellent progress! Your strengths in {studentProgress.strengths.join(" and ")} are really showing.
               Let's focus on strengthening {studentProgress.areasForGrowth.join(" and ")} to boost your overall performance.
             </p>
-            
+
             <div className="mt-4">
               <h3 className="font-semibold mb-2">Today's AI Study Plan:</h3>
               <ul className="list-disc pl-6 space-y-2">
