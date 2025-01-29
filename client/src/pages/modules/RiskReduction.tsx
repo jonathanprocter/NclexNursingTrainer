@@ -84,14 +84,6 @@ const initialPreventionQuestions: PreventionQuestion[] = [
         {
           title: "Multiple Interventions",
           description: "Fall prevention requires a multi-faceted approach"
-        },
-        {
-          title: "Least Restrictive",
-          description: "Avoid restraints when possible"
-        },
-        {
-          title: "Proactive Planning",
-          description: "Scheduled assistance prevents unplanned activities"
         }
       ]
     }
@@ -116,15 +108,202 @@ const initialPreventionQuestions: PreventionQuestion[] = [
         {
           title: "Assessment Integration",
           description: "Regular skin checks allow early intervention"
-        },
-        {
-          title: "Comprehensive Care",
-          description: "Combines prevention with monitoring"
         }
       ]
     }
   },
-  // Add 8 more questions following the same pattern...
+  {
+    id: "q3",
+    question: "A nurse is caring for multiple patients. Which action best prevents medication errors?",
+    options: [
+      { value: "a", label: "Preparing medications for all patients at once" },
+      { value: "b", label: "Verifying the five rights for each medication individually" },
+      { value: "c", label: "Delegating medication administration to unlicensed personnel" },
+      { value: "d", label: "Relying on memory for regular medications" }
+    ],
+    correctAnswer: "b",
+    explanation: {
+      main: "Following the five rights of medication administration for each medication individually is essential for preventing errors.",
+      concepts: [
+        {
+          title: "Individual Verification",
+          description: "Each medication requires separate verification"
+        },
+        {
+          title: "Safety Protocol",
+          description: "The five rights are fundamental to medication safety"
+        }
+      ]
+    }
+  },
+  {
+    id: "q4",
+    question: "Which nursing intervention is most effective in preventing ventilator-associated pneumonia (VAP)?",
+    options: [
+      { value: "a", label: "Maintaining head of bed at 30-45 degrees" },
+      { value: "b", label: "Changing ventilator circuits daily" },
+      { value: "c", label: "Using sterile gloves only" },
+      { value: "d", label: "Increasing sedation" }
+    ],
+    correctAnswer: "a",
+    explanation: {
+      main: "Elevating the head of bed prevents aspiration and reduces the risk of VAP.",
+      concepts: [
+        {
+          title: "Positioning",
+          description: "Proper positioning prevents aspiration"
+        },
+        {
+          title: "Evidence-Based Care",
+          description: "Part of VAP prevention bundle"
+        }
+      ]
+    }
+  },
+  {
+    id: "q5",
+    question: "To prevent central line-associated bloodstream infections (CLABSI), which intervention should the nurse implement?",
+    options: [
+      { value: "a", label: "Changing dressings when visibly soiled only" },
+      { value: "b", label: "Using maximum sterile barrier precautions during insertion" },
+      { value: "c", label: "Replacing administration sets every 12 hours" },
+      { value: "d", label: "Applying antibiotic ointment to the insertion site" }
+    ],
+    correctAnswer: "b",
+    explanation: {
+      main: "Maximum sterile barrier precautions during insertion significantly reduce CLABSI risk.",
+      concepts: [
+        {
+          title: "Sterile Technique",
+          description: "Critical for preventing contamination"
+        },
+        {
+          title: "Bundle Compliance",
+          description: "Part of evidence-based CLABSI prevention"
+        }
+      ]
+    }
+  },
+  {
+    id: "q6",
+    question: "Which nursing intervention best prevents surgical site infections?",
+    options: [
+      { value: "a", label: "Maintaining normothermia during surgery" },
+      { value: "b", label: "Shaving the surgical site the night before" },
+      { value: "c", label: "Applying heat to the surgical site" },
+      { value: "d", label: "Removing dressings frequently to check wound" }
+    ],
+    correctAnswer: "a",
+    explanation: {
+      main: "Maintaining normothermia during surgery is evidence-based practice for preventing surgical site infections.",
+      concepts: [
+        {
+          title: "Temperature Control",
+          description: "Affects immune function and healing"
+        },
+        {
+          title: "Prevention Strategy",
+          description: "Part of surgical care improvement protocols"
+        }
+      ]
+    }
+  },
+  {
+    id: "q7",
+    question: "A nurse is implementing fall prevention strategies. Which assessment finding requires immediate intervention?",
+    options: [
+      { value: "a", label: "Patient requests assistance to bathroom" },
+      { value: "b", label: "Patient taking multiple antihypertensive medications" },
+      { value: "c", label: "Patient attempting to get out of bed while confused" },
+      { value: "d", label: "Patient wearing non-slip socks" }
+    ],
+    correctAnswer: "c",
+    explanation: {
+      main: "A confused patient attempting to get out of bed presents an immediate fall risk requiring urgent intervention.",
+      concepts: [
+        {
+          title: "Risk Recognition",
+          description: "Identifying immediate safety threats"
+        },
+        {
+          title: "Prompt Response",
+          description: "Preventing imminent falls"
+        }
+      ]
+    }
+  },
+  {
+    id: "q8",
+    question: "Which intervention is most effective in preventing catheter-associated urinary tract infections (CAUTI)?",
+    options: [
+      { value: "a", label: "Daily catheter care with soap and water" },
+      { value: "b", label: "Regular assessment for continued catheter need" },
+      { value: "c", label: "Routine catheter irrigation" },
+      { value: "d", label: "Using larger catheter sizes" }
+    ],
+    correctAnswer: "b",
+    explanation: {
+      main: "Daily assessment of catheter necessity and prompt removal when no longer needed is the most effective CAUTI prevention strategy.",
+      concepts: [
+        {
+          title: "Duration Control",
+          description: "Shorter duration reduces infection risk"
+        },
+        {
+          title: "Assessment Priority",
+          description: "Regular evaluation of necessity"
+        }
+      ]
+    }
+  },
+  {
+    id: "q9",
+    question: "To prevent medication errors during patient transfers, which action is most important?",
+    options: [
+      { value: "a", label: "Conducting medication reconciliation" },
+      { value: "b", label: "Transferring all medications with patient" },
+      { value: "c", label: "Disposing of previous medications" },
+      { value: "d", label: "Rewriting all orders" }
+    ],
+    correctAnswer: "a",
+    explanation: {
+      main: "Medication reconciliation during transitions of care prevents errors and ensures continuity of appropriate therapy.",
+      concepts: [
+        {
+          title: "Transition Safety",
+          description: "Critical point for medication errors"
+        },
+        {
+          title: "Verification Process",
+          description: "Ensures medication accuracy"
+        }
+      ]
+    }
+  },
+  {
+    id: "q10",
+    question: "Which intervention best prevents deep vein thrombosis (DVT) in a postoperative patient?",
+    options: [
+      { value: "a", label: "Maintaining bed rest for 24 hours" },
+      { value: "b", label: "Early mobilization and sequential compression devices" },
+      { value: "c", label: "Elastic stockings alone" },
+      { value: "d", label: "Keeping legs elevated continuously" }
+    ],
+    correctAnswer: "b",
+    explanation: {
+      main: "Early mobilization combined with mechanical prophylaxis provides optimal DVT prevention in postoperative patients.",
+      concepts: [
+        {
+          title: "Combined Approach",
+          description: "Multiple prevention strategies are most effective"
+        },
+        {
+          title: "Early Intervention",
+          description: "Proactive prevention is key"
+        }
+      ]
+    }
+  }
 ];
 
 interface Progress {
