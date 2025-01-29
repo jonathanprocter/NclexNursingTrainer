@@ -185,13 +185,25 @@ export default function Quizzes() {
     }
   };
 
-  const startTopicPractice = (topic: string) => {
-    setIsLoading(true);
-    setSelectedTopic(topic);
-    generateQuestionsMutation.mutate(topic);
-    // Switch to questions tab
-    const questionsTab = document.querySelector('[value="questions"]') as HTMLElement;
-    if (questionsTab) questionsTab.click();
+  const startTopicPractice = async (topic: string) => {
+    try {
+      setIsLoading(true);
+      setSelectedTopic(topic);
+      await generateQuestionsMutation.mutateAsync(topic);
+      
+      // Switch to questions tab after questions are loaded
+      const questionsTab = document.querySelector('[value="questions"]') as HTMLElement;
+      if (questionsTab) questionsTab.click();
+    } catch (error) {
+      console.error('Failed to start practice:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load practice questions. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const startReview = () => {
