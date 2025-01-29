@@ -1,3 +1,4 @@
+
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
@@ -6,12 +7,12 @@ interface Question {
   id: string;
   question: string;
   answer: string;
-  explanation: string;
+  explanation?: string;
   category: string;
 }
 
 export default function Questions() {
-  const { data: questions = [], isLoading, isError } = useQuery<Question[]>({
+  const { data, isLoading, isError } = useQuery<Question[]>({
     queryKey: ["questions"],
     queryFn: async () => {
       const response = await fetch("/api/questions");
@@ -19,8 +20,7 @@ export default function Questions() {
         throw new Error("Failed to fetch questions");
       }
       return response.json();
-    },
-    initialData: []
+    }
   });
 
   if (isLoading) {
@@ -31,13 +31,15 @@ export default function Questions() {
     return <div>Error loading questions. Please try again.</div>;
   }
 
+  const questions = data || [];
+
   return (
     <Card>
       <CardContent className="p-6">
         <ScrollArea className="h-[600px] pr-4">
           <div className="space-y-4">
             {questions.map((question) => (
-              <Card key={question.id} className="p-4">
+              <Card key={`question-${question.id}`} className="p-4">
                 <h3 className="font-medium mb-2">{question.question}</h3>
                 <p className="text-muted-foreground mb-2">{question.answer}</p>
                 {question.explanation && (
