@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "../components/ui/input";
+import { Button } from "../components/ui/button";
+import { ScrollArea } from "../components/ui/scroll-area";
 import { Loader2, Send, Mic } from "lucide-react";
-import { ToneSelector } from "@/components/ToneSelector";
-import type { StudyBuddyTone } from "@/components/ToneSelector";
+import { ToneSelector } from "../components/ToneSelector";
+import type { StudyBuddyTone } from "../components/ToneSelector";
 import { useToast } from "@/hooks/use-toast";
 
 interface Message {

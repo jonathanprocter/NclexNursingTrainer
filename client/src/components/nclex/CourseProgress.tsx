@@ -1,4 +1,4 @@
-import { Progress } from "@/components/ui/progress";
+import { Progress } from "../components/ui/progress";
 
 export default function CourseProgress() {
   const progress = 65; // This would come from your actual progress tracking

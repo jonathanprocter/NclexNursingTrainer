@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "../components/ui/button";
 import { Brain, Send, Download } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import {
@@ -9,9 +9,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
+} from "../components/ui/dialog";
+import { Input } from "../components/ui/input";
+import { ScrollArea } from "../components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 
 interface Message {

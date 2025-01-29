@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Check, MessageSquare } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Button } from "../components/ui/button";
+import { Card } from "../components/ui/card";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from "../components/ui/popover";
 import { cn } from "@/lib/utils";
 
 export type StudyBuddyTone = 

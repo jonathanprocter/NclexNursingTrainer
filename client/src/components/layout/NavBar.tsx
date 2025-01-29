@@ -7,9 +7,9 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu";
+} from "../components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { Button } from "../components/ui/button";
 import {
   BookOpen,
   Brain,
@@ -35,7 +35,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription 
-} from "@/components/ui/sheet";
+} from "../components/ui/sheet";
 import { useState } from "react";
 
 const dashboardItems = [

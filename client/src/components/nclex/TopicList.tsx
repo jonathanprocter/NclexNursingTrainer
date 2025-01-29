@@ -1,5 +1,5 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { Card, CardContent } from "../components/ui/card";
+import { Progress } from "../components/ui/progress";
 import { Check, ArrowRight } from "lucide-react";
 import { Link } from "wouter";
 

@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useParams } from "wouter";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Progress } from "../components/ui/progress";
+import { Alert, AlertDescription } from "../components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { AlertCircle, ChevronRight, Timer, PauseCircle } from "lucide-react";
 

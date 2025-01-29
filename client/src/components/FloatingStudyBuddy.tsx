@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { StudyBuddyChat } from "./StudyBuddyChat";
-import { Button } from "@/components/ui/button";
+import { Button } from "../components/ui/button";
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";

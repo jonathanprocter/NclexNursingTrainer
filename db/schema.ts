@@ -9,14 +9,13 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-// Add study buddy chat history table
 export const studyBuddyChats = pgTable("study_buddy_chats", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id),
   sessionId: text("session_id").notNull(),
-  role: text("role").notNull(), // 'user' or 'assistant'
+  role: text("role").notNull(),
   content: text("content").notNull(),
-  tone: text("tone").notNull(), // professional, friendly, etc.
+  tone: text("tone").notNull(),
   timestamp: timestamp("timestamp").notNull().defaultNow(),
 });
 
@@ -24,9 +23,9 @@ export const modules = pgTable("modules", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description"),
-  type: text("type").notNull(), // 'pharmacology', 'fundamentals', etc.
+  type: text("type").notNull(),
   orderIndex: integer("order_index").notNull(),
-  aiGeneratedContent: json("ai_generated_content"), // AI-generated study materials
+  aiGeneratedContent: json("ai_generated_content"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -41,76 +40,71 @@ export const questions = pgTable("questions", {
   difficulty: integer("difficulty").notNull(), // 1-5 scale
   aiGenerated: boolean("ai_generated").default(false),
   topicTags: json("topic_tags"), // Array of related topics for AI analysis
+  conceptBreakdown: json("concept_breakdown"), // Array of concept explanations
+  faqs: json("faqs"), // Frequently asked questions about this topic
+  relatedTopics: json("related_topics"), // Array of related NCLEX topics
+  references: json("references"), // Study material references
+  category: text("category"), // NCLEX category
+  subcategory: text("subcategory"), // Specific topic within category
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export const questionHistory = pgTable("question_history", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id),
-  questionId: text("question_id").notNull(), // Store the original question ID (e.g., "pattern-1")
-  type: text("type").notNull(), // pattern, hypothesis, decision, etc.
-  usedAt: timestamp("used_at").notNull().defaultNow(),
-});
-
-export const quizAttempts = pgTable("quiz_attempts", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id),
-  moduleId: integer("module_id").references(() => modules.id),
-  type: text("type").notNull(), // 'practice', 'cat', 'standard'
-  score: integer("score").notNull(),
-  totalQuestions: integer("total_questions").notNull(),
-  answers: json("answers").notNull(), // Array of user answers
-  aiAnalysis: json("ai_analysis"), // AI-generated performance analysis
-  strengthAreas: json("strength_areas"), // Topics where user performed well
-  weaknessAreas: json("weakness_areas"), // Topics needing improvement
-  startedAt: timestamp("started_at").notNull(),
-  completedAt: timestamp("completed_at"),
+  questionId: integer("question_id").references(() => questions.id),
+  answer: text("answer").notNull(),
+  isCorrect: boolean("is_correct").notNull(),
+  timeSpent: integer("time_spent"), // Time spent in seconds
+  timestamp: timestamp("timestamp").notNull().defaultNow(),
+  // Spaced repetition fields
+  easeFactor: integer("ease_factor").default(250), // Multiplied by 100 to store as integer
+  interval: integer("interval").default(1),
+  repetitions: integer("repetitions").default(0),
+  nextReview: timestamp("next_review"),
+  // Analytics fields
+  attemptContext: json("attempt_context"), // Additional context about the attempt
 });
 
 export const userProgress = pgTable("user_progress", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id),
   moduleId: integer("module_id").references(() => modules.id),
-  completedQuestions: integer("completed_questions").notNull().default(0),
-  correctAnswers: integer("correct_answers").notNull().default(0),
-  lastAttempt: timestamp("last_attempt"),
-  learningPath: json("learning_path"), // AI-recommended study path
-  performanceMetrics: json("performance_metrics"), // Detailed analytics
+  totalQuestions: integer("total_questions").default(0),
+  correctAnswers: integer("correct_answers").default(0),
+  lastStudied: timestamp("last_studied"),
+  studyStreak: integer("study_streak").default(0),
+  masteryLevel: integer("mastery_level").default(0), // 0-100
+  weakAreas: json("weak_areas"), // Array of topics needing review
+  strongAreas: json("strong_areas"), // Array of mastered topics
+  studyGoals: json("study_goals"), // User's study goals and progress
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-// Create schemas for all tables
+// Schemas for TypeScript inference
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
+
+export type Question = typeof questions.$inferSelect;
+export type NewQuestion = typeof questions.$inferInsert;
+
+export type QuestionHistory = typeof questionHistory.$inferSelect;
+export type NewQuestionHistory = typeof questionHistory.$inferInsert;
+
+export type UserProgress = typeof userProgress.$inferSelect;
+export type NewUserProgress = typeof userProgress.$inferInsert;
+
+export type SelectStudyBuddyChat = typeof studyBuddyChats.$inferSelect;
+
+// Zod schemas for validation
 export const insertUserSchema = createInsertSchema(users);
 export const selectUserSchema = createSelectSchema(users);
-export const insertModuleSchema = createInsertSchema(modules);
-export const selectModuleSchema = createSelectSchema(modules);
+
 export const insertQuestionSchema = createInsertSchema(questions);
 export const selectQuestionSchema = createSelectSchema(questions);
-export const insertQuizAttemptSchema = createInsertSchema(quizAttempts);
-export const selectQuizAttemptSchema = createSelectSchema(quizAttempts);
-export const insertUserProgressSchema = createInsertSchema(userProgress);
-export const selectUserProgressSchema = createSelectSchema(userProgress);
+
 export const insertQuestionHistorySchema = createInsertSchema(questionHistory);
 export const selectQuestionHistorySchema = createSelectSchema(questionHistory);
 
-// Add schemas for study buddy chats
-export const insertStudyBuddyChatSchema = createInsertSchema(studyBuddyChats);
-export const selectStudyBuddyChatSchema = createSelectSchema(studyBuddyChats);
-
-// Export types for all tables
-export type InsertUser = typeof users.$inferInsert;
-export type SelectUser = typeof users.$inferSelect;
-export type InsertModule = typeof modules.$inferInsert;
-export type SelectModule = typeof modules.$inferSelect;
-export type InsertQuestion = typeof questions.$inferInsert;
-export type SelectQuestion = typeof questions.$inferSelect;
-export type InsertQuizAttempt = typeof quizAttempts.$inferInsert;
-export type SelectQuizAttempt = typeof quizAttempts.$inferSelect;
-export type InsertUserProgress = typeof userProgress.$inferInsert;
-export type SelectUserProgress = typeof userProgress.$inferSelect;
-export type InsertQuestionHistory = typeof questionHistory.$inferInsert;
-export type SelectQuestionHistory = typeof questionHistory.$inferSelect;
-
-// Add types for study buddy chats
-export type InsertStudyBuddyChat = typeof studyBuddyChats.$inferInsert;
-export type SelectStudyBuddyChat = typeof studyBuddyChats.$inferSelect;
+export const insertUserProgressSchema = createInsertSchema(userProgress);
+export const selectUserProgressSchema = createSelectSchema(userProgress);
