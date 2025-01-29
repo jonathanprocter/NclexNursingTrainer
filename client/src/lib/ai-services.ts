@@ -40,7 +40,6 @@ export async function getPathophysiologyHelp(
   }
 }
 
-// Existing functions...
 export async function analyzePerformance(
   answers: Array<{
     question: string;
@@ -73,7 +72,107 @@ export async function analyzePerformance(
   }
 }
 
-interface QuestionGenerationParams {
+export interface SimulationFeedback {
+  strengths: string[];
+  areas_for_improvement: string[];
+  recommendations: string[];
+  clinical_reasoning_score: number;
+}
+
+export interface SimulationScenario {
+  id: string;
+  title: string;
+  description: string;
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  objectives: string[];
+  initial_state: {
+    patient_condition: string;
+    vital_signs: {
+      blood_pressure: string;
+      heart_rate: number;
+      respiratory_rate: number;
+      temperature: number;
+      oxygen_saturation: number;
+    };
+    symptoms: string[];
+    medical_history: string;
+  };
+  expected_actions: {
+    priority: number;
+    action: string;
+    rationale: string;
+  }[];
+  duration_minutes: number;
+}
+
+export async function generateSimulationScenario(
+  difficulty: string,
+  focus_areas?: string[]
+): Promise<SimulationScenario> {
+  try {
+    const response = await anthropic.messages.create({
+      model: "claude-3-sonnet-20240229",
+      max_tokens: 2000,
+      messages: [{
+        role: "user",
+        content: `Generate a detailed nursing simulation scenario with difficulty level: ${difficulty}
+        ${focus_areas ? `Focus areas: ${focus_areas.join(', ')}` : ''}
+        Include:
+        - Detailed patient information and initial state
+        - Clear learning objectives
+        - Expected nursing actions with rationales
+        - Vital signs and symptoms
+        Output in JSON format matching the SimulationScenario type.`
+      }]
+    });
+
+    const content = response.content[0];
+    if (content.type !== 'text') {
+      throw new Error('Unexpected response format from Anthropic API');
+    }
+
+    return JSON.parse(content.text);
+  } catch (error) {
+    console.error('Error generating simulation scenario:', error);
+    throw new Error('Failed to generate simulation scenario');
+  }
+}
+
+export async function getSimulationFeedback(
+  scenario: SimulationScenario,
+  userActions: {
+    action: string;
+    timestamp: string;
+    outcome?: string;
+  }[]
+): Promise<SimulationFeedback> {
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert nursing instructor providing feedback on simulation performance. Analyze the learner's actions against the expected actions and provide detailed, constructive feedback."
+        },
+        {
+          role: "user",
+          content: JSON.stringify({
+            scenario,
+            userActions,
+          })
+        }
+      ],
+      response_format: { type: "json_object" }
+    });
+
+    return JSON.parse(response.choices[0].message.content || '{}');
+  } catch (error) {
+    console.error('Error getting simulation feedback:', error);
+    throw new Error('Failed to get simulation feedback');
+  }
+}
+
+export interface QuestionGenerationParams {
   topics: string[];
   difficulty: number;
   previousPerformance: {
