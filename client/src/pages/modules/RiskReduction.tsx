@@ -353,22 +353,27 @@ export default function RiskReduction() {
         throw new Error("Failed to generate questions");
       }
 
-      return response.json();
+      const data = await response.json();
+      if (!Array.isArray(data) || data.length === 0) {
+        throw new Error("Invalid response format");
+      }
+
+      return data;
     },
     onSuccess: (newQuestions) => {
       if (isMounted.current) {
         setPreventionQuestions(prev => [...prev, ...newQuestions]);
         toast({
           title: "New questions added!",
-          description: "Additional practice questions are now available.",
+          description: `Added ${newQuestions.length} new questions to your practice set.`,
         });
       }
     },
-    onError: () => {
+    onError: (error) => {
       if (isMounted.current) {
         toast({
           title: "Error",
-          description: "Failed to generate new questions. Please try again.",
+          description: error instanceof Error ? error.message : "Failed to generate new questions. Please try again.",
           variant: "destructive",
         });
       }
