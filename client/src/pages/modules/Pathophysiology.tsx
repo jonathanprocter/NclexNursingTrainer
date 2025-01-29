@@ -36,12 +36,11 @@ export default function Pathophysiology() {
       recognition.interimResults = true;
 
       recognition.onresult = (event) => {
-        const transcript = Array.from(event.results)
-          .map(result => result[0])
-          .map(result => result.transcript)
-          .join('');
-
-        setQuestion(prev => prev + transcript);
+        const lastResult = event.results[event.results.length - 1];
+        if (lastResult.isFinal) {
+          const transcript = lastResult[0].transcript;
+          setQuestion(prev => prev + ' ' + transcript);
+        }
       };
 
       recognition.onerror = (event) => {
