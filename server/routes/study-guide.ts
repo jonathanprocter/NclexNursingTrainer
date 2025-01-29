@@ -169,8 +169,13 @@ router.post("/generate", async (req, res) => {
         suggestedApproach: `Review fundamentals and practice with ${Math.round(timeAvailable * 0.4)} minutes of targeted questions`
       }));
 
+    const defaultWeakAreas = [
+      { topic: "Fundamentals of Nursing", score: 60, improvement: "Review basic nursing concepts", suggestedApproach: "Spend 20 minutes reviewing fundamental concepts." },
+      { topic: "Pharmacology", score: 55, improvement: "Focus on medication calculations and side effects", suggestedApproach: "Practice medication calculations and review common side effects of medications." }
+    ]
+
     // Generate adaptive questions for weak areas
-    const adaptiveQuestions = await Promise.all(
+    const adaptiveQuestions = weakAreas.length > 0 ? await Promise.all(
       weakAreas.map(async (area) => ({
         topic: area.topic,
         questions: await generateAdaptiveQuestions({
@@ -184,8 +189,9 @@ router.post("/generate", async (req, res) => {
             }))
         })
       }))
-    );
+    ) : [];
 
+    const finalWeakAreas = weakAreas.length > 0 ? weakAreas : defaultWeakAreas;
 
     const nursingTopics = [
       "Fundamentals of Nursing",
@@ -209,7 +215,7 @@ router.post("/generate", async (req, res) => {
           "Review and reinforce learning"
         ]
       })),
-      weakAreas: weakAreas, // Use the dynamically generated weak areas
+      weakAreas: finalWeakAreas, // Use the dynamically generated weak areas
       strengthAreas: [],
       recommendedResources: focusAreas.map((plan: string, i: number) => ({
         id: `resource-${i}`,
