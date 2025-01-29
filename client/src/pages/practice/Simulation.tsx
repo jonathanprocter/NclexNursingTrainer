@@ -70,9 +70,9 @@ export default function Simulation() {
     });
   };
 
-  const handleAction = (action: { action: string; priority?: number; rationale?: string }) => {
+  const handleAction = (actionText: string) => {
     setUserActions(prev => [...prev, {
-      action: action.action,
+      action: actionText,
       timestamp: new Date().toISOString()
     }]);
   };
@@ -339,7 +339,7 @@ export default function Simulation() {
                         key={index}
                         variant="outline"
                         className="justify-start"
-                        onClick={() => handleAction(action)}
+                        onClick={() => handleAction(action.action)}
                       >
                         {action.action}
                       </Button>
