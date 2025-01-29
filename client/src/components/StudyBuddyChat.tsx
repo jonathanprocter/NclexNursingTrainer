@@ -136,19 +136,41 @@ export function StudyBuddyChat() {
     }
 
     try {
+      const SpeechRecognition = window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      
       setIsListening(true);
-      // Voice input feature will be implemented here
-      toast({
-        title: "Coming Soon",
-        description: "Voice input feature is coming soon!",
-      });
+      
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setInput(transcript);
+        sendMessage.mutate(transcript);
+      };
+
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        toast({
+          title: "Error",
+          description: "Failed to recognize speech. Please try again.",
+          variant: "destructive",
+        });
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognition.start();
     } catch (error) {
+      console.error('Voice input error:', error);
       toast({
         title: "Error",
         description: "Failed to start voice recognition. Please try again.",
         variant: "destructive",
       });
-    } finally {
       setIsListening(false);
     }
   };
