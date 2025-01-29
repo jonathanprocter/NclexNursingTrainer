@@ -1,9 +1,10 @@
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Progress } from "../components/ui/progress";
-import { Badge } from "../components/ui/badge";
+
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Progress } from "../ui/progress";
+import { Badge } from "../ui/badge";
 
 interface PerformanceMetricsProps {
-  data: any;
+  data?: any;
 }
 
 export default function PerformanceMetrics({ data }: PerformanceMetricsProps) {
@@ -34,9 +35,11 @@ export default function PerformanceMetrics({ data }: PerformanceMetricsProps) {
     },
   ];
 
+  const metrics = data?.metrics || mockMetrics;
+
   return (
     <div className="space-y-6">
-      {mockMetrics.map((metric) => (
+      {metrics.map((metric: any) => (
         <Card key={metric.category}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg font-medium">
@@ -56,7 +59,7 @@ export default function PerformanceMetrics({ data }: PerformanceMetricsProps) {
                 <Progress value={metric.score} className="h-2" />
               </div>
               <ul className="text-sm text-muted-foreground list-disc pl-4 space-y-1">
-                {metric.details.map((detail, index) => (
+                {metric.details.map((detail: string, index: number) => (
                   <li key={index}>{detail}</li>
                 ))}
               </ul>
