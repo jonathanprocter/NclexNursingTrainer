@@ -1,30 +1,4 @@
-import OpenAI from "openai";
-import { Anthropic } from '@anthropic-ai/sdk';
 import type { AIAnalysisResult, SimulationFeedback, SimulationScenario } from './types';
-
-if (!import.meta.env.VITE_OPENAI_API_KEY) {
-  throw new Error("VITE_OPENAI_API_KEY is required");
-}
-
-if (!import.meta.env.VITE_ANTHROPIC_API_KEY) {
-  throw new Error("VITE_ANTHROPIC_API_KEY is required");
-}
-
-const openai = new OpenAI({
-  apiKey: import.meta.env.VITE_OPENAI_API_KEY,
-});
-
-const anthropic = new Anthropic({
-  apiKey: import.meta.env.VITE_ANTHROPIC_API_KEY,
-});
-
-export interface AIAnalysisResult {
-  strengths: string[];
-  weaknesses: string[];
-  recommendedTopics: string[];
-  confidence: number;
-}
-
 
 export async function getPathophysiologyHelp(
   section: string,
@@ -207,4 +181,11 @@ export async function getStudyRecommendations(
     console.error('Error generating study recommendations:', error);
     throw new Error('Failed to generate study recommendations');
   }
+}
+
+export interface AIAnalysisResult {
+  strengths: string[];
+  weaknesses: string[];
+  recommendedTopics: string[];
+  confidence: number;
 }
