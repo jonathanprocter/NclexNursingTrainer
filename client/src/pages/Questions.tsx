@@ -22,7 +22,7 @@ function ErrorFallback({ error }: { error: Error }) {
 }
 
 function QuestionsList() {
-  const { data: questions = [], isLoading, isError, error } = useQuery<Question[]>({
+  const { data, isLoading, isError, error } = useQuery<Question[]>({
     queryKey: ["questions"],
     queryFn: async () => {
       const response = await fetch("/api/questions");
@@ -32,7 +32,8 @@ function QuestionsList() {
       return response.json();
     },
     retry: 3,
-    refetchOnWindowFocus: false
+    refetchOnWindowFocus: false,
+    initialData: [] // Provide initial empty array to prevent undefined
   });
 
   if (isLoading) return <div>Loading questions...</div>;
@@ -41,8 +42,8 @@ function QuestionsList() {
   return (
     <ScrollArea className="h-[600px] pr-4">
       <div className="space-y-4">
-        {questions.map((question) => (
-          <Card key={`question-${question.id}-${Date.now()}`} className="p-4">
+        {data.map((question) => (
+          <Card key={question.id} className="p-4">
             <h3 className="font-medium mb-2">{question.question}</h3>
             <p className="text-muted-foreground mb-2">{question.answer}</p>
             {question.explanation && (
