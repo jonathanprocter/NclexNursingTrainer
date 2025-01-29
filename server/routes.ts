@@ -422,6 +422,36 @@ app.get("/api/questions/:moduleId", async (req, res) => {
     }
   });
 
+  // Quiz question generation endpoint
+  app.post("/api/generate-questions", async (req, res) => {
+    try {
+      const { topic } = req.body;
+      const availableQuestions = topic 
+        ? practiceQuestions[topic.toLowerCase()]
+        : Object.values(practiceQuestions).flat();
+
+      if (!availableQuestions || availableQuestions.length === 0) {
+        throw new Error("No questions available for the selected topic");
+      }
+
+      // Randomly select 5 questions
+      const selectedQuestions = [];
+      const questionsCopy = [...availableQuestions];
+      for (let i = 0; i < Math.min(5, questionsCopy.length); i++) {
+        const randomIndex = Math.floor(Math.random() * questionsCopy.length);
+        selectedQuestions.push(questionsCopy.splice(randomIndex, 1)[0]);
+      }
+
+      res.json(selectedQuestions);
+    } catch (error) {
+      console.error("Error generating questions:", error);
+      res.status(500).json({ 
+        message: "Failed to generate questions",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Add exam question endpoint
   app.post("/api/exam/:type/question", async (req, res) => {
     try {

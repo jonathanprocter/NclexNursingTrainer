@@ -55,13 +55,28 @@ export default function Quizzes() {
   // Generate new questions mutation
   const generateQuestionsMutation = useMutation({
     mutationFn: async (topic?: string) => {
-      const response = await fetch('/api/generate-questions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic }),
-      });
-      if (!response.ok) throw new Error('Failed to generate questions');
-      return response.json();
+      try {
+        const response = await fetch('/api/generate-questions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ topic }),
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to generate questions');
+        }
+        
+        const data = await response.json();
+        if (!Array.isArray(data) || data.length === 0) {
+          throw new Error('No questions received');
+        }
+        
+        return data;
+      } catch (error) {
+        console.error('Question generation error:', error);
+        throw error;
+      }
     },
     onSuccess: (newQuestions) => {
       // Reset all state
