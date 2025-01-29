@@ -8,7 +8,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useMutation } from "@tanstack/react-query";
 import { AIHelpButton } from "@/components/ui/ai-help-button";
-import { CheckCircle2, RefreshCw, XCircle, Shield, BookOpen } from "lucide-react";
+import { CheckCircle2, RefreshCw, XCircle, Shield, BookOpen, AlertTriangle, Stethoscope, ClipboardCheck } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -46,6 +46,8 @@ export default function RiskReduction() {
   const isMounted = useRef(true);
 
   useEffect(() => {
+    // Load initial questions
+    handleGenerateMoreQuestions();
     return () => {
       isMounted.current = false;
     };
@@ -94,6 +96,29 @@ export default function RiskReduction() {
           description: error instanceof Error ? error.message : "Failed to generate new questions. Please try again.",
           variant: "destructive",
         });
+        // Set some default questions if API fails
+        setPreventionQuestions([
+          {
+            id: "default_1",
+            question: "Which nursing intervention best demonstrates proper infection control?",
+            options: [
+              { value: "a", label: "Performing hand hygiene before and after patient contact" },
+              { value: "b", label: "Wearing the same gloves between patients" },
+              { value: "c", label: "Reusing personal protective equipment" },
+              { value: "d", label: "Using hand sanitizer without washing visibly soiled hands" }
+            ],
+            correctAnswer: "a",
+            explanation: {
+              main: "Hand hygiene is the most effective way to prevent infection spread.",
+              concepts: [
+                {
+                  title: "Basic Prevention",
+                  description: "Hand hygiene is fundamental to infection control"
+                }
+              ]
+            }
+          }
+        ]);
       }
     },
   });
@@ -148,6 +173,185 @@ export default function RiskReduction() {
 
     setShowExplanation(true);
   };
+
+  const renderOverview = () => (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Understanding Risk Reduction in Nursing</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <p className="text-muted-foreground">
+            Risk reduction in nursing practice involves systematic approaches to identify, assess, and mitigate potential hazards that could affect patient safety and care outcomes.
+          </p>
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card className="p-6">
+              <Shield className="h-10 w-10 mb-4 text-primary" />
+              <h3 className="text-xl font-semibold mb-4">Key Components</h3>
+              <ul className="space-y-3 text-muted-foreground">
+                <li className="flex items-start gap-2">
+                  <AlertTriangle className="h-5 w-5 mt-0.5 text-yellow-500" />
+                  <div>
+                    <span className="font-medium">Risk Assessment:</span>
+                    <p className="text-sm">Systematic evaluation of potential hazards and vulnerabilities</p>
+                  </div>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Shield className="h-5 w-5 mt-0.5 text-green-500" />
+                  <div>
+                    <span className="font-medium">Prevention Strategies:</span>
+                    <p className="text-sm">Evidence-based interventions to minimize risks</p>
+                  </div>
+                </li>
+                <li className="flex items-start gap-2">
+                  <ClipboardCheck className="h-5 w-5 mt-0.5 text-blue-500" />
+                  <div>
+                    <span className="font-medium">Safety Protocols:</span>
+                    <p className="text-sm">Standardized procedures for consistent care delivery</p>
+                  </div>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Stethoscope className="h-5 w-5 mt-0.5 text-purple-500" />
+                  <div>
+                    <span className="font-medium">Clinical Monitoring:</span>
+                    <p className="text-sm">Continuous assessment and early intervention</p>
+                  </div>
+                </li>
+              </ul>
+            </Card>
+            <Card className="p-6">
+              <BookOpen className="h-10 w-10 mb-4 text-primary" />
+              <h3 className="text-xl font-semibold mb-4">Learning Objectives</h3>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium mb-2">Core Competencies</h4>
+                  <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
+                    <li>Master critical safety assessment techniques</li>
+                    <li>Implement evidence-based prevention strategies</li>
+                    <li>Develop strong clinical judgment skills</li>
+                    <li>Apply risk reduction principles in practice</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-medium mb-2">Expected Outcomes</h4>
+                  <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
+                    <li>Identify potential risks in clinical scenarios</li>
+                    <li>Select appropriate interventions</li>
+                    <li>Evaluate effectiveness of safety measures</li>
+                    <li>Document and communicate safety concerns</li>
+                  </ul>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderSafetyMeasures = () => (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Safety Measures</CardTitle>
+          <AIHelpButton
+            title="Safety Measures"
+            description="Get AI assistance with understanding and implementing safety measures in nursing practice."
+            topic="safety measures in nursing"
+          />
+        </CardHeader>
+        <CardContent>
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="infection-control">
+              <AccordionTrigger>Infection Control & Prevention</AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-4">
+                  <h4 className="font-medium">Key Protocols</h4>
+                  <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                    <li>Hand hygiene protocols and monitoring</li>
+                    <li>Personal protective equipment (PPE) selection and use</li>
+                    <li>Sterile technique maintenance</li>
+                    <li>Isolation precautions implementation</li>
+                    <li>Environmental cleaning standards</li>
+                  </ul>
+                  <h4 className="font-medium">Best Practices</h4>
+                  <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                    <li>Regular compliance audits</li>
+                    <li>Staff education and competency validation</li>
+                    <li>Infection surveillance and reporting</li>
+                    <li>Outbreak management protocols</li>
+                  </ul>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="medication-safety">
+              <AccordionTrigger>Medication Safety</AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-4">
+                  <h4 className="font-medium">Core Principles</h4>
+                  <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                    <li>The Five Rights of Medication Administration</li>
+                    <li>High-alert medications management</li>
+                    <li>Double-checking procedures</li>
+                    <li>Documentation requirements</li>
+                  </ul>
+                  <h4 className="font-medium">Risk Reduction Strategies</h4>
+                  <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                    <li>Barcode medication administration</li>
+                    <li>Smart pump technology usage</li>
+                    <li>Medication reconciliation processes</li>
+                    <li>Adverse event reporting systems</li>
+                  </ul>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="fall-prevention">
+              <AccordionTrigger>Fall Prevention</AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-4">
+                  <h4 className="font-medium">Assessment Tools</h4>
+                  <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                    <li>Standardized fall risk assessments</li>
+                    <li>Environmental safety checks</li>
+                    <li>Medication review protocols</li>
+                    <li>Mobility evaluation tools</li>
+                  </ul>
+                  <h4 className="font-medium">Interventions</h4>
+                  <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                    <li>Bed alarm implementation</li>
+                    <li>Patient education strategies</li>
+                    <li>Staff communication tools</li>
+                    <li>Post-fall assessment protocols</li>
+                  </ul>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="emergency-preparedness">
+              <AccordionTrigger>Emergency Preparedness</AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-4">
+                  <h4 className="font-medium">Response Protocols</h4>
+                  <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                    <li>Code response procedures</li>
+                    <li>Rapid response team activation</li>
+                    <li>Evacuation protocols</li>
+                    <li>Communication chains</li>
+                  </ul>
+                  <h4 className="font-medium">Training Requirements</h4>
+                  <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                    <li>Regular emergency drills</li>
+                    <li>Equipment competency checks</li>
+                    <li>Documentation requirements</li>
+                    <li>Team role assignments</li>
+                  </ul>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </CardContent>
+      </Card>
+    </div>
+  );
 
   const renderPreventionStrategies = () => {
     if (preventionQuestions.length === 0) {
@@ -311,90 +515,52 @@ export default function RiskReduction() {
     );
   };
 
-  const renderOverview = () => (
+  const renderPracticeScenarios = () => (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Understanding Risk Reduction in Nursing</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-muted-foreground">
-            Risk reduction in nursing practice involves systematic approaches to identify, assess, and mitigate potential hazards that could affect patient safety and care outcomes.
-          </p>
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card className="p-4">
-              <Shield className="h-8 w-8 mb-2 text-primary" />
-              <h3 className="font-semibold mb-2">Key Components</h3>
-              <ul className="list-disc pl-4 space-y-1 text-sm text-muted-foreground">
-                <li>Risk Assessment</li>
-                <li>Prevention Strategies</li>
-                <li>Safety Protocols</li>
-                <li>Quality Improvement</li>
-              </ul>
-            </Card>
-            <Card className="p-4">
-              <BookOpen className="h-8 w-8 mb-2 text-primary" />
-              <h3 className="font-semibold mb-2">Learning Objectives</h3>
-              <ul className="list-disc pl-4 space-y-1 text-sm text-muted-foreground">
-                <li>Understand core safety principles</li>
-                <li>Apply prevention strategies</li>
-                <li>Develop clinical judgment</li>
-                <li>Master best practices</li>
-              </ul>
-            </Card>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-
-  const renderSafetyMeasures = () => (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Safety Measures</CardTitle>
-          <AIHelpButton
-            title="Safety Measures"
-            description="Get AI assistance with understanding and implementing safety measures in nursing practice."
-            topic="safety measures in nursing"
-          />
+          <CardTitle>Interactive Practice Scenarios</CardTitle>
         </CardHeader>
         <CardContent>
-          <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="item-1">
-              <AccordionTrigger>Infection Control</AccordionTrigger>
-              <AccordionContent>
-                <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-                  <li>Hand hygiene protocols</li>
-                  <li>Personal protective equipment (PPE)</li>
-                  <li>Sterile technique</li>
-                  <li>Isolation precautions</li>
-                </ul>
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="item-2">
-              <AccordionTrigger>Medication Safety</AccordionTrigger>
-              <AccordionContent>
-                <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-                  <li>The Five Rights of Medication Administration</li>
-                  <li>High-alert medications</li>
-                  <li>Double-checking procedures</li>
-                  <li>Documentation requirements</li>
-                </ul>
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="item-3">
-              <AccordionTrigger>Patient Assessment</AccordionTrigger>
-              <AccordionContent>
-                <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-                  <li>Initial assessment protocols</li>
-                  <li>Ongoing monitoring</li>
-                  <li>Risk factor identification</li>
-                  <li>Documentation standards</li>
-                </ul>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
+          <div className="space-y-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              <Card className="p-6">
+                <h3 className="font-semibold mb-3">Case Study 1: Medical-Surgical Unit</h3>
+                <p className="text-muted-foreground mb-4">
+                  A post-operative patient shows signs of confusion and attempts to get out of bed.
+                </p>
+                <Button className="w-full" variant="outline">Start Scenario</Button>
+              </Card>
+              <Card className="p-6">
+                <h3 className="font-semibold mb-3">Case Study 2: Emergency Department</h3>
+                <p className="text-muted-foreground mb-4">
+                  Multiple trauma patients arrive simultaneously during a busy shift.
+                </p>
+                <Button className="w-full" variant="outline">Start Scenario</Button>
+              </Card>
+              <Card className="p-6">
+                <h3 className="font-semibold mb-3">Case Study 3: Critical Care</h3>
+                <p className="text-muted-foreground mb-4">
+                  Patient on mechanical ventilation shows signs of respiratory distress.
+                </p>
+                <Button className="w-full" variant="outline">Start Scenario</Button>
+              </Card>
+              <Card className="p-6">
+                <h3 className="font-semibold mb-3">Case Study 4: Medication Safety</h3>
+                <p className="text-muted-foreground mb-4">
+                  High-alert medication administration in a pediatric setting.
+                </p>
+                <Button className="w-full" variant="outline">Start Scenario</Button>
+              </Card>
+            </div>
+            <Card className="bg-muted/50 p-6">
+              <h3 className="font-semibold mb-3">Coming Soon</h3>
+              <p className="text-muted-foreground">
+                More interactive scenarios are being developed to cover additional clinical situations and specialties.
+                Check back soon for updates!
+              </p>
+            </Card>
+          </div>
         </CardContent>
       </Card>
     </div>
@@ -409,7 +575,7 @@ export default function RiskReduction() {
         </p>
       </div>
 
-      <Tabs defaultValue="prevention" className="space-y-4">
+      <Tabs defaultValue="overview" className="space-y-4">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="safety">Safety Measures</TabsTrigger>
@@ -430,16 +596,7 @@ export default function RiskReduction() {
         </TabsContent>
 
         <TabsContent value="practice">
-          <Card>
-            <CardHeader>
-              <CardTitle>Practice Scenarios</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-4">
-                Coming soon: Interactive scenarios to test your knowledge of risk reduction strategies.
-              </p>
-            </CardContent>
-          </Card>
+          {renderPracticeScenarios()}
         </TabsContent>
       </Tabs>
     </div>
