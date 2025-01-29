@@ -1,27 +1,70 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Mic, StopCircle, History, Lightbulb } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 
-
 export default function AICompanion() {
+  const { toast } = useToast();
   const [microphoneEnabled, setMicrophoneEnabled] = useState(false);
+  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      
+      recognition.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map(result => result[0])
+          .map(result => result.transcript)
+          .join('');
+        console.log('Transcript:', transcript);
+      };
+
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setMicrophoneEnabled(false);
+        toast({
+          title: "Error",
+          description: "Failed to record speech. Please try again.",
+          variant: "destructive",
+        });
+      };
+
+      recognition.onend = () => {
+        setMicrophoneEnabled(false);
+      };
+
+      setRecognition(recognition);
+    }
+  }, [toast]);
 
   const handleMicClick = async () => {
     try {
+      if (!recognition) {
+        toast({
+          title: "Error",
+          description: "Speech recognition is not supported in your browser.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       if (!microphoneEnabled) {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        // Process the audio stream (not implemented here)
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        recognition.start();
         setMicrophoneEnabled(true);
       } else {
-        // Stop audio stream (not implemented here)
+        recognition.stop();
         setMicrophoneEnabled(false);
       }
     } catch (error) {
-      console.warn("Microphone access denied:", error);
-      const { toast } = useToast();
+      console.error("Microphone access denied:", error);
       toast({
         title: "Microphone Access Required",
         description: "Please allow microphone access to use voice features.",
@@ -55,7 +98,6 @@ export default function AICompanion() {
                   <Button size="lg" className="w-16 h-16 rounded-full" onClick={handleMicClick}>
                     {microphoneEnabled ? <StopCircle className="h-8 w-8" /> : <Mic className="h-8 w-8" />}
                   </Button>
-                  {/*Removed StopCircle button as it's handled by the state*/}
                 </div>
 
                 <div className="bg-muted p-4 rounded-lg">
