@@ -108,11 +108,27 @@ export default function Quizzes() {
       });
     },
     onError: (error) => {
+      console.error('Question generation error:', error);
       toast({
         title: "Error",
-        description: "Failed to generate new questions. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to generate questions. Using backup questions instead.",
         variant: "destructive",
       });
+      // Set a default question if API fails
+      setQuestions([{
+        id: Date.now(),
+        text: "Which nursing intervention is most appropriate for a client with acute pain?",
+        options: [
+          { id: "a", text: "Assess pain characteristics" },
+          { id: "b", text: "Administer PRN pain medication immediately" },
+          { id: "c", text: "Notify healthcare provider" },
+          { id: "d", text: "Apply ice pack to affected area" }
+        ],
+        correctAnswer: "a",
+        explanation: "Pain assessment should be conducted first to determine appropriate interventions.",
+        category: selectedTopic || "General",
+        difficulty: "Medium"
+      }]);
       setIsLoading(false);
     },
   });

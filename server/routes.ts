@@ -434,11 +434,11 @@ app.get("/api/questions/:moduleId", async (req, res) => {
         messages: [
           {
             role: "system",
-            content: "Generate NCLEX-style questions. Focus on areas where the user needs improvement."
+            content: "Generate NCLEX-style questions in valid JSON array format. Focus on areas where the user needs improvement."
           },
           {
             role: "user",
-            content: `Generate ${MIN_QUESTIONS} unique nursing questions${topic ? ` for ${topic}` : ''}.
+            content: `Generate ${MIN_QUESTIONS} unique nursing questions${topic ? ` for ${topic}` : ''} in a JSON array. Each question should have: text, options (array of {id, text}), correctAnswer, explanation, category, and difficulty fields.
             Previous question IDs: ${previousQuestionIds?.join(', ') || 'none'}
             User performance: ${JSON.stringify(userPerformance)}`
           }
@@ -446,7 +446,37 @@ app.get("/api/questions/:moduleId", async (req, res) => {
         temperature: 0.7,
       });
 
-      const generatedQuestions = JSON.parse(completion.choices[0]?.message?.content || '[]');
+      let generatedQuestions;
+      try {
+        const content = completion.choices[0]?.message?.content;
+        if (!content) throw new Error("No content received from OpenAI");
+        
+        // Try to extract JSON if wrapped in markdown code blocks
+        const jsonContent = content.replace(/```json\n?|\n?```/g, '').trim();
+        generatedQuestions = JSON.parse(jsonContent);
+        
+        if (!Array.isArray(generatedQuestions)) {
+          throw new Error("Generated content is not an array");
+        }
+      } catch (parseError) {
+        console.error("Failed to parse OpenAI response:", parseError);
+        // Fallback to default questions
+        generatedQuestions = [
+          {
+            text: "Which nursing intervention is most appropriate for a client with acute pain?",
+            options: [
+              { id: "a", text: "Assess pain characteristics" },
+              { id: "b", text: "Administer PRN pain medication immediately" },
+              { id: "c", text: "Notify healthcare provider" },
+              { id: "d", text: "Apply ice pack to affected area" }
+            ],
+            correctAnswer: "a",
+            explanation: "Pain assessment should be conducted first to determine appropriate interventions.",
+            category: topic || "General",
+            difficulty: "Medium"
+          }
+        ];
+      }
       
       // Ensure questions are unique and properly formatted
       const formattedQuestions = generatedQuestions.map((q: any, index: number) => ({
