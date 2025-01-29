@@ -333,7 +333,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Add exam question endpoint with enhanced error handling
+  // Update the prevention questions endpoint
   app.post("/api/exam/prevention/questions", async (req, res) => {
     try {
       console.log('Received request for more prevention questions');
@@ -345,30 +345,30 @@ export function registerRoutes(app: Express): Server {
           {
             role: "system",
             content: `Generate 3 NCLEX-style questions focused on nursing prevention strategies and risk reduction. 
-            Each question should follow this JSON format:
-            {
-              "id": "unique_id",
-              "question": "question text",
-              "options": [
-                { "value": "a", "label": "option text" },
-                { "value": "b", "label": "option text" },
-                { "value": "c", "label": "option text" },
-                { "value": "d", "label": "option text" }
-              ],
-              "correctAnswer": "correct_option_value",
-              "explanation": {
-                "main": "main explanation text",
-                "concepts": [
-                  { "title": "concept title", "description": "concept description" },
-                  { "title": "concept title", "description": "concept description" }
-                ]
+            Each question should be in this format:
+            [
+              {
+                "id": "unique_string_id",
+                "question": "question text",
+                "options": [
+                  { "value": "a", "label": "option text" },
+                  { "value": "b", "label": "option text" },
+                  { "value": "c", "label": "option text" },
+                  { "value": "d", "label": "option text" }
+                ],
+                "correctAnswer": "correct_option_value",
+                "explanation": {
+                  "main": "main explanation text",
+                  "concepts": [
+                    { "title": "concept title", "description": "concept description" }
+                  ]
+                }
               }
-            }`
+            ]`
           },
           {
             role: "user",
-            content: "Generate new prevention-focused questions that are different from these IDs: " +
-              (previousQuestions?.join(", ") || "")
+            content: `Generate 3 new prevention-focused questions. Previous question IDs to avoid: ${previousQuestions?.join(", ") || "none"}`
           }
         ],
         temperature: 0.7,
@@ -384,14 +384,20 @@ export function registerRoutes(app: Express): Server {
 
       try {
         // Try to parse the response as JSON
-        const questions = JSON.parse(response);
-        console.log(`Successfully parsed ${Array.isArray(questions) ? questions.length : 1} questions`);
-        res.json(Array.isArray(questions) ? questions : [questions]);
+        const jsonStr = response.replace(/```json\n?|\n?```/g, '').trim();
+        const questions = JSON.parse(jsonStr);
+        console.log('Parsed questions:', questions);
+
+        if (!Array.isArray(questions)) {
+          throw new Error("Response is not an array");
+        }
+
+        res.json(questions);
       } catch (parseError) {
         console.error("Error parsing OpenAI response:", parseError);
-        // If parsing fails, use the backup question generation
-        const backupQuestions = generateBackupQuestions();
-        res.json(backupQuestions);
+        console.log("Raw response:", response);
+        // If parsing fails, use backup questions
+        res.json(generateBackupQuestions());
       }
     } catch (error) {
       console.error("Error generating prevention questions:", error);
