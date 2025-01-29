@@ -118,7 +118,7 @@ export default function Questions() {
         <ScrollArea className="h-[600px]">
           <div className="space-y-6">
             {questions?.map((question) => (
-              <Card key={`question-${question.id}`} className="border-l-4" style={{
+              <Card key={`q-${question.id}-${Math.random()}`} className="border-l-4" style={{
                 borderLeftColor: 
                   question.difficulty === 'easy' ? '#4ade80' :
                   question.difficulty === 'medium' ? '#fbbf24' : '#ef4444'
