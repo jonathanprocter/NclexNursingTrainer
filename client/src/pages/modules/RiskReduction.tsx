@@ -45,9 +45,192 @@ export default function RiskReduction() {
   const [answerResults, setAnswerResults] = useState<{ [key: number]: boolean }>({});
   const isMounted = useRef(true);
 
+  const preloadedQuestions = [
+    {
+      id: "preload_1",
+      question: "Which nursing intervention is most effective in preventing falls in elderly patients?",
+      options: [
+        { value: "a", label: "Regular exercise and balance training programs" },
+        { value: "b", label: "Continuous bed rest" },
+        { value: "c", label: "Sedation during nighttime" },
+        { value: "d", label: "Using restraints when unattended" }
+      ],
+      correctAnswer: "a",
+      explanation: {
+        main: "Regular exercise and balance training programs help improve strength, coordination, and balance, reducing fall risk in elderly patients.",
+        concepts: [
+          { title: "Fall Prevention", description: "Exercise improves muscle strength and balance" },
+          { title: "Evidence-Based Practice", description: "Research supports exercise as effective fall prevention" }
+        ]
+      }
+    },
+    {
+      id: "preload_2",
+      question: "What is the most effective method to prevent hospital-acquired infections?",
+      options: [
+        { value: "a", label: "Universal use of antibiotics" },
+        { value: "b", label: "Hand hygiene before and after patient contact" },
+        { value: "c", label: "Wearing gloves at all times" },
+        { value: "d", label: "Isolating all patients" }
+      ],
+      correctAnswer: "b",
+      explanation: {
+        main: "Hand hygiene is the single most effective method to prevent hospital-acquired infections.",
+        concepts: [
+          { title: "Infection Control", description: "Hand hygiene is fundamental to infection prevention" },
+          { title: "Standard Precautions", description: "Basic level of infection control precautions" }
+        ]
+      }
+    },
+    {
+      id: "preload_3",
+      question: "Which intervention best prevents pressure ulcers in bedbound patients?",
+      options: [
+        { value: "a", label: "Repositioning every 2 hours" },
+        { value: "b", label: "Applying lotion daily" },
+        { value: "c", label: "Using a firm mattress" },
+        { value: "d", label: "Massaging reddened areas" }
+      ],
+      correctAnswer: "a",
+      explanation: {
+        main: "Regular repositioning every 2 hours helps prevent pressure ulcers by relieving pressure on vulnerable areas.",
+        concepts: [
+          { title: "Pressure Relief", description: "Regular repositioning prevents tissue damage" },
+          { title: "Risk Assessment", description: "Early intervention prevents complications" }
+        ]
+      }
+    },
+    {
+      id: "preload_4",
+      question: "What is the best strategy to prevent medication errors?",
+      options: [
+        { value: "a", label: "Memorizing common medications" },
+        { value: "b", label: "Following the five rights of medication administration" },
+        { value: "c", label: "Using only verbal orders" },
+        { value: "d", label: "Preparing medications in advance" }
+      ],
+      correctAnswer: "b",
+      explanation: {
+        main: "The five rights of medication administration provide a systematic approach to prevent medication errors.",
+        concepts: [
+          { title: "Medication Safety", description: "Systematic verification prevents errors" },
+          { title: "Patient Safety", description: "Standardized processes reduce risks" }
+        ]
+      }
+    },
+    {
+      id: "preload_5",
+      question: "Which intervention best prevents surgical site infections?",
+      options: [
+        { value: "a", label: "Prophylactic antibiotics within prescribed timeframe" },
+        { value: "b", label: "Extended use of antibiotics post-surgery" },
+        { value: "c", label: "Daily dressing changes" },
+        { value: "d", label: "Application of topical antibiotics" }
+      ],
+      correctAnswer: "a",
+      explanation: {
+        main: "Timely administration of prophylactic antibiotics is crucial in preventing surgical site infections.",
+        concepts: [
+          { title: "Surgical Prophylaxis", description: "Timing of antibiotics is critical" },
+          { title: "Infection Prevention", description: "Evidence-based protocols reduce infection risk" }
+        ]
+      }
+    },
+    {
+      id: "preload_6",
+      question: "What is the most effective way to prevent ventilator-associated pneumonia?",
+      options: [
+        { value: "a", label: "Head of bed elevation to 30-45 degrees" },
+        { value: "b", label: "Frequent nebulizer treatments" },
+        { value: "c", label: "Continuous sedation" },
+        { value: "d", label: "Extended antibiotic prophylaxis" }
+      ],
+      correctAnswer: "a",
+      explanation: {
+        main: "Elevating the head of bed reduces aspiration risk and helps prevent ventilator-associated pneumonia.",
+        concepts: [
+          { title: "VAP Prevention", description: "Positioning reduces aspiration risk" },
+          { title: "Critical Care", description: "Evidence-based bundle reduces complications" }
+        ]
+      }
+    },
+    {
+      id: "preload_7",
+      question: "Which intervention best prevents deep vein thrombosis in hospitalized patients?",
+      options: [
+        { value: "a", label: "Early mobilization and sequential compression devices" },
+        { value: "b", label: "Continuous bed rest" },
+        { value: "c", label: "Fluid restriction" },
+        { value: "d", label: "Heat application to legs" }
+      ],
+      correctAnswer: "a",
+      explanation: {
+        main: "Early mobilization and mechanical prophylaxis help prevent blood stasis and clot formation.",
+        concepts: [
+          { title: "DVT Prevention", description: "Movement promotes circulation" },
+          { title: "Risk Reduction", description: "Mechanical methods reduce clot formation" }
+        ]
+      }
+    },
+    {
+      id: "preload_8",
+      question: "What is the best approach to prevent central line-associated bloodstream infections?",
+      options: [
+        { value: "a", label: "Maximum sterile barrier precautions during insertion" },
+        { value: "b", label: "Routine central line changes" },
+        { value: "c", label: "Daily prophylactic antibiotics" },
+        { value: "d", label: "Using uncoated catheters" }
+      ],
+      correctAnswer: "a",
+      explanation: {
+        main: "Maximum sterile barrier precautions during insertion are crucial in preventing central line infections.",
+        concepts: [
+          { title: "CLABSI Prevention", description: "Sterile technique is essential" },
+          { title: "Bundle Approach", description: "Multiple interventions reduce infection risk" }
+        ]
+      }
+    },
+    {
+      id: "preload_9",
+      question: "Which intervention best prevents catheter-associated urinary tract infections?",
+      options: [
+        { value: "a", label: "Daily catheter care and early removal" },
+        { value: "b", label: "Routine antibiotic prophylaxis" },
+        { value: "c", label: "Frequent catheter changes" },
+        { value: "d", label: "Using larger catheters" }
+      ],
+      correctAnswer: "a",
+      explanation: {
+        main: "Daily assessment of catheter necessity and early removal when appropriate best prevents CAUTIs.",
+        concepts: [
+          { title: "CAUTI Prevention", description: "Duration of catheterization affects risk" },
+          { title: "Evidence-Based Care", description: "Early removal reduces infection risk" }
+        ]
+      }
+    },
+    {
+      id: "preload_10",
+      question: "What is the most effective strategy to prevent medication errors in pediatric patients?",
+      options: [
+        { value: "a", label: "Double-checking weight-based calculations" },
+        { value: "b", label: "Using adult dosages" },
+        { value: "c", label: "Estimating weights" },
+        { value: "d", label: "Rounding up doses" }
+      ],
+      correctAnswer: "a",
+      explanation: {
+        main: "Double-checking weight-based calculations is crucial in preventing medication errors in pediatric patients.",
+        concepts: [
+          { title: "Pediatric Safety", description: "Weight-based dosing requires precision" },
+          { title: "Medication Safety", description: "Verification prevents calculation errors" }
+        ]
+      }
+    }
+  ];
+
   useEffect(() => {
     if (preventionQuestions.length === 0) {
-      handleGenerateMoreQuestions();
+      setPreventionQuestions(preloadedQuestions);
     }
     return () => {
       isMounted.current = false;
