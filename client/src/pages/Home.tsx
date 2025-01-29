@@ -93,7 +93,7 @@ export default function Home() {
 
       Keep going, Bianca! You're making great progress! 🌟`;
 
-    setStudyPlan(personalizedPlan);
+    setStudyPlan(plan.personalizedPlan || personalizedPlan);
   };
 
   const showToast = () => {
