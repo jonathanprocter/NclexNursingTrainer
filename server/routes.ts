@@ -50,10 +50,6 @@ export function setupAIRoutes(app: Express) {
   // Add other AI endpoints here...
 }
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
-
 // Helper function for analyzing performance
 async function analyzePerformance(answers: any[]) {
   try {
