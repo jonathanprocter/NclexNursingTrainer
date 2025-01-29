@@ -182,6 +182,7 @@ export function registerRoutes(app: Express): Server {
 
       const response = completion.choices[0]?.message?.content;
       
+
       if (!response) {
         throw new Error("No response generated");
       }
@@ -219,6 +220,7 @@ export function registerRoutes(app: Express): Server {
 
       const response = completion.choices[0]?.message?.content;
       
+
       if (!response) {
         throw new Error("No response generated");
       }
@@ -283,6 +285,7 @@ export function registerRoutes(app: Express): Server {
     try {
       const { difficulty } = req.body;
       
+
       // Generate a sample calculation problem based on difficulty
       const problem = {
         id: `calc_${Date.now()}`,
@@ -450,10 +453,12 @@ export function registerRoutes(app: Express): Server {
         const content = completion.choices[0]?.message?.content;
         if (!content) throw new Error("No content received from OpenAI");
         
+
         // Try to extract JSON if wrapped in markdown code blocks
         const jsonContent = content.replace(/```json\n?|\n?```/g, '').trim();
         generatedQuestions = JSON.parse(jsonContent);
         
+
         if (!Array.isArray(generatedQuestions)) {
           throw new Error("Generated content is not an array");
         }
@@ -477,6 +482,7 @@ export function registerRoutes(app: Express): Server {
         ];
       }
       
+
       // Ensure questions are unique and properly formatted
       const formattedQuestions = generatedQuestions.map((q: any, index: number) => ({
         id: `gen_${Date.now()}_${index}`,
@@ -659,7 +665,7 @@ export function registerRoutes(app: Express): Server {
             content: `You are an expert nursing educator creating detailed patient scenarios for NCLEX preparation.
             Generate realistic scenarios that test clinical judgment and decision-making skills.
             Include vital signs, symptoms, medical history, and current presentation.
-            Structure the response as a JSON object with the following format:
+            Return your response as a JSON object with the following format:
             {
               "id": "unique_string",
               "title": "scenario title",
@@ -675,7 +681,7 @@ export function registerRoutes(app: Express): Server {
           },
           {
             role: "user",
-            content: `Generate a ${difficulty || 'Medium'} difficulty nursing scenario. Previous scenario IDs to avoid: ${previousScenarios?.join(', ') || 'none'}`
+            content: `Generate a ${difficulty || 'Medium'} difficulty nursing scenario and return it as a JSON object. Previous scenario IDs to avoid: ${previousScenarios?.join(', ') || 'none'}`
           }
         ],
         response_format: { type: "json_object" }
@@ -708,7 +714,7 @@ export function registerRoutes(app: Express): Server {
             role: "system",
             content: `You are an expert nursing educator evaluating student performance in patient scenarios.
             Analyze the student's actions and assessments against expected nursing interventions.
-            Provide detailed feedback and scoring. Response format:
+            Provide detailed feedback and scoring. Return your response as a JSON object with the following format:
             {
               "score": number (0-100),
               "feedback": {
@@ -721,7 +727,7 @@ export function registerRoutes(app: Express): Server {
           },
           {
             role: "user",
-            content: `Evaluate these nursing actions and assessments for scenario ${scenarioId}:
+            content: `Evaluate these nursing actions and assessments for scenario ${scenarioId} and return the evaluation as a JSON object:
             Actions: ${JSON.stringify(actions)}
             Assessments: ${JSON.stringify(assessments)}`
           }
@@ -756,7 +762,7 @@ export function registerRoutes(app: Express): Server {
             role: "system",
             content: `You are an expert nursing educator providing guidance during patient scenarios.
             Offer hints that promote critical thinking without giving away answers directly.
-            Format response as:
+            Return your response as a JSON object with the following format:
             {
               "hint": "detailed guidance",
               "relevantConcepts": [ ... ],
@@ -765,7 +771,7 @@ export function registerRoutes(app: Express): Server {
           },
           {
             role: "user",
-            content: `Provide a hint for scenario ${scenarioId} at current state: ${JSON.stringify(currentState)}`
+            content: `Provide a hint for scenario ${scenarioId} at current state and return it as a JSON object: ${JSON.stringify(currentState)}`
           }
         ],
         response_format: { type: "json_object" }
