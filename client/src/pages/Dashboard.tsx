@@ -8,11 +8,19 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Progress } from "../components/ui/progress";
 
 export default function Dashboard() {
-  const { data: analytics } = useQuery({
-    queryKey: ["/api/analytics/user/1"],
+  const { data: analytics, isError } = useQuery({
+    queryKey: ["analytics"],
     queryFn: async () => {
-      const response = await fetch("/api/analytics/user/1");
-      return response.json();
+      try {
+        const response = await fetch("/api/analytics/user/1");
+        if (!response.ok) {
+          throw new Error('Failed to fetch analytics');
+        }
+        return response.json();
+      } catch (error) {
+        console.error('Analytics fetch error:', error);
+        return null;
+      }
     }
   });
 
