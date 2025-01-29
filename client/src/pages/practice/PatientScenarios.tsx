@@ -23,10 +23,18 @@ interface Scenario {
   difficulty: string;
   vitalSigns: Record<string, string>;
   medicalHistory: string[];
+  currentMedications: string[];
+  allergies: string[];
   currentSymptoms: string[];
+  labResults: Record<string, string>;
   requiredAssessments: string[];
   expectedInterventions: string[];
+  rationales: {
+    assessmentRationales: Record<string, string>;
+    interventionRationales: Record<string, string>;
+  };
   criticalThinkingPoints: string[];
+  nursingSensitivities: string[];
 }
 
 interface ScenarioEvaluation {
@@ -34,9 +42,19 @@ interface ScenarioEvaluation {
   feedback: {
     strengths: string[];
     areasForImprovement: string[];
+    missedCriticalActions: string[];
+    incorrectActions: string[];
   };
   criticalThinkingAnalysis: string;
+  clinicalReasoning: {
+    recognizeClues: string;
+    analyzeInformation: string;
+    prioritizeConcerns: string;
+  };
+  patientSafetyImpact: string;
   recommendedStudyTopics: string[];
+  suggestedResources: string[];
+  nextStepsGuidance: string;
 }
 
 export default function PatientScenarios() {
@@ -144,17 +162,17 @@ export default function PatientScenarios() {
   };
 
   const toggleAssessment = (assessment: string) => {
-    setSelectedAssessments(prev =>
+    setSelectedAssessments((prev) =>
       prev.includes(assessment)
-        ? prev.filter(a => a !== assessment)
+        ? prev.filter((a) => a !== assessment)
         : [...prev, assessment]
     );
   };
 
   const toggleIntervention = (intervention: string) => {
-    setSelectedInterventions(prev =>
+    setSelectedInterventions((prev) =>
       prev.includes(intervention)
-        ? prev.filter(i => i !== intervention)
+        ? prev.filter((i) => i !== intervention)
         : [...prev, intervention]
     );
   };
@@ -186,7 +204,7 @@ export default function PatientScenarios() {
                     </Badge>
                   </div>
                 </div>
-                <Button 
+                <Button
                   onClick={() => handleStartScenario(difficulty)}
                   disabled={generateScenario.isPending}
                 >
@@ -196,7 +214,7 @@ export default function PatientScenarios() {
                       Generating...
                     </>
                   ) : (
-                    'Start Scenario'
+                    "Start Scenario"
                   )}
                 </Button>
               </div>
@@ -254,26 +272,59 @@ export default function PatientScenarios() {
                           {activeScenario.description}
                         </p>
 
-                        <div className="grid gap-4 md:grid-cols-2">
-                          <div>
-                            <h3 className="font-medium mb-2">Vital Signs</h3>
-                            <ul className="space-y-2">
-                              {Object.entries(activeScenario.vitalSigns).map(([key, value]) => (
-                                <li key={key} className="text-sm flex justify-between">
-                                  <span>{key}:</span>
-                                  <span className="font-medium">{value}</span>
-                                </li>
-                              ))}
-                            </ul>
+                        <div className="grid gap-6">
+                          <div className="grid gap-4 md:grid-cols-2">
+                            <div>
+                              <h3 className="font-medium mb-2">Vital Signs</h3>
+                              <ul className="space-y-2">
+                                {Object.entries(activeScenario.vitalSigns).map(([key, value]) => (
+                                  <li key={key} className="text-sm flex justify-between">
+                                    <span>{key}:</span>
+                                    <span className="font-medium">{value}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+
+                            <div>
+                              <h3 className="font-medium mb-2">Current Medications</h3>
+                              <ul className="space-y-1">
+                                {activeScenario.currentMedications.map((med, index) => (
+                                  <li key={index} className="text-sm">• {med}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+
+                          <div className="grid gap-4 md:grid-cols-2">
+                            <div>
+                              <h3 className="font-medium mb-2">Medical History</h3>
+                              <ul className="space-y-1">
+                                {activeScenario.medicalHistory.map((history, index) => (
+                                  <li key={index} className="text-sm">• {history}</li>
+                                ))}
+                              </ul>
+                            </div>
+
+                            <div>
+                              <h3 className="font-medium mb-2">Current Symptoms</h3>
+                              <ul className="space-y-1">
+                                {activeScenario.currentSymptoms.map((symptom, index) => (
+                                  <li key={index} className="text-sm">• {symptom}</li>
+                                ))}
+                              </ul>
+                            </div>
                           </div>
 
                           <div>
-                            <h3 className="font-medium mb-2">Current Symptoms</h3>
-                            <ul className="space-y-1">
-                              {activeScenario.currentSymptoms.map((symptom, index) => (
-                                <li key={index} className="text-sm">• {symptom}</li>
+                            <h3 className="font-medium mb-2">Lab Results</h3>
+                            <div className="grid gap-2 md:grid-cols-2">
+                              {Object.entries(activeScenario.labResults).map(([test, result]) => (
+                                <div key={test} className="text-sm">
+                                  <span className="font-medium">{test}:</span> {result}
+                                </div>
                               ))}
-                            </ul>
+                            </div>
                           </div>
                         </div>
                       </CardContent>
@@ -344,29 +395,79 @@ export default function PatientScenarios() {
                           <div className="space-y-6">
                             <div>
                               <div className="flex justify-between text-sm mb-2">
-                                <span>Score</span>
+                                <span>Overall Score</span>
                                 <span>{evaluation.score}%</span>
                               </div>
                               <Progress value={evaluation.score} className="h-2" />
                             </div>
 
-                            <div className="space-y-4">
-                              <div>
-                                <h4 className="font-medium mb-2">Strengths</h4>
-                                <ul className="space-y-1">
-                                  {evaluation.feedback.strengths.map((strength, index) => (
-                                    <li key={index} className="text-sm">• {strength}</li>
-                                  ))}
-                                </ul>
+                            <div className="grid gap-6">
+                              <div className="space-y-4">
+                                <div>
+                                  <h4 className="font-medium mb-2">Strengths</h4>
+                                  <ul className="space-y-1">
+                                    {evaluation.feedback.strengths.map((strength, index) => (
+                                      <li key={index} className="text-sm">• {strength}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+
+                                <div>
+                                  <h4 className="font-medium mb-2">Areas for Improvement</h4>
+                                  <ul className="space-y-1">
+                                    {evaluation.feedback.areasForImprovement.map((area, index) => (
+                                      <li key={index} className="text-sm">• {area}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+
+                                {evaluation.feedback.missedCriticalActions.length > 0 && (
+                                  <div>
+                                    <h4 className="font-medium mb-2 text-red-500">Missed Critical Actions</h4>
+                                    <ul className="space-y-1">
+                                      {evaluation.feedback.missedCriticalActions.map((action, index) => (
+                                        <li key={index} className="text-sm">• {action}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
                               </div>
 
                               <div>
-                                <h4 className="font-medium mb-2">Areas for Improvement</h4>
-                                <ul className="space-y-1">
-                                  {evaluation.feedback.areasForImprovement.map((area, index) => (
-                                    <li key={index} className="text-sm">• {area}</li>
+                                <h4 className="font-medium mb-2">Clinical Reasoning Analysis</h4>
+                                <div className="space-y-2">
+                                  <div>
+                                    <h5 className="text-sm font-medium">Recognition of Cues</h5>
+                                    <p className="text-sm text-muted-foreground">{evaluation.clinicalReasoning.recognizeClues}</p>
+                                  </div>
+                                  <div>
+                                    <h5 className="text-sm font-medium">Information Analysis</h5>
+                                    <p className="text-sm text-muted-foreground">{evaluation.clinicalReasoning.analyzeInformation}</p>
+                                  </div>
+                                  <div>
+                                    <h5 className="text-sm font-medium">Prioritization Skills</h5>
+                                    <p className="text-sm text-muted-foreground">{evaluation.clinicalReasoning.prioritizeConcerns}</p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div>
+                                <h4 className="font-medium mb-2">Patient Safety Impact</h4>
+                                <p className="text-sm text-muted-foreground">{evaluation.patientSafetyImpact}</p>
+                              </div>
+
+                              <div>
+                                <h4 className="font-medium mb-2">Recommended Study Topics</h4>
+                                <div className="flex flex-wrap gap-2">
+                                  {evaluation.recommendedStudyTopics.map((topic, index) => (
+                                    <Badge key={index} variant="secondary">{topic}</Badge>
                                   ))}
-                                </ul>
+                                </div>
+                              </div>
+
+                              <div>
+                                <h4 className="font-medium mb-2">Next Steps</h4>
+                                <p className="text-sm text-muted-foreground">{evaluation.nextStepsGuidance}</p>
                               </div>
                             </div>
                           </div>
@@ -396,7 +497,7 @@ export default function PatientScenarios() {
                         Evaluating...
                       </>
                     ) : (
-                      'Submit for Evaluation'
+                      "Submit for Evaluation"
                     )}
                   </Button>
                 </div>

@@ -663,25 +663,41 @@ export function registerRoutes(app: Express): Server {
           {
             role: "system",
             content: `You are an expert nursing educator creating detailed patient scenarios for NCLEX preparation.
-            Generate realistic scenarios that test clinical judgment and decision-making skills.
-            Include vital signs, symptoms, medical history, and current presentation.
+            Generate realistic, complex scenarios that test clinical judgment and decision-making skills.
+            Include comprehensive vital signs, detailed symptoms, relevant medical history, medications, and current presentation.
+            Focus on common NCLEX topics and real-world nursing situations.
             Return your response as a JSON object with the following format:
             {
               "id": "unique_string",
               "title": "scenario title",
-              "description": "detailed patient presentation",
-              "vitalSigns": { ... },
-              "medicalHistory": [ ... ],
-              "currentSymptoms": [ ... ],
-              "requiredAssessments": [ ... ],
-              "expectedInterventions": [ ... ],
-              "criticalThinkingPoints": [ ... ],
+              "description": "detailed patient presentation including chief complaint and relevant history",
+              "vitalSigns": {
+                "Temperature": "string",
+                "HeartRate": "string",
+                "RespiratoryRate": "string",
+                "BloodPressure": "string",
+                "O2Saturation": "string",
+                "Pain": "string"
+              },
+              "medicalHistory": ["detailed past medical conditions"],
+              "currentMedications": ["list of current medications with dosages"],
+              "allergies": ["list of allergies"],
+              "currentSymptoms": ["detailed current symptoms"],
+              "labResults": {"test": "result with normal ranges"},
+              "requiredAssessments": ["specific assessment tasks"],
+              "expectedInterventions": ["detailed nursing interventions"],
+              "rationales": {
+                "assessmentRationales": {"assessment": "why this is important"},
+                "interventionRationales": {"intervention": "why this is appropriate"}
+              },
+              "criticalThinkingPoints": ["key points to consider"],
+              "nursingSensitivities": ["cultural or special considerations"],
               "difficulty": "Easy|Medium|Hard"
             }`
           },
           {
             role: "user",
-            content: `Generate a ${difficulty || 'Medium'} difficulty nursing scenario and return it as a JSON object. Previous scenario IDs to avoid: ${previousScenarios?.join(', ') || 'none'}`
+            content: `Generate a ${difficulty || 'Medium'} difficulty nursing scenario with comprehensive details and return it as a JSON object. Previous scenario IDs to avoid: ${previousScenarios?.join(', ') || 'none'}`
           }
         ],
         response_format: { type: "json_object" }
@@ -713,23 +729,34 @@ export function registerRoutes(app: Express): Server {
           {
             role: "system",
             content: `You are an expert nursing educator evaluating student performance in patient scenarios.
-            Analyze the student's actions and assessments against expected nursing interventions.
-            Provide detailed feedback and scoring. Return your response as a JSON object with the following format:
+            Analyze the student's actions and assessments against expected nursing interventions using the NCLEX Clinical Judgment Measurement Model.
+            Provide detailed, educational feedback focusing on clinical reasoning and patient safety.
+            Return your response as a JSON object with the following format:
             {
               "score": number (0-100),
               "feedback": {
-                "strengths": [ ... ],
-                "areasForImprovement": [ ... ]
+                "strengths": ["specific positive actions taken"],
+                "areasForImprovement": ["specific areas needing improvement"],
+                "missedCriticalActions": ["important actions that were missed"],
+                "incorrectActions": ["actions that were inappropriate"]
               },
-              "criticalThinkingAnalysis": string,
-              "recommendedStudyTopics": [ ... ]
+              "criticalThinkingAnalysis": "detailed analysis of clinical judgment",
+              "clinicalReasoning": {
+                "recognizeClues": "analysis of cue recognition",
+                "analyzeInformation": "analysis of information interpretation",
+                "prioritizeConcerns": "analysis of prioritization skills"
+              },
+              "patientSafetyImpact": "analysis of how decisions affected patient safety",
+              "recommendedStudyTopics": ["specific topics to review"],
+              "suggestedResources": ["specific learning resources"],
+              "nextStepsGuidance": "guidance for improvement"
             }`
           },
           {
             role: "user",
-            content: `Evaluate these nursing actions and assessments for scenario ${scenarioId} and return the evaluation as a JSON object:
-            Actions: ${JSON.stringify(actions)}
-            Assessments: ${JSON.stringify(assessments)}`
+            content: `Evaluate these nursing actions and assessments for scenario ${scenarioId} and return a comprehensive evaluation as a JSON object:
+            Actions Taken: ${JSON.stringify(actions)}
+            Assessments Performed: ${JSON.stringify(assessments)}`
           }
         ],
         response_format: { type: "json_object" }
@@ -761,17 +788,21 @@ export function registerRoutes(app: Express): Server {
           {
             role: "system",
             content: `You are an expert nursing educator providing guidance during patient scenarios.
-            Offer hints that promote critical thinking without giving away answers directly.
+            Offer hints that promote critical thinking and clinical reasoning without giving away answers directly.
+            Focus on helping students recognize important clinical cues and relationships.
             Return your response as a JSON object with the following format:
             {
-              "hint": "detailed guidance",
-              "relevantConcepts": [ ... ],
-              "thingsToConsider": [ ... ]
+              "hint": "detailed guidance that promotes thinking",
+              "relevantConcepts": ["key nursing concepts to consider"],
+              "thingsToConsider": ["specific aspects to think about"],
+              "clinicalConnections": ["related clinical concepts"],
+              "patientSafetyConsiderations": ["safety aspects to consider"],
+              "prioritizationGuidance": "tips for prioritizing actions"
             }`
           },
           {
             role: "user",
-            content: `Provide a hint for scenario ${scenarioId} at current state and return it as a JSON object: ${JSON.stringify(currentState)}`
+            content: `Provide a hint for scenario ${scenarioId} based on the current state and return it as a JSON object. Current state: ${JSON.stringify(currentState)}`
           }
         ],
         response_format: { type: "json_object" }
