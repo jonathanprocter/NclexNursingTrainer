@@ -6,8 +6,14 @@ import { eq } from "drizzle-orm";
 import { practiceQuestions } from "./data/practice-questions";
 import OpenAI from "openai";
 
-// Initialize OpenAI
-const openai = new OpenAI();
+if (!process.env.OPENAI_API_KEY) {
+  throw new Error("OPENAI_API_KEY must be set in environment variables");
+}
+
+// Initialize OpenAI with error handling
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
 
 // Helper function for analyzing performance
 async function analyzePerformance(answers: any[]) {
@@ -180,6 +186,7 @@ export function registerRoutes(app: Express): Server {
       });
 
       const response = completion.choices[0]?.message?.content;
+      console.log("AI response generated successfully");
 
       if (!response) {
         throw new Error("No response generated");
@@ -326,10 +333,10 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Add exam question endpoint
+  // Add exam question endpoint with enhanced error handling
   app.post("/api/exam/prevention/questions", async (req, res) => {
     try {
-      console.log('Received request for more prevention questions'); // Add logging
+      console.log('Received request for more prevention questions');
       const { previousQuestions } = req.body;
 
       const completion = await openai.chat.completions.create({
@@ -338,12 +345,25 @@ export function registerRoutes(app: Express): Server {
           {
             role: "system",
             content: `Generate 3 NCLEX-style questions focused on nursing prevention strategies and risk reduction. 
-          Format each question with:
-          - A clear scenario
-          - 4 multiple choice options
-          - The correct answer
-          - A detailed explanation
-          Questions should test critical thinking and clinical judgment.`
+            Each question should follow this JSON format:
+            {
+              "id": "unique_id",
+              "question": "question text",
+              "options": [
+                { "value": "a", "label": "option text" },
+                { "value": "b", "label": "option text" },
+                { "value": "c", "label": "option text" },
+                { "value": "d", "label": "option text" }
+              ],
+              "correctAnswer": "correct_option_value",
+              "explanation": {
+                "main": "main explanation text",
+                "concepts": [
+                  { "title": "concept title", "description": "concept description" },
+                  { "title": "concept title", "description": "concept description" }
+                ]
+              }
+            }`
           },
           {
             role: "user",
@@ -352,20 +372,27 @@ export function registerRoutes(app: Express): Server {
           }
         ],
         temperature: 0.7,
-        max_tokens: 1500,
+        max_tokens: 2000,
       });
 
       const response = completion.choices[0]?.message?.content;
-      console.log('Generated response from OpenAI'); // Add logging
+      console.log('Generated response from OpenAI');
 
       if (!response) {
         throw new Error("Failed to generate questions");
       }
 
-      // Parse and format the response into question objects
-      const formattedQuestions = parseAIResponseToQuestions(response);
-      console.log(`Formatted ${formattedQuestions.length} questions`); // Add logging
-      res.json(formattedQuestions);
+      try {
+        // Try to parse the response as JSON
+        const questions = JSON.parse(response);
+        console.log(`Successfully parsed ${Array.isArray(questions) ? questions.length : 1} questions`);
+        res.json(Array.isArray(questions) ? questions : [questions]);
+      } catch (parseError) {
+        console.error("Error parsing OpenAI response:", parseError);
+        // If parsing fails, use the backup question generation
+        const backupQuestions = generateBackupQuestions();
+        res.json(backupQuestions);
+      }
     } catch (error) {
       console.error("Error generating prevention questions:", error);
       res.status(500).json({
@@ -375,64 +402,58 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Update the parseAIResponseToQuestions function to handle the AI response better
-  function parseAIResponseToQuestions(aiResponse: string) {
-    try {
-      // This is a more robust implementation for parsing AI-generated questions
-      return [
-        {
-          id: `gen_${Date.now()}_1`,
-          question: "A nurse is implementing infection control measures in a busy medical unit. Which action has the highest priority?",
-          options: [
-            { value: "a", label: "Documenting all isolation precautions in the EMR" },
-            { value: "b", label: "Performing hand hygiene between patient contacts" },
-            { value: "c", label: "Posting isolation signs on all doors" },
-            { value: "d", label: "Ordering personal protective equipment" }
-          ],
-          correctAnswer: "b",
-          explanation: {
-            main: "Hand hygiene is the single most effective measure in preventing the spread of infections in healthcare settings.",
-            concepts: [
-              {
-                title: "Basic Prevention",
-                description: "Hand hygiene is fundamental to infection control"
-              },
-              {
-                title: "Cost-Effective",
-                description: "Most efficient way to prevent cross-contamination"
-              }
-            ]
-          }
-        },
-        {
-          id: `gen_${Date.now()}_2`,
-          question: "When implementing patient safety measures, which intervention should the nurse perform first?",
-          options: [
-            { value: "a", label: "Updating the care plan" },
-            { value: "b", label: "Conducting an environmental safety assessment" },
-            { value: "c", label: "Documenting previous interventions" },
-            { value: "d", label: "Consulting with the healthcare team" }
-          ],
-          correctAnswer: "b",
-          explanation: {
-            main: "An environmental safety assessment is the first step in implementing safety measures as it identifies immediate risks and hazards.",
-            concepts: [
-              {
-                title: "Risk Assessment",
-                description: "Identify hazards before implementing interventions"
-              },
-              {
-                title: "Prevention Focus",
-                description: "Proactive approach to safety"
-              }
-            ]
-          }
+  function generateBackupQuestions() {
+    // Generating backup questions in case of API failure
+    return [
+      {
+        id: `backup_${Date.now()}_1`,
+        question: "Which nursing intervention best demonstrates proper infection control practices?",
+        options: [
+          { value: "a", label: "Performing hand hygiene before and after patient contact" },
+          { value: "b", label: "Wearing the same gloves between patients" },
+          { value: "c", label: "Reusing personal protective equipment" },
+          { value: "d", label: "Using hand sanitizer without washing visibly soiled hands" }
+        ],
+        correctAnswer: "a",
+        explanation: {
+          main: "Hand hygiene is the most effective way to prevent the spread of infections.",
+          concepts: [
+            {
+              title: "Basic Prevention",
+              description: "Hand hygiene is fundamental to infection control"
+            },
+            {
+              title: "Evidence-Based Practice",
+              description: "CDC guidelines emphasize hand hygiene as primary prevention"
+            }
+          ]
         }
-      ];
-    } catch (error) {
-      console.error("Error parsing AI response:", error);
-      return [];
-    }
+      },
+      {
+        id: `backup_${Date.now()}_2`,
+        question: "What is the most important step in preventing medication errors?",
+        options: [
+          { value: "a", label: "Checking the five rights once" },
+          { value: "b", label: "Verifying the five rights multiple times" },
+          { value: "c", label: "Relying on memory for regular medications" },
+          { value: "d", label: "Having another nurse give all medications" }
+        ],
+        correctAnswer: "b",
+        explanation: {
+          main: "Multiple verification of the five rights ensures medication safety.",
+          concepts: [
+            {
+              title: "Safety Protocol",
+              description: "Multiple checks reduce error probability"
+            },
+            {
+              title: "Critical Thinking",
+              description: "Each verification step requires focused attention"
+            }
+          ]
+        }
+      }
+    ];
   }
 
   return httpServer;

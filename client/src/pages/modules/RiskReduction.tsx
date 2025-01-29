@@ -11,12 +11,6 @@ import { AIHelpButton } from "@/components/ui/ai-help-button";
 import {
   CheckCircle2,
   RefreshCw,
-  ListChecks,
-  Shield,
-  FileLock2,
-  Stethoscope,
-  BookOpen,
-  ClipboardList,
   XCircle
 } from "lucide-react";
 import {
@@ -26,6 +20,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
+// ... keep all the interfaces and initial data ...
 interface RiskScenario {
   id: string;
   title: string;
@@ -337,6 +332,21 @@ export default function RiskReduction() {
     };
   }, []);
 
+  const generateScenarioMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/exam/regular/question", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate scenario");
+      }
+
+      return response.json();
+    },
+  });
+
   const generateMoreQuestionsMutation = useMutation({
     mutationFn: async () => {
       const currentQuestionIds = preventionQuestions.map(q => q.id);
@@ -401,6 +411,31 @@ export default function RiskReduction() {
     }
   };
 
+  const handleGenerateScenario = async () => {
+    if (!isMounted.current || isLoading) return;
+
+    setIsLoading(true);
+    try {
+      const result = await generateScenarioMutation.mutateAsync();
+      if (isMounted.current) {
+        setSelectedScenario(result);
+        setShowExplanation(false);
+      }
+    } catch (error) {
+      if (isMounted.current) {
+        toast({
+          title: "Error",
+          description: "Failed to generate scenario. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      if (isMounted.current) {
+        setIsLoading(false);
+      }
+    }
+  };
+
   const handleNextQuestion = () => {
     if (currentQuestionIndex < preventionQuestions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
@@ -421,28 +456,22 @@ export default function RiskReduction() {
       [currentQuestionIndex]: value
     }));
 
-    // Check if answer is correct
     const isCorrect = value === preventionQuestions[currentQuestionIndex].correctAnswer;
     setAnswerResults(prev => ({
       ...prev,
       [currentQuestionIndex]: isCorrect
     }));
 
-    // Update progress
     if (!answeredQuestions.has(preventionQuestions[currentQuestionIndex].id)) {
-      setAnsweredQuestions(prev => new Set([...prev, preventionQuestions[currentQuestionIndex].id]));
-      if (isCorrect) {
-        setProgress(prev => ({
-          ...prev,
-          correctResponses: prev.correctResponses + 1,
-          scenariosCompleted: prev.scenariosCompleted + 1
-        }));
-      } else {
-        setProgress(prev => ({
-          ...prev,
-          scenariosCompleted: prev.scenariosCompleted + 1
-        }));
-      }
+      const newAnsweredQuestions = new Set(answeredQuestions);
+      newAnsweredQuestions.add(preventionQuestions[currentQuestionIndex].id);
+      setAnsweredQuestions(newAnsweredQuestions);
+
+      setProgress(prev => ({
+        ...prev,
+        correctResponses: isCorrect ? prev.correctResponses + 1 : prev.correctResponses,
+        scenariosCompleted: prev.scenariosCompleted + 1
+      }));
     }
 
     setShowExplanation(true);
@@ -572,91 +601,49 @@ export default function RiskReduction() {
       </CardContent>
     </Card>
   );
-};
 
-const generateScenarioMutation = useMutation({
-  mutationFn: async () => {
-    const response = await fetch("/api/exam/regular/question", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+  const handleSubmitAssessment = async (data: { riskAssessment: string }) => {
+    if (!isMounted.current) return;
+
+    toast({
+      title: "Assessment Submitted",
+      description: "Your risk assessment has been recorded.",
     });
+  };
 
-    if (!response.ok) {
-      throw new Error("Failed to generate scenario");
-    }
+  return (
+    <div className="space-y-6">
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold mb-2">Risk Reduction in Nursing Practice</h1>
+        <p className="text-muted-foreground max-w-2xl mx-auto">
+          Master essential risk reduction concepts and strategies for safe, high-quality patient care
+        </p>
+      </div>
 
-    return response.json();
-  },
-});
+      <Tabs defaultValue="prevention" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="safety">Safety Measures</TabsTrigger>
+          <TabsTrigger value="prevention">Prevention Strategies</TabsTrigger>
+          <TabsTrigger value="practice">Practice Scenarios</TabsTrigger>
+        </TabsList>
 
-const handleGenerateScenario = async () => {
-  if (!isMounted.current) return;
+        <TabsContent value="overview">
+          {/* Overview content */}
+        </TabsContent>
 
-  setIsLoading(true);
-  try {
-    const result = await generateScenarioMutation.mutateAsync();
-    if (isMounted.current) {
-      setSelectedScenario(result);
-      setShowExplanation(false);
-    }
-  } catch (error) {
-    if (isMounted.current) {
-      toast({
-        title: "Error",
-        description: "Failed to generate scenario. Please try again.",
-        variant: "destructive",
-      });
-    }
-  } finally {
-    if (isMounted.current) {
-      setIsLoading(false);
-    }
-  }
-};
+        <TabsContent value="safety">
+          {/* Safety Measures content */}
+        </TabsContent>
 
-const handleSubmitAssessment = async (data: { riskAssessment: string }) => {
-  if (!isMounted.current) return;
+        <TabsContent value="prevention">
+          {renderPreventionStrategies()}
+        </TabsContent>
 
-  toast({
-    title: "Assessment Submitted",
-    description: "Your risk assessment has been recorded.",
-  });
-};
-
-
-return (
-  <div className="space-y-6">
-    <div className="text-center mb-8">
-      <h1 className="text-3xl font-bold mb-2">Risk Reduction in Nursing Practice</h1>
-      <p className="text-muted-foreground max-w-2xl mx-auto">
-        Master essential risk reduction concepts and strategies for safe, high-quality patient care
-      </p>
+        <TabsContent value="practice">
+          {/* Practice Scenarios content */}
+        </TabsContent>
+      </Tabs>
     </div>
-
-    <Tabs defaultValue="prevention" className="space-y-4">
-      <TabsList className="grid w-full grid-cols-4">
-        <TabsTrigger value="overview">Overview</TabsTrigger>
-        <TabsTrigger value="safety">Safety Measures</TabsTrigger>
-        <TabsTrigger value="prevention">Prevention Strategies</TabsTrigger>
-        <TabsTrigger value="practice">Practice Scenarios</TabsTrigger>
-      </TabsList>
-
-      <TabsContent value="overview">
-        {/* Overview content */}
-      </TabsContent>
-
-      <TabsContent value="safety">
-        {/* Safety Measures content */}
-      </TabsContent>
-
-      <TabsContent value="prevention">
-        {renderPreventionStrategies()}
-      </TabsContent>
-
-      <TabsContent value="practice">
-        {/* Practice Scenarios content */}
-      </TabsContent>
-    </Tabs>
-  </div>
-);
+  );
 }
