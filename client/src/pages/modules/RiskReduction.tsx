@@ -183,7 +183,7 @@ export default function RiskReduction() {
         </CardHeader>
         <CardContent className="space-y-6">
           <p className="text-muted-foreground">
-            Risk reduction in nursing practice involves systematic approaches to identify, assess, and mitigate potential hazards that could affect patient safety and care outcomes.
+            Risk reduction in nursing practice encompasses comprehensive strategies to identify, assess, and mitigate potential hazards that could affect patient safety and care outcomes. It requires a combination of clinical knowledge, critical thinking, and evidence-based practice to effectively minimize risks in healthcare settings.
           </p>
           <div className="grid gap-6 md:grid-cols-2">
             <Card className="p-6">
@@ -194,7 +194,13 @@ export default function RiskReduction() {
                   <AlertTriangle className="h-5 w-5 mt-0.5 text-yellow-500" />
                   <div>
                     <span className="font-medium">Risk Assessment:</span>
-                    <p className="text-sm">Systematic evaluation of potential hazards and vulnerabilities</p>
+                    <p className="text-sm">Systematic evaluation of potential hazards including:</p>
+                    <ul className="ml-4 mt-1 space-y-1 text-sm">
+                      <li>• Patient-specific risk factors</li>
+                      <li>• Environmental safety concerns</li>
+                      <li>• Medication-related risks</li>
+                      <li>• Communication barriers</li>
+                    </ul>
                   </div>
                 </li>
                 <li className="flex items-start gap-2">
@@ -269,11 +275,34 @@ export default function RiskReduction() {
                 <div className="space-y-4">
                   <h4 className="font-medium">Key Protocols</h4>
                   <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-                    <li>Hand hygiene protocols and monitoring</li>
-                    <li>Personal protective equipment (PPE) selection and use</li>
-                    <li>Sterile technique maintenance</li>
-                    <li>Isolation precautions implementation</li>
-                    <li>Environmental cleaning standards</li>
+                    <li>Hand hygiene protocols and monitoring
+                      <ul className="ml-4 mt-1">
+                        <li>• WHO's 5 moments of hand hygiene</li>
+                        <li>• Proper handwashing technique</li>
+                        <li>• Hand sanitizer use guidelines</li>
+                      </ul>
+                    </li>
+                    <li>Personal protective equipment (PPE)
+                      <ul className="ml-4 mt-1">
+                        <li>• Proper sequence of donning/doffing</li>
+                        <li>• Situation-specific PPE selection</li>
+                        <li>• Cross-contamination prevention</li>
+                      </ul>
+                    </li>
+                    <li>Sterile technique maintenance
+                      <ul className="ml-4 mt-1">
+                        <li>• Surgical asepsis principles</li>
+                        <li>• Sterile field maintenance</li>
+                        <li>• Common break in technique scenarios</li>
+                      </ul>
+                    </li>
+                    <li>Isolation precautions implementation
+                      <ul className="ml-4 mt-1">
+                        <li>• Standard precautions</li>
+                        <li>• Transmission-based precautions</li>
+                        <li>• Patient education requirements</li>
+                      </ul>
+                    </li>
                   </ul>
                   <h4 className="font-medium">Best Practices</h4>
                   <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
