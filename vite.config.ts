@@ -21,13 +21,13 @@ export default defineConfig({
   },
   server: {
     host: "0.0.0.0",
+    strictPort: true,
+    allowedHosts: ["*", ".replit.dev"],
     proxy: {
       "/api": {
         target: "http://0.0.0.0:3001",
         changeOrigin: true,
       },
     },
-    // Allow requests from any host
-    allowedHosts: "all",
   },
 });
