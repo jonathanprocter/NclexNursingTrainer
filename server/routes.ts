@@ -217,7 +217,7 @@ export function registerRoutes(app: Express): Server {
       });
 
       const response = completion.choices[0]?.message?.content;
-      
+
 
       if (!response) {
         throw new Error("No response generated");
@@ -236,7 +236,7 @@ export function registerRoutes(app: Express): Server {
   // Pathophysiology AI help endpoint
   app.post("/api/ai-help", async (req, res) => {
     const { topic, context, question } = req.body;
-    
+
     try {
       const completion = await openai.chat.completions.create({
         model: "gpt-4",
@@ -255,7 +255,7 @@ export function registerRoutes(app: Express): Server {
       });
 
       const response = completion.choices[0]?.message?.content;
-      
+
 
       if (!response) {
         throw new Error("No response generated");
@@ -320,7 +320,7 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/generate-calculation", async (req, res) => {
     try {
       const { difficulty } = req.body;
-      
+
 
       // Generate a sample calculation problem based on difficulty
       const problem = {
@@ -488,12 +488,12 @@ export function registerRoutes(app: Express): Server {
       try {
         const content = completion.choices[0]?.message?.content;
         if (!content) throw new Error("No content received from OpenAI");
-        
+
 
         // Try to extract JSON if wrapped in markdown code blocks
         const jsonContent = content.replace(/```json\n?|\n?```/g, '').trim();
         generatedQuestions = JSON.parse(jsonContent);
-        
+
 
         if (!Array.isArray(generatedQuestions)) {
           throw new Error("Generated content is not an array");
@@ -517,7 +517,7 @@ export function registerRoutes(app: Express): Server {
           }
         ];
       }
-      
+
 
       // Ensure questions are unique and properly formatted
       const formattedQuestions = generatedQuestions.map((q: any, index: number) => ({
@@ -857,6 +857,51 @@ export function registerRoutes(app: Express): Server {
         message: "Failed to generate hint",
         error: error instanceof Error ? error.message : "Unknown error"
       });
+    }
+  });
+
+  app.post("/api/ai/simulation-scenario", async (req, res) => {
+    try {
+      const { difficulty, focus_areas } = req.body;
+
+      // Return a mock scenario for testing
+      const mockScenario = {
+        id: `sim_${Date.now()}`,
+        title: "Critical Care Patient Assessment",
+        description: "Manage a patient with acute respiratory distress",
+        difficulty: difficulty || 'intermediate',
+        objectives: focus_areas || ["patient assessment", "critical thinking"],
+        initial_state: {
+          patient_condition: "Patient presents with increasing shortness of breath",
+          vital_signs: {
+            blood_pressure: "140/90",
+            heart_rate: 98,
+            respiratory_rate: 24,
+            temperature: 37.8,
+            oxygen_saturation: 92
+          },
+          symptoms: ["dyspnea", "anxiety", "chest tightness"],
+          medical_history: "History of asthma"
+        },
+        expected_actions: [
+          {
+            priority: 1,
+            action: "Assess airway and breathing",
+            rationale: "Critical first step in patient assessment"
+          },
+          {
+            priority: 2,
+            action: "Check vital signs",
+            rationale: "Establish baseline and monitor changes"
+          }
+        ],
+        duration_minutes: 30
+      };
+
+      res.json(mockScenario);
+    } catch (error) {
+      console.error("Error generating simulation scenario:", error);
+      res.status(500).json({ message: "Failed to generate simulation scenario" });
     }
   });
 
