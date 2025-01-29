@@ -66,6 +66,20 @@ export const questionHistory = pgTable("question_history", {
   attemptContext: json("attempt_context"), // Additional context about the attempt
 });
 
+export const quizAttempts = pgTable("quiz_attempts", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  moduleId: integer("module_id").references(() => modules.id),
+  type: text("type").notNull(),
+  answers: json("answers").notNull(),
+  score: integer("score").notNull(),
+  totalQuestions: integer("total_questions").notNull(),
+  startedAt: timestamp("started_at").notNull().defaultNow(),
+  aiAnalysis: json("ai_analysis"),
+  strengthAreas: json("strength_areas"),
+  weaknessAreas: json("weakness_areas"),
+});
+
 export const userProgress = pgTable("user_progress", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id),
