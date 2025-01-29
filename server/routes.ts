@@ -906,7 +906,13 @@ export function registerRoutes(app: Express): Server {
             oxygen_saturation: 92
           },
           symptoms: ["dyspnea", "anxiety", "chest tightness"],
-          medical_history: "History of asthma"
+          medical_history: "History of asthma",
+          current_interventions: [
+            "Oxygen therapy via nasal cannula at 2L/min",
+            "IV access established",
+            "Continuous pulse oximetry monitoring",
+            "Semi-Fowler's position"
+          ]
         },
         expected_actions: [
           {
