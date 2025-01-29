@@ -1,23 +1,17 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 interface AnalyticsProps {
-  data?: any;
+  data?: {
+    performanceData?: Array<{ module: string; score: number }>;
+    totalStudyTime?: string;
+    questionsAttempted?: number;
+    averageScore?: number;
+  };
 }
 
-export default function Analytics({ data }: AnalyticsProps = { data: undefined }) {
-  if (!data) {
-    return (
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Module Performance</CardTitle>
-          </CardHeader>
-          <CardContent>Loading analytics...</CardContent>
-        </Card>
-      </div>
-    );
-  }
+export default function Analytics({ data }: AnalyticsProps) {
   const mockPerformanceData = [
     { module: "Pharmacology", score: 85 },
     { module: "Pathophysiology", score: 75 },
@@ -27,7 +21,6 @@ export default function Analytics({ data }: AnalyticsProps = { data: undefined }
     { module: "Med-Surg", score: 78 },
   ];
 
-  // Use provided data or fallback to mock data
   const chartData = data?.performanceData || mockPerformanceData;
 
   return (
