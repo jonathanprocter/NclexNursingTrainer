@@ -9,6 +9,17 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Add study buddy chat history table
+export const studyBuddyChats = pgTable("study_buddy_chats", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  sessionId: text("session_id").notNull(),
+  role: text("role").notNull(), // 'user' or 'assistant'
+  content: text("content").notNull(),
+  tone: text("tone").notNull(), // professional, friendly, etc.
+  timestamp: timestamp("timestamp").notNull().defaultNow(),
+});
+
 export const modules = pgTable("modules", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
@@ -82,6 +93,9 @@ export const selectUserProgressSchema = createSelectSchema(userProgress);
 export const insertQuestionHistorySchema = createInsertSchema(questionHistory);
 export const selectQuestionHistorySchema = createSelectSchema(questionHistory);
 
+// Add schemas for study buddy chats
+export const insertStudyBuddyChatSchema = createInsertSchema(studyBuddyChats);
+export const selectStudyBuddyChatSchema = createSelectSchema(studyBuddyChats);
 
 // Export types for all tables
 export type InsertUser = typeof users.$inferInsert;
@@ -96,3 +110,7 @@ export type InsertUserProgress = typeof userProgress.$inferInsert;
 export type SelectUserProgress = typeof userProgress.$inferSelect;
 export type InsertQuestionHistory = typeof questionHistory.$inferInsert;
 export type SelectQuestionHistory = typeof questionHistory.$inferSelect;
+
+// Add types for study buddy chats
+export type InsertStudyBuddyChat = typeof studyBuddyChats.$inferInsert;
+export type SelectStudyBuddyChat = typeof studyBuddyChats.$inferSelect;

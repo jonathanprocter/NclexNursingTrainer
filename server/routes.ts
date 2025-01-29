@@ -4,6 +4,7 @@ import { db } from "@db";
 import { eq } from "drizzle-orm";
 import studyGuideRouter from './routes/study-guide';
 import OpenAI from "openai";
+import { studyBuddyChats } from "@db/schema";
 
 if (!process.env.OPENAI_API_KEY) {
   throw new Error("OPENAI_API_KEY must be set in environment variables");
@@ -43,8 +44,19 @@ export function registerRoutes(app: Express): Server {
         throw new Error("Failed to generate initial message");
       }
 
+      const sessionId = `session_${Date.now()}`;
+
+      // Store chat in database
+      await db.insert(studyBuddyChats).values({
+        userId: studentId,
+        sessionId,
+        role: 'assistant',
+        content: message,
+        tone
+      });
+
       res.json({
-        sessionId: `session_${Date.now()}`,
+        sessionId,
         message
       });
     } catch (error) {
@@ -59,6 +71,15 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/study-buddy/chat", async (req, res) => {
     try {
       const { studentId, sessionId, message, context } = req.body;
+
+      // Store user message
+      await db.insert(studyBuddyChats).values({
+        userId: studentId,
+        sessionId,
+        role: 'user',
+        content: message,
+        tone: context.tone
+      });
 
       const completion = await openai.chat.completions.create({
         model: "gpt-4",
@@ -79,6 +100,15 @@ export function registerRoutes(app: Express): Server {
       if (!response) {
         throw new Error("Failed to generate response");
       }
+
+      // Store assistant response
+      await db.insert(studyBuddyChats).values({
+        userId: studentId,
+        sessionId,
+        role: 'assistant',
+        content: response,
+        tone: context.tone
+      });
 
       res.json({ message: response });
     } catch (error) {
