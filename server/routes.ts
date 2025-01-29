@@ -895,7 +895,9 @@ export function registerRoutes(app: Express): Server {
         difficulty: difficulty || 'intermediate',
         objectives: focus_areas || ["patient assessment", "critical thinking"],
         initial_state: {
-          patient_condition: "Patient presents with increasing shortness of breath",
+          patient_history: "72-year-old male with history of COPD, hypertension, and type 2 diabetes. Recent hospitalization for exacerbation 2 months ago.",
+          chief_complaint: "Progressive dyspnea over past 24 hours with increased cough and yellow sputum production. Family reports patient has been using rescue inhaler more frequently.",
+          patient_condition: "Patient presents with increasing shortness of breath, sitting upright in tripod position, and using accessory muscles to breathe",
           vital_signs: {
             blood_pressure: "140/90",
             heart_rate: 98,

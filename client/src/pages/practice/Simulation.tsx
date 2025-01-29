@@ -254,6 +254,12 @@ export default function Simulation() {
                   {activeScenario?.initial_state && (
                     <div className="space-y-6">
                       <div className="bg-muted/50 p-4 rounded-lg">
+                        <h3 className="font-medium mb-2">Patient Background</h3>
+                        <p className="text-sm mb-4">{activeScenario.initial_state?.patient_history || 'No patient history available'}</p>
+                        
+                        <h3 className="font-medium mb-2">Chief Complaint</h3>
+                        <p className="text-sm mb-4">{activeScenario.initial_state?.chief_complaint || 'No chief complaint available'}</p>
+
                         <h3 className="font-medium mb-2">Primary Assessment (ABCDE)</h3>
                         <div className="space-y-3">
                           <div>
