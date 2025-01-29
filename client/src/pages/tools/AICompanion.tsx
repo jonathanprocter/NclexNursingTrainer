@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Mic, StopCircle, History, Lightbulb } from "lucide-react";
@@ -63,31 +62,6 @@ export default function AICompanion() {
         description: "Speech recognition is not supported in your browser.",
         variant: "destructive",
       });
-    }
-      
-      recognition.onresult = (event) => {
-        const transcript = Array.from(event.results)
-          .map(result => result[0])
-          .map(result => result.transcript)
-          .join('');
-        console.log('Transcript:', transcript);
-      };
-
-      recognition.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
-        setMicrophoneEnabled(false);
-        toast({
-          title: "Error",
-          description: "Failed to record speech. Please try again.",
-          variant: "destructive",
-        });
-      };
-
-      recognition.onend = () => {
-        setMicrophoneEnabled(false);
-      };
-
-      setRecognition(recognition);
     }
   }, [toast]);
 
