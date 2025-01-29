@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
@@ -30,7 +30,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Textarea } from "@/components/ui/textarea";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { AIHelpButton } from "@/components/ui/ai-help-button";
 
 interface RiskScenario {
@@ -147,14 +147,18 @@ export default function RiskReduction() {
   const [showExplanation, setShowExplanation] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [answeredQuestions, setAnsweredQuestions] = useState<Set<string>>(new Set());
+  const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
+  const isMounted = useRef(true);
+
   const [progress, setProgress] = useState<Progress>({
     scenariosCompleted: 0,
     totalScenarios: 20,
     correctResponses: 0,
     skillLevel: "Beginner"
   });
+
   const [preventionQuestions, setPreventionQuestions] = useState<PreventionQuestion[]>(initialPreventionQuestions);
-  const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
+
   const form = useForm<FormValues>({
     defaultValues: {
       answer: "",
@@ -162,6 +166,13 @@ export default function RiskReduction() {
       preventionQ1: "",
     },
   });
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   const generateScenarioMutation = useMutation({
     mutationFn: async () => {
@@ -192,49 +203,67 @@ export default function RiskReduction() {
       return response.json();
     },
     onSuccess: (newQuestions) => {
-      setPreventionQuestions(prev => [...prev, ...newQuestions]);
-      toast({
-        title: "New questions added!",
-        description: "Additional practice questions are now available.",
-      });
+      if (isMounted.current) {
+        setPreventionQuestions(prev => [...prev, ...newQuestions]);
+        toast({
+          title: "New questions added!",
+          description: "Additional practice questions are now available.",
+        });
+      }
     },
     onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to generate new questions. Please try again.",
-        variant: "destructive",
-      });
+      if (isMounted.current) {
+        toast({
+          title: "Error",
+          description: "Failed to generate new questions. Please try again.",
+          variant: "destructive",
+        });
+      }
     },
   });
 
   const handleGenerateScenario = async () => {
+    if (!isMounted.current) return;
+
     setIsLoading(true);
     try {
       const result = await generateScenarioMutation.mutateAsync();
-      setSelectedScenario(result);
-      setShowExplanation(false);
-      form.reset();
+      if (isMounted.current) {
+        setSelectedScenario(result);
+        setShowExplanation(false);
+        form.reset();
+      }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to generate scenario. Please try again.",
-        variant: "destructive",
-      });
+      if (isMounted.current) {
+        toast({
+          title: "Error",
+          description: "Failed to generate scenario. Please try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
-      setIsLoading(false);
+      if (isMounted.current) {
+        setIsLoading(false);
+      }
     }
   };
 
   const handleGenerateMoreQuestions = async () => {
+    if (!isMounted.current) return;
+
     setIsGeneratingQuestions(true);
     try {
       await generateMoreQuestionsMutation.mutateAsync();
     } finally {
-      setIsGeneratingQuestions(false);
+      if (isMounted.current) {
+        setIsGeneratingQuestions(false);
+      }
     }
   };
 
   const handleSubmitAssessment = async (data: { riskAssessment: string }) => {
+    if (!isMounted.current) return;
+
     toast({
       title: "Assessment Submitted",
       description: "Your risk assessment has been recorded.",
@@ -242,6 +271,8 @@ export default function RiskReduction() {
   };
 
   const handleNextQuestion = () => {
+    if (!isMounted.current) return;
+
     if (currentQuestionIndex < preventionQuestions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
       setShowExplanation(false);
@@ -249,6 +280,8 @@ export default function RiskReduction() {
   };
 
   const handlePrevQuestion = () => {
+    if (!isMounted.current) return;
+
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(prev => prev - 1);
       setShowExplanation(false);
@@ -256,7 +289,10 @@ export default function RiskReduction() {
   };
 
   const handleQuestionChange = (value: string) => {
-    form.setValue(`question_${currentQuestionIndex}` as keyof FormValues, value);
+    if (!isMounted.current) return;
+
+    const fieldName = `question_${currentQuestionIndex}`;
+    form.setValue(fieldName as keyof FormValues, value);
     setAnsweredQuestions(prev => new Set(prev).add(preventionQuestions[currentQuestionIndex].id));
     setShowExplanation(true);
   };
@@ -832,7 +868,7 @@ export default function RiskReduction() {
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <BookOpen className="mx-auto h-12 w-12 text-muted-foreground/50" />
+                    <BookOpen className="mx-auto h-12 w-12 w-12 text-muted-foreground/50" />
                     <h3 className="mt-4 text-lg font-semibold">No Scenario Selected</h3>
                     <p className="text-sm text-muted-foreground">
                       Click "New Scenario" to start practicing
