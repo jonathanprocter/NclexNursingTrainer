@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
@@ -15,13 +14,11 @@ export default function Analytics({ data }: AnalyticsProps) {
   const mockPerformanceData = [
     { module: "Pharmacology", score: 85 },
     { module: "Pathophysiology", score: 75 },
-    { module: "Assessment", score: 90 },
-    { module: "Fundamentals", score: 82 },
-    { module: "Psychiatric", score: 88 },
     { module: "Med-Surg", score: 78 },
+    { module: "Mental Health", score: 82 }
   ];
 
-  const chartData = data?.performanceData || mockPerformanceData;
+  const performanceData = data?.performanceData || mockPerformanceData;
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
@@ -32,7 +29,7 @@ export default function Analytics({ data }: AnalyticsProps) {
         <CardContent>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData}>
+              <BarChart data={performanceData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="module" />
                 <YAxis />
