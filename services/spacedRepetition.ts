@@ -12,10 +12,6 @@ export class SpacedRepetitionService {
     nextInterval: number;
     newEaseFactor: number;
   } {
-    // Quality should be between 0 and 5
-    // 0-2: Incorrect
-    // 3-5: Correct with varying degrees of difficulty
-
     let newEaseFactor = easeFactor;
     let nextInterval: number;
 
@@ -42,8 +38,8 @@ export class SpacedRepetitionService {
 
   // Process an answer and update spaced repetition data
   async processAnswer(
-    userId: string,
-    questionId: string,
+    userId: number,
+    questionId: number,
     isCorrect: boolean,
     answerQuality: number,
   ) {
@@ -57,15 +53,32 @@ export class SpacedRepetitionService {
           eq(userProgress.questionId, questionId),
         ),
       )
-      .orderBy(userProgress.timestamp, "desc")
       .limit(1);
 
     const progress = currentProgress[0];
 
+    if (!progress) {
+      // Create new progress entry if it doesn't exist
+      const newProgress = await db.insert(userProgress).values({
+        userId,
+        questionId,
+        isCorrect,
+        easeFactor: 250, // Default ease factor
+        interval: 1,
+        repetitions: 0,
+        nextReview: new Date(),
+      }).returning();
+      return {
+        nextReview: newProgress[0].nextReview,
+        interval: 1,
+        easeFactor: 250,
+      };
+    }
+
     // Calculate next review
     const { nextInterval, newEaseFactor } = this.calculateNextReview(
-      progress?.easeFactor || 2.5,
-      progress?.interval || 1,
+      progress.easeFactor / 100, // Convert from stored integer
+      progress.interval,
       answerQuality,
     );
 
@@ -76,10 +89,11 @@ export class SpacedRepetitionService {
     await db
       .update(userProgress)
       .set({
-        easeFactor: newEaseFactor,
+        easeFactor: Math.round(newEaseFactor * 100), // Store as integer
         interval: nextInterval,
-        repetitions: (progress?.repetitions || 0) + 1,
-        nextReview: nextReview,
+        repetitions: progress.repetitions + 1,
+        nextReview,
+        isCorrect,
       })
       .where(eq(userProgress.id, progress.id));
 
@@ -91,14 +105,17 @@ export class SpacedRepetitionService {
   }
 
   // Get questions due for review
-  async getDueQuestions(userId: string) {
+  async getDueQuestions(userId: number) {
     const now = new Date();
 
     const dueQuestions = await db
       .select()
       .from(userProgress)
       .where(
-        and(eq(userProgress.userId, userId), lt(userProgress.nextReview, now)),
+        and(
+          eq(userProgress.userId, userId),
+          lt(userProgress.nextReview, now)
+        )
       )
       .orderBy(userProgress.nextReview);
 
@@ -106,7 +123,7 @@ export class SpacedRepetitionService {
   }
 
   // Get learning progress overview
-  async getLearningProgress(userId: string) {
+  async getLearningProgress(userId: number) {
     const progress = await db
       .select()
       .from(userProgress)
@@ -115,14 +132,17 @@ export class SpacedRepetitionService {
     const now = new Date();
     const stats = {
       totalCards: progress.length,
-      mastered: 0, // Cards with ease factor > 2.5 and correct answers > 3
-      learning: 0, // Cards in learning phase (interval <= 7)
-      needsReview: 0, // Cards due for review
-      retention: 0, // Overall retention rate
+      mastered: 0,
+      learning: 0,
+      needsReview: 0,
+      retention: 0,
     };
 
+    let correctAnswers = 0;
+    let totalAttempts = 0;
+
     progress.forEach((card) => {
-      if (card.easeFactor > 2.5 && card.repetitions > 3) {
+      if (card.easeFactor > 250 && card.repetitions > 3) {
         stats.mastered++;
       } else if (card.interval <= 7) {
         stats.learning++;
@@ -131,15 +151,14 @@ export class SpacedRepetitionService {
       if (card.nextReview && card.nextReview <= now) {
         stats.needsReview++;
       }
+
+      if (card.isCorrect) {
+        correctAnswers++;
+      }
+      totalAttempts++;
     });
 
-    const totalAttempts = progress.reduce(
-      (sum, card) => sum + card.repetitions,
-      0,
-    );
-    const correctAttempts = progress.filter((card) => card.isCorrect).length;
-    stats.retention =
-      totalAttempts > 0 ? (correctAttempts / totalAttempts) * 100 : 0;
+    stats.retention = totalAttempts > 0 ? (correctAnswers / totalAttempts) * 100 : 0;
 
     return stats;
   }

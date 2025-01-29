@@ -84,11 +84,19 @@ export const userProgress = pgTable("user_progress", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id),
   moduleId: integer("module_id").references(() => modules.id),
+  questionId: integer("question_id").references(() => questions.id),
   totalQuestions: integer("total_questions").default(0),
   correctAnswers: integer("correct_answers").default(0),
   lastStudied: timestamp("last_studied"),
   studyStreak: integer("study_streak").default(0),
   masteryLevel: integer("mastery_level").default(0), // 0-100
+  // Spaced repetition fields
+  easeFactor: integer("ease_factor").default(250), // Multiplied by 100 to store as integer
+  interval: integer("interval").default(1),
+  repetitions: integer("repetitions").default(0),
+  nextReview: timestamp("next_review"),
+  isCorrect: boolean("is_correct").default(false),
+  // Analytics fields
   weakAreas: json("weak_areas"), // Array of topics needing review
   strongAreas: json("strong_areas"), // Array of mastered topics
   studyGoals: json("study_goals"), // User's study goals and progress
