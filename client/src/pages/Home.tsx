@@ -36,7 +36,7 @@ export default function Home() {
       });
 
       const plan = await response.json();
-      
+
       const personalizedPlan = `
       📚 ${data.duration} Minute Personalized Study Plan for ${studentProgress.name}
 
