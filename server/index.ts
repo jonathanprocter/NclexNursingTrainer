@@ -1,9 +1,5 @@
 import "dotenv/config";
-import express, {
-  type Request,
-  type Response,
-  type NextFunction,
-} from "express";
+import express, { type Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
@@ -11,66 +7,64 @@ import { setupVite, serveStatic, log } from "./vite";
 const app = express();
 
 // ─────────────────────────────────────────────────────────────
-// 1. CORS Configuration
+// 1. CORS and Basic Middleware Configuration
 // ─────────────────────────────────────────────────────────────
-app.use(
-  cors({
-    origin: "*", // Allow all origins in development
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allowedHeaders: ["*"],
-    exposedHeaders: ["Content-Range", "X-Content-Range"],
-    maxAge: 86400,
-  }),
-);
+app.use(cors({
+  origin: true, // Allow configured origins
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
 
-// Explicitly handle OPTIONS requests
-app.options("*", cors());
-
-// ─────────────────────────────────────────────────────────────
-// 2. Additional Headers for Replit
-// ─────────────────────────────────────────────────────────────
-app.use((req, res, next) => {
-  // Allow the Replit domain and any other origins
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
-  res.header("Access-Control-Allow-Headers", "*");
-  // Set CSP to be more permissive in development
-  res.header(
-    "Content-Security-Policy",
-    "default-src 'self' * 'unsafe-inline' 'unsafe-eval' data: blob:;",
-  );
-  next();
-});
-
-// ─────────────────────────────────────────────────────────────
-// 3. Standard Middleware
-// ─────────────────────────────────────────────────────────────
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 // ─────────────────────────────────────────────────────────────
-// 4. Request Logging
+// 2. Logging Middleware
 // ─────────────────────────────────────────────────────────────
 app.use((req, res, next) => {
   const start = Date.now();
+  const path = req.path;
+  let capturedJsonResponse: Record<string, any> | undefined = undefined;
+
+  const originalResJson = res.json;
+  res.json = function (bodyJson, ...args) {
+    capturedJsonResponse = bodyJson;
+    return originalResJson.apply(res, [bodyJson, ...args]);
+  };
+
   res.on("finish", () => {
     const duration = Date.now() - start;
-    log(`${req.method} ${req.path} ${res.statusCode} in ${duration}ms`);
+    if (path.startsWith("/api")) {
+      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
+      if (capturedJsonResponse) {
+        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+      }
+      log(logLine);
+    }
   });
+
   next();
 });
 
 // ─────────────────────────────────────────────────────────────
-// 5. Start Server + Vite/Static Setup
+// 3. Error Handling
+// ─────────────────────────────────────────────────────────────
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  console.error("Error:", err);
+  res.status(500).json({ 
+    message: process.env.NODE_ENV === "development" ? err.message : "Internal Server Error"
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// 4. Server Setup
 // ─────────────────────────────────────────────────────────────
 (async () => {
   try {
     const server = registerRoutes(app);
 
     if (process.env.NODE_ENV === "development") {
-      // Set NODE_ENV to development explicitly
-      process.env.NODE_ENV = "development";
       await setupVite(app, server);
     } else {
       serveStatic(app);
@@ -95,7 +89,6 @@ app.use((req, res, next) => {
       console.log("=================================");
       log(`Server running on http://0.0.0.0:${PORT}`);
     });
-
   } catch (error) {
     console.error("Failed to start server:", error);
     process.exit(1);
