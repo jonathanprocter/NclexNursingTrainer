@@ -197,6 +197,43 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Pathophysiology AI help endpoint
+  app.post("/api/ai-help", async (req, res) => {
+    const { topic, context, question } = req.body;
+    
+    try {
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [
+          {
+            role: "system",
+            content: "You are an expert pathophysiology educator helping nursing students understand complex disease processes and body systems. Provide detailed explanations with clinical correlations."
+          },
+          {
+            role: "user",
+            content: question || `Explain ${topic} in pathophysiology${context ? `. Context: ${context}` : ''}`
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 1000
+      });
+
+      const response = completion.choices[0]?.message?.content;
+      
+      if (!response) {
+        throw new Error("No response generated");
+      }
+
+      res.json({ content: response });
+    } catch (error) {
+      console.error("Error in AI help endpoint:", error);
+      res.status(500).json({
+        message: "Failed to get AI assistance",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // AI Help endpoint with enhanced safety measures context
   app.post("/api/chat/risk-reduction", async (req, res) => {
     const { topic, question } = req.body;

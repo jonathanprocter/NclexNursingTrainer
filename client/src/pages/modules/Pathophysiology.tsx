@@ -83,17 +83,27 @@ export default function Pathophysiology() {
 
   const aiHelpMutation = useMutation({
     mutationFn: async ({ topic, context, question }: { topic: string; context?: string; question?: string }) => {
-      const response = await fetch("/api/ai-help", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic, context, question }),
-      });
+      try {
+        const response = await fetch("/api/ai-help", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ topic, context, question }),
+        });
 
-      if (!response.ok) {
-        throw new Error("Failed to get AI assistance");
+        if (!response.ok) {
+          throw new Error("Failed to get AI assistance");
+        }
+
+        const data = await response.json();
+        if (!data || !data.content) {
+          throw new Error("Invalid response format");
+        }
+
+        return data;
+      } catch (error) {
+        console.error("Error in AI help mutation:", error);
+        throw error;
       }
-
-      return response.json();
     },
   });
 
