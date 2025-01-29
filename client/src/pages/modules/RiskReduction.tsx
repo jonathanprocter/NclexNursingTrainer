@@ -659,13 +659,6 @@ export default function RiskReduction() {
                 </Card>
               ))}
             </div>
-            <Card className="p-6">
-              <h3 className="font-semibold mb-3">Coming Soon</h3>
-              <p className="text-muted-foreground">
-                More interactive scenarios are being developed to cover additional clinical situations and specialties.
-                Check back soon for updates!
-              </p>
-            </Card>
           </div>
         </CardContent>
       </Card>
