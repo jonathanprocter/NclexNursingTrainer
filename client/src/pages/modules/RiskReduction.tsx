@@ -659,6 +659,22 @@ export default function RiskReduction() {
                 </Card>
               ))}
             </div>
+            <div className="flex justify-center mt-6">
+              <Button
+                onClick={() => handleStartScenario(scenarios[Math.floor(Math.random() * scenarios.length)].id)}
+                disabled={isGeneratingScenario}
+                className="w-full max-w-md"
+              >
+                {isGeneratingScenario ? (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                    Generating More...
+                  </>
+                ) : (
+                  "Generate More"
+                )}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
