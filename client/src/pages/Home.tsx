@@ -92,8 +92,8 @@ export default function Home() {
       - Record any challenging concepts for future review
 
       Keep going, Bianca! You're making great progress! 🌟
-    `;
-    setStudyPlan(mockStudyPlan);
+      `;
+    setStudyPlan(personalizedPlan);
   };
 
   const showToast = () => {
