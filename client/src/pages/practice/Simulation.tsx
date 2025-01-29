@@ -19,13 +19,7 @@ type UserAction = {
 
 export default function Simulation() {
   const { toast } = useToast();
-  const [activeScenario, setActiveScenario] = useState<SimulationScenario>({
-    id: '',
-    title: '',
-    description: '',
-    expected_actions: [],
-    initial_state: null
-  });
+  const [activeScenario, setActiveScenario] = useState<SimulationScenario | null>(null);
   const [isSimulationActive, setIsSimulationActive] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [userActions, setUserActions] = useState<UserAction[]>([]);
@@ -76,7 +70,7 @@ export default function Simulation() {
     });
   };
 
-  const handleAction = (action: any) => {
+  const handleAction = (action: string | { action: string }) => {
     if (!action) return;
     setUserActions(prev => [...prev, {
       action: typeof action === 'string' ? action : action.action,
@@ -250,90 +244,111 @@ export default function Simulation() {
           </DialogHeader>
           <ScrollArea className="h-[60vh] mt-4">
             <div className="space-y-6 p-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Stethoscope className="h-5 w-5" />
-                    Critical Care Assessment
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {activeScenario?.initial_state && (
+              {activeScenario?.initial_state && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Stethoscope className="h-5 w-5" />
+                      Critical Care Assessment
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
                     <div className="space-y-6">
                       <div className="bg-muted/50 p-4 rounded-lg">
                         <h3 className="font-medium mb-2">Patient Background</h3>
-                        <p className="text-sm mb-4">{activeScenario.initial_state?.patient_history || 'No patient history available'}</p>
+                        <p className="text-sm mb-4">{activeScenario.initial_state.patient_history}</p>
 
                         <h3 className="font-medium mb-2">Chief Complaint</h3>
-                        <p className="text-sm mb-4">{activeScenario.initial_state?.chief_complaint || 'No chief complaint available'}</p>
+                        <p className="text-sm mb-4">{activeScenario.initial_state.chief_complaint}</p>
 
                         <h3 className="font-medium mb-2">Primary Assessment (ABCDE)</h3>
                         <div className="space-y-3">
-                          <div>
-                            <h4 className="text-sm font-medium">Airway & Breathing</h4>
-                            <p className="text-sm text-muted-foreground">{activeScenario.initial_state.airway_assessment}</p>
-                            <div className="grid grid-cols-2 gap-2 mt-2">
-                              {renderVitalSign('Respiratory Rate', activeScenario.initial_state.vital_signs.respiratory_rate)}
-                              {renderVitalSign('SpO2', activeScenario.initial_state.vital_signs.spo2)}
-                              {renderVitalSign('Work of Breathing', activeScenario.initial_state.vital_signs.work_of_breathing)}
+                          {activeScenario.initial_state.airway_assessment && (
+                            <div>
+                              <h4 className="text-sm font-medium">Airway & Breathing</h4>
+                              <p className="text-sm text-muted-foreground">
+                                {activeScenario.initial_state.airway_assessment}
+                              </p>
+                              <div className="grid grid-cols-2 gap-2 mt-2">
+                                {activeScenario.initial_state.vital_signs && (
+                                  <>
+                                    {renderVitalSign('Respiratory Rate', activeScenario.initial_state.vital_signs.respiratory_rate)}
+                                    {renderVitalSign('SpO2', activeScenario.initial_state.vital_signs.spo2)}
+                                    {renderVitalSign('Work of Breathing', activeScenario.initial_state.vital_signs.work_of_breathing)}
+                                  </>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                          <div>
-                            <h4 className="text-sm font-medium">Circulation</h4>
-                            <div className="grid grid-cols-2 gap-2 mt-2">
-                              {renderVitalSign('Blood Pressure', activeScenario.initial_state.vital_signs.blood_pressure)}
-                              {renderVitalSign('Heart Rate', activeScenario.initial_state.vital_signs.heart_rate)}
-                              {renderVitalSign('MAP', activeScenario.initial_state.vital_signs.mean_arterial_pressure)}
-                              {renderVitalSign('Peripheral Perfusion', activeScenario.initial_state.vital_signs.capillary_refill)}
+                          )}
+
+                          {activeScenario.initial_state.vital_signs && (
+                            <div>
+                              <h4 className="text-sm font-medium">Circulation</h4>
+                              <div className="grid grid-cols-2 gap-2 mt-2">
+                                {renderVitalSign('Blood Pressure', activeScenario.initial_state.vital_signs.blood_pressure)}
+                                {renderVitalSign('Heart Rate', activeScenario.initial_state.vital_signs.heart_rate)}
+                                {renderVitalSign('MAP', activeScenario.initial_state.vital_signs.mean_arterial_pressure)}
+                                {renderVitalSign('Peripheral Perfusion', activeScenario.initial_state.vital_signs.capillary_refill)}
+                              </div>
                             </div>
-                          </div>
-                          <div>
-                            <h4 className="text-sm font-medium">Disability</h4>
-                            <div className="grid grid-cols-2 gap-2 mt-2">
-                              {renderVitalSign('GCS', activeScenario.initial_state.vital_signs.gcs)}
-                              {renderVitalSign('Pupils', activeScenario.initial_state.vital_signs.pupils)}
-                              {renderVitalSign('Blood Glucose', activeScenario.initial_state.vital_signs.blood_glucose)}
+                          )}
+
+                          {activeScenario.initial_state.vital_signs && (
+                            <div>
+                              <h4 className="text-sm font-medium">Disability</h4>
+                              <div className="grid grid-cols-2 gap-2 mt-2">
+                                {renderVitalSign('GCS', activeScenario.initial_state.vital_signs.gcs)}
+                                {renderVitalSign('Pupils', activeScenario.initial_state.vital_signs.pupils)}
+                                {renderVitalSign('Blood Glucose', activeScenario.initial_state.vital_signs.blood_glucose)}
+                              </div>
                             </div>
-                          </div>
+                          )}
                         </div>
                       </div>
 
                       <div className="bg-muted/50 p-4 rounded-lg">
                         <h3 className="font-medium mb-2">Secondary Assessment</h3>
                         <div className="space-y-3">
-                          <div>
-                            <h4 className="text-sm font-medium">Monitoring & Equipment</h4>
-                            <div className="grid grid-cols-2 gap-2 mt-2">
-                              {renderVitalSign('CVP', activeScenario.initial_state.vital_signs.cvp)}
-                              {renderVitalSign('EtCO2', activeScenario.initial_state.vital_signs.etco2)}
-                              {renderVitalSign('Arterial Line', activeScenario.initial_state.vital_signs.art_line)}
+                          {activeScenario.initial_state.vital_signs && (
+                            <div>
+                              <h4 className="text-sm font-medium">Monitoring & Equipment</h4>
+                              <div className="grid grid-cols-2 gap-2 mt-2">
+                                {renderVitalSign('CVP', activeScenario.initial_state.vital_signs.cvp)}
+                                {renderVitalSign('EtCO2', activeScenario.initial_state.vital_signs.etco2)}
+                                {renderVitalSign('Arterial Line', activeScenario.initial_state.vital_signs.art_line)}
+                              </div>
                             </div>
-                          </div>
-                          <div>
-                            <h4 className="text-sm font-medium">Lab Values</h4>
-                            <div className="grid grid-cols-2 gap-2 mt-2">
-                              {Object.entries(activeScenario.initial_state.lab_values || {}).map(([key, value]) => 
-                                renderVitalSign(key, value)
-                              )}
+                          )}
+
+                          {activeScenario.initial_state.lab_values && (
+                            <div>
+                              <h4 className="text-sm font-medium">Lab Values</h4>
+                              <div className="grid grid-cols-2 gap-2 mt-2">
+                                {Object.entries(activeScenario.initial_state.lab_values).map(([key, value]) => 
+                                  renderVitalSign(key, value)
+                                )}
+                              </div>
                             </div>
-                          </div>
+                          )}
                         </div>
                       </div>
 
-                      <div className="bg-muted/50 p-4 rounded-lg">
-                        <h3 className="font-medium mb-2">Current Interventions</h3>
-                        <div className="space-y-2">
-                          {activeScenario.initial_state.current_interventions?.map((intervention, index) => (
-                            <div key={index} className="text-sm">
-                              • {intervention}
-                            </div>
-                          ))}
+                      {activeScenario.initial_state.current_interventions && (
+                        <div className="bg-muted/50 p-4 rounded-lg">
+                          <h3 className="font-medium mb-2">Current Interventions</h3>
+                          <div className="space-y-2">
+                            {activeScenario.initial_state.current_interventions.map((intervention, index) => (
+                              <div key={index} className="text-sm">
+                                • {intervention}
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
-                  )}
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              )}
 
               <Card>
                 <CardHeader>
@@ -341,7 +356,7 @@ export default function Simulation() {
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-2">
-                    {activeScenario?.expected_actions?.map((action, index: number) => (
+                    {activeScenario?.expected_actions?.map((action, index) => (
                       <Button
                         key={index}
                         variant="outline"
@@ -350,7 +365,7 @@ export default function Simulation() {
                       >
                         {action.action}
                       </Button>
-                    )) || null}
+                    ))}
                   </div>
                 </CardContent>
               </Card>
@@ -392,7 +407,7 @@ export default function Simulation() {
                   <div>
                     <h3 className="font-medium mb-2">Strengths</h3>
                     <ul className="list-disc pl-5 space-y-1">
-                      {getFeedbackMutation.data.strengths.map((strength: string, index: number) => (
+                      {getFeedbackMutation.data.strengths.map((strength, index) => (
                         <li key={index}>{strength}</li>
                       ))}
                     </ul>
@@ -400,7 +415,7 @@ export default function Simulation() {
                   <div>
                     <h3 className="font-medium mb-2">Areas for Improvement</h3>
                     <ul className="list-disc pl-5 space-y-1">
-                      {getFeedbackMutation.data.areas_for_improvement.map((area: string, index: number) => (
+                      {getFeedbackMutation.data.areas_for_improvement.map((area, index) => (
                         <li key={index}>{area}</li>
                       ))}
                     </ul>
@@ -408,7 +423,7 @@ export default function Simulation() {
                   <div>
                     <h3 className="font-medium mb-2">Recommendations</h3>
                     <ul className="list-disc pl-5 space-y-1">
-                      {getFeedbackMutation.data.recommendations.map((rec: string, index: number) => (
+                      {getFeedbackMutation.data.recommendations.map((rec, index) => (
                         <li key={index}>{rec}</li>
                       ))}
                     </ul>
