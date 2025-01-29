@@ -123,12 +123,15 @@ export default function Dashboard() {
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={studentProgress.nclexDomains}>
+                <BarChart data={studentProgress.nclexDomains.map((domain, index) => ({
+                  ...domain,
+                  key: `domain-${index}`
+                }))}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="domain" angle={-45} textAnchor="end" height={80} />
                   <YAxis domain={[0, 100]} />
                   <Tooltip />
-                  <Bar dataKey="mastery" fill="#82ca9d" />
+                  <Bar dataKey="mastery" fill="#82ca9d" name="Domain Mastery" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
