@@ -16,8 +16,7 @@ if (!process.env.ANTHROPIC_API_KEY) {
 }
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  dangerouslyAllowBrowser: true
+  apiKey: process.env.OPENAI_API_KEY
 });
 
 const anthropic = new Anthropic({
@@ -708,35 +707,13 @@ export function registerRoutes(app: Express): Server {
               "id": "unique_string",
               "title": "scenario title",
               "description": "detailed patient presentation including chief complaint and relevant history",
-              "initial_state": {
-                "airway_assessment": "string",
-                "vital_signs": {
-                  "respiratory_rate": "string",
-                  "spo2": "string",
-                  "work_of_breathing": "string",
-                  "blood_pressure": "string",
-                  "heart_rate": "string",
-                  "mean_arterial_pressure": "string",
-                  "capillary_refill": "string",
-                  "temperature": "string",
-                  "gcs": "string",
-                  "pupils": "string",
-                  "blood_glucose": "string",
-                  "cvp": "string",
-                  "etco2": "string",
-                  "art_line": "string"
-                },
-                "lab_values": {
-                  "arterial_blood_gas": "string",
-                  "hemoglobin": "string",
-                  "wbc": "string",
-                  "platelets": "string",
-                  "sodium": "string",
-                  "potassium": "string",
-                  "lactate": "string",
-                  "troponin": "string"
-                },
-                "current_interventions": ["string"]
+              "vitalSigns": {
+                "Temperature": "string",
+                "HeartRate": "string",
+                "RespiratoryRate": "string",
+                "BloodPressure": "string",
+                "O2Saturation": "string",
+                "Pain": "string"
               },
               "medicalHistory": ["detailed past medical conditions"],
               "currentMedications": ["list of current medications with dosages"],
@@ -880,92 +857,6 @@ export function registerRoutes(app: Express): Server {
         message: "Failed to generate hint",
         error: error instanceof Error ? error.message : "Unknown error"
       });
-    }
-  });
-
-  app.post("/api/ai/simulation-scenario", async (req, res) => {
-    try {
-      const { difficulty, focus_areas } = req.body;
-
-      // Return a mock scenario for testing
-      const mockScenario = {
-        id: `sim_${Date.now()}`,
-        title: "Critical Care Patient Assessment",
-        description: "Manage a patient with acute respiratory distress",
-        difficulty: difficulty || 'intermediate',
-        objectives: focus_areas || ["patient assessment", "critical thinking"],
-        initial_state: {
-          patient_history: "72-year-old male with history of COPD, hypertension, and type 2 diabetes. Recent hospitalization for exacerbation 2 months ago.",
-          chief_complaint: "Progressive dyspnea over past 24 hours with increased cough and yellow sputum production. Family reports patient has been using rescue inhaler more frequently.",
-          patient_condition: "Patient presents with increasing shortness of breath, sitting upright in tripod position, and using accessory muscles to breathe",
-          vital_signs: {
-            blood_pressure: "140/90",
-            heart_rate: 98,
-            respiratory_rate: 24,
-            temperature: 37.8,
-            oxygen_saturation: 92
-          },
-          symptoms: ["dyspnea", "anxiety", "chest tightness"],
-          medical_history: "History of asthma",
-          current_interventions: [
-            "Oxygen therapy via nasal cannula at 2L/min",
-            "IV access established",
-            "Continuous pulse oximetry monitoring",
-            "Semi-Fowler's position"
-          ]
-        },
-        expected_actions: [
-          {
-            priority: 1,
-            action: "Assess airway and breathing",
-            rationale: "Critical first step in patient assessment"
-          },
-          {
-            priority: 2,
-            action: "Check vital signs",
-            rationale: "Establish baseline and monitor changes"
-          }
-        ],
-        duration_minutes: 30
-      };
-
-      res.json(mockScenario);
-    } catch (error) {
-      console.error("Error generating simulation scenario:", error);
-      res.status(500).json({ message: "Failed to generate simulation scenario" });
-    }
-  });
-
-  app.post("/api/ai/simulation-feedback", async (req, res) => {
-    try {
-      const { scenario, userActions } = req.body;
-
-      // Validate input
-      if (!scenario || !userActions) {
-        return res.status(400).json({
-          error: "Missing required fields: scenario and userActions"
-        });
-      }
-
-      const response = await openai.chat.completions.create({
-        model: "gpt-4",
-        messages: [
-          {
-            role: "system",
-            content: "You are an expert nursing educator evaluating a simulation scenario. Analyze the user's actions and provide feedback."
-          },
-          {
-            role: "user",
-            content: `Scenario: ${JSON.stringify(scenario)}\nUser Actions: ${JSON.stringify(userActions)}`
-          }
-        ]
-      });
-
-      const feedback = response.choices[0]?.message?.content;
-      res.json({ feedback });
-    } catch (error) {
-      console.error("Error getting simulation feedback:", error);
-      res.status(500).json({ error: "Failed to get simulation feedback" });
     }
   });
 
