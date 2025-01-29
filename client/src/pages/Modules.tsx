@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Progress } from "../components/ui/progress";
-import { Button } from "../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { BookOpen, Brain, PenSquare, Beaker, Heart, Stethoscope } from "lucide-react";
 
@@ -67,11 +67,12 @@ const mockModules = [
   },
 ];
 
-// Placeholder for the AIHelpButton component.  Replace with actual implementation.
 const AIHelpButton = ({ title, description, topic }: { title: string; description: string; topic: string }) => (
-  <Button variant="ghost">AI Help</Button>
+  <Button variant="outline" size="sm" className="flex items-center gap-2">
+    <Brain className="h-4 w-4" />
+    AI Help
+  </Button>
 );
-
 
 export default function Modules() {
   const { data: modules, isLoading } = useQuery<Module[]>({
@@ -80,11 +81,11 @@ export default function Modules() {
   });
 
   if (isLoading) {
-    return <div>Loading modules...</div>;
+    return <div className="flex items-center justify-center p-8">Loading modules...</div>;
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold mb-2">NCLEX Study Modules</h1>
         <p className="text-muted-foreground max-w-2xl mx-auto">
@@ -129,7 +130,7 @@ export default function Modules() {
                         description={`Get AI assistance with ${module.title.toLowerCase()} concepts and topics.`}
                         topic={module.type}
                       />
-                      <Link href={`/modules/${module.id}`}>
+                      <Link href={`/modules/${module.type}`}>
                         <Button>Start Learning</Button>
                       </Link>
                     </div>

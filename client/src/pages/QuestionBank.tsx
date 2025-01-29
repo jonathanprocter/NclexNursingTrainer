@@ -1,16 +1,16 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Badge } from "../components/ui/badge";
-import { Button } from "../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../components/ui/select";
-import { Progress } from "../components/ui/progress";
+} from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
 
 interface Option {
   id: string;
@@ -39,6 +39,11 @@ export default function QuestionBank() {
   // Fetch questions from the API
   const { data: questions = [], isLoading } = useQuery<Question[]>({
     queryKey: ['/api/questions', selectedCategory],
+    queryFn: async () => {
+      const response = await fetch(`/api/questions${selectedCategory ? `?category=${selectedCategory}` : ''}`);
+      if (!response.ok) throw new Error('Failed to fetch questions');
+      return response.json();
+    }
   });
 
   useEffect(() => {
@@ -98,27 +103,29 @@ export default function QuestionBank() {
           </p>
         </div>
 
-        <Card className="mb-6">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-xl">Practice Session</CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                Questions Answered: {questionsAnswered}
-              </p>
-            </div>
-            <div className="w-32">
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
-                  <SelectItem value="fundamentals">Fundamentals</SelectItem>
-                  <SelectItem value="med-surg">Med-Surg</SelectItem>
-                  <SelectItem value="pediatrics">Pediatrics</SelectItem>
-                  <SelectItem value="pharmacology">Pharmacology</SelectItem>
-                </SelectContent>
-              </Select>
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle className="text-xl">Practice Session</CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Questions Answered: {questionsAnswered}
+                </p>
+              </div>
+              <div className="w-32">
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All Categories</SelectItem>
+                    <SelectItem value="fundamentals">Fundamentals</SelectItem>
+                    <SelectItem value="med-surg">Med-Surg</SelectItem>
+                    <SelectItem value="pediatrics">Pediatrics</SelectItem>
+                    <SelectItem value="pharmacology">Pharmacology</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </CardHeader>
         </Card>
@@ -128,18 +135,18 @@ export default function QuestionBank() {
             <CardContent className="pt-6">
               <div className="space-y-6">
                 <div className="flex flex-wrap gap-2 mb-4">
-                  <Badge variant="outline">{currentQuestion.category}</Badge>
+                  <Badge className="bg-primary/10">{currentQuestion.category}</Badge>
                   <Badge 
-                    variant={
-                      currentQuestion.difficulty === "Easy" ? "default" :
-                      currentQuestion.difficulty === "Medium" ? "secondary" :
-                      "destructive"
+                    className={
+                      currentQuestion.difficulty === "Easy" ? "bg-green-500/10" :
+                      currentQuestion.difficulty === "Medium" ? "bg-yellow-500/10" :
+                      "bg-red-500/10"
                     }
                   >
                     {currentQuestion.difficulty}
                   </Badge>
                   {currentQuestion.tags.map((tag, index) => (
-                    <Badge key={index} variant="outline" className="bg-muted">
+                    <Badge key={index} className="bg-muted">
                       {tag}
                     </Badge>
                   ))}
@@ -153,18 +160,17 @@ export default function QuestionBank() {
                   {currentQuestion.options.map((option) => (
                     <Button
                       key={option.id}
-                      variant={
+                      className={`w-full justify-start text-left h-auto p-4 ${
                         showExplanation
                           ? option.id === currentQuestion.correctAnswer
-                            ? "default"
+                            ? "bg-green-500/10 hover:bg-green-500/20"
                             : option.id === selectedAnswer
-                            ? "destructive"
-                            : "outline"
+                            ? "bg-red-500/10 hover:bg-red-500/20"
+                            : "bg-background hover:bg-accent"
                           : selectedAnswer === option.id
-                          ? "default"
-                          : "outline"
-                      }
-                      className="w-full justify-start text-left h-auto p-4"
+                          ? "bg-primary/10 hover:bg-primary/20"
+                          : "bg-background hover:bg-accent"
+                      }`}
                       onClick={() => handleAnswerSelect(option.id)}
                       disabled={showExplanation}
                     >
