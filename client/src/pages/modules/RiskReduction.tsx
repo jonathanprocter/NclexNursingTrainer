@@ -8,8 +8,22 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useMutation } from "@tanstack/react-query";
 import { AIHelpButton } from "@/components/ui/ai-help-button";
-import { CheckCircle2, RefreshCw, BookOpen } from "lucide-react";
-import { Form } from "@/components/ui/form"; //Added import
+import { 
+  CheckCircle2, 
+  RefreshCw,
+  ListChecks,
+  Shield,
+  FileLock2,
+  Stethoscope,
+  BookOpen 
+} from "lucide-react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Form } from "@/components/ui/form";
 
 
 interface RiskScenario {
@@ -337,7 +351,6 @@ export default function RiskReduction() {
       if (isMounted.current) {
         setSelectedScenario(result);
         setShowExplanation(false);
-        //form.reset(); //Removed as it's not needed here.
       }
     } catch (error) {
       if (isMounted.current) {
@@ -753,13 +766,13 @@ export default function RiskReduction() {
                       </div>
                     </div>
 
-                    <Form {...form}> {/*Added Form*/}
+                    <Form>
                       <form className="space-y-4">
                         <div className="space-y-2">
                           <Label>Select the best course of action:</Label>
                           <RadioGroup
                             onValueChange={(value) => {
-                              form.setValue("answer", value);
+                              //form.setValue("answer", value);
                               setShowExplanation(true);
                             }}
                           >
@@ -783,7 +796,7 @@ export default function RiskReduction() {
                         <p className="text-sm">
                           {selectedScenario.options
                             ?.find(
-                              (_, index) => index.toString() === form.getValues("answer")
+                              (_, index) => index.toString() ===  "answer" //form.getValues("answer")
                             )?.explanation}
                         </p>
                       </div>
