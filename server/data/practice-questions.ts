@@ -11,9 +11,30 @@ export const practiceQuestions = {
       ],
       correctAnswer: "a",
       explanation: "Positioning the client in high Fowler's position is the first priority as it maximizes lung expansion and reduces the work of breathing. This position helps decrease the work of breathing and improves oxygenation before implementing other interventions.",
-      category: "Fundamentals",
+      domain: "Physiological Integrity",
+      topic: "Basic Care and Comfort",
+      subtopic: "Oxygenation",
       difficulty: "Medium",
-      tags: ["respiratory", "positioning", "oxygenation"]
+      conceptBreakdown: [
+        {
+          concept: "ABC Priority",
+          explanation: "Airway and breathing take priority over other interventions"
+        },
+        {
+          concept: "Positioning",
+          explanation: "High Fowler's position (60-90 degrees) optimizes respiratory function"
+        }
+      ],
+      faqs: [
+        {
+          question: "Why not give the bronchodilator first?",
+          answer: "While medication may help, positioning is a quick, non-pharmacological intervention that can immediately help breathing"
+        },
+        {
+          question: "What are the signs of respiratory distress?",
+          answer: "Increased respiratory rate, decreased O2 saturation, use of accessory muscles"
+        }
+      ]
     },
     {
       id: "fund-2",
@@ -26,9 +47,12 @@ export const practiceQuestions = {
       ],
       correctAnswer: "c",
       explanation: "Unresponsiveness to verbal stimuli combined with unequal pupils indicates a significant neurological change that requires immediate medical attention as it could signify increased intracranial pressure or other acute neurological conditions.",
-      category: "Fundamentals",
+      domain: "Physiological Integrity",
+      topic: "Neurological",
+      subtopic: "Assessment",
       difficulty: "Hard",
-      tags: ["neurological", "assessment", "critical thinking"]
+      conceptBreakdown: [],
+      faqs: []
     }
   ],
   "med-surg": [
@@ -43,9 +67,12 @@ export const practiceQuestions = {
       ],
       correctAnswer: "b",
       explanation: "High Fowler's position (60-90 degrees) reduces venous return to the heart and promotes optimal lung expansion, making it the best position for a client with heart failure experiencing dyspnea.",
-      category: "Med-Surg",
+      domain: "Physiological Integrity",
+      topic: "Cardiovascular",
+      subtopic: "Heart Failure",
       difficulty: "Medium",
-      tags: ["cardiac", "positioning", "respiratory"]
+      conceptBreakdown: [],
+      faqs: []
     },
     {
       id: "med-2",
@@ -58,9 +85,12 @@ export const practiceQuestions = {
       ],
       correctAnswer: "b",
       explanation: "For hypoglycemia (blood glucose < 70 mg/dL), the priority is to raise blood glucose quickly using 15g of fast-acting carbohydrate according to the Rule of 15. This is especially important when the client is symptomatic.",
-      category: "Med-Surg",
+      domain: "Physiological Integrity",
+      topic: "Endocrine",
+      subtopic: "Diabetes",
       difficulty: "Medium",
-      tags: ["diabetes", "hypoglycemia", "prioritization"]
+      conceptBreakdown: [],
+      faqs: []
     }
   ],
   "pediatrics": [
@@ -75,9 +105,12 @@ export const practiceQuestions = {
       ],
       correctAnswer: "c",
       explanation: "Delayed capillary refill > 3 seconds indicates significant dehydration and compromised peripheral circulation, requiring immediate intervention.",
-      category: "Pediatrics",
+      domain: "Physiological Integrity",
+      topic: "Pediatric",
+      subtopic: "Dehydration",
       difficulty: "Hard",
-      tags: ["pediatric", "assessment", "dehydration"]
+      conceptBreakdown: [],
+      faqs: []
     },
     {
       id: "ped-2",
@@ -90,9 +123,12 @@ export const practiceQuestions = {
       ],
       correctAnswer: "c",
       explanation: "Using age-appropriate explanations helps reduce anxiety and promotes cooperation. Never deceive children about medication or force administration, as this can create distrust and future compliance issues.",
-      category: "Pediatrics",
+      domain: "Psychosocial Integrity",
+      topic: "Pediatric",
+      subtopic: "Communication",
       difficulty: "Medium",
-      tags: ["pediatric", "medication administration", "communication"]
+      conceptBreakdown: [],
+      faqs: []
     }
   ],
   "pharmacology": [
@@ -107,9 +143,12 @@ export const practiceQuestions = {
       ],
       correctAnswer: "b",
       explanation: "Apical pulse must be assessed for a full minute before administering digoxin. Hold the medication and notify the provider if pulse is < 60 beats/min in adults, as bradycardia may indicate toxicity.",
-      category: "Pharmacology",
+      domain: "Physiological Integrity",
+      topic: "Pharmacological and Parenteral Therapies",
+      subtopic: "Cardiac Glycosides",
       difficulty: "Medium",
-      tags: ["medication safety", "cardiac", "assessment"]
+      conceptBreakdown: [],
+      faqs: []
     }
   ]
 };
