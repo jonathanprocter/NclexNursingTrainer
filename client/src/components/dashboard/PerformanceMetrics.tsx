@@ -35,11 +35,11 @@ export default function PerformanceMetrics({ data }: PerformanceMetricsProps) {
     },
   ];
 
-  const metrics = data?.metrics || mockMetrics;
+  const metrics = Array.isArray(data?.metrics) ? data.metrics : mockMetrics;
 
   return (
     <div className="space-y-6">
-      {metrics.map((metric: any) => (
+      {metrics.map((metric, index) => (
         <Card key={metric.category}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg font-medium">
