@@ -41,7 +41,7 @@ export default function Pathophysiology() {
           .map(result => result.transcript)
           .join('');
 
-        setQuestion(prev => transcript);
+        setQuestion(prev => prev + transcript);
       };
 
       recognition.onerror = (event) => {
