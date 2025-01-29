@@ -68,34 +68,11 @@ export default function Home() {
 
       Keep going! You're making great progress in mastering these topics! 🌟
       `;
-      setStudyPlan(`Study Plan for ${data.duration} Minutes:
-
-      1. Quick Review (5 mins)
-      - Review your previous quiz results in Pharmacology
-      - Check areas needing improvement
-
-      2. Focused Learning (${Math.floor(parseInt(data.duration) * 0.4)} mins)
-      - Practice Drug Calculations module
-      - Focus on dosage conversions (your current weak area)
-
-      3. Active Practice (${Math.floor(parseInt(data.duration) * 0.4)} mins)
-      - Complete 2 practice scenarios in Clinical Judgment
-      - Focus on patient assessment and care planning
-
-      4. Quick Assessment (${Math.floor(parseInt(data.duration) * 0.2)} mins)
-      - Take a mini-quiz on today's topics
-      - Review incorrect answers
-
-      💡 Pro Tips:
-      - Take short breaks between sections
-      - Use the AI companion for instant clarification
-      - Record any challenging concepts for future review
-
-      Keep going, Bianca! You're making great progress! 🌟
-
-      ${plan.additionalTips || ''}`);
-
-    setStudyPlan(plan.personalizedPlan || personalizedPlan);
+      setStudyPlan(plan.personalizedPlan || personalizedPlan);
+    } catch (error) {
+      console.error("Error generating study plan:", error);
+      toast.error("Failed to generate study plan. Please try again.");
+    }
   };
 
   const showToast = () => {
