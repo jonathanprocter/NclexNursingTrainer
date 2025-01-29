@@ -150,5 +150,29 @@ export const practiceQuestions = {
       conceptBreakdown: [],
       faqs: []
     }
+  ],
+  "standard": [
+    {
+      id: "std_q1",
+      text: "Which nursing intervention is most appropriate for a patient experiencing acute anxiety?",
+      options: [
+        "Administer PRN medication immediately",
+        "Use therapeutic communication and breathing techniques",
+        "Call for psychiatric consultation",
+        "Restrain the patient for safety"
+      ],
+      correctAnswer: 1
+    },
+    {
+      id: "std_q2",
+      text: "A patient presents with symptoms of diabetic ketoacidosis. What is the priority nursing action?",
+      options: [
+        "Administer insulin as ordered",
+        "Check blood glucose level",
+        "Assess level of consciousness",
+        "Start IV fluids"
+      ],
+      correctAnswer: 2
+    }
   ]
 };
