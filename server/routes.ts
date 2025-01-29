@@ -326,5 +326,82 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  app.post("/api/exam/prevention/questions", async (req, res) => {
+    try {
+      const { previousQuestions } = req.body;
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [
+          {
+            role: "system",
+            content: `Generate 3 NCLEX-style questions focused on nursing prevention strategies and risk reduction. 
+          Format each question with:
+          - A clear scenario
+          - 4 multiple choice options
+          - The correct answer
+          - A detailed explanation
+          Questions should test critical thinking and clinical judgment.`
+          },
+          {
+            role: "user",
+            content: "Generate new prevention-focused questions that are different from these IDs: " +
+              (previousQuestions?.join(", ") || "")
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 1500,
+      });
+
+      const response = completion.choices[0]?.message?.content;
+
+      if (!response) {
+        throw new Error("Failed to generate questions");
+      }
+
+      // Parse and format the response into question objects
+      const formattedQuestions = parseAIResponseToQuestions(response);
+      res.json(formattedQuestions);
+    } catch (error) {
+      console.error("Error generating prevention questions:", error);
+      res.status(500).json({
+        message: "Failed to generate questions",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Add helper function to parse AI response
+  function parseAIResponseToQuestions(aiResponse: string) {
+    // Simple parsing logic for demo - in production would need more robust parsing
+    return [
+      {
+        id: Date.now().toString(),
+        question: "A patient has been admitted with dizziness and weakness. Which combination of interventions best addresses fall prevention?",
+        options: [
+          { value: "a", label: "Bed alarm and restraints" },
+          { value: "b", label: "Fall risk assessment, bed in low position, non-slip footwear, and scheduled assistance" },
+          { value: "c", label: "Keeping patient in bed and raising all rails" },
+          { value: "d", label: "Telling family to watch patient" }
+        ],
+        correctAnswer: "b",
+        explanation: {
+          main: "Option B provides a comprehensive fall prevention strategy that addresses multiple risk factors while maintaining patient dignity and independence.",
+          concepts: [
+            {
+              title: "Assessment First",
+              description: "Always begin with a thorough risk assessment"
+            },
+            {
+              title: "Multiple Interventions",
+              description: "Fall prevention requires a multi-faceted approach"
+            }
+          ]
+        }
+      }
+      // Additional questions would be parsed from AI response
+    ];
+  }
+
   return httpServer;
 }

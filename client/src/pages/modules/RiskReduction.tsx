@@ -176,7 +176,7 @@ export default function RiskReduction() {
 
   const generateScenarioMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch("/api/generate-risk-scenario", {
+      const response = await fetch("/api/exam/regular/question", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
@@ -191,9 +191,12 @@ export default function RiskReduction() {
 
   const generateMoreQuestionsMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch("/api/generate-prevention-questions", {
+      const response = await fetch("/api/exam/prevention/questions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          previousQuestions: preventionQuestions.map(q => q.id)
+        }),
       });
 
       if (!response.ok) {
@@ -644,7 +647,7 @@ export default function RiskReduction() {
               <AIHelpButton
                 title="Prevention Strategies"
                 description="Get AI assistance with understanding prevention strategies and risk reduction techniques."
-                topic="prevention strategies in nursing"
+                topic="prevention strategies and risk reduction in nursing practice"
               />
             </CardHeader>
             <CardContent>
@@ -859,7 +862,7 @@ export default function RiskReduction() {
                           <h4 className="font-medium">Explanation</h4>
                         </div>
                         <p className="text-sm">
-                          {selectedScenario.options.find(
+                          {selectedScenario.options                          ?.find(
                             (_, index) => index.toString() === form.getValues("answer")
                           )?.explanation}
                         </p>
