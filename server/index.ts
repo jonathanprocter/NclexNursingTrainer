@@ -15,7 +15,7 @@ const app = express();
 // ─────────────────────────────────────────────────────────────
 app.use(
   cors({
-    origin: true, // Allow all origins in development
+    origin: "*", // Allow all origins in development
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: ["*"],
@@ -31,9 +31,15 @@ app.options("*", cors());
 // 2. Additional Headers for Replit
 // ─────────────────────────────────────────────────────────────
 app.use((req, res, next) => {
+  // Allow the Replit domain and any other origins
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
   res.header("Access-Control-Allow-Headers", "*");
+  // Set CSP to be more permissive in development
+  res.header(
+    "Content-Security-Policy",
+    "default-src 'self' * 'unsafe-inline' 'unsafe-eval' data: blob:;",
+  );
   next();
 });
 
@@ -63,6 +69,8 @@ app.use((req, res, next) => {
     const server = registerRoutes(app);
 
     if (process.env.NODE_ENV === "development") {
+      // Set NODE_ENV to development explicitly
+      process.env.NODE_ENV = "development";
       await setupVite(app, server);
     } else {
       serveStatic(app);

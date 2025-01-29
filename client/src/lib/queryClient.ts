@@ -4,8 +4,16 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       queryFn: async ({ queryKey }) => {
-        const res = await fetch(queryKey[0] as string, {
+        // Get the current host from window location
+        const host = window.location.origin;
+        const url = `${host}${queryKey[0]}`;
+
+        const res = await fetch(url, {
           credentials: "include",
+          headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+          },
         });
 
         if (!res.ok) {
