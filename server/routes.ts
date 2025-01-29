@@ -833,17 +833,18 @@ export function registerRoutes(app: Express): Server {
     let allQuestions = Object.values(practiceQuestions).flat();
 
     if (difficulty !== 'all') {
-      allQuestions = allQuestions.filter(q => q.difficulty === difficulty);
+      allQuestions = allQuestions.filter(q => q.difficulty.toLowerCase() === difficulty);
     }
 
-    // Ensure minimum number of questions
-    while (allQuestions.length < Number(min)) {
-      const originalQuestions = Object.values(practiceQuestions).flat();
-      const questionsToAdd = originalQuestions.slice(0, Number(min) - allQuestions.length);
-      allQuestions.push(...questionsToAdd);
-    }
+    // Shuffle questions randomly
+    const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
+    
+    // Take only unique questions up to min
+    const uniqueQuestions = Array.from(new Set(shuffled.map(q => JSON.stringify(q))))
+      .map(q => JSON.parse(q))
+      .slice(0, Number(min));
 
-    res.json(allQuestions);
+    res.json(uniqueQuestions);
   });
 
   return httpServer;
