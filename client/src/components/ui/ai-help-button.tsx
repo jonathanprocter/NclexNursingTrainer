@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Brain, Send } from "lucide-react";
+import ReactMarkdown from 'react-markdown';
 import {
   Dialog,
   DialogContent,
@@ -71,23 +72,25 @@ export function AIHelpButton({ title, description, topic }: AIHelpButtonProps) {
           AI Help
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <ScrollArea className="h-[300px] pr-4">
+          <ScrollArea className="h-[400px] pr-4">
             {messages.map((message, i) => (
               <div
                 key={i}
                 className={`mb-4 ${
                   message.role === "assistant"
-                    ? "bg-muted p-3 rounded-lg"
+                    ? "bg-muted p-4 rounded-lg"
                     : "border-l-4 border-primary pl-3"
                 }`}
               >
-                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                <div className="prose prose-sm dark:prose-invert max-w-none">
+                  <ReactMarkdown>{message.content}</ReactMarkdown>
+                </div>
               </div>
             ))}
             {messages.length === 0 && (
