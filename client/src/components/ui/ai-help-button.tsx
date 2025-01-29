@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Brain, Send } from "lucide-react";
+import { Brain, Send, Download } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import {
   Dialog,
@@ -30,6 +30,23 @@ export function AIHelpButton({ title, description, topic }: AIHelpButtonProps) {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  const handleExport = () => {
+    const content = messages.map(msg => `${msg.role.toUpperCase()}: ${msg.content}`).join('\n\n');
+    const element = document.createElement('a');
+    const file = new Blob([content], { type: 'text/plain' });
+    element.href = URL.createObjectURL(file);
+    element.download = `${topic.toLowerCase().replace(/\s+/g, '_')}_ai_help.txt`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    
+    toast({
+      title: "Success",
+      description: "Content exported successfully!",
+      duration: 3000,
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,6 +95,17 @@ export function AIHelpButton({ title, description, topic }: AIHelpButtonProps) {
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
+          <div className="flex justify-end mb-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleExport}
+              disabled={messages.length === 0}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </Button>
+          </div>
           <ScrollArea className="h-[400px] pr-4">
             {messages.map((message, i) => (
               <div
