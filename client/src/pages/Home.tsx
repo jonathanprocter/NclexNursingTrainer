@@ -53,12 +53,12 @@ export default function Home() {
       `).join('\n') : 'Loading study areas...'}
 
       📋 Recommended Study Schedule:
-      ${plan.adaptiveQuestions ? plan.adaptiveQuestions.map((topic: any, index: number) => `
-      ${index + 1}. ${topic.topic} Practice (${Math.round(parseInt(data.duration) * 0.3)} mins)
-      - Complete ${topic.questions.length} targeted practice questions
-      - Review incorrect answers and explanations
-      - Take notes on challenging concepts
-      `).join('\n')}
+      ${plan.adaptiveQuestions ? plan.adaptiveQuestions.map((topic: any, index: number) => 
+        `${index + 1}. ${topic.topic} Practice (${Math.round(parseInt(data.duration) * 0.3)} mins)
+        - Complete ${topic.questions.length} targeted practice questions
+        - Review incorrect answers and explanations
+        - Take notes on challenging concepts`
+      ).join('\n') : ''}
 
       💡 Personalized Tips:
       - Focus on understanding core concepts before moving to complex scenarios
