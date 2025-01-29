@@ -1,25 +1,16 @@
-import { Button } from "../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { Progress } from "../components/ui/progress";
-import QuestionCard from "../components/nclex/QuestionCard";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
+import QuestionCard from "@/components/nclex/QuestionCard";
 import { useState, useEffect } from "react";
-import { Badge } from "../components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { Clock, Book, Activity, BarChart3, HelpCircle, Loader2 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
-import { Alert, AlertDescription } from "../components/ui/alert";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
-
-interface Question {
-  id: number;
-  text: string;
-  options: { id: string; text: string }[];
-  correctAnswer: string;
-  explanation: string;
-  category?: string;
-  difficulty?: string;
-}
+import type { Question } from "@/types/questions";
 
 export default function Quizzes() {
   const { toast } = useToast();
@@ -29,14 +20,14 @@ export default function Quizzes() {
   const [aiResponse, setAiResponse] = useState("");
   const [score, setScore] = useState({ correct: 0, total: 0 });
   const [quizComplete, setQuizComplete] = useState(false);
-  const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
+  const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
   const [isReviewMode, setIsReviewMode] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   // Format time as mm:ss
-  const formatTime = (seconds: number) => {
+  const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
@@ -52,11 +43,10 @@ export default function Quizzes() {
     }
   }, [quizComplete, isReviewMode, questions.length]);
 
-  // Generate new questions mutation
   const [previousQuestionIds, setPreviousQuestionIds] = useState<string[]>([]);
   const [userPerformance, setUserPerformance] = useState<{
-    correctByTopic: { [key: string]: number },
-    totalByTopic: { [key: string]: number }
+    correctByTopic: Record<string, number>;
+    totalByTopic: Record<string, number>;
   }>({
     correctByTopic: {},
     totalByTopic: {}
@@ -68,31 +58,30 @@ export default function Quizzes() {
         const response = await fetch('/api/generate-questions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             topic,
             previousQuestionIds,
-            userPerformance 
+            userPerformance
           }),
         });
-        
+
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.message || 'Failed to generate questions');
         }
-        
+
         const data = await response.json();
         if (!Array.isArray(data) || data.length === 0) {
           throw new Error('No questions received');
         }
-        
-        return data;
+
+        return data as Question[];
       } catch (error) {
         console.error('Question generation error:', error);
         throw error;
       }
     },
     onSuccess: (newQuestions) => {
-      // Reset all state
       setQuestions(newQuestions);
       setCurrentQuestion(0);
       setQuizComplete(false);
@@ -114,9 +103,9 @@ export default function Quizzes() {
         description: error instanceof Error ? error.message : "Failed to generate questions. Using backup questions instead.",
         variant: "destructive",
       });
-      // Set a default question if API fails
-      setQuestions([{
-        id: Date.now(),
+
+      const backupQuestion: Question = {
+        id: "backup-1",
         text: "Which nursing intervention is most appropriate for a client with acute pain?",
         options: [
           { id: "a", text: "Assess pain characteristics" },
@@ -127,38 +116,30 @@ export default function Quizzes() {
         correctAnswer: "a",
         explanation: "Pain assessment should be conducted first to determine appropriate interventions.",
         category: selectedTopic || "General",
-        difficulty: "Medium"
-      }]);
+        difficulty: "medium"
+      };
+
+      setQuestions([backupQuestion]);
       setIsLoading(false);
     },
   });
 
-  const generateNewQuestions = (topic?: string) => {
-    setIsLoading(true);
-    setSelectedTopic(topic || null);
-    generateQuestionsMutation.mutate(topic);
-  };
-
-  const handleAnswer = (questionId: number, selectedAnswer: string) => {
+  const handleAnswer = (questionId: string, selectedAnswer: string) => {
     if (isReviewMode) return;
 
     const currentQ = questions[currentQuestion];
     const correct = selectedAnswer === currentQ.correctAnswer;
-    
-    // Update user answers
+
     setUserAnswers(prev => ({...prev, [questionId]: selectedAnswer}));
-    
-    // Update score
+
     setScore(prev => ({
       ...prev,
       correct: prev.correct + (correct ? 1 : 0),
       total: prev.total + 1
     }));
 
-    // Track question ID
-    setPreviousQuestionIds(prev => [...prev, currentQ.id]);
+    setPreviousQuestionIds(prev => [...prev, questionId]);
 
-    // Update performance metrics
     setUserPerformance(prev => {
       const topic = currentQ.category || 'General';
       return {
@@ -185,12 +166,18 @@ export default function Quizzes() {
     }
   };
 
+  const generateNewQuestions = (topic?: string) => {
+    setIsLoading(true);
+    setSelectedTopic(topic || null);
+    generateQuestionsMutation.mutate(topic);
+  };
+
   const startTopicPractice = async (topic: string) => {
     try {
       setIsLoading(true);
       setSelectedTopic(topic);
       await generateQuestionsMutation.mutateAsync(topic);
-      
+
       // Switch to questions tab after questions are loaded
       const questionsTab = document.querySelector('[value="questions"]') as HTMLElement;
       if (questionsTab) questionsTab.click();
@@ -314,15 +301,15 @@ Would you like me to elaborate on any of these points?`);
 
                   <QuestionCard
                     question={questions[currentQuestion]}
-                    onNext={(answer) => handleAnswer(questions[currentQuestion].id, answer)}
+                    onNext={(answer: string) => handleAnswer(questions[currentQuestion].id, answer)}
                     userAnswer={isReviewMode ? userAnswers[questions[currentQuestion].id] : undefined}
                     showAnswer={isReviewMode}
                   />
 
                   <div className="mt-4">
-                    <Progress 
-                      value={(currentQuestion + 1) * (100 / questions.length)} 
-                      className="h-2" 
+                    <Progress
+                      value={(currentQuestion + 1) * (100 / questions.length)}
+                      className="h-2"
                     />
                     <div className="flex justify-between text-sm text-muted-foreground mt-2">
                       <span>{isReviewMode ? "Review Progress" : "Progress"}</span>
@@ -335,12 +322,12 @@ Would you like me to elaborate on any of these points?`);
                   <div className="text-center">
                     <h2 className="text-2xl font-bold mb-2">Quiz Complete! 🎉</h2>
                     <p className="text-muted-foreground">
-                      You scored {Math.round((score.correct / questions.length) * 100)}% 
+                      You scored {Math.round((score.correct / questions.length) * 100)}%
                       ({score.correct}/{questions.length} correct)
                     </p>
                   </div>
                   <div className="flex justify-center gap-4">
-                    <Button 
+                    <Button
                       onClick={() => generateNewQuestions()}
                       disabled={isLoading}
                       className="flex items-center gap-2"
@@ -381,7 +368,7 @@ Would you like me to elaborate on any of these points?`);
                         <span>Questions: 50</span>
                         <span>Completed: 25</span>
                       </div>
-                      <Button 
+                      <Button
                         className="w-full mt-4"
                         onClick={() => startTopicPractice(topic)}
                       >
