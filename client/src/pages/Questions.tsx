@@ -36,6 +36,14 @@ export default function Questions() {
 
   const { data: questions, isLoading, refetch } = useQuery<Question[]>({
     queryKey: ["/api/questions", selectedDifficulty],
+    queryFn: async () => {
+      const response = await fetch(`/api/questions?min=25&difficulty=${selectedDifficulty}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch questions');
+      }
+      const data = await response.json();
+      return data;
+    }
   });
 
   const generateMore = useMutation({

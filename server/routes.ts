@@ -828,6 +828,24 @@ export function registerRoutes(app: Express): Server {
     ];
   }
 
+  app.get('/api/questions', (req, res) => {
+    const { difficulty = 'all', min = 25 } = req.query;
+    let allQuestions = Object.values(practiceQuestions).flat();
+
+    if (difficulty !== 'all') {
+      allQuestions = allQuestions.filter(q => q.difficulty === difficulty);
+    }
+
+    // Ensure minimum number of questions
+    while (allQuestions.length < Number(min)) {
+      const originalQuestions = Object.values(practiceQuestions).flat();
+      const questionsToAdd = originalQuestions.slice(0, Number(min) - allQuestions.length);
+      allQuestions.push(...questionsToAdd);
+    }
+
+    res.json(allQuestions);
+  });
+
   return httpServer;
 }
 
