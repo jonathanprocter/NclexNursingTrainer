@@ -25,8 +25,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Form } from "@/components/ui/form";
-
 
 interface RiskScenario {
   id: string;
@@ -341,7 +339,6 @@ export default function RiskReduction() {
 
   const generateMoreQuestionsMutation = useMutation({
     mutationFn: async () => {
-      // Get the IDs of current questions
       const currentQuestionIds = preventionQuestions.map(q => q.id);
       console.log('Sending request with previous questions:', currentQuestionIds);
 
@@ -354,12 +351,14 @@ export default function RiskReduction() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to generate questions");
+        throw new Error(`Failed to generate questions: ${response.statusText}`);
       }
 
       const data = await response.json();
+      console.log('Received new questions:', data);
+
       if (!Array.isArray(data) || data.length === 0) {
-        throw new Error("Invalid response format");
+        throw new Error("Invalid response format or no questions received");
       }
 
       return data;
@@ -375,6 +374,7 @@ export default function RiskReduction() {
     },
     onError: (error) => {
       if (isMounted.current) {
+        console.error('Question generation error:', error);
         toast({
           title: "Error",
           description: error instanceof Error ? error.message : "Failed to generate new questions. Please try again.",
@@ -386,8 +386,10 @@ export default function RiskReduction() {
 
   const handleGenerateMoreQuestions = async () => {
     if (!isMounted.current || isGeneratingQuestions) return;
+
     setIsGeneratingQuestions(true);
-    console.log('Generating new questions...'); 
+    console.log('Generating new questions...');
+
     try {
       await generateMoreQuestionsMutation.mutateAsync();
     } catch (error) {
@@ -570,90 +572,91 @@ export default function RiskReduction() {
       </CardContent>
     </Card>
   );
+};
 
-  const generateScenarioMutation = useMutation({
-    mutationFn: async () => {
-      const response = await fetch("/api/exam/regular/question", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to generate scenario");
-      }
-
-      return response.json();
-    },
-  });
-
-  const handleGenerateScenario = async () => {
-    if (!isMounted.current) return;
-
-    setIsLoading(true);
-    try {
-      const result = await generateScenarioMutation.mutateAsync();
-      if (isMounted.current) {
-        setSelectedScenario(result);
-        setShowExplanation(false);
-      }
-    } catch (error) {
-      if (isMounted.current) {
-        toast({
-          title: "Error",
-          description: "Failed to generate scenario. Please try again.",
-          variant: "destructive",
-        });
-      }
-    } finally {
-      if (isMounted.current) {
-        setIsLoading(false);
-      }
-    }
-  };
-
-  const handleSubmitAssessment = async (data: { riskAssessment: string }) => {
-    if (!isMounted.current) return;
-
-    toast({
-      title: "Assessment Submitted",
-      description: "Your risk assessment has been recorded.",
+const generateScenarioMutation = useMutation({
+  mutationFn: async () => {
+    const response = await fetch("/api/exam/regular/question", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
     });
-  };
+
+    if (!response.ok) {
+      throw new Error("Failed to generate scenario");
+    }
+
+    return response.json();
+  },
+});
+
+const handleGenerateScenario = async () => {
+  if (!isMounted.current) return;
+
+  setIsLoading(true);
+  try {
+    const result = await generateScenarioMutation.mutateAsync();
+    if (isMounted.current) {
+      setSelectedScenario(result);
+      setShowExplanation(false);
+    }
+  } catch (error) {
+    if (isMounted.current) {
+      toast({
+        title: "Error",
+        description: "Failed to generate scenario. Please try again.",
+        variant: "destructive",
+      });
+    }
+  } finally {
+    if (isMounted.current) {
+      setIsLoading(false);
+    }
+  }
+};
+
+const handleSubmitAssessment = async (data: { riskAssessment: string }) => {
+  if (!isMounted.current) return;
+
+  toast({
+    title: "Assessment Submitted",
+    description: "Your risk assessment has been recorded.",
+  });
+};
 
 
-  return (
-    <div className="space-y-6">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold mb-2">Risk Reduction in Nursing Practice</h1>
-        <p className="text-muted-foreground max-w-2xl mx-auto">
-          Master essential risk reduction concepts and strategies for safe, high-quality patient care
-        </p>
-      </div>
-
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="safety">Safety Measures</TabsTrigger>
-          <TabsTrigger value="prevention">Prevention Strategies</TabsTrigger>
-          <TabsTrigger value="practice">Practice Scenarios</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview">
-          {/* Overview content */}
-        </TabsContent>
-
-        <TabsContent value="safety">
-          {/* Safety Measures content */}
-        </TabsContent>
-
-        <TabsContent value="prevention">
-          {renderPreventionStrategies()}
-        </TabsContent>
-
-        <TabsContent value="practice">
-          {/* Practice Scenarios content */}
-        </TabsContent>
-      </Tabs>
+return (
+  <div className="space-y-6">
+    <div className="text-center mb-8">
+      <h1 className="text-3xl font-bold mb-2">Risk Reduction in Nursing Practice</h1>
+      <p className="text-muted-foreground max-w-2xl mx-auto">
+        Master essential risk reduction concepts and strategies for safe, high-quality patient care
+      </p>
     </div>
-  );
+
+    <Tabs defaultValue="prevention" className="space-y-4">
+      <TabsList className="grid w-full grid-cols-4">
+        <TabsTrigger value="overview">Overview</TabsTrigger>
+        <TabsTrigger value="safety">Safety Measures</TabsTrigger>
+        <TabsTrigger value="prevention">Prevention Strategies</TabsTrigger>
+        <TabsTrigger value="practice">Practice Scenarios</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="overview">
+        {/* Overview content */}
+      </TabsContent>
+
+      <TabsContent value="safety">
+        {/* Safety Measures content */}
+      </TabsContent>
+
+      <TabsContent value="prevention">
+        {renderPreventionStrategies()}
+      </TabsContent>
+
+      <TabsContent value="practice">
+        {/* Practice Scenarios content */}
+      </TabsContent>
+    </Tabs>
+  </div>
+);
 }
