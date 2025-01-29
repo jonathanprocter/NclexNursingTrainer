@@ -164,6 +164,7 @@ export function registerRoutes(app: Express): Server {
       res.status(500).json({ message: "Failed to fetch modules" });
     }
   });
+
   // Clinical Judgment AI endpoint
   app.post("/api/chat/clinical-judgment", async (req, res) => {
     const { topic, context, question, type } = req.body;
@@ -188,7 +189,6 @@ export function registerRoutes(app: Express): Server {
       });
 
       const response = completion.choices[0]?.message?.content;
-
 
       if (!response) {
         throw new Error("No response generated");
@@ -226,7 +226,6 @@ export function registerRoutes(app: Express): Server {
       });
 
       const response = completion.choices[0]?.message?.content;
-
 
       if (!response) {
         throw new Error("No response generated");
@@ -471,10 +470,7 @@ export function registerRoutes(app: Express): Server {
         console.error("Failed to parse OpenAI response:", parseError);
         // Fallback to default questions
         generatedQuestions = generateBackupQuestions();
-      } finally {
-        // Ensure cleanup happens regardless of success or failure
       }
-
 
       // Ensure questions are unique and properly formatted
       const formattedQuestions = generatedQuestions.map((q: any, index: number) => ({
@@ -763,103 +759,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  function generateBackupQuestions() {
-    // Generating backup questions in case of API failure
-    return [
-      {
-        id: `backup_${Date.now()}_1`,
-        question: "Which nursing intervention best demonstrates proper infection control practices?",
-        options: [
-          { value: "a", label: "Performing hand hygiene before and after patient contact" },
-          { value: "b", label: "Wearing the same gloves between patients" },
-          { value: "c", label: "Reusing personal protective equipment" },
-          { value: "d", label: "Using hand sanitizer without washing visibly soiled hands" }
-        ],
-        correctAnswer: "a",
-        explanation: {
-          main: "Hand hygiene is the most effective way to prevent the spread of infections.",
-          concepts: [
-            {
-              title: "Basic Prevention",
-              description: "Hand hygiene is fundamental to infection control"
-            },
-            {
-              title: "Evidence-Based Practice",
-              description: "CDC guidelines emphasize hand hygiene as primary prevention"
-            }
-          ]
-        }
-      },
-      {
-        id: `backup_${Date.now()}_2`,
-        question: "What is the most important step in preventing medication errors?",
-        options: [
-          { value: "a", label: "Checking the five rights once" },
-          { value: "b", label: "Verifying the five rights multiple times" },
-          { value: "c", label: "Relying on memory for regular medications" },
-          { value: "d", label: "Having another nurse give all medications" }
-        ],
-        correctAnswer: "b",
-        explanation: {
-          main: "Multiple verification of the five rights ensures medication safety.",
-          concepts: [
-            {
-              title: "Safety Protocol",
-              description: "Multiple checks reduce error probability"
-            },
-            {
-              title: "Critical Thinking",
-              description: "Each verification step requires focused attention"
-            }
-          ]
-        }
-      }
-    ];
-  }
-
-  app.get('/api/questions', (req, res) => {
-    try {
-      const { difficulty = 'all', min = 25 } = req.query;
-      let questions = getQuestionsWithMinimum(Number(min));
-
-      // Convert difficulty to lowercase for comparison
-      const targetDifficulty = String(difficulty).toLowerCase();
-
-      if (targetDifficulty !== 'all') {
-        questions = questions.filter(q => q.difficulty.toLowerCase() === targetDifficulty);
-
-        // If filtered questions are less than minimum, get more questions
-        if (questions.length < Number(min)) {
-          const allQuestions = getQuestionsWithMinimum(Number(min) * 2);
-          questions = allQuestions
-            .filter(q => q.difficulty.toLowerCase() === targetDifficulty)
-            .slice(0, Number(min));
-        }
-      }
-
-      // Ensure all questions have required fields
-      questions = questions.map(question => ({
-        ...question,
-        domain: question.domain || "General Nursing",
-        topic: question.topic || "Core Concepts",
-        subtopic: question.subtopic || "Fundamentals",
-        conceptBreakdown: question.conceptBreakdown || [],
-        faqs: question.faqs || []
-      }));
-
-      // Take questions up to min
-      const selectedQuestions = questions.slice(0, Number(min));
-
-      res.json(selectedQuestions);
-    } catch (error) {
-      console.error("Error fetching questions:", error);
-      res.status(500).json({
-        message: "Failed to fetch questions",
-        error: error instanceof Error ? error.message : "Unknown error"
-      });
-    }
-  });
-
   return httpServer;
 }
 
@@ -971,6 +870,4 @@ function difficultyToNumber(difficulty: string): number {
     case 'hard': return 3;
     default: return 2;
   }
-}
-
 }
