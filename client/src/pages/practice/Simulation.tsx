@@ -70,11 +70,10 @@ export default function Simulation() {
     });
   };
 
-  const handleAction = (action: { action: string; priority: number; rationale: string }) => {
+  const handleAction = (action: { action: string; priority?: number; rationale?: string }) => {
     setUserActions(prev => [...prev, {
       action: action.action,
-      timestamp: new Date().toISOString(),
-      outcome: action.rationale
+      timestamp: new Date().toISOString()
     }]);
   };
 
@@ -257,7 +256,7 @@ export default function Simulation() {
                       <div className="bg-muted/50 p-4 rounded-lg">
                         <h3 className="font-medium mb-2">Patient Background</h3>
                         <p className="text-sm mb-4">{activeScenario.initial_state?.patient_history || 'No patient history available'}</p>
-                        
+
                         <h3 className="font-medium mb-2">Chief Complaint</h3>
                         <p className="text-sm mb-4">{activeScenario.initial_state?.chief_complaint || 'No chief complaint available'}</p>
 
