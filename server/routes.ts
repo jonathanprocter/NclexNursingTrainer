@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { practiceQuestions } from "./data/practice-questions";
 import OpenAI from "openai";
 import { Anthropic } from '@anthropic-ai/sdk';
+import studyGuideRouter from './routes/study-guide';
 
 if (!process.env.OPENAI_API_KEY) {
   throw new Error("OPENAI_API_KEY must be set in environment variables");
@@ -23,163 +24,82 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY
 });
 
-export function setupAIRoutes(app: Express) {
-  app.post("/api/ai/pathophysiology-help", async (req, res) => {
+export function registerRoutes(app: Express): Server {
+  const httpServer = createServer(app);
+
+  // Study guide routes
+  app.use('/api/study-guide', studyGuideRouter);
+
+  // Study buddy chat endpoints
+  app.post("/api/study-buddy/start", async (req, res) => {
     try {
-      const { section, context } = req.body;
-      const response = await openai.chat.completions.create({
+      const { studentId, tone, topic } = req.body;
+
+      const completion = await openai.chat.completions.create({
         model: "gpt-4",
         messages: [
           {
             role: "system",
-            content: "You are an expert pathophysiology instructor helping nursing students prepare for the NCLEX exam."
+            content: `You are a knowledgeable and ${tone} NCLEX tutor. Help nursing students understand complex topics and prepare for their exam.`
           },
           {
             role: "user",
-            content: `Explain the ${section} section in pathophysiology${context ? `. Context: ${context}` : ''}`
+            content: `Start a tutoring session about ${topic || 'NCLEX preparation'}.`
           }
         ]
       });
-      res.json({ content: response.choices[0].message.content });
+
+      const message = completion.choices[0]?.message?.content;
+      if (!message) {
+        throw new Error("Failed to generate initial message");
+      }
+
+      res.json({
+        sessionId: `session_${Date.now()}`,
+        message
+      });
     } catch (error) {
-      console.error("Error:", error);
-      res.status(500).json({ error: "Failed to get AI assistance" });
+      console.error("Error starting study session:", error);
+      res.status(500).json({
+        message: "Failed to start study session",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 
-  // Add other AI endpoints here...
-}
+  app.post("/api/study-buddy/chat", async (req, res) => {
+    try {
+      const { studentId, sessionId, message, context } = req.body;
 
-// Helper function for analyzing performance
-async function analyzePerformance(answers: any[]) {
-  try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        {
-          role: "system",
-          content: "You are an expert nursing educator analyzing student performance on NCLEX-style questions. Provide detailed feedback on strengths and areas for improvement."
-        },
-        {
-          role: "user",
-          content: `Analyze these question responses: ${JSON.stringify(answers)}`
-        }
-      ]
-    });
-
-    const analysis = completion.choices[0]?.message?.content;
-    return {
-      strengths: ["Clinical reasoning", "Patient safety"],
-      weaknesses: ["Pharmacology calculations", "Priority setting"],
-      confidence: 0.75,
-      recommendedTopics: ["Medication administration", "Critical thinking"]
-    };
-  } catch (error) {
-    console.error("Error analyzing performance:", error);
-    return null;
-  }
-}
-
-// Helper function for pathophysiology help
-async function getPathophysiologyHelp(topic: string, context: string) {
-  try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        {
-          role: "system",
-          content: "You are an expert pathophysiology educator helping nursing students understand complex disease processes."
-        },
-        {
-          role: "user",
-          content: `Explain ${topic} in the context of ${context}`
-        }
-      ]
-    });
-
-    return {
-      content: completion.choices[0]?.message?.content,
-      relatedConcepts: ["Inflammation", "Cellular adaptation", "Tissue repair"],
-      clinicalCorrelations: ["Assessment findings", "Common complications", "Nursing interventions"]
-    };
-  } catch (error) {
-    console.error("Error getting pathophysiology help:", error);
-    return null;
-  }
-}
-
-// Helper function for study recommendations
-async function getStudyRecommendations(performanceData: any[]) {
-  try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        {
-          role: "system",
-          content: "You are an expert nursing educator providing personalized study recommendations based on student performance data."
-        },
-        {
-          role: "user",
-          content: `Analyze this performance data and provide study recommendations: ${JSON.stringify(performanceData)}`
-        }
-      ]
-    });
-
-    return {
-      recommendations: completion.choices[0]?.message?.content,
-      priorityTopics: ["Critical thinking", "Clinical judgment", "Patient safety"],
-      studyStrategies: ["Case studies", "Practice questions", "Concept mapping"]
-    };
-  } catch (error) {
-    console.error("Error generating study recommendations:", error);
-    return null;
-  }
-}
-
-// Question generation helper function
-async function generateNewQuestions(userId: number, examType: string) {
-  try {
-    const availableQuestions = Object.values(practiceQuestions).flat();
-
-    if (availableQuestions.length === 0) {
-      throw new Error("No questions available");
-    }
-
-    if (examType === 'cat') {
-      const sortedQuestions = availableQuestions.sort((a, b) => {
-        const difficultyMap = { Easy: 1, Medium: 2, Hard: 3 };
-        return difficultyMap[a.difficulty as keyof typeof difficultyMap] -
-               difficultyMap[b.difficulty as keyof typeof difficultyMap];
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [
+          {
+            role: "system",
+            content: `You are a ${context.tone} NCLEX tutor. Consider recent messages for context and maintain a consistent teaching approach.
+            Previous context: ${JSON.stringify(context.recentMessages)}`
+          },
+          {
+            role: "user",
+            content: message
+          }
+        ]
       });
 
-      const mediumQuestions = sortedQuestions.filter(q => q.difficulty === 'Medium');
-      if (mediumQuestions.length === 0) {
-        throw new Error("No medium difficulty questions available");
+      const response = completion.choices[0]?.message?.content;
+      if (!response) {
+        throw new Error("Failed to generate response");
       }
 
-      const selectedQuestion = mediumQuestions[Math.floor(Math.random() * mediumQuestions.length)];
-      return formatQuestion(selectedQuestion);
+      res.json({ message: response });
+    } catch (error) {
+      console.error("Error in study buddy chat:", error);
+      res.status(500).json({
+        message: "Failed to process message",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
     }
-
-    const randomQuestion = availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
-    return formatQuestion(randomQuestion);
-  } catch (error) {
-    console.error("Error generating questions:", error);
-    throw new Error("Failed to generate questions");
-  }
-}
-
-function formatQuestion(question: any) {
-  return {
-    id: 1,
-    text: question.text,
-    options: question.options,
-    correctAnswer: question.correctAnswer
-  };
-}
-
-export function registerRoutes(app: Express): Server {
-  const httpServer = createServer(app);
+  });
 
   // Modules routes
   app.get("/api/modules", async (_req, res) => {
@@ -489,11 +409,9 @@ export function registerRoutes(app: Express): Server {
         const content = completion.choices[0]?.message?.content;
         if (!content) throw new Error("No content received from OpenAI");
 
-
         // Try to extract JSON if wrapped in markdown code blocks
         const jsonContent = content.replace(/```json\n?|\n?```/g, '').trim();
         generatedQuestions = JSON.parse(jsonContent);
-
 
         if (!Array.isArray(generatedQuestions)) {
           throw new Error("Generated content is not an array");
@@ -533,7 +451,7 @@ export function registerRoutes(app: Express): Server {
       res.json(formattedQuestions);
     } catch (error) {
       console.error("Error generating questions:", error);
-      res.status(500).json({ 
+      res.status(500).json({
         message: "Failed to generate questions",
         error: error instanceof Error ? error.message : "Unknown error"
       });
@@ -694,7 +612,7 @@ export function registerRoutes(app: Express): Server {
 
     try {
       const completion = await openai.chat.completions.create({
-        model: "gpt-4", 
+        model: "gpt-4",
         messages: [
           {
             role: "system",
@@ -760,7 +678,7 @@ export function registerRoutes(app: Express): Server {
 
     try {
       const completion = await openai.chat.completions.create({
-        model: "gpt-4", 
+        model: "gpt-4",
         messages: [
           {
             role: "system",
@@ -819,7 +737,7 @@ export function registerRoutes(app: Express): Server {
 
     try {
       const completion = await openai.chat.completions.create({
-        model: "gpt-4", 
+        model: "gpt-4",
         messages: [
           {
             role: "system",
@@ -861,4 +779,128 @@ export function registerRoutes(app: Express): Server {
   });
 
   return httpServer;
+}
+
+async function analyzePerformance(answers: any[]) {
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert nursing educator analyzing student performance on NCLEX-style questions. Provide detailed feedback on strengths and areas for improvement."
+        },
+        {
+          role: "user",
+          content: `Analyze these question responses: ${JSON.stringify(answers)}`
+        }
+      ]
+    });
+
+    const analysis = completion.choices[0]?.message?.content;
+    return {
+      strengths: ["Clinical reasoning", "Patient safety"],
+      weaknesses: ["Pharmacology calculations", "Priority setting"],
+      confidence: 0.75,
+      recommendedTopics: ["Medication administration", "Critical thinking"]
+    };
+  } catch (error) {
+    console.error("Error analyzing performance:", error);
+    return null;
+  }
+}
+
+async function getPathophysiologyHelp(topic: string, context: string) {
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert pathophysiology educator helping nursing students understand complex disease processes."
+        },
+        {
+          role: "user",
+          content: `Explain ${topic} in the context of ${context}`
+        }
+      ]
+    });
+
+    return {
+      content: completion.choices[0]?.message?.content,
+      relatedConcepts: ["Inflammation", "Cellular adaptation", "Tissue repair"],
+      clinicalCorrelations: ["Assessment findings", "Common complications", "Nursing interventions"]
+    };
+  } catch (error) {
+    console.error("Error getting pathophysiology help:", error);
+    return null;
+  }
+}
+
+async function getStudyRecommendations(performanceData: any[]) {
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert nursing educator providing personalized study recommendations based on student performance data."
+        },
+        {
+          role: "user",
+          content: `Analyze this performance data and provide study recommendations: ${JSON.stringify(performanceData)}`
+        }
+      ]
+    });
+
+    return {
+      recommendations: completion.choices[0]?.message?.content,
+      priorityTopics: ["Critical thinking", "Clinical judgment", "Patient safety"],
+      studyStrategies: ["Case studies", "Practice questions", "Concept mapping"]
+    };
+  } catch (error) {
+    console.error("Error generating study recommendations:", error);
+    return null;
+  }
+}
+
+async function generateNewQuestions(userId: number, examType: string) {
+  try {
+    const availableQuestions = Object.values(practiceQuestions).flat();
+
+    if (availableQuestions.length === 0) {
+      throw new Error("No questions available");
+    }
+
+    if (examType === 'cat') {
+      const sortedQuestions = availableQuestions.sort((a, b) => {
+        const difficultyMap = { Easy: 1, Medium: 2, Hard: 3 };
+        return difficultyMap[a.difficulty as keyof typeof difficultyMap] -
+               difficultyMap[b.difficulty as keyof typeof difficultyMap];
+      });
+
+      const mediumQuestions = sortedQuestions.filter(q => q.difficulty === 'Medium');
+      if (mediumQuestions.length === 0) {
+        throw new Error("No medium difficulty questions available");
+      }
+
+      const selectedQuestion = mediumQuestions[Math.floor(Math.random() * mediumQuestions.length)];
+      return formatQuestion(selectedQuestion);
+    }
+
+    const randomQuestion = availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
+    return formatQuestion(randomQuestion);
+  } catch (error) {
+    console.error("Error generating questions:", error);
+    throw new Error("Failed to generate questions");
+  }
+}
+
+function formatQuestion(question: any) {
+  return {
+    id: 1,
+    text: question.text,
+    options: question.options,
+    correctAnswer: question.correctAnswer
+  };
 }
