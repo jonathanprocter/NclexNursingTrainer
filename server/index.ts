@@ -12,39 +12,39 @@ const app = express();
 
 // ─────────────────────────────────────────────────────────────
 // 1. CORS Configuration
-//    - The 'cors' library will handle all preflight logic.
-//    - No need to manually set headers in a second middleware.
 // ─────────────────────────────────────────────────────────────
 app.use(
   cors({
-    // For development or if you truly want to allow everything:
-    origin: true,
+    origin: true, // Allow all origins in development
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-      "X-Requested-With",
-      "Accept",
-      "Origin",
-      "Access-Control-Allow-Origin",
-    ],
+    allowedHeaders: ["*"],
     exposedHeaders: ["Content-Range", "X-Content-Range"],
-    maxAge: 600, // Increase preflight cache time (in seconds)
+    maxAge: 86400,
   }),
 );
 
-// If you want to explicitly handle OPTIONS requests (optional):
+// Explicitly handle OPTIONS requests
 app.options("*", cors());
 
 // ─────────────────────────────────────────────────────────────
-// 2. Standard Middleware
+// 2. Additional Headers for Replit
+// ─────────────────────────────────────────────────────────────
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "*");
+  next();
+});
+
+// ─────────────────────────────────────────────────────────────
+// 3. Standard Middleware
 // ─────────────────────────────────────────────────────────────
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 // ─────────────────────────────────────────────────────────────
-// 3. Request Logging
+// 4. Request Logging
 // ─────────────────────────────────────────────────────────────
 app.use((req, res, next) => {
   const start = Date.now();
@@ -56,77 +56,37 @@ app.use((req, res, next) => {
 });
 
 // ─────────────────────────────────────────────────────────────
-// 4. Start Server + Vite/Static Setup
+// 5. Start Server + Vite/Static Setup
 // ─────────────────────────────────────────────────────────────
 (async () => {
   try {
     const server = registerRoutes(app);
 
-    // Use Vite in dev or serve static build in production
     if (process.env.NODE_ENV === "development") {
       await setupVite(app, server);
     } else {
       serveStatic(app);
     }
 
-    // 404 handler for unmatched routes
-    app.use((_req: Request, res: Response) => {
-      res.status(404).json({ success: false, message: "Not Found" });
+    // Catch-all route handler for SPA
+    app.use("*", (req, res, next) => {
+      if (req.path.startsWith("/api")) {
+        next();
+      } else {
+        res.sendFile("index.html", { root: "./client" });
+      }
     });
 
-    // Global Error Handler (after routes)
-    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-      console.error("Error:", err);
-      const status = err.status || err.statusCode || 500;
-      const message = err.message || "Internal Server Error";
-      res.status(status).json({
-        success: false,
-        message,
-        ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
-      });
+    const PORT = parseInt(process.env.PORT || "5000", 10);
+    server.listen(PORT, "0.0.0.0", () => {
+      console.log("=== SERVER READY ===");
+      console.log("=================================");
+      console.log(`Server started successfully`);
+      console.log(`Server is running on port ${PORT}`);
+      console.log(`Access URL: http://0.0.0.0:${PORT}`);
+      console.log("=================================");
+      log(`Server running on http://0.0.0.0:${PORT}`);
     });
-
-    // Enhanced port finding logic
-    const findAvailablePort = async (startPort: number, maxRetries = 20): Promise<number> => {
-      return new Promise((resolve, reject) => {
-        let currentPort = startPort;
-        const tryPort = () => {
-          console.log(`Attempting to start server on port ${currentPort}...`);
-          server.listen(currentPort)
-            .once('listening', () => {
-              console.log(`Successfully bound to port ${currentPort}`);
-              resolve(currentPort);
-            })
-            .once('error', (err: any) => {
-              server.removeAllListeners();
-              if (err.code === 'EADDRINUSE') {
-                console.log(`Port ${currentPort} is in use`);
-                if (currentPort - startPort >= maxRetries) {
-                  reject(new Error(`Unable to find an available port after ${maxRetries} attempts`));
-                  return;
-                }
-                currentPort++;
-                setTimeout(tryPort, 100);
-              } else {
-                reject(err);
-              }
-            });
-        };
-        tryPort();
-      });
-    };
-
-    const startPort = process.env.PORT ? parseInt(process.env.PORT, 10) : 5000;
-    const port = await findAvailablePort(startPort);
-
-    // Add this marker for workflow to detect server readiness
-    console.log("=== SERVER READY ===");
-    console.log("=================================");
-    console.log("Server started successfully");
-    console.log(`Server is running on port ${port}`);
-    console.log(`Access URL: http://0.0.0.0:${port}`);
-    console.log("=================================");
-    log(`Server running on http://0.0.0.0:${port}`);
 
   } catch (error) {
     console.error("Failed to start server:", error);

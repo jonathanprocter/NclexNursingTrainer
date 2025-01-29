@@ -1,11 +1,11 @@
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 interface AnalyticsProps {
-  data: any;
+  data?: any; // Make data prop optional
 }
 
-export default function Analytics({ data }: AnalyticsProps) {
+export default function Analytics({ data }: AnalyticsProps = { data: undefined }) {
   const mockPerformanceData = [
     { module: "Pharmacology", score: 85 },
     { module: "Pathophysiology", score: 75 },
@@ -14,6 +14,9 @@ export default function Analytics({ data }: AnalyticsProps) {
     { module: "Psychiatric", score: 88 },
     { module: "Med-Surg", score: 78 },
   ];
+
+  // Use provided data or fallback to mock data
+  const chartData = data?.performanceData || mockPerformanceData;
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
@@ -24,7 +27,7 @@ export default function Analytics({ data }: AnalyticsProps) {
         <CardContent>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={mockPerformanceData}>
+              <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="module" />
                 <YAxis />
@@ -44,15 +47,15 @@ export default function Analytics({ data }: AnalyticsProps) {
           <div className="grid gap-4">
             <div className="bg-muted p-4 rounded-lg">
               <p className="text-sm text-muted-foreground">Total Study Time</p>
-              <p className="text-2xl font-bold">45.5 hours</p>
+              <p className="text-2xl font-bold">{data?.totalStudyTime || "45.5"} hours</p>
             </div>
             <div className="bg-muted p-4 rounded-lg">
               <p className="text-sm text-muted-foreground">Questions Attempted</p>
-              <p className="text-2xl font-bold">428</p>
+              <p className="text-2xl font-bold">{data?.questionsAttempted || "428"}</p>
             </div>
             <div className="bg-muted p-4 rounded-lg">
               <p className="text-sm text-muted-foreground">Average Score</p>
-              <p className="text-2xl font-bold">82%</p>
+              <p className="text-2xl font-bold">{data?.averageScore || "82"}%</p>
             </div>
           </div>
         </CardContent>
