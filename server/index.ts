@@ -18,11 +18,7 @@ const app = express();
 app.use(
   cors({
     // For development or if you truly want to allow everything:
-    origin: "*",
-
-    // Or specify an array of allowed origins instead:
-    // origin: ['https://somefrontend.example', 'https://another-allowed-domain'],
-
+    origin: true,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: [
@@ -59,9 +55,6 @@ app.use((req, res, next) => {
   next();
 });
 
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 5000;
-const HOST = "0.0.0.0"; // Listen on all interfaces
-
 // ─────────────────────────────────────────────────────────────
 // 4. Start Server + Vite/Static Setup
 // ─────────────────────────────────────────────────────────────
@@ -93,15 +86,46 @@ const HOST = "0.0.0.0"; // Listen on all interfaces
       });
     });
 
-    // Finally, start the server
-    server.listen(PORT, HOST, () => {
-      console.log("=================================");
-      console.log("Server started successfully");
-      console.log(`Server is running on port ${PORT}`);
-      console.log(`Access URL: http://${HOST}:${PORT}`);
-      console.log("=================================");
-      log(`Server running on http://${HOST}:${PORT}`);
-    });
+    // Enhanced port finding logic
+    const findAvailablePort = async (startPort: number, maxRetries = 20): Promise<number> => {
+      return new Promise((resolve, reject) => {
+        let currentPort = startPort;
+        const tryPort = () => {
+          console.log(`Attempting to start server on port ${currentPort}...`);
+          server.listen(currentPort)
+            .once('listening', () => {
+              console.log(`Successfully bound to port ${currentPort}`);
+              resolve(currentPort);
+            })
+            .once('error', (err: any) => {
+              server.removeAllListeners();
+              if (err.code === 'EADDRINUSE') {
+                console.log(`Port ${currentPort} is in use`);
+                if (currentPort - startPort >= maxRetries) {
+                  reject(new Error(`Unable to find an available port after ${maxRetries} attempts`));
+                  return;
+                }
+                currentPort++;
+                setTimeout(tryPort, 100);
+              } else {
+                reject(err);
+              }
+            });
+        };
+        tryPort();
+      });
+    };
+
+    const startPort = process.env.PORT ? parseInt(process.env.PORT, 10) : 5000;
+    const port = await findAvailablePort(startPort);
+
+    console.log("=================================");
+    console.log("Server started successfully");
+    console.log(`Server is running on port ${port}`);
+    console.log(`Access URL: http://0.0.0.0:${port}`);
+    console.log("=================================");
+    log(`Server running on http://0.0.0.0:${port}`);
+
   } catch (error) {
     console.error("Failed to start server:", error);
     process.exit(1);
