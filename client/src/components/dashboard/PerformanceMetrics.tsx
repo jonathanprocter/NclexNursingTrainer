@@ -44,7 +44,7 @@ export default function PerformanceMetrics({ data }: PerformanceMetricsProps) {
     },
   ];
 
-  const metrics = Array.isArray(data?.metrics) ? data.metrics : mockMetrics;
+  const metrics = data?.metrics && Array.isArray(data.metrics) && data.metrics.length > 0 ? data.metrics : mockMetrics;
 
   return (
     <div className="space-y-6">
