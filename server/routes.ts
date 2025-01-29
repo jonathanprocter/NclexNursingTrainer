@@ -708,13 +708,35 @@ export function registerRoutes(app: Express): Server {
               "id": "unique_string",
               "title": "scenario title",
               "description": "detailed patient presentation including chief complaint and relevant history",
-              "vitalSigns": {
-                "Temperature": "string",
-                "HeartRate": "string",
-                "RespiratoryRate": "string",
-                "BloodPressure": "string",
-                "O2Saturation": "string",
-                "Pain": "string"
+              "initial_state": {
+                "airway_assessment": "string",
+                "vital_signs": {
+                  "respiratory_rate": "string",
+                  "spo2": "string",
+                  "work_of_breathing": "string",
+                  "blood_pressure": "string",
+                  "heart_rate": "string",
+                  "mean_arterial_pressure": "string",
+                  "capillary_refill": "string",
+                  "temperature": "string",
+                  "gcs": "string",
+                  "pupils": "string",
+                  "blood_glucose": "string",
+                  "cvp": "string",
+                  "etco2": "string",
+                  "art_line": "string"
+                },
+                "lab_values": {
+                  "arterial_blood_gas": "string",
+                  "hemoglobin": "string",
+                  "wbc": "string",
+                  "platelets": "string",
+                  "sodium": "string",
+                  "potassium": "string",
+                  "lactate": "string",
+                  "troponin": "string"
+                },
+                "current_interventions": ["string"]
               },
               "medicalHistory": ["detailed past medical conditions"],
               "currentMedications": ["list of current medications with dosages"],
