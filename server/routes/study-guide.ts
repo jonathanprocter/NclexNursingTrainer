@@ -146,11 +146,46 @@ router.get("/current", async (req, res) => {
   }
 });
 
-// Generate new personalized study guide
+// Generate new study guide
 router.post("/generate", async (req, res) => {
   try {
     const userId = 1; // TODO: Replace with actual user ID from auth
     const { focusAreas = [], timeAvailable } = req.body as { focusAreas: string[], timeAvailable?: number };
+
+    // Get user's performance data
+    const performance = await db.select()
+      .from(userProgress)
+      .where(eq(userProgress.userId, userId))
+      .orderBy(desc(userProgress.timestamp))
+      .limit(10);
+
+    // Analyze weak areas
+    const weakAreas = performance
+      .filter(p => (p.correctAnswers / p.completedQuestions) < 0.7)
+      .map(p => ({
+        topic: p.topic,
+        score: Math.round((p.correctAnswers / p.completedQuestions) * 100),
+        improvement: `Focus on understanding core concepts in ${p.topic}`,
+        suggestedApproach: `Review fundamentals and practice with ${Math.round(timeAvailable * 0.4)} minutes of targeted questions`
+      }));
+
+    // Generate adaptive questions for weak areas
+    const adaptiveQuestions = await Promise.all(
+      weakAreas.map(async (area) => ({
+        topic: area.topic,
+        questions: await generateAdaptiveQuestions({
+          topics: [area.topic],
+          difficulty: Math.max(1, Math.min(3, Math.round((area.score / 100) * 5))),
+          previousPerformance: performance
+            .filter(p => p.topic === area.topic)
+            .map(p => ({
+              topic: p.topic,
+              successRate: (p.correctAnswers / p.completedQuestions) * 100
+            }))
+        })
+      }))
+    );
+
 
     const nursingTopics = [
       "Fundamentals of Nursing",
@@ -174,10 +209,7 @@ router.post("/generate", async (req, res) => {
           "Review and reinforce learning"
         ]
       })),
-      weakAreas: focusAreas.map((area: string) => ({
-        topic: area,
-        suggestedApproach: "Start with fundamentals and gradually increase difficulty"
-      })),
+      weakAreas: weakAreas, // Use the dynamically generated weak areas
       strengthAreas: [],
       recommendedResources: focusAreas.map((plan: string, i: number) => ({
         id: `resource-${i}`,
@@ -206,5 +238,16 @@ router.post("/generate", async (req, res) => {
     });
   }
 });
+
+// Placeholder for adaptive question generation
+async function generateAdaptiveQuestions(params: any): Promise<any[]> {
+  // Implement your AI-driven question generation logic here.
+  // This is a placeholder, replace with your actual implementation.
+  console.log("Generating adaptive questions with parameters:", params);
+  return [
+    { question: "Adaptive Question 1", answer: "Answer 1" },
+    { question: "Adaptive Question 2", answer: "Answer 2" },
+  ];
+}
 
 export default router;

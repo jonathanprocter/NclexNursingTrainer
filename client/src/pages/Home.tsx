@@ -22,9 +22,52 @@ export default function Home() {
     },
   });
 
-  const onSubmit = (data: StudyTimeFormData) => {
-    // In a real application, this would make an API call to generate the plan
-    const mockStudyPlan = `
+  const onSubmit = async (data: StudyTimeFormData) => {
+    try {
+      const response = await fetch('/api/study-guide/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          timeAvailable: parseInt(data.duration),
+          focusAreas: studentProgress.areasForGrowth
+        })
+      });
+
+      const plan = await response.json();
+      
+      const personalizedPlan = `
+      📚 ${data.duration} Minute Personalized Study Plan for ${studentProgress.name}
+
+      🎯 Focus Areas Based on Your Analytics:
+      ${plan.weakAreas.map((area: any) => `
+      ${area.topic} (Current Score: ${area.score}%)
+      - ${area.improvement}
+      - ${area.suggestedApproach}
+      `).join('\n')}
+
+      📋 Recommended Study Schedule:
+      ${plan.adaptiveQuestions.map((topic: any, index: number) => `
+      ${index + 1}. ${topic.topic} Practice (${Math.round(parseInt(data.duration) * 0.3)} mins)
+      - Complete ${topic.questions.length} targeted practice questions
+      - Review incorrect answers and explanations
+      - Take notes on challenging concepts
+      `).join('\n')}
+
+      💡 Personalized Tips:
+      - Focus on understanding core concepts before moving to complex scenarios
+      - Use active recall techniques during practice
+      - Take short breaks between topics
+      - Review previous mistakes before starting new questions
+
+      📊 Progress Tracking:
+      - Initial assessment completed
+      - Targeting improvement in identified weak areas
+      - Adaptive questions will adjust based on your performance
+
+      Keep going! You're making great progress in mastering these topics! 🌟
+      `;
       📚 ${data.duration} Minute Personalized Study Plan for Bianca:
 
       1. Quick Review (5 mins)
