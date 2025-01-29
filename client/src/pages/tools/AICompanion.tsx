@@ -17,6 +17,31 @@ export default function AICompanion() {
   const [microphoneEnabled, setMicrophoneEnabled] = useState(false);
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
   const [transcript, setTranscript] = useState('');
+  const [aiResponse, setAiResponse] = useState('');
+
+  const getAIResponse = async (question: string) => {
+    try {
+      const response = await fetch('/api/ai/pathophysiology-help', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ section: 'pharmacology', context: question })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get AI response');
+      }
+
+      const data = await response.json();
+      setAiResponse(data.content);
+    } catch (error) {
+      console.error('Error getting AI response:', error);
+      toast({
+        title: "Error",
+        description: "Failed to get AI response. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   useEffect(() => {
     try {
@@ -36,7 +61,9 @@ export default function AICompanion() {
             .map(result => result.transcript)
             .join('');
           setTranscript(transcript);
-          console.log('Transcript:', transcript);
+          if (event.results[0].isFinal) {
+            getAIResponse(transcript);
+          }
         };
 
         recognition.onerror = (event) => {
@@ -130,6 +157,12 @@ export default function AICompanion() {
                     <div className="mt-4 p-3 bg-white rounded">
                       <p className="font-medium">Transcript:</p>
                       <p className="text-sm">{transcript}</p>
+                      {aiResponse && (
+                        <div className="mt-4">
+                          <p className="font-medium">AI Response:</p>
+                          <p className="text-sm">{aiResponse}</p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
