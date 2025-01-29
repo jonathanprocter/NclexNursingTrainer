@@ -340,7 +340,7 @@ export default function Simulation() {
                         key={index}
                         variant="outline"
                         className="justify-start"
-                        onClick={() => handleAction(action.action)}
+                        onClick={() => handleAction(action)}
                       >
                         {action.action}
                       </Button>
