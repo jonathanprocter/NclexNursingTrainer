@@ -562,7 +562,13 @@ export default function RiskReduction() {
       if (!response.ok) throw new Error("Failed to generate scenario");
 
       const data = await response.json();
-      setScenarioResponses(prev => ({ ...prev, [scenarioId]: data.response }));
+      // Clean HTML and format response text
+      const cleanResponse = data.response
+        .replace(/<[^>]*>/g, '') // Remove HTML tags
+        .replace(/&nbsp;/g, ' ') // Replace HTML spaces
+        .replace(/\n\s*\n/g, '\n\n') // Clean up multiple newlines
+        .trim();
+      setScenarioResponses(prev => ({ ...prev, [scenarioId]: cleanResponse }));
     } catch (error) {
       toast({
         title: "Error",
@@ -590,9 +596,14 @@ export default function RiskReduction() {
       if (!response.ok) throw new Error("Failed to get response");
 
       const data = await response.json();
+      const cleanResponse = data.response
+        .replace(/<[^>]*>/g, '')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/\n\s*\n/g, '\n\n')
+        .trim();
       setScenarioResponses(prev => ({ 
         ...prev, 
-        [scenarioId]: prev[scenarioId] + "\n\nFollow-up:\n" + data.response 
+        [scenarioId]: prev[scenarioId] + "\n\nFollow-up:\n" + cleanResponse 
       }));
     } catch (error) {
       toast({
