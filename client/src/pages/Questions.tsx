@@ -22,7 +22,7 @@ function ErrorFallback({ error }: { error: Error }) {
 }
 
 function QuestionsList() {
-  const { data = [], isLoading, isError, error } = useQuery<Question[]>({
+  const { data, isLoading, isError, error } = useQuery<Question[]>({
     queryKey: ["questions"],
     queryFn: async () => {
       const response = await fetch("/api/questions");
@@ -37,12 +37,13 @@ function QuestionsList() {
 
   if (isLoading) return <div>Loading questions...</div>;
   if (isError) return <div>Error: {(error as Error).message}</div>;
+  if (!data) return <div>No questions available</div>;
 
   return (
     <ScrollArea className="h-[600px] pr-4">
       <div className="space-y-4">
         {data.map((question) => (
-          <Card key={`q-${question.id}`} className="p-4">
+          <Card key={`question-${question.id}`} className="p-4">
             <h3 className="font-medium mb-2">{question.question}</h3>
             <p className="text-muted-foreground mb-2">{question.answer}</p>
             {question.explanation && (
