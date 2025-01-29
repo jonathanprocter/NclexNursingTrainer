@@ -134,13 +134,21 @@ export async function getSimulationFeedback(
     });
 
     if (!response.ok) {
-      throw new Error('Failed to get simulation feedback');
+      const errorText = await response.text();
+      console.error('Server response:', errorText);
+      throw new Error(`Failed to get simulation feedback: ${response.status}`);
     }
 
-    return await response.json();
+    const data = await response.json();
+    if (!data || typeof data !== 'object') {
+      console.error('Invalid response data:', data);
+      throw new Error('Invalid feedback format');
+    }
+
+    return data;
   } catch (error) {
     console.error('Error getting simulation feedback:', error);
-    throw new Error('Failed to get simulation feedback');
+    throw error instanceof Error ? error : new Error('Failed to get simulation feedback');
   }
 }
 

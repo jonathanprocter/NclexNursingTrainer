@@ -761,7 +761,7 @@ export function registerRoutes(app: Express): Server {
 
     try {
       const completion = await openai.chat.completions.create({
-        model: "gpt-4o", 
+        model: "gpt-4", 
         messages: [
           {
             role: "system",
@@ -820,7 +820,7 @@ export function registerRoutes(app: Express): Server {
 
     try {
       const completion = await openai.chat.completions.create({
-        model: "gpt-4o", 
+        model: "gpt-4", 
         messages: [
           {
             role: "system",
@@ -903,6 +903,39 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error("Error generating simulation scenario:", error);
       res.status(500).json({ message: "Failed to generate simulation scenario" });
+    }
+  });
+
+  app.post("/api/ai/simulation-feedback", async (req, res) => {
+    try {
+      const { scenario, userActions } = req.body;
+
+      // Validate input
+      if (!scenario || !userActions) {
+        return res.status(400).json({
+          error: "Missing required fields: scenario and userActions"
+        });
+      }
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [
+          {
+            role: "system",
+            content: "You are an expert nursing educator evaluating a simulation scenario. Analyze the user's actions and provide feedback."
+          },
+          {
+            role: "user",
+            content: `Scenario: ${JSON.stringify(scenario)}\nUser Actions: ${JSON.stringify(userActions)}`
+          }
+        ]
+      });
+
+      const feedback = response.choices[0]?.message?.content;
+      res.json({ feedback });
+    } catch (error) {
+      console.error("Error getting simulation feedback:", error);
+      res.status(500).json({ error: "Failed to get simulation feedback" });
     }
   });
 
