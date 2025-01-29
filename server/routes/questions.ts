@@ -7,9 +7,9 @@ const router = express.Router();
 
 router.get("/", async (req, res) => {
   try {
-    const questions = await db.query.questions.findMany() || [];
-    if (questions.length === 0) {
-      return res.json([{
+    let questions = await db.query.questions.findMany();
+    if (!questions || questions.length === 0) {
+      questions = [{
         id: "sample_1",
         question: "Sample Question",
         answer: "Sample Answer",
