@@ -19,7 +19,13 @@ type UserAction = {
 
 export default function Simulation() {
   const { toast } = useToast();
-  const [activeScenario, setActiveScenario] = useState<SimulationScenario | null>(null);
+  const [activeScenario, setActiveScenario] = useState<SimulationScenario>({
+    id: '',
+    title: '',
+    description: '',
+    expected_actions: [],
+    initial_state: null
+  });
   const [isSimulationActive, setIsSimulationActive] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [userActions, setUserActions] = useState<UserAction[]>([]);
