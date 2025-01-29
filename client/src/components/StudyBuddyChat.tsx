@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { Card } from "@/components/ui/card";
+import { useMutation } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, Send, MicOff } from "lucide-react";
+import { Loader2, Send, Mic } from "lucide-react";
 import { ToneSelector } from "@/components/ToneSelector";
 import type { StudyBuddyTone } from "@/components/ToneSelector";
 import { useToast } from "@/hooks/use-toast";
@@ -24,31 +23,21 @@ export function StudyBuddyChat() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  // Mock student ID for now - in a real app this would come from auth context
-  const studentId = 1;
+  const studentId = "1"; // Mock student ID
 
   const startSession = useMutation({
     mutationFn: async () => {
-      try {
-        const response = await fetch("/api/study-buddy/start", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            studentId,
-            tone: selectedTone,
-            topic: "NCLEX preparation"
-          }),
-        });
-        if (!response.ok) throw new Error("Failed to start session");
-        return response.json();
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to start study session. Please try again.",
-          variant: "destructive",
-        });
-        throw error;
-      }
+      const response = await fetch("/api/study-buddy/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentId,
+          tone: selectedTone,
+          topic: "NCLEX preparation"
+        }),
+      });
+      if (!response.ok) throw new Error("Failed to start session");
+      return response.json();
     },
     onSuccess: (data) => {
       setSessionId(data.sessionId);
@@ -62,30 +51,21 @@ export function StudyBuddyChat() {
 
   const sendMessage = useMutation({
     mutationFn: async (message: string) => {
-      try {
-        const response = await fetch("/api/study-buddy/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            studentId,
-            sessionId,
-            message,
-            context: {
-              tone: selectedTone,
-              recentMessages: messages.slice(-3)
-            }
-          }),
-        });
-        if (!response.ok) throw new Error("Failed to send message");
-        return response.json();
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to send message. Please try again.",
-          variant: "destructive",
-        });
-        throw error;
-      }
+      const response = await fetch("/api/study-buddy/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentId,
+          sessionId,
+          message,
+          context: {
+            tone: selectedTone,
+            recentMessages: messages.slice(-3)
+          }
+        }),
+      });
+      if (!response.ok) throw new Error("Failed to send message");
+      return response.json();
     },
     onSuccess: (data) => {
       setMessages(prev => [...prev, {
@@ -96,7 +76,7 @@ export function StudyBuddyChat() {
     }
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
 
@@ -108,29 +88,14 @@ export function StudyBuddyChat() {
 
     setMessages(prev => [...prev, userMessage]);
     setInput("");
-    sendMessage.mutate(input);
+    await sendMessage.mutate(input);
   };
-
-  // Start session on component mount
-  useEffect(() => {
-    if (!sessionId) {
-      startSession.mutate();
-    }
-  }, [sessionId]);
-
-  // Auto scroll to bottom when new messages arrive
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
 
   const handleVoiceInput = async () => {
     if (!("webkitSpeechRecognition" in window)) {
       toast({
         title: "Not Supported",
-        description: "Speech recognition is not supported in your browser. Please use Chrome for this feature.",
-        variant: "destructive",
+        description: "Speech recognition is not supported in your browser.",
       });
       return;
     }
@@ -140,17 +105,15 @@ export function StudyBuddyChat() {
       const recognition = new SpeechRecognition();
       recognition.continuous = false;
       recognition.interimResults = false;
-      
+
       setIsListening(true);
-      
+
       recognition.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
         setInput(transcript);
-        sendMessage.mutate(transcript);
       };
 
-      recognition.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
+      recognition.onerror = () => {
         toast({
           title: "Error",
           description: "Failed to recognize speech. Please try again.",
@@ -165,26 +128,35 @@ export function StudyBuddyChat() {
 
       recognition.start();
     } catch (error) {
-      console.error('Voice input error:', error);
+      console.error("Voice input error:", error);
       toast({
         title: "Error",
-        description: "Failed to start voice recognition. Please try again.",
+        description: "Failed to start voice recognition.",
         variant: "destructive",
       });
       setIsListening(false);
     }
   };
 
+  useEffect(() => {
+    if (!sessionId) {
+      startSession.mutate();
+    }
+  }, [sessionId]);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
   return (
     <div className="flex flex-col h-full">
-      <div className="px-4 py-2 border-b flex justify-between items-center">
-        <ToneSelector
-          selectedTone={selectedTone}
-          onToneChange={setSelectedTone}
-        />
+      <div className="px-4 py-2 border-b">
+        <ToneSelector selectedTone={selectedTone} onToneChange={setSelectedTone} />
       </div>
 
-      <ScrollArea ref={scrollRef} className="flex-1 p-4">
+      <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
           {messages.map((message, index) => (
             <div
@@ -234,19 +206,14 @@ export function StudyBuddyChat() {
           <Button
             type="button"
             variant="outline"
-            disabled={false}
             onClick={handleVoiceInput}
-            title="Voice input coming soon"
-            className="relative"
+            disabled={isListening}
           >
             {isListening ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <MicOff className="h-4 w-4 text-muted-foreground" />
+              <Mic className="h-4 w-4" />
             )}
-            <span className="sr-only">
-              {isListening ? "Listening..." : "Voice input (coming soon)"}
-            </span>
           </Button>
         </div>
       </form>
