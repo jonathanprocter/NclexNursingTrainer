@@ -5,8 +5,6 @@ import { eq } from "drizzle-orm";
 import studyGuideRouter from './routes/study-guide';
 import OpenAI from "openai";
 import { studyBuddyChats, modules, questions, quizAttempts, userProgress } from "@db/schema";
-import type { PracticeQuestion } from "./types";
-import { practiceQuestions, getQuestionsWithMinimum } from './data/practice-questions';
 
 if (!process.env.OPENAI_API_KEY) {
   throw new Error("OPENAI_API_KEY must be set in environment variables");
@@ -25,12 +23,31 @@ export function registerRoutes(app: Express): Server {
   // Error handling middleware
   app.use((err: Error, req: any, res: any, next: any) => {
     console.error('Error:', err);
-
     // Send appropriate error response
     res.status(err.status || 500).json({
       message: process.env.NODE_ENV === 'development' ? err.message : 'Internal Server Error',
       ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
     });
+  });
+
+  // Modules routes with proper error handling
+  app.get("/api/modules", async (req, res) => {
+    try {
+      // Use db.select() instead of query to be more explicit
+      const allModules = await db.select().from(modules).orderBy(modules.orderIndex);
+
+      if (!allModules) {
+        return res.status(404).json({ message: "No modules found" });
+      }
+
+      res.json(allModules);
+    } catch (error) {
+      console.error("Error fetching modules:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch modules",
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
   });
 
   // Study buddy chat endpoints
@@ -133,17 +150,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Modules routes
-  app.get("/api/modules", async (_req, res) => {
-    try {
-      const allModules = await db.query.modules.findMany({
-        orderBy: (modules, { asc }) => [asc(modules.orderIndex)],
-      });
-      res.json(allModules);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch modules" });
-    }
-  });
 
   // Clinical Judgment AI endpoint
   app.post("/api/chat/clinical-judgment", async (req, res) => {
@@ -826,7 +832,7 @@ async function generateNewQuestions(userId: number, examType: string) {
 
     if (examType === 'cat') {
       // For computer adaptive testing, sort by difficulty
-      const sortedQuestions = availableQuestions.sort((a: PracticeQuestion, b: PracticeQuestion) => {
+      const sortedQuestions = availableQuestions.sort((a: any, b: any) => {
         if (!a.difficulty || !b.difficulty) return 0;
         return difficultyToNumber(a.difficulty) - difficultyToNumber(b.difficulty);
       });
@@ -852,7 +858,7 @@ function difficultyToNumber(difficulty: string): number {
   }
 }
 
-function formatQuestion(question: PracticeQuestion) {
+function formatQuestion(question: any) {
   return {
     id: question.id,
     text: question.text,
@@ -876,7 +882,7 @@ function generateBackupQuestions() {
   }]
 }
 
-const practiceQuestionsConst: Record<string, PracticeQuestion[]> = {
+const practiceQuestions = {
   standard: [
     {
       id: "std_1",

@@ -1,3 +1,23 @@
+#!/bin/bash
+
+# Colors for output
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+echo -e "${BLUE}Fixing dependency and component errors...${NC}"
+
+# Install missing dotenv package
+echo -e "${BLUE}Installing dotenv...${NC}"
+npm install dotenv
+
+# Fix toast component
+echo -e "${BLUE}Fixing toast component...${NC}"
+mkdir -p client/src/components/ui
+
+# Create the fixed toast component
+cat > client/src/components/ui/toast.tsx << 'EOL'
 import * as React from "react"
 import * as ToastPrimitives from "@radix-ui/react-toast"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -120,3 +140,86 @@ export {
   ToastClose,
   ToastAction,
 }
+EOL
+
+# Create Toaster component
+cat > client/src/components/ui/toaster.tsx << 'EOL'
+"use client"
+
+import {
+  Toast,
+  ToastClose,
+  ToastDescription,
+  ToastProvider,
+  ToastTitle,
+  ToastViewport,
+} from "@/components/ui/toast"
+import { useToast } from "@/hooks/use-toast"
+
+export function Toaster() {
+  const { toasts } = useToast()
+
+  return (
+    <ToastProvider>
+      {toasts.map(function ({ id, title, description, action, ...props }) {
+        return (
+          <Toast key={id} {...props}>
+            <div className="grid gap-1">
+              {title && <ToastTitle>{title}</ToastTitle>}
+              {description && (
+                <ToastDescription>{description}</ToastDescription>
+              )}
+            </div>
+            {action}
+            <ToastClose />
+          </Toast>
+        )
+      })}
+      <ToastViewport />
+    </ToastProvider>
+  )
+}
+EOL
+
+# Create use-toast hook
+mkdir -p client/src/hooks
+cat > client/src/hooks/use-toast.ts << 'EOL'
+import { useState, useEffect, useCallback } from 'react'
+
+type ToastProps = {
+  id: string
+  title?: string
+  description?: string
+  action?: React.ReactNode
+  duration?: number
+}
+
+export function useToast() {
+  const [toasts, setToasts] = useState<ToastProps[]>([])
+
+  const addToast = useCallback((toast: Omit<ToastProps, 'id'>) => {
+    const id = Math.random().toString(36).substr(2, 9)
+    setToasts((prev) => [...prev, { ...toast, id }])
+
+    if (toast.duration !== Infinity) {
+      setTimeout(() => {
+        setToasts((prev) => prev.filter((t) => t.id !== id))
+      }, toast.duration || 5000)
+    }
+  }, [])
+
+  const dismissToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id))
+  }, [])
+
+  return {
+    toasts,
+    addToast,
+    dismissToast,
+  }
+}
+EOL
+
+echo -e "${GREEN}Fixes applied!${NC}"
+echo -e "${BLUE}Next steps:${NC}"
+echo "1. Run 'npm run dev' to start the development server"

@@ -1,103 +1,39 @@
-import "dotenv/config";
-import express, { type Request, Response, NextFunction } from "express";
-import cors from "cors";
-import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+require('dotenv').config();
+import express from 'express';
+import cors from 'cors';
 
 const app = express();
 
-// ─────────────────────────────────────────────────────────────
-// 1. CORS and Basic Middleware Configuration
-// ─────────────────────────────────────────────────────────────
-app.use(cors({
-  origin: true, // Allow configured origins
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-}));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: false }));
 
-// Explicitly handle OPTIONS requests
-app.options("*", cors());
+if (process.env.NODE_ENV === 'development') {
+  app.use(cors({
+    origin: 'http://localhost:4000',
+    credentials: true
+  }));
+}
 
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true }));
-
-// ─────────────────────────────────────────────────────────────
-// 2. Logging Middleware
-// ─────────────────────────────────────────────────────────────
-app.use((req, res, next) => {
-  const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
-
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-      log(logLine);
-    }
-  });
-
-  next();
-});
-
-// ─────────────────────────────────────────────────────────────
-// 3. Error Handling
-// ─────────────────────────────────────────────────────────────
-app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  console.error("Error:", err);
-  res.status(500).json({ 
-    message: process.env.NODE_ENV === "development" ? err.message : "Internal Server Error"
+app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error('Error:', err);
+  const status = err.status || err.statusCode || 500;
+  const message = err.message || "Internal Server Error";
+  res.status(status).json({ 
+    success: false,
+    message,
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   });
 });
 
-// ─────────────────────────────────────────────────────────────
-// 4. Server Setup
-// ─────────────────────────────────────────────────────────────
-(async () => {
-  try {
-    const server = registerRoutes(app);
+const PORT = parseInt(process.env.PORT || '4001', 10);
+const HOST = process.env.HOST || '0.0.0.0';
 
-    // Catch-all route handler for SPA
-    app.use("*", (req, res, next) => {
-      if (req.path.startsWith("/api")) {
-        next();
-      } else {
-        if (process.env.NODE_ENV === "development") {
-          next();
-        } else {
-          res.sendFile("index.html", { root: "./dist/public" });
-        }
-      }
-    });
+app.listen(PORT, HOST, () => {
+  console.log('=================================');
+  console.log('Server started successfully');
+  console.log(`Server is running on port ${PORT}`);
+  console.log(`Access URL: http://${HOST}:${PORT}`);
+  console.log('=================================');
+});
 
-    if (process.env.NODE_ENV === "development") {
-      await setupVite(app, server);
-    } else {
-      serveStatic(app);
-    }
-
-    const PORT = parseInt(process.env.PORT || "5000", 10);
-    server.listen(PORT, "0.0.0.0", () => {
-      console.log("=== SERVER READY ===");
-      console.log("=================================");
-      console.log(`Server started successfully`);
-      console.log(`Server is running on port ${PORT}`);
-      console.log(`Access URL: http://0.0.0.0:${PORT}`);
-      console.log("=================================");
-      log(`Server running on http://0.0.0.0:${PORT}`);
-    });
-  } catch (error) {
-    console.error("Failed to start server:", error);
-    process.exit(1);
-  }
-})();
+export default app;
