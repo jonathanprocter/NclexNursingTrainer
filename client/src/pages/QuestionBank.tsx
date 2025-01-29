@@ -36,7 +36,6 @@ export default function QuestionBank() {
   const [questionsAnswered, setQuestionsAnswered] = useState(0);
   const [correctAnswers, setCorrectAnswers] = useState(0);
 
-  // Fetch questions from the API
   const { data: questions = [], isLoading } = useQuery<Question[]>({
     queryKey: ['/api/questions', selectedCategory],
     queryFn: async () => {
@@ -69,14 +68,12 @@ export default function QuestionBank() {
     setSelectedAnswer(null);
     setShowExplanation(false);
 
-    // Filter out the current question to avoid repetition
     const remainingQuestions = questions.filter(q => q.id !== currentQuestion?.id);
 
     if (remainingQuestions.length > 0) {
       const randomIndex = Math.floor(Math.random() * remainingQuestions.length);
       setCurrentQuestion(remainingQuestions[randomIndex]);
     } else {
-      // If all questions have been shown, reset to full pool
       const randomIndex = Math.floor(Math.random() * questions.length);
       setCurrentQuestion(questions[randomIndex]);
     }
@@ -135,18 +132,18 @@ export default function QuestionBank() {
             <CardContent className="pt-6">
               <div className="space-y-6">
                 <div className="flex flex-wrap gap-2 mb-4">
-                  <Badge className="bg-primary/10">{currentQuestion.category}</Badge>
+                  <Badge variant="outline">{currentQuestion.category}</Badge>
                   <Badge 
-                    className={
-                      currentQuestion.difficulty === "Easy" ? "bg-green-500/10" :
-                      currentQuestion.difficulty === "Medium" ? "bg-yellow-500/10" :
-                      "bg-red-500/10"
+                    variant={
+                      currentQuestion.difficulty === "Easy" ? "success" :
+                      currentQuestion.difficulty === "Medium" ? "warning" :
+                      "destructive"
                     }
                   >
                     {currentQuestion.difficulty}
                   </Badge>
                   {currentQuestion.tags.map((tag, index) => (
-                    <Badge key={index} className="bg-muted">
+                    <Badge key={index} variant="secondary">
                       {tag}
                     </Badge>
                   ))}
@@ -160,6 +157,7 @@ export default function QuestionBank() {
                   {currentQuestion.options.map((option) => (
                     <Button
                       key={option.id}
+                      variant="outline"
                       className={`w-full justify-start text-left h-auto p-4 ${
                         showExplanation
                           ? option.id === currentQuestion.correctAnswer

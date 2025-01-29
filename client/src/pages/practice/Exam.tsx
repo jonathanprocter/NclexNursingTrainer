@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useParams } from "wouter";
-import { Card, CardContent } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Progress } from "../components/ui/progress";
-import { Alert, AlertDescription } from "../components/ui/alert";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { AlertCircle, ChevronRight, Timer, PauseCircle } from "lucide-react";
 
@@ -40,7 +40,6 @@ export default function Exam() {
     return () => clearInterval(timer);
   }, [isPaused]);
 
-  // Fetch next question based on exam type
   const fetchNextQuestion = async () => {
     try {
       const response = await fetch(`/api/exam/${type}/question`, {
@@ -53,7 +52,7 @@ export default function Exam() {
           previousAnswer: null // Add answer tracking here
         }),
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch question');
       }
@@ -81,7 +80,6 @@ export default function Exam() {
   };
 
   const handleAnswer = (optionId: string) => {
-    // Submit answer and get next question
     setQuestionNumber(prev => prev + 1);
     fetchNextQuestion();
   };
@@ -95,7 +93,7 @@ export default function Exam() {
   };
 
   if (!currentQuestion) {
-    return <div>Loading question...</div>;
+    return <div className="flex items-center justify-center p-6">Loading question...</div>;
   }
 
   return (
@@ -131,7 +129,7 @@ export default function Exam() {
         className="h-2"
       />
 
-      <Card className="mt-6">
+      <Card>
         <CardContent className="p-6">
           <p className="text-lg mb-6">{currentQuestion.text}</p>
           <div className="space-y-4">
