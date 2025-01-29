@@ -67,6 +67,12 @@ const mockModules = [
   },
 ];
 
+// Placeholder for the AIHelpButton component.  Replace with actual implementation.
+const AIHelpButton = ({ title, description, topic }: { title: string; description: string; topic: string }) => (
+  <Button variant="ghost">AI Help</Button>
+);
+
+
 export default function Modules() {
   const { data: modules, isLoading } = useQuery<Module[]>({
     queryKey: ["/api/modules"],
@@ -117,9 +123,16 @@ export default function Modules() {
                       <p className="font-medium">0/10</p>
                       <p className="text-muted-foreground">Units completed</p>
                     </div>
-                    <Link href={`/modules/${module.id}`}>
-                      <Button>Start Learning</Button>
-                    </Link>
+                    <div className="flex gap-2">
+                      <AIHelpButton
+                        title={module.title}
+                        description={`Get AI assistance with ${module.title.toLowerCase()} concepts and topics.`}
+                        topic={module.type}
+                      />
+                      <Link href={`/modules/${module.id}`}>
+                        <Button>Start Learning</Button>
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </CardContent>
