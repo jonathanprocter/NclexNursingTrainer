@@ -15,7 +15,8 @@ import {
   Shield,
   FileLock2,
   Stethoscope,
-  BookOpen 
+  BookOpen,
+  ClipboardList 
 } from "lucide-react";
 import {
   Accordion,
@@ -639,7 +640,7 @@ export default function RiskReduction() {
 
                 <div className="bg-muted/50 p-4 rounded-lg">
                   <h3 className="font-semibold text-lg mb-3 flex items-center">
-                    <Workflow className="h-5 w-5 mr-2" />
+                    <ClipboardList className="h-5 w-5 mr-2" />
                     High-Risk Procedures
                   </h3>
                   <div className="space-y-4">
