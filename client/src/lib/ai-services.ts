@@ -101,10 +101,17 @@ export async function generateSimulationScenario(
 
     const data = await response.json();
     if (!data || typeof data !== 'object') {
+      console.error('Invalid response data:', data);
       throw new Error('Invalid response format');
     }
 
-    return data;
+    // Validate required fields
+    if (!data.id || !data.title || !data.initial_state) {
+      console.error('Missing required fields in scenario:', data);
+      throw new Error('Invalid scenario data structure');
+    }
+
+    return data as SimulationScenario;
   } catch (error) {
     console.error('Error generating simulation scenario:', error);
     throw error instanceof Error ? error : new Error('Failed to generate simulation scenario');
