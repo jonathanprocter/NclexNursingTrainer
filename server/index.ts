@@ -9,7 +9,7 @@ app.use(express.urlencoded({ extended: false }));
 
 if (process.env.NODE_ENV === 'development') {
   app.use(cors({
-    origin: 'http://localhost:4000',
+    origin: 'http://localhost:3000',
     credentials: true
   }));
 }
