@@ -49,7 +49,7 @@ interface FormValues {
   answer: string;
   riskAssessment: string;
   preventionQ1: string;
-  // Add fields for all questions
+  [key: string]: string; // Add index signature for dynamic fields
 }
 
 interface PreventionQuestion {
@@ -160,7 +160,6 @@ export default function RiskReduction() {
       answer: "",
       riskAssessment: "",
       preventionQ1: "",
-      // Add fields for all questions
     },
   });
 
@@ -254,6 +253,12 @@ export default function RiskReduction() {
       setCurrentQuestionIndex(prev => prev - 1);
       setShowExplanation(false);
     }
+  };
+
+  const handleQuestionChange = (value: string) => {
+    form.setValue(`question_${currentQuestionIndex}` as keyof FormValues, value);
+    setAnsweredQuestions(prev => new Set(prev).add(preventionQuestions[currentQuestionIndex].id));
+    setShowExplanation(true);
   };
 
   return (
@@ -635,11 +640,8 @@ export default function RiskReduction() {
                         <div>
                           <h4 className="font-medium mb-2">{preventionQuestions[currentQuestionIndex].question}</h4>
                           <RadioGroup
-                            onValueChange={(value) => {
-                              form.setValue(`question_${currentQuestionIndex}`, value);
-                              setAnsweredQuestions(prev => new Set(prev).add(preventionQuestions[currentQuestionIndex].id));
-                              setShowExplanation(true);
-                            }}
+                            onValueChange={handleQuestionChange}
+                            defaultValue={form.getValues(`question_${currentQuestionIndex}` as keyof FormValues)}
                           >
                             <div className="space-y-2">
                               {preventionQuestions[currentQuestionIndex].options.map((option) => (
