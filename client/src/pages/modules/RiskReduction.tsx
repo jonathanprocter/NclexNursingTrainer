@@ -46,8 +46,9 @@ export default function RiskReduction() {
   const isMounted = useRef(true);
 
   useEffect(() => {
-    // Load initial questions
-    handleGenerateMoreQuestions();
+    if (preventionQuestions.length === 0) {
+      handleGenerateMoreQuestions();
+    }
     return () => {
       isMounted.current = false;
     };
