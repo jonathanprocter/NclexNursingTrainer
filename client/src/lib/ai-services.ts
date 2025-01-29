@@ -1,10 +1,23 @@
 import OpenAI from "openai";
 import { Anthropic } from '@anthropic-ai/sdk';
 
-const openai = new OpenAI();
-const anthropic = new Anthropic();
+if (!import.meta.env.VITE_OPENAI_API_KEY) {
+  throw new Error("VITE_OPENAI_API_KEY is required");
+}
 
-interface AIAnalysisResult {
+if (!import.meta.env.VITE_ANTHROPIC_API_KEY) {
+  throw new Error("VITE_ANTHROPIC_API_KEY is required");
+}
+
+const openai = new OpenAI({
+  apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+});
+
+const anthropic = new Anthropic({
+  apiKey: import.meta.env.VITE_ANTHROPIC_API_KEY,
+});
+
+export interface AIAnalysisResult {
   strengths: string[];
   weaknesses: string[];
   recommendedTopics: string[];
@@ -31,7 +44,7 @@ export async function getPathophysiologyHelp(
       ]
     });
 
-    return { 
+    return {
       content: response.choices[0].message.content || 'No explanation available'
     };
   } catch (error) {
