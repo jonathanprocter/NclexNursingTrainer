@@ -402,7 +402,7 @@ export default function Simulation() {
           </DialogHeader>
           <ScrollArea className="h-[60vh] mt-4">
             <div className="space-y-4 p-4">
-              {getFeedbackMutation.data && (
+              {getFeedbackMutation.data && getFeedbackMutation.data.strengths && getFeedbackMutation.data.areas_for_improvement && (
                 <>
                   <div>
                     <h3 className="font-medium mb-2">Strengths</h3>
