@@ -4,9 +4,9 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, Send, Mic, MicOff } from "lucide-react";
-import { ToneSelector } from "./ToneSelector";
-import type { StudyBuddyTone } from "./ToneSelector";
+import { Loader2, Send, MicOff } from "lucide-react";
+import { ToneSelector } from "@/components/ToneSelector";
+import type { StudyBuddyTone } from "@/components/ToneSelector";
 import { useToast } from "@/hooks/use-toast";
 
 interface Message {
@@ -156,7 +156,7 @@ export function StudyBuddyChat() {
   return (
     <div className="flex flex-col h-full">
       <div className="px-4 py-2 border-b flex justify-between items-center">
-        <ToneSelector 
+        <ToneSelector
           selectedTone={selectedTone}
           onToneChange={setSelectedTone}
         />

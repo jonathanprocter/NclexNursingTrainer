@@ -1,27 +1,16 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { db } from "@db";
-import { modules, questions, quizAttempts, userProgress } from "@db/schema";
 import { eq } from "drizzle-orm";
-import { practiceQuestions } from "./data/practice-questions";
-import OpenAI from "openai";
-import { Anthropic } from '@anthropic-ai/sdk';
 import studyGuideRouter from './routes/study-guide';
+import OpenAI from "openai";
 
 if (!process.env.OPENAI_API_KEY) {
   throw new Error("OPENAI_API_KEY must be set in environment variables");
 }
 
-if (!process.env.ANTHROPIC_API_KEY) {
-  throw new Error("ANTHROPIC_API_KEY must be set in environment variables");
-}
-
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
-});
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY
 });
 
 export function registerRoutes(app: Express): Server {
@@ -112,7 +101,6 @@ export function registerRoutes(app: Express): Server {
       res.status(500).json({ message: "Failed to fetch modules" });
     }
   });
-
   // Clinical Judgment AI endpoint
   app.post("/api/chat/clinical-judgment", async (req, res) => {
     const { topic, context, question, type } = req.body;

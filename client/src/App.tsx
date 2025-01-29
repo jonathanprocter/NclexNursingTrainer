@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import NavBar from "@/components/layout/NavBar";
 import Home from "@/pages/Home";
+import { FloatingStudyBuddy } from "@/components/FloatingStudyBuddy";
 
 // Dashboard Components
 import Analytics from "@/components/dashboard/Analytics";
@@ -32,6 +33,19 @@ import StudyGuide from "@/pages/StudyGuide";
 import AICompanion from "@/pages/tools/AICompanion";
 import SpacedRepetition from "@/pages/tools/SpacedRepetition";
 
+// Define prop types for components
+interface RouteProps {
+  path?: string;
+}
+
+interface AnalyticsProps extends RouteProps {
+  data?: any; // Replace with proper analytics data type
+}
+
+interface PerformanceMetricsProps extends RouteProps {
+  data?: any; // Replace with proper metrics data type
+}
+
 function Router() {
   return (
     <div className="min-h-screen bg-background">
@@ -42,8 +56,12 @@ function Router() {
           <Route path="/" component={Home} />
 
           {/* Dashboard Routes */}
-          <Route path="/dashboard/analytics" component={Analytics} />
-          <Route path="/dashboard/performance" component={PerformanceMetrics} />
+          <Route path="/dashboard/analytics">
+            {(params) => <Analytics data={undefined} {...params} />}
+          </Route>
+          <Route path="/dashboard/performance">
+            {(params) => <PerformanceMetrics data={undefined} {...params} />}
+          </Route>
           <Route path="/dashboard/instructor" component={InstructorDashboard} />
 
           {/* Learning Module Routes */}
@@ -73,6 +91,7 @@ function Router() {
           <Route component={NotFound} />
         </Switch>
       </main>
+      <FloatingStudyBuddy />
     </div>
   );
 }
