@@ -91,7 +91,8 @@ export default function Home() {
       - Use the AI companion for instant clarification
       - Record any challenging concepts for future review
 
-      Keep going, Bianca! You're making great progress! 🌟`;
+      Keep going, Bianca! You're making great progress! 🌟
+      `;
     setStudyPlan(personalizedPlan);
   };
 
