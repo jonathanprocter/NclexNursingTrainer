@@ -6,7 +6,7 @@ import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 
-// Enhanced CORS middleware for development
+// Enhanced CORS middleware with more permissive settings for development
 app.use(cors({
   origin: true, // Allow all origins in development
   credentials: true,
@@ -39,8 +39,8 @@ app.use((req, res, next) => {
   next();
 });
 
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
-const HOST = process.env.HOST || '0.0.0.0';
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 5000;
+const HOST = '0.0.0.0'; // Always bind to all interfaces
 
 // Start server with proper error handling
 (async () => {
