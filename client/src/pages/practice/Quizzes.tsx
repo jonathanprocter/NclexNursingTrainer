@@ -186,7 +186,9 @@ export default function Quizzes() {
   };
 
   const startTopicPractice = (topic: string) => {
-    generateNewQuestions(topic);
+    setIsLoading(true);
+    setSelectedTopic(topic);
+    generateQuestionsMutation.mutate(topic);
     // Switch to questions tab
     const questionsTab = document.querySelector('[value="questions"]') as HTMLElement;
     if (questionsTab) questionsTab.click();
