@@ -46,14 +46,14 @@ export default function Home() {
       📚 ${data.duration} Minute Personalized Study Plan for ${studentProgress.name}
 
       🎯 Focus Areas Based on Your Analytics:
-      ${plan.weakAreas.map((area: any) => `
+      ${plan.weakAreas ? plan.weakAreas.map((area: any) => `
       ${area.topic} (Current Score: ${area.score}%)
       - ${area.improvement}
       - ${area.suggestedApproach}
-      `).join('\n')}
+      `).join('\n') : 'Loading study areas...'}
 
       📋 Recommended Study Schedule:
-      ${plan.adaptiveQuestions.map((topic: any, index: number) => `
+      ${plan.adaptiveQuestions ? plan.adaptiveQuestions.map((topic: any, index: number) => `
       ${index + 1}. ${topic.topic} Practice (${Math.round(parseInt(data.duration) * 0.3)} mins)
       - Complete ${topic.questions.length} targeted practice questions
       - Review incorrect answers and explanations
