@@ -4,7 +4,8 @@ import { db } from "@db";
 import { eq } from "drizzle-orm";
 import studyGuideRouter from './routes/study-guide';
 import OpenAI from "openai";
-import { studyBuddyChats } from "@db/schema";
+import { studyBuddyChats, modules, questions, quizAttempts, userProgress } from "@db/schema";
+import type { PracticeQuestion } from "./types";
 
 if (!process.env.OPENAI_API_KEY) {
   throw new Error("OPENAI_API_KEY must be set in environment variables");
@@ -13,6 +14,37 @@ if (!process.env.OPENAI_API_KEY) {
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
+
+const practiceQuestions: Record<string, PracticeQuestion[]> = {
+  standard: [
+    {
+      id: "std_1",
+      text: "Which nursing intervention is most appropriate for a client with acute pain?",
+      options: [
+        { id: "a", text: "Assess pain characteristics" },
+        { id: "b", text: "Administer PRN pain medication immediately" },
+        { id: "c", text: "Notify healthcare provider" },
+        { id: "d", text: "Apply ice pack to affected area" }
+      ],
+      correctAnswer: "a",
+      explanation: "Pain assessment should be conducted first to determine appropriate interventions.",
+      category: "Patient Care",
+      difficulty: "Medium"
+    }
+  ]
+};
+
+function formatQuestion(question: PracticeQuestion) {
+  return {
+    id: question.id,
+    text: question.text,
+    options: question.options,
+    correctAnswer: question.correctAnswer,
+    explanation: question.explanation,
+    category: question.category,
+    difficulty: question.difficulty
+  };
+}
 
 export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
@@ -570,60 +602,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  function generateBackupQuestions() {
-    // Generating backup questions in case of API failure
-    return [
-      {
-        id: `backup_${Date.now()}_1`,
-        question: "Which nursing intervention best demonstrates proper infection control practices?",
-        options: [
-          { value: "a", label: "Performing hand hygiene before and after patient contact" },
-          { value: "b", label: "Wearing the same gloves between patients" },
-          { value: "c", label: "Reusing personal protective equipment" },
-          { value: "d", label: "Using hand sanitizer without washing visibly soiled hands" }
-        ],
-        correctAnswer: "a",
-        explanation: {
-          main: "Hand hygiene is the most effective way to prevent the spread of infections.",
-          concepts: [
-            {
-              title: "Basic Prevention",
-              description: "Hand hygiene is fundamental to infection control"
-            },
-            {
-              title: "Evidence-Based Practice",
-              description: "CDC guidelines emphasize hand hygiene as primary prevention"
-            }
-          ]
-        }
-      },
-      {
-        id: `backup_${Date.now()}_2`,
-        question: "What is the most important step in preventing medication errors?",
-        options: [
-          { value: "a", label: "Checking the five rights once" },
-          { value: "b", label: "Verifying the five rights multiple times" },
-          { value: "c", label: "Relying on memory for regular medications" },
-          { value: "d", label: "Having another nurse give all medications" }
-        ],
-        correctAnswer: "b",
-        explanation: {
-          main: "Multiple verification of the five rights ensures medication safety.",
-          concepts: [
-            {
-              title: "Safety Protocol",
-              description: "Multiple checks reduce error probability"
-            },
-            {
-              title: "Critical Thinking",
-              description: "Each verification step requires focused attention"
-            }
-          ]
-        }
-      }
-    ];
-  }
-
   // Patient Scenarios Routes
   app.post("/api/scenarios/generate", async (req, res) => {
     const { difficulty, previousScenarios } = req.body;
@@ -796,9 +774,64 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  function generateBackupQuestions() {
+    // Generating backup questions in case of API failure
+    return [
+      {
+        id: `backup_${Date.now()}_1`,
+        question: "Which nursing intervention best demonstrates proper infection control practices?",
+        options: [
+          { value: "a", label: "Performing hand hygiene before and after patient contact" },
+          { value: "b", label: "Wearing the same gloves between patients" },
+          { value: "c", label: "Reusing personal protective equipment" },
+          { value: "d", label: "Using hand sanitizer without washing visibly soiled hands" }
+        ],
+        correctAnswer: "a",
+        explanation: {
+          main: "Hand hygiene is the most effective way to prevent the spread of infections.",
+          concepts: [
+            {
+              title: "Basic Prevention",
+              description: "Hand hygiene is fundamental to infection control"
+            },
+            {
+              title: "Evidence-Based Practice",
+              description: "CDC guidelines emphasize hand hygiene as primary prevention"
+            }
+          ]
+        }
+      },
+      {
+        id: `backup_${Date.now()}_2`,
+        question: "What is the most important step in preventing medication errors?",
+        options: [
+          { value: "a", label: "Checking the five rights once" },
+          { value: "b", label: "Verifying the five rights multiple times" },
+          { value: "c", label: "Relying on memory for regular medications" },
+          { value: "d", label: "Having another nurse give all medications" }
+        ],
+        correctAnswer: "b",
+        explanation: {
+          main: "Multiple verification of the five rights ensures medication safety.",
+          concepts: [
+            {
+              title: "Safety Protocol",
+              description: "Multiple checks reduce error probability"
+            },
+            {
+              title: "Critical Thinking",
+              description: "Each verification step requires focused attention"
+            }
+          ]
+        }
+      }
+    ];
+  }
+
   return httpServer;
 }
 
+// Helper functions
 async function analyzePerformance(answers: any[]) {
   try {
     const completion = await openai.chat.completions.create({
@@ -815,7 +848,6 @@ async function analyzePerformance(answers: any[]) {
       ]
     });
 
-    const analysis = completion.choices[0]?.message?.content;
     return {
       strengths: ["Clinical reasoning", "Patient safety"],
       weaknesses: ["Pharmacology calculations", "Priority setting"],
@@ -824,33 +856,6 @@ async function analyzePerformance(answers: any[]) {
     };
   } catch (error) {
     console.error("Error analyzing performance:", error);
-    return null;
-  }
-}
-
-async function getPathophysiologyHelp(topic: string, context: string) {
-  try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        {
-          role: "system",
-          content: "You are an expert pathophysiology educator helping nursing students understand complex disease processes."
-        },
-        {
-          role: "user",
-          content: `Explain ${topic} in the context of ${context}`
-        }
-      ]
-    });
-
-    return {
-      content: completion.choices[0]?.message?.content,
-      relatedConcepts: ["Inflammation", "Cellular adaptation", "Tissue repair"],
-      clinicalCorrelations: ["Assessment findings", "Common complications", "Nursing interventions"]
-    };
-  } catch (error) {
-    console.error("Error getting pathophysiology help:", error);
     return null;
   }
 }
@@ -873,8 +878,7 @@ async function getStudyRecommendations(performanceData: any[]) {
 
     return {
       recommendations: completion.choices[0]?.message?.content,
-      priorityTopics: ["Critical thinking", "Clinical judgment", "Patient safety"],
-      studyStrategies: ["Case studies", "Practice questions", "Concept mapping"]
+      priorityTopics: ["Critical thinking", "Clinical judgment", "Patient safety"]
     };
   } catch (error) {
     console.error("Error generating study recommendations:", error);
@@ -912,13 +916,4 @@ async function generateNewQuestions(userId: number, examType: string) {
     console.error("Error generating questions:", error);
     throw new Error("Failed to generate questions");
   }
-}
-
-function formatQuestion(question: any) {
-  return {
-    id: 1,
-    text: question.text,
-    options: question.options,
-    correctAnswer: question.correctAnswer
-  };
 }

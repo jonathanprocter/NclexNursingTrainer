@@ -76,6 +76,11 @@ const HOST = process.env.HOST || '0.0.0.0';
     }
 
     server.listen(PORT, HOST, () => {
+      console.log('=================================');
+      console.log('Server started successfully');
+      console.log(`Server is running on port ${PORT}`);
+      console.log(`Access URL: http://${HOST}:${PORT}`);
+      console.log('=================================');
       log(`Server running on http://${HOST}:${PORT}`);
     });
   } catch (error) {
