@@ -153,26 +153,40 @@ export const practiceQuestions = {
   ],
   "standard": [
     {
-      id: "std_q1",
+      id: "std_anxiety_1",
       text: "Which nursing intervention is most appropriate for a patient experiencing acute anxiety?",
       options: [
-        "Administer PRN medication immediately",
-        "Use therapeutic communication and breathing techniques",
-        "Call for psychiatric consultation",
-        "Restrain the patient for safety"
+        { id: "a", text: "Administer PRN medication immediately" },
+        { id: "b", text: "Use therapeutic communication and breathing techniques" },
+        { id: "c", text: "Call for psychiatric consultation" },
+        { id: "d", text: "Restrain the patient for safety" }
       ],
-      correctAnswer: 1
+      correctAnswer: "b",
+      explanation: "Therapeutic communication and breathing techniques are the first-line interventions for anxiety, being non-pharmacological and promoting patient autonomy.",
+      domain: "Psychosocial Integrity",
+      topic: "Anxiety Management",
+      subtopic: "Therapeutic Communication",
+      difficulty: "Medium",
+      conceptBreakdown: [],
+      faqs: []
     },
     {
-      id: "std_q2",
+      id: "std_dka_1",
       text: "A patient presents with symptoms of diabetic ketoacidosis. What is the priority nursing action?",
       options: [
-        "Administer insulin as ordered",
-        "Check blood glucose level",
-        "Assess level of consciousness",
-        "Start IV fluids"
+        { id: "a", text: "Administer insulin as ordered" },
+        { id: "b", text: "Check blood glucose level" },
+        { id: "c", text: "Assess level of consciousness" },
+        { id: "d", text: "Start IV fluids" }
       ],
-      correctAnswer: 2
+      correctAnswer: "c",
+      explanation: "Assessing level of consciousness is the priority as it indicates the severity of DKA and guides immediate interventions.",
+      domain: "Physiological Integrity",
+      topic: "Endocrine",
+      subtopic: "Diabetic Ketoacidosis",
+      difficulty: "Hard",
+      conceptBreakdown: [],
+      faqs: []
     }
   ]
 };
