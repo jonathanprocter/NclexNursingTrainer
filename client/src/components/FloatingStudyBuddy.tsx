@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { StudyBuddyChat } from "./StudyBuddyChat";
 import { Button } from "@/components/ui/button";
@@ -19,8 +20,8 @@ export function FloatingStudyBuddy() {
             transition={{ type: "spring", damping: 20 }}
             className="mr-4"
           >
-            <div className="bg-card border rounded-lg shadow-lg w-[400px] h-[600px] flex flex-col">
-              <div className="p-4 border-b flex justify-between items-center">
+            <div className="bg-background border rounded-lg shadow-lg w-[400px] h-[600px] flex flex-col">
+              <div className="p-4 border-b flex justify-between items-center bg-card">
                 <h2 className="font-semibold flex items-center gap-2">
                   <span className="text-xl" role="img" aria-label="bee">🐝</span>
                   Bee Wise
@@ -40,7 +41,7 @@ export function FloatingStudyBuddy() {
           </motion.div>
         )}
       </AnimatePresence>
-
+      
       <Button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
