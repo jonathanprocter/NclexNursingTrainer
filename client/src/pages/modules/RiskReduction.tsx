@@ -558,9 +558,9 @@ export default function RiskReduction() {
           question: scenarios.find(s => s.id === scenarioId)?.initialPrompt
         })
       });
-      
+
       if (!response.ok) throw new Error("Failed to generate scenario");
-      
+
       const data = await response.json();
       setScenarioResponses(prev => ({ ...prev, [scenarioId]: data.response }));
     } catch (error) {
@@ -586,9 +586,9 @@ export default function RiskReduction() {
           context: scenarioResponses[scenarioId]
         })
       });
-      
+
       if (!response.ok) throw new Error("Failed to get response");
-      
+
       const data = await response.json();
       setScenarioResponses(prev => ({ 
         ...prev, 
@@ -659,29 +659,7 @@ export default function RiskReduction() {
                 </Card>
               ))}
             </div>
-              <Card className="p-6">
-                <h3 className="font-semibold mb-3">Case Study 2: Emergency Department</h3>
-                <p className="text-muted-foreground mb-4">
-                  Multiple trauma patients arrive simultaneously during a busy shift.
-                </p>
-                <Button className="w-full" variant="outline">Start Scenario</Button>
-              </Card>
-              <Card className="p-6">
-                <h3 className="font-semibold mb-3">Case Study 3: Critical Care</h3>
-                <p className="text-muted-foreground mb-4">
-                  Patient on mechanical ventilation shows signs of respiratory distress.
-                </p>
-                <Button className="w-full" variant="outline">Start Scenario</Button>
-              </Card>
-              <Card className="p-6">
-                <h3 className="font-semibold mb-3">Case Study 4: Medication Safety</h3>
-                <p className="text-muted-foreground mb-4">
-                  High-alert medication administration in a pediatric setting.
-                </p>
-                <Button className="w-full" variant="outline">Start Scenario</Button>
-              </Card>
-            </div>
-            <Card className="bg-muted/50 p-6">
+            <Card className="p-6">
               <h3 className="font-semibold mb-3">Coming Soon</h3>
               <p className="text-muted-foreground">
                 More interactive scenarios are being developed to cover additional clinical situations and specialties.
