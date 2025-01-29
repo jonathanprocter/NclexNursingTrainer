@@ -5,9 +5,49 @@ import { modules, questions, quizAttempts, userProgress } from "@db/schema";
 import { eq } from "drizzle-orm";
 import { practiceQuestions } from "./data/practice-questions";
 import OpenAI from "openai";
+import { Anthropic } from '@anthropic-ai/sdk';
 
 if (!process.env.OPENAI_API_KEY) {
   throw new Error("OPENAI_API_KEY must be set in environment variables");
+}
+
+if (!process.env.ANTHROPIC_API_KEY) {
+  throw new Error("ANTHROPIC_API_KEY must be set in environment variables");
+}
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
+
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY
+});
+
+export function setupAIRoutes(app: Express) {
+  app.post("/api/ai/pathophysiology-help", async (req, res) => {
+    try {
+      const { section, context } = req.body;
+      const response = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [
+          {
+            role: "system",
+            content: "You are an expert pathophysiology instructor helping nursing students prepare for the NCLEX exam."
+          },
+          {
+            role: "user",
+            content: `Explain the ${section} section in pathophysiology${context ? `. Context: ${context}` : ''}`
+          }
+        ]
+      });
+      res.json({ content: response.choices[0].message.content });
+    } catch (error) {
+      console.error("Error:", error);
+      res.status(500).json({ error: "Failed to get AI assistance" });
+    }
+  });
+
+  // Add other AI endpoints here...
 }
 
 const openai = new OpenAI({

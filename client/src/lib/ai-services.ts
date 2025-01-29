@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { Anthropic } from '@anthropic-ai/sdk';
+import type { AIAnalysisResult, SimulationFeedback, SimulationScenario } from './types';
 
 if (!import.meta.env.VITE_OPENAI_API_KEY) {
   throw new Error("VITE_OPENAI_API_KEY is required");
@@ -24,29 +25,23 @@ export interface AIAnalysisResult {
   confidence: number;
 }
 
-// Helper function for pathophysiology-specific AI assistance
+
 export async function getPathophysiologyHelp(
   section: string,
   context?: string
 ): Promise<{ content: string }> {
   try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        {
-          role: "system",
-          content: "You are an expert pathophysiology instructor helping nursing students prepare for the NCLEX exam. Provide detailed explanations of disease processes, mechanisms, and systemic effects with clinical examples."
-        },
-        {
-          role: "user",
-          content: `Explain the ${section} section in pathophysiology${context ? `. Context: ${context}` : ''}`
-        }
-      ]
+    const response = await fetch('/api/ai/pathophysiology-help', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ section, context })
     });
 
-    return {
-      content: response.choices[0].message.content || 'No explanation available'
-    };
+    if (!response.ok) {
+      throw new Error('Failed to get AI assistance');
+    }
+
+    return await response.json();
   } catch (error) {
     console.error('Error getting pathophysiology help:', error);
     throw new Error('Failed to get AI assistance');
@@ -63,22 +58,17 @@ export async function analyzePerformance(
   }>
 ): Promise<AIAnalysisResult> {
   try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        {
-          role: "system",
-          content: "You are an NCLEX expert AI analyzing student performance in pathophysiology and clinical concepts."
-        },
-        {
-          role: "user",
-          content: JSON.stringify({ answers })
-        }
-      ],
-      response_format: { type: "json_object" }
+    const response = await fetch('/api/ai/analyze-performance', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ answers })
     });
 
-    return JSON.parse(response.choices[0].message.content || '{}');
+    if (!response.ok) {
+      throw new Error('Failed to analyze performance');
+    }
+
+    return await response.json();
   } catch (error) {
     console.error('Error analyzing performance:', error);
     throw new Error('Failed to analyze performance');
@@ -123,28 +113,17 @@ export async function generateSimulationScenario(
   focus_areas?: string[]
 ): Promise<SimulationScenario> {
   try {
-    const response = await anthropic.messages.create({
-      model: "claude-3-sonnet-20240229",
-      max_tokens: 2000,
-      messages: [{
-        role: "user",
-        content: `Generate a detailed nursing simulation scenario with difficulty level: ${difficulty}
-        ${focus_areas ? `Focus areas: ${focus_areas.join(', ')}` : ''}
-        Include:
-        - Detailed patient information and initial state
-        - Clear learning objectives
-        - Expected nursing actions with rationales
-        - Vital signs and symptoms
-        Output in JSON format matching the SimulationScenario type.`
-      }]
+    const response = await fetch('/api/ai/simulation-scenario', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ difficulty, focus_areas })
     });
 
-    const content = response.content[0];
-    if (content.type !== 'text') {
-      throw new Error('Unexpected response format from Anthropic API');
+    if (!response.ok) {
+      throw new Error('Failed to generate simulation scenario');
     }
 
-    return JSON.parse(content.text);
+    return await response.json();
   } catch (error) {
     console.error('Error generating simulation scenario:', error);
     throw new Error('Failed to generate simulation scenario');
@@ -160,25 +139,17 @@ export async function getSimulationFeedback(
   }[]
 ): Promise<SimulationFeedback> {
   try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        {
-          role: "system",
-          content: "You are an expert nursing instructor providing feedback on simulation performance. Analyze the learner's actions against the expected actions and provide detailed, constructive feedback."
-        },
-        {
-          role: "user",
-          content: JSON.stringify({
-            scenario,
-            userActions,
-          })
-        }
-      ],
-      response_format: { type: "json_object" }
+    const response = await fetch('/api/ai/simulation-feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scenario, userActions })
     });
 
-    return JSON.parse(response.choices[0].message.content || '{}');
+    if (!response.ok) {
+      throw new Error('Failed to get simulation feedback');
+    }
+
+    return await response.json();
   } catch (error) {
     console.error('Error getting simulation feedback:', error);
     throw new Error('Failed to get simulation feedback');
@@ -196,26 +167,17 @@ export interface QuestionGenerationParams {
 
 export async function generateAdaptiveQuestions(params: QuestionGenerationParams) {
   try {
-    const message = await anthropic.messages.create({
-      model: 'claude-3-sonnet-20240229',
-      max_tokens: 1024,
-      messages: [{
-        role: 'user',
-        content: `Generate NCLEX-style pathophysiology questions focusing on these topics: ${params.topics.join(', ')}. 
-        Adjust difficulty (1-10): ${params.difficulty}
-        Previous performance: ${JSON.stringify(params.previousPerformance)}
-        Output in JSON format with array of questions, each containing:
-        - question text
-        - answer choices
-        - correct answer
-        - explanation
-        - topic
-        - difficulty rating
-        Focus on disease processes, mechanisms, and systemic manifestations.`
-      }]
+    const response = await fetch('/api/ai/generate-questions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params)
     });
 
-    return JSON.parse(message.content[0].text);
+    if (!response.ok) {
+      throw new Error('Failed to generate questions');
+    }
+
+    return await response.json();
   } catch (error) {
     console.error('Error generating questions:', error);
     throw new Error('Failed to generate questions');
@@ -230,22 +192,17 @@ export async function getStudyRecommendations(
   }[]
 ) {
   try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        {
-          role: "system",
-          content: "Generate personalized pathophysiology study recommendations based on performance data, focusing on understanding disease mechanisms and systemic effects."
-        },
-        {
-          role: "user",
-          content: JSON.stringify({ performanceData })
-        }
-      ],
-      response_format: { type: "json_object" }
+    const response = await fetch('/api/ai/study-recommendations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ performanceData })
     });
 
-    return JSON.parse(response.choices[0].message.content || '{}');
+    if (!response.ok) {
+      throw new Error('Failed to generate study recommendations');
+    }
+
+    return await response.json();
   } catch (error) {
     console.error('Error generating study recommendations:', error);
     throw new Error('Failed to generate study recommendations');
