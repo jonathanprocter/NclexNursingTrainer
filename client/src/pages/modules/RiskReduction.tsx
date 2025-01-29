@@ -16,10 +16,300 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
-// ... keep all existing interfaces ...
+interface PreventionQuestion {
+  id: string;
+  question: string;
+  options: {
+    value: string;
+    label: string;
+  }[];
+  correctAnswer: string;
+  explanation: {
+    main: string;
+    concepts: {
+      title: string;
+      description: string;
+    }[];
+  };
+}
 
 export default function RiskReduction() {
-  // ... keep all existing state and mutations ...
+  const { toast } = useToast();
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [answeredQuestions, setAnsweredQuestions] = useState<Set<string>>(new Set());
+  const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
+  const [answerSelected, setAnswerSelected] = useState<{ [key: number]: string }>({});
+  const [preventionQuestions, setPreventionQuestions] = useState<PreventionQuestion[]>([]);
+  const [answerResults, setAnswerResults] = useState<{ [key: number]: boolean }>({});
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  const generateMoreQuestionsMutation = useMutation({
+    mutationFn: async () => {
+      const currentQuestionIds = preventionQuestions.map(q => q.id);
+      console.log('Sending request with previous questions:', currentQuestionIds);
+
+      const response = await fetch("/api/exam/prevention/questions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          previousQuestions: currentQuestionIds
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to generate questions: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Received new questions:', data);
+
+      if (!Array.isArray(data) || data.length === 0) {
+        throw new Error("Invalid response format or no questions received");
+      }
+
+      return data;
+    },
+    onSuccess: (newQuestions) => {
+      if (isMounted.current) {
+        setPreventionQuestions(prev => [...prev, ...newQuestions]);
+        toast({
+          title: "New questions added!",
+          description: `Added ${newQuestions.length} new questions to your practice set.`,
+        });
+      }
+    },
+    onError: (error) => {
+      if (isMounted.current) {
+        console.error('Question generation error:', error);
+        toast({
+          title: "Error",
+          description: error instanceof Error ? error.message : "Failed to generate new questions. Please try again.",
+          variant: "destructive",
+        });
+      }
+    },
+  });
+
+  const handleGenerateMoreQuestions = async () => {
+    if (!isMounted.current || isGeneratingQuestions) return;
+    setIsGeneratingQuestions(true);
+    try {
+      await generateMoreQuestionsMutation.mutateAsync();
+    } catch (error) {
+      console.error('Error generating questions:', error);
+    } finally {
+      if (isMounted.current) {
+        setIsGeneratingQuestions(false);
+      }
+    }
+  };
+
+  const handleNextQuestion = () => {
+    if (currentQuestionIndex < preventionQuestions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+      setShowExplanation(false);
+    }
+  };
+
+  const handlePrevQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(prev => prev - 1);
+      setShowExplanation(false);
+    }
+  };
+
+  const handleAnswerSelect = (value: string) => {
+    if (!preventionQuestions.length) return;
+
+    setAnswerSelected(prev => ({
+      ...prev,
+      [currentQuestionIndex]: value
+    }));
+
+    const isCorrect = value === preventionQuestions[currentQuestionIndex].correctAnswer;
+    setAnswerResults(prev => ({
+      ...prev,
+      [currentQuestionIndex]: isCorrect
+    }));
+
+    if (!answeredQuestions.has(preventionQuestions[currentQuestionIndex].id)) {
+      const newAnsweredQuestions = new Set(answeredQuestions);
+      newAnsweredQuestions.add(preventionQuestions[currentQuestionIndex].id);
+      setAnsweredQuestions(newAnsweredQuestions);
+    }
+
+    setShowExplanation(true);
+  };
+
+  const renderPreventionStrategies = () => {
+    if (preventionQuestions.length === 0) {
+      return (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Prevention Strategies Assessment</CardTitle>
+            <AIHelpButton
+              title="Prevention Strategies"
+              description="Get AI assistance with understanding prevention strategies and risk reduction techniques."
+              topic="prevention strategies and risk reduction in nursing practice"
+            />
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-8">
+              <p className="text-muted-foreground mb-4">
+                Click the button below to generate practice questions about prevention strategies.
+              </p>
+              <Button
+                onClick={handleGenerateMoreQuestions}
+                disabled={isGeneratingQuestions}
+                className="w-full max-w-md"
+              >
+                {isGeneratingQuestions ? (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                    Generating Questions...
+                  </>
+                ) : (
+                  "Generate Questions"
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    return (
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Prevention Strategies Assessment</CardTitle>
+          <AIHelpButton
+            title="Prevention Strategies"
+            description="Get AI assistance with understanding prevention strategies and risk reduction techniques."
+            topic="prevention strategies and risk reduction in nursing practice"
+          />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            <div className="bg-muted/50 p-4 rounded-lg">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-semibold text-lg">
+                  Question {currentQuestionIndex + 1} of {preventionQuestions.length}
+                </h3>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={handlePrevQuestion}
+                    disabled={currentQuestionIndex === 0}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleNextQuestion}
+                    disabled={currentQuestionIndex === preventionQuestions.length - 1}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium mb-2">
+                    {preventionQuestions[currentQuestionIndex].question}
+                  </h4>
+                  <RadioGroup
+                    value={answerSelected[currentQuestionIndex] || ""}
+                    onValueChange={handleAnswerSelect}
+                    className="space-y-2"
+                  >
+                    {preventionQuestions[currentQuestionIndex].options.map((option) => (
+                      <div key={option.value} className="flex items-center space-x-2">
+                        <RadioGroupItem
+                          value={option.value}
+                          id={`q${currentQuestionIndex}-${option.value}`}
+                        />
+                        <Label
+                          htmlFor={`q${currentQuestionIndex}-${option.value}`}
+                          className={
+                            showExplanation
+                              ? option.value === preventionQuestions[currentQuestionIndex].correctAnswer
+                                ? "text-green-600 font-medium"
+                                : answerSelected[currentQuestionIndex] === option.value
+                                ? "text-red-600"
+                                : ""
+                              : ""
+                          }
+                        >
+                          {option.label}
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+
+                  {showExplanation && (
+                    <div className="mt-4 p-4 bg-background/50 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        {answerResults[currentQuestionIndex] ? (
+                          <CheckCircle2 className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <XCircle className="h-5 w-5 text-red-500" />
+                        )}
+                        <h4 className="font-medium">
+                          {answerResults[currentQuestionIndex] ? "Correct!" : "Incorrect"}
+                        </h4>
+                      </div>
+                      <p className="text-sm">
+                        {preventionQuestions[currentQuestionIndex].explanation.main}
+                      </p>
+                      <div className="mt-4">
+                        <h5 className="font-medium mb-2">Conceptual Breakdown:</h5>
+                        <ul className="text-sm space-y-2">
+                          {preventionQuestions[currentQuestionIndex].explanation.concepts.map(
+                            (concept, index) => (
+                              <li key={index}>
+                                • <span className="font-medium">{concept.title}:</span>{" "}
+                                {concept.description}
+                              </li>
+                            )
+                          )}
+                        </ul>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-center">
+              <Button
+                onClick={handleGenerateMoreQuestions}
+                disabled={isGeneratingQuestions}
+                className="w-full max-w-md"
+              >
+                {isGeneratingQuestions ? (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                    Generating More Questions...
+                  </>
+                ) : (
+                  "Generate More Questions"
+                )}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
 
   const renderOverview = () => (
     <div className="space-y-6">
