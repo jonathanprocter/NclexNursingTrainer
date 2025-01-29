@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -19,21 +20,19 @@ export default function Questions() {
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("all");
   const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(new Set());
 
-  const { data: questions = [], isLoading } = useQuery<Question[]>({
+  const { data: questions, isLoading } = useQuery<Question[]>({
     queryKey: ["questions"],
     queryFn: async () => {
-      const response = await fetch("/api/questions");
-      if (!response.ok) {
-        throw new Error("Failed to fetch questions");
+      try {
+        const response = await fetch("/api/questions");
+        if (!response.ok) {
+          throw new Error("Failed to fetch questions");
+        }
+        return response.json();
+      } catch (error) {
+        console.error("Question fetch error:", error);
+        return [];
       }
-      return response.json();
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to load questions",
-        variant: "destructive",
-      });
     },
   });
 
@@ -47,13 +46,13 @@ export default function Questions() {
     setExpandedQuestions(newExpanded);
   };
 
-  const filteredQuestions = questions.filter(
-    (q) => selectedDifficulty === "all" || q.difficulty === selectedDifficulty
-  );
-
   if (isLoading) {
     return <div>Loading questions...</div>;
   }
+
+  const filteredQuestions = (questions || []).filter(
+    (q) => selectedDifficulty === "all" || q.difficulty === selectedDifficulty
+  );
 
   return (
     <div className="container mx-auto p-4">
@@ -65,7 +64,7 @@ export default function Questions() {
           <div className="space-y-4">
             <ScrollArea className="h-[600px]">
               {filteredQuestions.map((question) => (
-                <Card key={`question-${question.id}`} className="mb-4">
+                <Card key={`question-${question.id}-${question.text}`} className="mb-4">
                   <CardHeader>
                     <div className="flex justify-between">
                       <div>{question.text}</div>
@@ -76,7 +75,7 @@ export default function Questions() {
                     <div className="space-y-2">
                       {question.options.map((option) => (
                         <div
-                          key={`${question.id}-${option.id}`}
+                          key={`${question.id}-option-${option.id}`}
                           className="flex items-center gap-2"
                         >
                           <span>{option.text}</span>
