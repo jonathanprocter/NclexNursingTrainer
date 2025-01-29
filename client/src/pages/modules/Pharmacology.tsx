@@ -89,8 +89,26 @@ export default function Pharmacology() {
     setCurrentSection(formatSectionName(section));
     setIsDialogOpen(true);
 
+    // Create a detailed context based on the section
+    const sectionContexts: { [key: string]: string } = {
+      'medications_overview': 'Explain drug classifications, clinical implications, and therapeutic effects for common medications',
+      'complex_drug_classifications': 'Provide details about antimicrobials, cardiovascular medications, and pain management medications',
+      'mechanisms_of_action': 'Explain pharmacodynamics, pharmacokinetics (ADME), and clinical applications',
+      'pharmacodynamics_details': 'Detail receptor types, drug-receptor interactions, and dose-response relationships',
+      'pharmacokinetics_case_studies': 'Provide clinical cases involving drug absorption, distribution, metabolism, and excretion',
+      'clinical_applications': 'Explain therapeutic drug monitoring, special populations considerations, and clinical decision-making',
+      'administration_routes': 'Detail oral, parenteral, and other medication administration routes with safety considerations',
+      'safety_guidelines': 'Explain medication administration rights and error prevention strategies'
+    };
+
+    const enhancedContext = context || sectionContexts[section] || '';
+
     try {
-      const result = await aiHelpMutation.mutateAsync({ section, context });
+      const result = await aiHelpMutation.mutateAsync({ 
+        section,
+        context: enhancedContext,
+        topic: 'pharmacology'
+      });
       setAiContent(formatAIContent(result.content));
     } catch (error) {
       toast({
