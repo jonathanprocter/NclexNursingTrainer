@@ -53,13 +53,26 @@ export default function Quizzes() {
   }, [quizComplete, isReviewMode, questions.length]);
 
   // Generate new questions mutation
+  const [previousQuestionIds, setPreviousQuestionIds] = useState<string[]>([]);
+  const [userPerformance, setUserPerformance] = useState<{
+    correctByTopic: { [key: string]: number },
+    totalByTopic: { [key: string]: number }
+  }>({
+    correctByTopic: {},
+    totalByTopic: {}
+  });
+
   const generateQuestionsMutation = useMutation({
     mutationFn: async (topic?: string) => {
       try {
         const response = await fetch('/api/generate-questions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ topic }),
+          body: JSON.stringify({ 
+            topic,
+            previousQuestionIds,
+            userPerformance 
+          }),
         });
         
         if (!response.ok) {
@@ -113,13 +126,36 @@ export default function Quizzes() {
   const handleAnswer = (questionId: number, selectedAnswer: string) => {
     if (isReviewMode) return;
 
+    const currentQ = questions[currentQuestion];
+    const correct = selectedAnswer === currentQ.correctAnswer;
+    
+    // Update user answers
     setUserAnswers(prev => ({...prev, [questionId]: selectedAnswer}));
-    const correct = selectedAnswer === questions[currentQuestion].correctAnswer;
+    
+    // Update score
     setScore(prev => ({
       ...prev,
       correct: prev.correct + (correct ? 1 : 0),
       total: prev.total + 1
     }));
+
+    // Track question ID
+    setPreviousQuestionIds(prev => [...prev, currentQ.id]);
+
+    // Update performance metrics
+    setUserPerformance(prev => {
+      const topic = currentQ.category || 'General';
+      return {
+        correctByTopic: {
+          ...prev.correctByTopic,
+          [topic]: (prev.correctByTopic[topic] || 0) + (correct ? 1 : 0)
+        },
+        totalByTopic: {
+          ...prev.totalByTopic,
+          [topic]: (prev.totalByTopic[topic] || 0) + 1
+        }
+      };
+    });
 
     if (currentQuestion === questions.length - 1) {
       setQuizComplete(true);

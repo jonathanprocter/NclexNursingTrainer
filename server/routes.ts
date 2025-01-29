@@ -425,24 +425,41 @@ app.get("/api/questions/:moduleId", async (req, res) => {
   // Quiz question generation endpoint
   app.post("/api/generate-questions", async (req, res) => {
     try {
-      const { topic } = req.body;
-      const availableQuestions = topic 
-        ? practiceQuestions[topic.toLowerCase()]
-        : Object.values(practiceQuestions).flat();
+      const { topic, previousQuestionIds, userPerformance } = req.body;
+      const MIN_QUESTIONS = 20;
 
-      if (!availableQuestions || availableQuestions.length === 0) {
-        throw new Error("No questions available for the selected topic");
-      }
+      // Generate unique questions based on user performance
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [
+          {
+            role: "system",
+            content: "Generate NCLEX-style questions. Focus on areas where the user needs improvement."
+          },
+          {
+            role: "user",
+            content: `Generate ${MIN_QUESTIONS} unique nursing questions${topic ? ` for ${topic}` : ''}.
+            Previous question IDs: ${previousQuestionIds?.join(', ') || 'none'}
+            User performance: ${JSON.stringify(userPerformance)}`
+          }
+        ],
+        temperature: 0.7,
+      });
 
-      // Randomly select 5 questions
-      const selectedQuestions = [];
-      const questionsCopy = [...availableQuestions];
-      for (let i = 0; i < Math.min(5, questionsCopy.length); i++) {
-        const randomIndex = Math.floor(Math.random() * questionsCopy.length);
-        selectedQuestions.push(questionsCopy.splice(randomIndex, 1)[0]);
-      }
+      const generatedQuestions = JSON.parse(completion.choices[0]?.message?.content || '[]');
+      
+      // Ensure questions are unique and properly formatted
+      const formattedQuestions = generatedQuestions.map((q: any, index: number) => ({
+        id: `gen_${Date.now()}_${index}`,
+        text: q.question,
+        options: q.options,
+        correctAnswer: q.correctAnswer,
+        explanation: q.explanation,
+        category: topic || 'General',
+        difficulty: q.difficulty || 'Medium'
+      }));
 
-      res.json(selectedQuestions);
+      res.json(formattedQuestions);
     } catch (error) {
       console.error("Error generating questions:", error);
       res.status(500).json({ 
