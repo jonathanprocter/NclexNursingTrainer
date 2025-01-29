@@ -68,7 +68,7 @@ export default function Home() {
 
       Keep going! You're making great progress in mastering these topics! 🌟
       `;
-      📚 ${data.duration} Minute Personalized Study Plan for Bianca:
+      setStudyPlan(`Study Plan for ${data.duration} Minutes:
 
       1. Quick Review (5 mins)
       - Review your previous quiz results in Pharmacology
