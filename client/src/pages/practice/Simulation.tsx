@@ -70,10 +70,11 @@ export default function Simulation() {
     });
   };
 
-  const handleAction = (action: string) => {
+  const handleAction = (action: { action: string; priority: number; rationale: string }) => {
     setUserActions(prev => [...prev, {
-      action,
-      timestamp: new Date().toISOString()
+      action: action.action,
+      timestamp: new Date().toISOString(),
+      outcome: action.rationale
     }]);
   };
 
