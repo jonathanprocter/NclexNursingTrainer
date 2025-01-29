@@ -831,20 +831,31 @@ export function registerRoutes(app: Express): Server {
   app.get('/api/questions', (req, res) => {
     const { difficulty = 'all', min = 25 } = req.query;
     let allQuestions = Object.values(practiceQuestions).flat();
+    
+    // Convert difficulty to lowercase for comparison
+    const targetDifficulty = String(difficulty).toLowerCase();
+    
+    if (targetDifficulty !== 'all') {
+      allQuestions = allQuestions.filter(q => q.difficulty.toLowerCase() === targetDifficulty);
+    }
 
-    if (difficulty !== 'all') {
-      allQuestions = allQuestions.filter(q => q.difficulty.toLowerCase() === difficulty);
+    // If no questions match the filter, return all questions
+    if (allQuestions.length === 0) {
+      allQuestions = Object.values(practiceQuestions).flat();
+    }
+
+    // Ensure we have enough questions by duplicating if necessary
+    while (allQuestions.length < Number(min)) {
+      allQuestions = [...allQuestions, ...Object.values(practiceQuestions).flat()];
     }
 
     // Shuffle questions randomly
     const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
     
-    // Take only unique questions up to min
-    const uniqueQuestions = Array.from(new Set(shuffled.map(q => JSON.stringify(q))))
-      .map(q => JSON.parse(q))
-      .slice(0, Number(min));
+    // Take questions up to min
+    const selectedQuestions = shuffled.slice(0, Number(min));
 
-    res.json(uniqueQuestions);
+    res.json(selectedQuestions);
   });
 
   return httpServer;

@@ -153,6 +153,48 @@ export const practiceQuestions = {
   ],
   "standard": [
     {
+      id: "std_1",
+      text: "Which nursing intervention is most appropriate for a client with acute pain?",
+      options: [
+        { id: "a", text: "Assess pain characteristics" },
+        { id: "b", text: "Administer PRN pain medication immediately" },
+        { id: "c", text: "Notify healthcare provider" },
+        { id: "d", text: "Apply ice pack to affected area" }
+      ],
+      correctAnswer: "a",
+      explanation: "Pain assessment should be conducted first to determine appropriate interventions.",
+      category: "Patient Care",
+      difficulty: "Medium"
+    },
+    {
+      id: "std_2",
+      text: "What is the first step in preventing medication errors?",
+      options: [
+        { id: "a", text: "Check the five rights" },
+        { id: "b", text: "Verify allergies" },
+        { id: "c", text: "Document administration" },
+        { id: "d", text: "Call pharmacy" }
+      ],
+      correctAnswer: "a",
+      explanation: "The five rights are the first line of defense in preventing medication errors.",
+      category: "Medication Safety",
+      difficulty: "Easy"
+    },
+    {
+      id: "std_3",
+      text: "Which assessment finding requires immediate intervention in a post-operative patient?",
+      options: [
+        { id: "a", text: "Slight incision redness" },
+        { id: "b", text: "Temperature of 101.5°F" },
+        { id: "c", text: "Decreased urinary output" },
+        { id: "d", text: "Mild nausea" }
+      ],
+      correctAnswer: "c",
+      explanation: "Decreased urinary output could indicate shock or organ dysfunction requiring immediate attention.",
+      category: "Post-operative Care",
+      difficulty: "Hard"
+    },
+    {
       id: "std_anxiety_management",
       text: "Which nursing intervention is most appropriate for a patient experiencing acute anxiety?",
       options: [
