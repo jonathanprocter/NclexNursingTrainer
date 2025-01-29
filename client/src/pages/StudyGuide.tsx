@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AIHelpButton } from "@/components/ui/ai-help-button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -67,6 +68,13 @@ export default function StudyGuide() {
                       </li>
                     ))}
                   </ul>
+                  <div className="mt-4">
+                    <AIHelpButton
+                      title={section.subtitle}
+                      description={`Get AI assistance with understanding and mastering ${section.subtitle} concepts`}
+                      topic={topic.id}
+                    />
+                  </div>
                 </CardContent>
               </Card>
             ))}
