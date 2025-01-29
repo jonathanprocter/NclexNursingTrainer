@@ -21,12 +21,13 @@ export default function AICompanion() {
 
   const getAIResponse = async (question: string) => {
     try {
-      const response = await fetch('/api/ai/pathophysiology-help', {
+      const response = await fetch('/api/ai-help', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          section: 'pharmacology', 
-          context: question.trim() 
+          topic: 'pharmacology',
+          context: question.trim(),
+          question: question.trim()
         })
       });
 
