@@ -6,6 +6,7 @@ import studyGuideRouter from './routes/study-guide';
 import OpenAI from "openai";
 import { studyBuddyChats, modules, questions, quizAttempts, userProgress } from "@db/schema";
 import type { PracticeQuestion } from "./types";
+import { practiceQuestions, getQuestionsWithMinimum } from './data/practice-questions';
 
 if (!process.env.OPENAI_API_KEY) {
   throw new Error("OPENAI_API_KEY must be set in environment variables");
@@ -15,7 +16,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-const practiceQuestions: Record<string, PracticeQuestion[]> = {
+const practiceQuestionsConst: Record<string, PracticeQuestion[]> = {
   standard: [
     {
       id: "std_1",
@@ -379,7 +380,7 @@ export function registerRoutes(app: Express): Server {
 
       // Get AI study recommendations
       const performanceData = progress.map(p => ({
-        topic: p.module?.type || "",
+        topic: p.module?.title || "",
         score: (p.correctAnswers / p.completedQuestions) * 100 || 0,
         timeSpent: p.lastAttempt ?
           (new Date(p.lastAttempt).getTime() - new Date(p.updatedAt).getTime()) / 1000 : 0
@@ -829,37 +830,46 @@ export function registerRoutes(app: Express): Server {
   }
 
   app.get('/api/questions', (req, res) => {
-    const { difficulty = 'all', min = 25 } = req.query;
-    let allQuestions = Object.values(practiceQuestions).flat();
-    
-    // Convert difficulty to lowercase for comparison
-    const targetDifficulty = String(difficulty).toLowerCase();
-    
-    if (targetDifficulty !== 'all') {
-      allQuestions = allQuestions.filter(q => q.difficulty.toLowerCase() === targetDifficulty);
-    }
+    try {
+      const { difficulty = 'all', min = 25 } = req.query;
+      let questions = getQuestionsWithMinimum(Number(min));
 
-    // If no questions match the filter, return all questions
-    if (allQuestions.length === 0) {
-      allQuestions = Object.values(practiceQuestions).flat();
-    }
+      // Convert difficulty to lowercase for comparison
+      const targetDifficulty = String(difficulty).toLowerCase();
 
-    // Ensure we have enough questions by duplicating if necessary
-    while (allQuestions.length < Number(min)) {
-      const additionalQuestions = Object.values(practiceQuestions).flat().map(q => ({
-        ...q,
-        id: `${q.id}_${Date.now()}_${Math.random().toString(36).substring(7)}`
+      if (targetDifficulty !== 'all') {
+        questions = questions.filter(q => q.difficulty.toLowerCase() === targetDifficulty);
+
+        // If filtered questions are less than minimum, get more questions
+        if (questions.length < Number(min)) {
+          const allQuestions = getQuestionsWithMinimum(Number(min) * 2);
+          questions = allQuestions
+            .filter(q => q.difficulty.toLowerCase() === targetDifficulty)
+            .slice(0, Number(min));
+        }
+      }
+
+      // Ensure all questions have required fields
+      questions = questions.map(question => ({
+        ...question,
+        domain: question.domain || "General Nursing",
+        topic: question.topic || "Core Concepts",
+        subtopic: question.subtopic || "Fundamentals",
+        conceptBreakdown: question.conceptBreakdown || [],
+        faqs: question.faqs || []
       }));
-      allQuestions = [...allQuestions, ...additionalQuestions];
+
+      // Take questions up to min
+      const selectedQuestions = questions.slice(0, Number(min));
+
+      res.json(selectedQuestions);
+    } catch (error) {
+      console.error("Error fetching questions:", error);
+      res.status(500).json({
+        message: "Failed to fetch questions",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
     }
-
-    // Shuffle questions randomly
-    const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
-    
-    // Take questions up to min
-    const selectedQuestions = shuffled.slice(0, Number(min));
-
-    res.json(selectedQuestions);
   });
 
   return httpServer;
@@ -894,7 +904,11 @@ async function analyzePerformance(answers: any[]) {
   }
 }
 
-async function getStudyRecommendations(performanceData: any[]) {
+async function getStudyRecommendations(performanceData: {
+  topic: string;
+  score: number;
+  timeSpent: number;
+}[]) {
   try {
     const completion = await openai.chat.completions.create({
       model: "gpt-4",
@@ -910,44 +924,65 @@ async function getStudyRecommendations(performanceData: any[]) {
       ]
     });
 
+    const response = completion.choices[0]?.message?.content;
+    if (!response) {
+      throw new Error("No recommendation generated");
+    }
+
     return {
-      recommendations: completion.choices[0]?.message?.content,
-      priorityTopics: ["Critical thinking", "Clinical judgment", "Patient safety"]
+      recommendations: response,
+      focusAreas: performanceData
+        .filter(data => data.score < 70)
+        .map(data => data.topic),
+      strengthAreas: performanceData
+        .filter(data => data.score >= 85)
+        .map(data => data.topic)
     };
   } catch (error) {
     console.error("Error generating study recommendations:", error);
-    return null;
+    return {
+      recommendations: "Focus on reviewing core concepts and practice questions in areas with lower scores.",
+      focusAreas: [],
+      strengthAreas: []
+    };
   }
 }
 
+// Fix the generateNewQuestions function
 async function generateNewQuestions(userId: number, examType: string) {
   try {
-    const availableQuestions = Object.values(practiceQuestions).flat();
+    const availableQuestions = Object.values(practiceQuestionsConst).flat();
 
     if (availableQuestions.length === 0) {
       throw new Error("No questions available");
     }
 
     if (examType === 'cat') {
-      const sortedQuestions = availableQuestions.sort((a, b) => {
-        const difficultyMap = { Easy: 1, Medium: 2, Hard: 3 };
-        return difficultyMap[a.difficulty as keyof typeof difficultyMap] -
-               difficultyMap[b.difficulty as keyof typeof difficultyMap];
+      // For computer adaptive testing, sort by difficulty
+      const sortedQuestions = availableQuestions.sort((a: PracticeQuestion, b: PracticeQuestion) => {
+        if (!a.difficulty || !b.difficulty) return 0;
+        return difficultyToNumber(a.difficulty) - difficultyToNumber(b.difficulty);
       });
-
-      const mediumQuestions = sortedQuestions.filter(q => q.difficulty === 'Medium');
-      if (mediumQuestions.length === 0) {
-        throw new Error("No medium difficulty questions available");
-      }
-
-      const selectedQuestion = mediumQuestions[Math.floor(Math.random() * mediumQuestions.length)];
-      return formatQuestion(selectedQuestion);
+      return formatQuestion(sortedQuestions[0]);
     }
 
-    const randomQuestion = availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
-    return formatQuestion(randomQuestion);
+    // For other exam types, return a random question
+    const randomIndex = Math.floor(Math.random() * availableQuestions.length);
+    return formatQuestion(availableQuestions[randomIndex]);
   } catch (error) {
     console.error("Error generating questions:", error);
     throw new Error("Failed to generate questions");
   }
+}
+
+// Helper function to convert difficulty to number for sorting
+function difficultyToNumber(difficulty: string): number {
+  switch (difficulty.toLowerCase()) {
+    case 'easy': return 1;
+    case 'medium': return 2;
+    case 'hard': return 3;
+    default: return 2;
+  }
+}
+
 }
