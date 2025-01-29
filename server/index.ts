@@ -119,6 +119,8 @@ app.use((req, res, next) => {
     const startPort = process.env.PORT ? parseInt(process.env.PORT, 10) : 5000;
     const port = await findAvailablePort(startPort);
 
+    // Add this marker for workflow to detect server readiness
+    console.log("=== SERVER READY ===");
     console.log("=================================");
     console.log("Server started successfully");
     console.log(`Server is running on port ${port}`);
