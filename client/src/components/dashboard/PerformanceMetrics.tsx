@@ -3,8 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Progress } from "../ui/progress";
 import { Badge } from "../ui/badge";
 
+interface Metric {
+  category: string;
+  score: number;
+  status: string;
+  details: string[];
+}
+
 interface PerformanceMetricsProps {
-  data?: any;
+  data?: {
+    metrics?: Metric[];
+  };
 }
 
 export default function PerformanceMetrics({ data }: PerformanceMetricsProps) {
