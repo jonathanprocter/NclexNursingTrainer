@@ -95,7 +95,12 @@ export default function ClinicalJudgment() {
         const response = await fetch("/api/ai-help", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ topic, context, question }),
+          body: JSON.stringify({ 
+            topic, 
+            context, 
+            question,
+            type: "nursing_process" 
+          }),
         });
 
         if (!response.ok) {
@@ -112,7 +117,7 @@ export default function ClinicalJudgment() {
     onError: (error) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to get AI assistance. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to get AI assistance. Please try again.",
         variant: "destructive",
       });
     }
@@ -121,16 +126,14 @@ export default function ClinicalJudgment() {
   const handleAIHelp = async (topic: string, context?: string) => {
     setCurrentTopic(formatTopicName(topic));
     setIsDialogOpen(true);
+    setAiContent(""); // Clear previous content
 
     try {
       const result = await aiHelpMutation.mutateAsync({ topic, context });
-      setAiContent(result.content);
+      setAiContent(result.content || result.response);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to get AI assistance. Please try again.",
-        variant: "destructive",
-      });
+      // Error is handled by mutation's onError
+      setIsDialogOpen(false);
     }
   };
 
