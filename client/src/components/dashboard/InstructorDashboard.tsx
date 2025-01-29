@@ -1,213 +1,132 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function InstructorDashboard() {
-  const mockStudents = [
-    {
-      id: 1,
-      name: "Sarah Johnson",
-      progress: 75,
-      lastActive: "2024-01-27",
-      status: "On Track",
-      weakAreas: ["Pharmacology", "Critical Care"],
-      recentScores: [85, 78, 92, 88, 75],
-    },
-    {
-      id: 2,
-      name: "Michael Chen",
-      progress: 60,
-      lastActive: "2024-01-28",
-      status: "Needs Review",
-      weakAreas: ["Med-Surg", "Mental Health"],
-      recentScores: [65, 72, 68, 70, 60],
-    },
-    {
-      id: 3,
-      name: "Emily Davis",
-      progress: 90,
-      lastActive: "2024-01-28",
-      status: "Excellent",
-      weakAreas: ["None"],
-      recentScores: [95, 88, 92, 90, 94],
-    },
-  ];
-
-  const performanceData = mockStudents.map((student, index) => ({
-    name: student.name,
-    data: student.recentScores.map((score, i) => ({
-      day: `Day ${i + 1}`,
-      score: score,
-    })),
-  }));
-
-  const classStats = {
-    averageProgress: 75,
-    totalStudents: 24,
-    atRiskCount: 3,
-    topPerformers: 5,
-    completionRate: 68,
-    averageEngagement: 82,
+  const studentData = {
+    name: "Bianca",
+    strengths: ["Critical Care", "Pharmacology"],
+    areasForGrowth: ["Med-Surg", "Mental Health"],
+    lastScore: 82,
+    overallProgress: 75,
+    predictedPassRate: 88,
+    recentActivity: [
+      { date: "Jan 25", score: 78 },
+      { date: "Jan 26", score: 82 },
+      { date: "Jan 27", score: 85 },
+      { date: "Jan 28", score: 82 },
+      { date: "Jan 29", score: 88 }
+    ],
+    domainProgress: [
+      { domain: "Patient Care", score: 85 },
+      { domain: "Safety & Infection", score: 78 },
+      { domain: "Health Promotion", score: 92 },
+      { domain: "Psychosocial", score: 70 },
+      { domain: "Basic Care", score: 88 },
+      { domain: "Risk Reduction", score: 82 }
+    ]
   };
 
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="students">Students</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-        </TabsList>
+      <Card className="border-primary">
+        <CardHeader>
+          <CardTitle className="text-2xl">Welcome Back, {studentData.name}! 🌟</CardTitle>
+          <p className="text-muted-foreground mt-2">
+            You're making excellent progress in {studentData.strengths.join(" and ")}. 
+            Let's focus on strengthening {studentData.areasForGrowth.join(" and ")} today.
+            Based on your recent performance, you have an {studentData.predictedPassRate}% predicted success rate for the NCLEX.
+          </p>
+        </CardHeader>
+      </Card>
 
-        <TabsContent value="overview">
-          <div className="grid md:grid-cols-3 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Total Students</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">{classStats.totalStudents}</p>
-                <p className="text-sm text-muted-foreground">Active Enrollments</p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Class Average</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">{classStats.averageProgress}%</p>
-                <p className="text-sm text-muted-foreground">Overall Progress</p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">At-Risk Students</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">{classStats.atRiskCount}</p>
-                <p className="text-sm text-muted-foreground">Need Attention</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Top Performers</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">{classStats.topPerformers}</p>
-                <p className="text-sm text-muted-foreground">Above 90%</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Completion Rate</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">{classStats.completionRate}%</p>
-                <p className="text-sm text-muted-foreground">Module Completion</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Engagement</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">{classStats.averageEngagement}%</p>
-                <p className="text-sm text-muted-foreground">Average Activity</p>
-              </CardContent>
-            </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>AI Study Planner</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4">
+            <div className="p-4 bg-muted rounded-lg">
+              <h3 className="font-semibold mb-2">Recommended Study Plan</h3>
+              <ul className="space-y-2">
+                <li>• Focus on {studentData.areasForGrowth[0]} scenarios (2 hours)</li>
+                <li>• Review {studentData.areasForGrowth[1]} concepts (1.5 hours)</li>
+                <li>• Practice questions in strong areas to maintain mastery (1 hour)</li>
+              </ul>
+            </div>
           </div>
-        </TabsContent>
+        </CardContent>
+      </Card>
 
-        <TabsContent value="students">
-          <Card>
-            <CardHeader>
-              <CardTitle>Student Progress Overview</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Student Name</TableHead>
-                    <TableHead>Progress</TableHead>
-                    <TableHead>Last Active</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Areas for Review</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {mockStudents.map((student) => (
-                    <TableRow key={student.id}>
-                      <TableCell className="font-medium">{student.name}</TableCell>
-                      <TableCell>{student.progress}%</TableCell>
-                      <TableCell>{student.lastActive}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            student.status === "Excellent"
-                              ? "default"
-                              : student.status === "On Track"
-                              ? "secondary"
-                              : "destructive"
-                          }
-                        >
-                          {student.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1 flex-wrap">
-                          {student.weakAreas.map((area) => (
-                            <Badge key={area} variant="outline">
-                              {area}
-                            </Badge>
-                          ))}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Progress Trend</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={studentData.recentActivity}>
+                  <defs>
+                    <linearGradient id="progressColor" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0.1}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis domain={[0, 100]} />
+                  <Tooltip />
+                  <Area type="monotone" dataKey="score" stroke="#0ea5e9" fill="url(#progressColor)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
 
-        <TabsContent value="analytics">
-          <Card>
-            <CardHeader>
-              <CardTitle>Performance Trends</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[400px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="day" />
-                    <YAxis domain={[0, 100]} />
-                    <Tooltip />
-                    {performanceData.map((student, index) => (
-                      <Line
-                        key={student.name}
-                        data={student.data}
-                        dataKey="score"
-                        name={student.name}
-                        stroke={`hsl(${index * 120}, 70%, 50%)`}
-                        strokeWidth={2}
-                      />
-                    ))}
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+        <Card>
+          <CardHeader>
+            <CardTitle>NCLEX Domains Progress</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={studentData.domainProgress}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="domain" angle={-45} textAnchor="end" height={100} />
+                  <YAxis domain={[0, 100]} />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="score" stroke="#0ea5e9" strokeWidth={2} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Predictive Analytics</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="p-4 bg-muted rounded-lg text-center">
+              <h3 className="text-sm font-medium mb-2">Current Progress</h3>
+              <p className="text-3xl font-bold">{studentData.overallProgress}%</p>
+            </div>
+            <div className="p-4 bg-muted rounded-lg text-center">
+              <h3 className="text-sm font-medium mb-2">Latest Score</h3>
+              <p className="text-3xl font-bold">{studentData.lastScore}%</p>
+            </div>
+            <div className="p-4 bg-muted rounded-lg text-center">
+              <h3 className="text-sm font-medium mb-2">Predicted Pass Rate</h3>
+              <p className="text-3xl font-bold text-green-600">{studentData.predictedPassRate}%</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
