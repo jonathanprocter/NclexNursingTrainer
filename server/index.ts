@@ -6,13 +6,22 @@ import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 
-// Security middleware with more permissive CORS for development
+// Enhanced CORS middleware for development
 app.use(cors({
   origin: true, // Allow all origins in development
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 600 // Increase preflight cache time
 }));
+
+// Add headers middleware for additional CORS support
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Private-Network', 'true');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  next();
+});
 
 // Basic middleware
 app.use(express.json({ limit: '10mb' }));
