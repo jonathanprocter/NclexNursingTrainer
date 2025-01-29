@@ -94,10 +94,10 @@ export function AIHelpButton({ title, description, topic }: AIHelpButtonProps) {
               <div className="text-sm">
                 <p>Ask me anything about {topic}, such as:</p>
                 <ul className="list-disc list-inside mt-2 space-y-1">
-                  <li>Clarification on concepts</li>
-                  <li>Real-world applications</li>
-                  <li>NCLEX-style question breakdowns</li>
-                  <li>Evidence-based practices</li>
+                  <li>Understanding evidence-based safety protocols</li>
+                  <li>Implementation strategies for safety measures</li>
+                  <li>Risk assessment techniques</li>
+                  <li>Best practices for patient safety</li>
                 </ul>
               </div>
             )}

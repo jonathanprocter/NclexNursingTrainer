@@ -107,7 +107,7 @@ async function generateNewQuestions(userId: number, examType: string) {
     if (examType === 'cat') {
       const sortedQuestions = availableQuestions.sort((a, b) => {
         const difficultyMap = { Easy: 1, Medium: 2, Hard: 3 };
-        return difficultyMap[a.difficulty as keyof typeof difficultyMap] - 
+        return difficultyMap[a.difficulty as keyof typeof difficultyMap] -
                difficultyMap[b.difficulty as keyof typeof difficultyMap];
       });
 
@@ -152,35 +152,46 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // AI Help endpoint
-  app.post("/api/ai-help", async (req, res) => {
-    const { topic, context, question } = req.body;
+  // AI Help endpoint with enhanced safety measures context
+  app.post("/api/chat/risk-reduction", async (req, res) => {
+    const { topic, question } = req.body;
 
     try {
-      let response;
-      if (question) {
-        const result = await openai.chat.completions.create({
-          model: "gpt-4",
-          messages: [
-            {
-              role: "system",
-              content: "You are an expert nursing educator helping students understand complex topics. Focus on providing clear, detailed explanations with clinical correlations."
-            },
-            {
-              role: "user",
-              content: question
-            }
-          ]
-        });
-        response = { content: result.choices[0].message.content };
-      } else {
-        response = await getPathophysiologyHelp(topic, context);
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [
+          {
+            role: "system",
+            content: `You are an expert nursing educator specializing in patient safety and risk reduction.
+            Focus on providing practical, evidence-based guidance for nursing practice. When discussing safety measures:
+            - Reference relevant nursing standards and guidelines
+            - Provide concrete examples from clinical practice
+            - Emphasize critical thinking and clinical judgment
+            - Include both preventive measures and risk assessment strategies
+            Your responses should be clear, detailed, and directly applicable to nursing practice.`
+          },
+          {
+            role: "user",
+            content: question || `Explain key considerations for ${topic} in nursing practice.`
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 1000,
+      });
+
+      const response = completion.choices[0]?.message?.content;
+
+      if (!response) {
+        throw new Error("No response generated");
       }
 
-      res.json(response);
+      res.json({ response });
     } catch (error) {
-      console.error("Error in AI help endpoint:", error);
-      res.status(500).json({ message: "Failed to get AI assistance" });
+      console.error("Error in AI chat endpoint:", error);
+      res.status(500).json({
+        message: "Failed to get AI assistance",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 
@@ -309,8 +320,8 @@ export function registerRoutes(app: Express): Server {
       res.json(question);
     } catch (error) {
       console.error("Error generating exam question:", error);
-      res.status(500).json({ 
-        message: error instanceof Error ? error.message : "Failed to generate question" 
+      res.status(500).json({
+        message: error instanceof Error ? error.message : "Failed to generate question"
       });
     }
   });
