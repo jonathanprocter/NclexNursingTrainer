@@ -335,7 +335,7 @@ export default function Simulation() {
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-2">
-                    {activeScenario?.expected_actions.map((action, index: number) => (
+                    {activeScenario?.expected_actions?.map((action, index: number) => (
                       <Button
                         key={index}
                         variant="outline"
@@ -344,7 +344,7 @@ export default function Simulation() {
                       >
                         {action.action}
                       </Button>
-                    ))}
+                    )) || null}
                   </div>
                 </CardContent>
               </Card>
