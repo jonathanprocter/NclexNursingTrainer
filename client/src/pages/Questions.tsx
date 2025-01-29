@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,6 +32,7 @@ interface Question {
 export default function Questions() {
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("all");
   const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(new Set());
+  const [answeredQuestions, setAnsweredQuestions] = useState<Set<string>>(new Set());
 
   const { data: questions, isLoading, refetch } = useQuery<Question[]>({
     queryKey: ["/api/questions", selectedDifficulty],
@@ -69,6 +69,10 @@ export default function Questions() {
       newExpanded.add(id);
     }
     setExpandedQuestions(newExpanded);
+  };
+
+  const handleAnswerSubmit = (questionId: string, answerId: string) => {
+    setAnsweredQuestions(prev => new Set([...prev, questionId]));
   };
 
   if (isLoading) {
@@ -128,13 +132,15 @@ export default function Questions() {
                       </div>
                       <CardTitle className="text-lg">{question.text}</CardTitle>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleQuestion(question.id)}
-                    >
-                      <ChevronDown className={`h-4 w-4 transform ${expandedQuestions.has(question.id) ? 'rotate-180' : ''}`} />
-                    </Button>
+                    {answeredQuestions.has(question.id) && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleQuestion(question.id)}
+                      >
+                        <ChevronDown className={`h-4 w-4 transform ${expandedQuestions.has(question.id) ? 'rotate-180' : ''}`} />
+                      </Button>
+                    )}
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -142,13 +148,21 @@ export default function Questions() {
                     {question.options.map((option) => (
                       <Button
                         key={option.id}
-                        variant={option.id === question.correctAnswer ? "default" : "outline"}
+                        variant={
+                          answeredQuestions.has(question.id)
+                            ? option.id === question.correctAnswer
+                              ? "default"
+                              : "outline"
+                            : "outline"
+                        }
                         className="w-full justify-start text-left h-auto p-4"
+                        onClick={() => handleAnswerSubmit(question.id, option.id)}
+                        disabled={answeredQuestions.has(question.id)}
                       >
                         {option.text}
                       </Button>
                     ))}
-                    
+
                     {expandedQuestions.has(question.id) && (
                       <div className="mt-6 space-y-4">
                         <div>
