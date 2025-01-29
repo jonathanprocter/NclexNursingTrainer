@@ -30,6 +30,40 @@ export default function AICompanion() {
         recognition.continuous = true;
         recognition.interimResults = true;
         recognition.lang = 'en-US';
+
+        recognition.onresult = (event) => {
+          const transcript = Array.from(event.results)
+            .map(result => result[0])
+            .map(result => result.transcript)
+            .join('');
+          setTranscript(transcript);
+          console.log('Transcript:', transcript);
+        };
+
+        recognition.onerror = (event) => {
+          console.error('Speech recognition error:', event.error);
+          setMicrophoneEnabled(false);
+          toast({
+            title: "Error",
+            description: "Failed to record speech. Please try again.",
+            variant: "destructive",
+          });
+        };
+
+        recognition.onend = () => {
+          setMicrophoneEnabled(false);
+        };
+
+        setRecognition(recognition);
+      }
+    } catch (error) {
+      console.error('Speech recognition setup error:', error);
+      toast({
+        title: "Error",
+        description: "Speech recognition is not supported in your browser.",
+        variant: "destructive",
+      });
+    }
       
       recognition.onresult = (event) => {
         const transcript = Array.from(event.results)
