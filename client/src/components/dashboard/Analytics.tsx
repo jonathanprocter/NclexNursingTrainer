@@ -17,7 +17,7 @@ interface AnalyticsProps {
 }
 
 export default function Analytics({ data }: AnalyticsProps) {
-  const performanceData = data?.performanceData ?? [
+  const performanceData = data?.performanceData || [
     { module: "Pharmacology", score: 85 },
     { module: "Pathophysiology", score: 75 },
     { module: "Med-Surg", score: 78 },

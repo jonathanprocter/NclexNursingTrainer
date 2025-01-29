@@ -1,8 +1,8 @@
-
 import React from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
+import { BrowserRouter as Router, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from 'react-error-boundary';
+import Dashboard from './Dashboard'; // Assuming Dashboard component exists
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,6 +38,11 @@ function App() {
         <QueryClientProvider client={queryClient}>
           <div className="min-h-screen bg-gray-100">
             <h1>NCLEX Prep</h1>
+            <Route path="/dashboard">
+              <ErrorBoundary>
+                <Dashboard />
+              </ErrorBoundary>
+            </Route>
             {/* Rest of your application */}
           </div>
         </QueryClientProvider>
