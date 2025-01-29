@@ -77,11 +77,12 @@ export default function Simulation() {
     }]);
   };
 
-  const renderVitalSign = (key: string, value: string | number) => {
+  const renderVitalSign = (key: string, value: string | number | undefined) => {
+    if (value === undefined || value === null) return null;
     return (
       <div key={key} className="bg-muted p-2 rounded">
         <p className="text-sm font-medium">{key.replace('_', ' ').toUpperCase()}</p>
-        <p className="text-lg">{value.toString()}</p>
+        <p className="text-lg">{String(value)}</p>
       </div>
     );
   };
