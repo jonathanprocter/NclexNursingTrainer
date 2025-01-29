@@ -3,50 +3,6 @@ import { db } from "@db";
 import { eq, desc } from "drizzle-orm";
 import { userProgress } from "@db/schema";
 
-interface StudyTopic {
-  id: string;
-  name: string;
-  priority: 'high' | 'medium' | 'low';
-  completed: boolean;
-  estimatedTime: number;
-  description?: string;
-  learningTips?: string[];
-  learningObjectives?: string[];
-}
-
-interface StudyResource {
-  id: string;
-  type: 'article' | 'video' | 'quiz';
-  title: string;
-  url: string;
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
-  estimatedTime: string;
-  learningOutcome?: string;
-}
-
-interface StudyGuide {
-  id: string;
-  createdAt: string;
-  topics: StudyTopic[];
-  weakAreas: Array<{
-    moduleId?: string;
-    topic?: string;
-    score?: string;
-    improvement?: string;
-    suggestedApproach?: string;
-  }>;
-  strengthAreas: Array<{
-    moduleId?: string;
-    topic?: string;
-    score?: string;
-    tip?: string;
-  }>;
-  recommendedResources: StudyResource[];
-  progress: number;
-  studyTips?: string[];
-  nextSteps?: string[];
-}
-
 const router = Router();
 
 // Get current study guide with enhanced error handling and learner feedback
@@ -55,29 +11,30 @@ router.get("/current", async (req, res) => {
     const userId = 1; // TODO: Replace with actual user ID from auth
 
     // Get recent performance data for personalized recommendations
-    const performance = await db.select()
+    const performance = await db
+      .select()
       .from(userProgress)
       .where(eq(userProgress.userId, userId));
 
     // Calculate performance metrics
-    const completedModules = performance.filter(p => p.completedQuestions > 0);
+    const completedModules = performance.filter(p => p.totalQuestions && p.totalQuestions > 0);
     const averageScore = completedModules.length > 0
-      ? completedModules.reduce((acc, curr) => acc + (curr.correctAnswers / curr.completedQuestions * 100), 0) / completedModules.length
+      ? completedModules.reduce((acc, curr) => acc + ((curr.correctAnswers || 0) / (curr.totalQuestions || 1) * 100), 0) / completedModules.length
       : 0;
 
     // Generate adaptive recommendations based on performance
     const weakModules = completedModules
-      .filter(p => (p.correctAnswers / p.completedQuestions) < 0.7)
+      .filter(p => p.totalQuestions && p.correctAnswers && (p.correctAnswers / p.totalQuestions) < 0.7)
       .map(p => ({
-        id: p.moduleId,
-        score: (p.correctAnswers / p.completedQuestions * 100).toFixed(1)
+        moduleId: p.moduleId?.toString(),
+        score: ((p.correctAnswers || 0) / (p.totalQuestions || 1) * 100).toFixed(1)
       }));
 
     const strongModules = completedModules
-      .filter(p => (p.correctAnswers / p.completedQuestions) >= 0.7)
+      .filter(p => p.totalQuestions && p.correctAnswers && (p.correctAnswers / p.totalQuestions) >= 0.7)
       .map(p => ({
-        id: p.moduleId,
-        score: (p.correctAnswers / p.completedQuestions * 100).toFixed(1)
+        moduleId: p.moduleId?.toString(),
+        score: ((p.correctAnswers || 0) / (p.totalQuestions || 1) * 100).toFixed(1)
       }));
 
     const nursingTopics: string[] = [
@@ -88,7 +45,7 @@ router.get("/current", async (req, res) => {
     ];
 
     // Transform data to learner-friendly format
-    const guide: StudyGuide = {
+    const guide = {
       id: `sg-${Date.now()}`,
       createdAt: new Date().toISOString(),
       topics: nursingTopics.map((domain: string, index: number) => ({
@@ -105,15 +62,15 @@ router.get("/current", async (req, res) => {
         ]
       })),
       weakAreas: weakModules.map(module => ({
-        moduleId: module.id,
+        moduleId: module.moduleId,
         score: module.score,
         improvement: "Focus on understanding core concepts and practice more questions"
-      })).slice(0, 3),
+      })),
       strengthAreas: strongModules.map(module => ({
-        moduleId: module.id,
+        moduleId: module.moduleId,
         score: module.score,
         tip: "Keep practicing to maintain proficiency"
-      })).slice(0, 3),
+      })),
       recommendedResources: [
         "Patient Care Management",
         "Medication Administration",
@@ -152,46 +109,30 @@ router.post("/generate", async (req, res) => {
     const userId = 1; // TODO: Replace with actual user ID from auth
     const { focusAreas = [], timeAvailable } = req.body as { focusAreas: string[], timeAvailable?: number };
 
-    // Get user's performance data
-    const performance = await db.select()
+    // Get user's performance data with proper ordering
+    const performance = await db
+      .select()
       .from(userProgress)
       .where(eq(userProgress.userId, userId))
-      .orderBy(desc(userProgress.timestamp))
+      .orderBy(userProgress.updatedAt, 'desc')
       .limit(10);
 
-    // Analyze weak areas
+    // Analyze weak areas based on totalQuestions and correctAnswers
     const weakAreas = performance
-      .filter(p => (p.correctAnswers / p.completedQuestions) < 0.7)
+      .filter(p => p.totalQuestions && p.correctAnswers && (p.correctAnswers / p.totalQuestions) < 0.7)
       .map(p => ({
-        topic: p.topic,
-        score: Math.round((p.correctAnswers / p.completedQuestions) * 100),
-        improvement: `Focus on understanding core concepts in ${p.topic}`,
-        suggestedApproach: `Review fundamentals and practice with ${Math.round(timeAvailable * 0.4)} minutes of targeted questions`
+        moduleId: p.moduleId?.toString(),
+        score: Math.round((p.correctAnswers || 0) / (p.totalQuestions || 1) * 100),
+        improvement: `Focus on core concepts`,
+        suggestedApproach: timeAvailable ? 
+          `Review fundamentals and practice with ${Math.round(timeAvailable * 0.4)} minutes of targeted questions` :
+          'Practice with targeted questions'
       }));
 
     const defaultWeakAreas = [
-      { topic: "Fundamentals of Nursing", score: 60, improvement: "Review basic nursing concepts", suggestedApproach: "Spend 20 minutes reviewing fundamental concepts." },
-      { topic: "Pharmacology", score: 55, improvement: "Focus on medication calculations and side effects", suggestedApproach: "Practice medication calculations and review common side effects of medications." }
-    ]
-
-    // Generate adaptive questions for weak areas
-    const adaptiveQuestions = weakAreas.length > 0 ? await Promise.all(
-      weakAreas.map(async (area) => ({
-        topic: area.topic,
-        questions: await generateAdaptiveQuestions({
-          topics: [area.topic],
-          difficulty: Math.max(1, Math.min(3, Math.round((area.score / 100) * 5))),
-          previousPerformance: performance
-            .filter(p => p.topic === area.topic)
-            .map(p => ({
-              topic: p.topic,
-              successRate: (p.correctAnswers / p.completedQuestions) * 100
-            }))
-        })
-      }))
-    ) : [];
-
-    const finalWeakAreas = weakAreas.length > 0 ? weakAreas : defaultWeakAreas;
+      { topic: "Fundamentals of Nursing", score: "60", improvement: "Review basic nursing concepts", suggestedApproach: "Spend 20 minutes reviewing fundamental concepts." },
+      { topic: "Pharmacology", score: "55", improvement: "Focus on medication calculations and side effects", suggestedApproach: "Practice medication calculations and review common side effects of medications." }
+    ];
 
     const nursingTopics = [
       "Fundamentals of Nursing",
@@ -200,7 +141,7 @@ router.post("/generate", async (req, res) => {
       "Pediatric Nursing"
     ];
 
-    const guide: StudyGuide = {
+    const guide = {
       id: `sg-${Date.now()}`,
       createdAt: new Date().toISOString(),
       topics: nursingTopics.map((domain: string, index: number) => ({
@@ -215,7 +156,7 @@ router.post("/generate", async (req, res) => {
           "Review and reinforce learning"
         ]
       })),
-      weakAreas: finalWeakAreas, // Use the dynamically generated weak areas
+      weakAreas: weakAreas.length > 0 ? weakAreas : defaultWeakAreas,
       strengthAreas: [],
       recommendedResources: focusAreas.map((plan: string, i: number) => ({
         id: `resource-${i}`,
@@ -244,16 +185,5 @@ router.post("/generate", async (req, res) => {
     });
   }
 });
-
-// Placeholder for adaptive question generation
-async function generateAdaptiveQuestions(params: any): Promise<any[]> {
-  // Implement your AI-driven question generation logic here.
-  // This is a placeholder, replace with your actual implementation.
-  console.log("Generating adaptive questions with parameters:", params);
-  return [
-    { question: "Adaptive Question 1", answer: "Answer 1" },
-    { question: "Adaptive Question 2", answer: "Answer 2" },
-  ];
-}
 
 export default router;
