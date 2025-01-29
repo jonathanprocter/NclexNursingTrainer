@@ -70,9 +70,10 @@ export default function Simulation() {
     });
   };
 
-  const handleAction = (actionText: string) => {
+  const handleAction = (action: any) => {
+    if (!action) return;
     setUserActions(prev => [...prev, {
-      action: actionText,
+      action: typeof action === 'string' ? action : action.action,
       timestamp: new Date().toISOString()
     }]);
   };
@@ -339,7 +340,7 @@ export default function Simulation() {
                         key={index}
                         variant="outline"
                         className="justify-start"
-                        onClick={() => handleAction(action.action)}
+                        onClick={() => handleAction(action)}
                       >
                         {action.action}
                       </Button>
