@@ -52,9 +52,26 @@ interface Question {
 export default function Questions() {
   const { toast } = useToast();
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("all");
-  const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(
-    new Set(),
-  );
+  const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(new Set());
+  
+  const mockQuestions: Question[] = [
+    {
+      id: "q1",
+      text: "Sample Question 1",
+      options: [
+        { id: "a", text: "Option A" },
+        { id: "b", text: "Option B" }
+      ],
+      correctAnswer: "a",
+      explanation: "Example explanation",
+      domain: "Med-Surg",
+      topic: "Safety",
+      subtopic: "Patient Care",
+      difficulty: "medium",
+      conceptBreakdown: [],
+      faqs: []
+    }
+  ];
   const [answeredQuestions, setAnsweredQuestions] = useState<Set<string>>(
     new Set(),
   );
@@ -66,7 +83,7 @@ export default function Questions() {
 
   // Fetch questions
   const {
-    data: questions = [],
+    data: questions = mockQuestions,
     isLoading,
     refetch,
   } = useQuery<Question[]>({
