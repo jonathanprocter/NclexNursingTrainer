@@ -20,11 +20,13 @@ export default defineConfig({
     emptyOutDir: true
   },
   server: {
+    host: '0.0.0.0',
     proxy: {
       '/api': {
         target: 'http://0.0.0.0:3001',
         changeOrigin: true,
       },
     },
+    allowedHosts: 'all'
   },
 })
