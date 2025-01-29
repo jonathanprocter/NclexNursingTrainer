@@ -515,22 +515,150 @@ export default function RiskReduction() {
     );
   };
 
+  const [activeScenario, setActiveScenario] = useState<number | null>(null);
+  const [scenarioResponses, setScenarioResponses] = useState<{ [key: number]: string }>({});
+  const [isGeneratingScenario, setIsGeneratingScenario] = useState(false);
+
+  const scenarios = [
+    {
+      id: 1,
+      title: "Medical-Surgical Unit",
+      description: "A post-operative patient shows signs of confusion and attempts to get out of bed.",
+      initialPrompt: "What are your immediate nursing priorities and interventions?"
+    },
+    {
+      id: 2,
+      title: "Emergency Department",
+      description: "Multiple trauma patients arrive simultaneously during a busy shift.",
+      initialPrompt: "How would you prioritize and manage this situation?"
+    },
+    {
+      id: 3,
+      title: "Critical Care",
+      description: "Patient on mechanical ventilation shows signs of respiratory distress.",
+      initialPrompt: "What assessments and interventions would you perform?"
+    },
+    {
+      id: 4,
+      title: "Medication Safety",
+      description: "High-alert medication administration in a pediatric setting.",
+      initialPrompt: "What safety measures would you implement?"
+    }
+  ];
+
+  const handleStartScenario = async (scenarioId: number) => {
+    setActiveScenario(scenarioId);
+    setIsGeneratingScenario(true);
+    try {
+      const response = await fetch("/api/chat/risk-reduction", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          topic: scenarios.find(s => s.id === scenarioId)?.title,
+          question: scenarios.find(s => s.id === scenarioId)?.initialPrompt
+        })
+      });
+      
+      if (!response.ok) throw new Error("Failed to generate scenario");
+      
+      const data = await response.json();
+      setScenarioResponses(prev => ({ ...prev, [scenarioId]: data.response }));
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to generate scenario response. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGeneratingScenario(false);
+    }
+  };
+
+  const handleAskFollowUp = async (scenarioId: number, question: string) => {
+    setIsGeneratingScenario(true);
+    try {
+      const response = await fetch("/api/chat/risk-reduction", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          topic: scenarios.find(s => s.id === scenarioId)?.title,
+          question: question,
+          context: scenarioResponses[scenarioId]
+        })
+      });
+      
+      if (!response.ok) throw new Error("Failed to get response");
+      
+      const data = await response.json();
+      setScenarioResponses(prev => ({ 
+        ...prev, 
+        [scenarioId]: prev[scenarioId] + "\n\nFollow-up:\n" + data.response 
+      }));
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to get follow-up response. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGeneratingScenario(false);
+    }
+  };
+
   const renderPracticeScenarios = () => (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Interactive Practice Scenarios</CardTitle>
+          <CardTitle className="flex justify-between items-center">
+            Interactive Practice Scenarios
+            <AIHelpButton
+              title="Practice Scenarios"
+              description="Get AI assistance with clinical scenarios and decision-making"
+              topic="clinical scenarios in nursing practice"
+            />
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
-              <Card className="p-6">
-                <h3 className="font-semibold mb-3">Case Study 1: Medical-Surgical Unit</h3>
-                <p className="text-muted-foreground mb-4">
-                  A post-operative patient shows signs of confusion and attempts to get out of bed.
-                </p>
-                <Button className="w-full" variant="outline">Start Scenario</Button>
-              </Card>
+              {scenarios.map((scenario) => (
+                <Card key={scenario.id} className="p-6">
+                  <h3 className="font-semibold mb-3">{scenario.title}</h3>
+                  <p className="text-muted-foreground mb-4">
+                    {scenario.description}
+                  </p>
+                  {activeScenario === scenario.id ? (
+                    <div className="space-y-4">
+                      <div className="bg-muted p-4 rounded-lg">
+                        <p className="whitespace-pre-wrap">{scenarioResponses[scenario.id]}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          onClick={() => handleAskFollowUp(scenario.id, "What additional interventions would you recommend?")}
+                          disabled={isGeneratingScenario}
+                        >
+                          Ask Follow-up
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          onClick={() => setActiveScenario(null)}
+                        >
+                          Close
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Button
+                      className="w-full"
+                      onClick={() => handleStartScenario(scenario.id)}
+                      disabled={isGeneratingScenario}
+                    >
+                      {isGeneratingScenario ? "Generating..." : "Start Scenario"}
+                    </Button>
+                  )}
+                </Card>
+              ))}
+            </div>
               <Card className="p-6">
                 <h3 className="font-semibold mb-3">Case Study 2: Emergency Department</h3>
                 <p className="text-muted-foreground mb-4">
