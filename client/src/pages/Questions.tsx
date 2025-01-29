@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import QuestionCard from "../components/QuestionCard";
 import { ScrollArea } from "../components/ui/scroll-area";
@@ -14,33 +13,27 @@ interface Question {
   explanation: string;
 }
 
+const fetchQuestions = async () => {
+  const response = await fetch("/api/questions");
+  if (!response.ok) {
+    throw new Error("Failed to fetch questions");
+  }
+  return response.json();
+};
+
 export default function Questions() {
-  const { data: questions, isLoading, isError, refetch } = useQuery<Question[]>({
+  const { data: questions = [], isError, isLoading, refetch } = useQuery({
     queryKey: ["questions"],
-    queryFn: async () => {
-      const response = await fetch("/api/questions");
-      if (!response.ok) {
-        throw new Error("Failed to fetch questions");
-      }
-      return response.json();
-    }
+    queryFn: fetchQuestions,
+    retry: 1
   });
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
-        <RefreshCw className="animate-spin h-8 w-8" />
-      </div>
-    );
+  if (isError) {
+    return <div>Error loading questions</div>;
   }
 
-  if (isError) {
-    return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)] gap-4">
-        <p>Error loading questions</p>
-        <Button onClick={() => refetch()}>Try Again</Button>
-      </div>
-    );
+  if (isLoading) {
+    return <div>Loading questions...</div>;
   }
 
   return (
@@ -52,14 +45,11 @@ export default function Questions() {
           Refresh Questions
         </Button>
       </div>
-      
+
       <ScrollArea className="h-[calc(100vh-12rem)]">
         <div className="space-y-6">
-          {questions?.map((question, index) => (
-            <QuestionCard
-              key={`${question.id}-${index}`}
-              question={question}
-            />
+          {questions.map((question) => (
+            <QuestionCard key={question.id} question={question} />
           ))}
         </div>
       </ScrollArea>

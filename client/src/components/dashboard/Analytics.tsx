@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
@@ -17,7 +16,7 @@ interface AnalyticsProps {
 }
 
 export default function Analytics({ data }: AnalyticsProps) {
-  const performanceData = data?.performanceData || [
+  const performanceData = Array.isArray(data?.performanceData) ? data.performanceData : [
     { module: "Pharmacology", score: 85 },
     { module: "Pathophysiology", score: 75 },
     { module: "Med-Surg", score: 78 },
