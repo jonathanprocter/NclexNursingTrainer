@@ -32,6 +32,7 @@ import Simulation from "@/pages/practice/Simulation";
 import StudyGuide from "@/pages/StudyGuide";
 import AICompanion from "@/pages/tools/AICompanion";
 import SpacedRepetition from "@/pages/tools/SpacedRepetition";
+import Questions from "@/pages/Questions"; // Added import for Questions page
 
 // Define prop types for components
 interface RouteProps {
@@ -86,6 +87,7 @@ function Router() {
           {/* Study Tools Routes */}
           <Route path="/tools/ai-companion" component={AICompanion} />
           <Route path="/tools/spaced-repetition" component={SpacedRepetition} />
+          <Route path="/questions" component={Questions} /> {/* Added route for /questions */}
 
           {/* Fallback to 404 */}
           <Route component={NotFound} />
