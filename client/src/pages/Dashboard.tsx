@@ -42,7 +42,14 @@ export default function Dashboard() {
   });
 
   if (isLoading) {
-    return <div>Loading dashboard data...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center space-y-4">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
+          <p className="text-muted-foreground">Loading dashboard data...</p>
+        </div>
+      </div>
+    );
   }
 
   if (isError) {
