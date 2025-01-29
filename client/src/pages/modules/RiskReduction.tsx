@@ -194,7 +194,7 @@ export default function RiskReduction() {
       const response = await fetch("/api/exam/prevention/questions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           previousQuestions: preventionQuestions.map(q => q.id)
         }),
       });
@@ -252,11 +252,39 @@ export default function RiskReduction() {
   };
 
   const handleGenerateMoreQuestions = async () => {
-    if (!isMounted.current) return;
+    if (!isMounted.current || isGeneratingQuestions) return;
 
     setIsGeneratingQuestions(true);
     try {
-      await generateMoreQuestionsMutation.mutateAsync();
+      const response = await fetch("/api/exam/prevention/questions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          previousQuestions: preventionQuestions.map(q => q.id)
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate questions");
+      }
+
+      const newQuestions = await response.json();
+
+      if (isMounted.current) {
+        setPreventionQuestions(prev => [...prev, ...newQuestions]);
+        toast({
+          title: "New questions added!",
+          description: "Additional practice questions are now available.",
+        });
+      }
+    } catch (error) {
+      if (isMounted.current) {
+        toast({
+          title: "Error",
+          description: "Failed to generate new questions. Please try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
       if (isMounted.current) {
         setIsGeneratingQuestions(false);
@@ -279,6 +307,11 @@ export default function RiskReduction() {
     if (currentQuestionIndex < preventionQuestions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
       setShowExplanation(false);
+      // Reset form for the next question
+      const nextFieldName = `question_${currentQuestionIndex + 1}`;
+      if (!form.getValues(nextFieldName)) {
+        form.setValue(nextFieldName, '');
+      }
     }
   };
 
@@ -295,8 +328,12 @@ export default function RiskReduction() {
     if (!isMounted.current) return;
 
     const fieldName = `question_${currentQuestionIndex}`;
-    form.setValue(fieldName as keyof FormValues, value);
-    setAnsweredQuestions(prev => new Set(prev).add(preventionQuestions[currentQuestionIndex].id));
+    form.setValue(fieldName, value);
+
+    // Add the question to answered questions set
+    setAnsweredQuestions(prev => new Set([...prev, preventionQuestions[currentQuestionIndex].id]));
+
+    // Show explanation after answer is selected
     setShowExplanation(true);
   };
 
@@ -680,16 +717,20 @@ export default function RiskReduction() {
                           <h4 className="font-medium mb-2">{preventionQuestions[currentQuestionIndex].question}</h4>
                           <RadioGroup
                             onValueChange={handleQuestionChange}
-                            defaultValue={form.getValues(`question_${currentQuestionIndex}` as keyof FormValues)}
+                            value={form.getValues(`question_${currentQuestionIndex}`)}
+                            className="space-y-2"
                           >
-                            <div className="space-y-2">
-                              {preventionQuestions[currentQuestionIndex].options.map((option) => (
-                                <div key={option.value} className="flex items-center space-x-2">
-                                  <RadioGroupItem value={option.value} id={`q${currentQuestionIndex}-${option.value}`} />
-                                  <Label htmlFor={`q${currentQuestionIndex}-${option.value}`}>{option.label}</Label>
-                                </div>
-                              ))}
-                            </div>
+                            {preventionQuestions[currentQuestionIndex].options.map((option) => (
+                              <div key={option.value} className="flex items-center space-x-2">
+                                <RadioGroupItem
+                                  value={option.value}
+                                  id={`q${currentQuestionIndex}-${option.value}`}
+                                />
+                                <Label htmlFor={`q${currentQuestionIndex}-${option.value}`}>
+                                  {option.label}
+                                </Label>
+                              </div>
+                            ))}
                           </RadioGroup>
 
                           {showExplanation && (
@@ -862,9 +903,10 @@ export default function RiskReduction() {
                           <h4 className="font-medium">Explanation</h4>
                         </div>
                         <p className="text-sm">
-                          {selectedScenario.options                          ?.find(
-                            (_, index) => index.toString() === form.getValues("answer")
-                          )?.explanation}
+                          {selectedScenario.options
+                            ?.find(
+                              (_, index) => index.toString() === form.getValues("answer")
+                            )?.explanation}
                         </p>
                       </div>
                     )}
