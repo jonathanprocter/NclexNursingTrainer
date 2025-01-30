@@ -25,10 +25,6 @@ router.get('/:userId', async (req, res) => {
   }
 });
 
-export default router;
-
-const router = Router();
-
 router.get('/user/:id', async (req, res) => {
   try {
     // Mock data for now - replace with actual database query later
