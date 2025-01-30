@@ -1,10 +1,9 @@
-
 import { memo } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { ErrorBoundary } from "react-error-boundary";
-import type { AnalyticsData } from "../../types/analytics";
+import type { AnalyticsData } from "@/types/analytics";
 
 interface AnalyticsProps {
   analytics: AnalyticsData;
