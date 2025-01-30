@@ -1,8 +1,8 @@
-require('dotenv').config();
-import express from 'express';
+import 'dotenv/config';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import { setupVite } from "./vite";
 
 const app = express();
 
@@ -13,13 +13,26 @@ app.use(express.urlencoded({ extended: false }));
 // CORS configuration for development
 if (process.env.NODE_ENV === 'development') {
   app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true
   }));
 }
 
-// Error handling
-app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+// Register API routes
+registerRoutes(app);
+
+// Setup Vite development server middleware in development mode
+if (process.env.NODE_ENV === 'development') {
+  setupVite(app);
+}
+
+// Error handling middleware
+interface ErrorWithStatus extends Error {
+  status?: number;
+  statusCode?: number;
+}
+
+app.use((err: ErrorWithStatus, _req: Request, res: Response, _next: NextFunction) => {
   console.error('Error:', err);
   const status = err.status || err.statusCode || 500;
   const message = err.message || "Internal Server Error";
@@ -32,14 +45,6 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
 
 const PORT = parseInt(process.env.PORT || '3001', 10);
 const HOST = process.env.HOST || '0.0.0.0';
-
-// Kill any existing process on PORT
-const { execSync } = require('child_process');
-try {
-  execSync(`lsof -ti:${PORT} | xargs kill -9`);
-} catch (error) {
-  // No process was running on this port
-}
 
 app.listen(PORT, HOST, () => {
   console.log('=================================');
