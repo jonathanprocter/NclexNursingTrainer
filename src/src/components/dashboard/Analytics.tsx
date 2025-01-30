@@ -15,8 +15,31 @@ function Analytics({ analytics }: AnalyticsProps) {
   }
 
   return (
-    <div className="grid gap-4">
-      <PerformanceChart data={analytics.performanceData} />
+    <div className="space-y-4">
+      <ErrorBoundary
+        FallbackComponent={ErrorFallback}
+        onReset={() => {
+          window.location.reload();
+        }}
+      >
+        <Tabs defaultValue="performance" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="performance">Performance Analysis</TabsTrigger>
+            <TabsTrigger value="breakdown">Domain Breakdown</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="performance">
+            <Card>
+              <CardHeader>
+                <CardTitle>Performance Trends</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <PerformanceChart data={analytics.performanceData} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </ErrorBoundary>
     </div>
   );
 }

@@ -62,21 +62,9 @@ function Dashboard() {
 
   const { data: analytics, isError, isLoading, error } = useQuery<AnalyticsData>({
     queryKey: ["analytics"],
-    queryFn: async () => {
-      try {
-        const response = await fetch('http://0.0.0.0:4003/api/analytics/1', {
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          }
-        });
-        const data = await response.json();
-        return data || mockAnalytics;
-      } catch (e) {
-        console.error('Fetch Error:', e);
-        return mockAnalytics;
-      }
-    },
+    queryFn: () => Promise.resolve(mockAnalytics),
+    staleTime: 30000,
+    refetchOnWindowFocus: false,
     retry: 1,
     refetchOnWindowFocus: false,
     staleTime: 30000,
