@@ -42,8 +42,6 @@ export default function Dashboard() {
         averageScore: data?.averageScore || studentProgress.predictedPassRate,
       };
     },
-    retry: false,
-    refetchOnWindowFocus: false,
     retry: 2,
     retryDelay: 1000,
     refetchOnWindowFocus: false,
