@@ -60,7 +60,7 @@ function startServer() {
         console.log('=================================');
         console.log('Server started successfully');
         console.log(`Server is running on port ${PORT}`);
-        console.log(`Frontend URL: ${process.env.FRONTEND_URL}`);
+        console.log(`Frontend URL: http://0.0.0.0:3000`); // Updated Frontend URL
         console.log(`Access URL: http://${HOST}:${PORT}`);
         console.log('=================================');
 
