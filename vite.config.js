@@ -1,40 +1,56 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
+var __importDefault =
+    (this && this.__importDefault) ||
+    function (mod) {
+        return mod && mod.__esModule ? mod : { default: mod };
+    };
 Object.defineProperty(exports, "__esModule", { value: true });
 const vite_1 = require("vite");
 const plugin_react_1 = __importDefault(require("@vitejs/plugin-react"));
 const path_1 = __importDefault(require("path"));
+
 exports.default = (0, vite_1.defineConfig)({
     plugins: [(0, plugin_react_1.default)()],
-    root: './client',
+    root: "./client",
     build: {
-        outDir: '../dist/client',
-        emptyOutDir: true
+        outDir: "../dist/client",
+        emptyOutDir: true,
     },
     server: {
         host: "0.0.0.0",
         port: 3000,
+        allowedHosts: [
+            "28283d82-bfbd-491e-8711-8e29be387da7-00-29i5ngdyjh860.spock.replit.dev",
+        ],
         hmr: {
-            host: process.env.REPL_SLUG ? `${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co` : '0.0.0.0',
-            protocol: 'ws',
-            clientPort: 443
+            host: process.env.REPL_SLUG
+                ? `${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+                : "0.0.0.0",
+            protocol: "ws",
+            clientPort: 443,
         },
         watch: {
             usePolling: true,
             interval: 100,
         },
         proxy: {
-            '/api': {
-                target: 'http://0.0.0.0:4002',
+            "/api": {
+                target: "http://0.0.0.0:4002",
                 changeOrigin: true,
+            },
+            "/analytics": {
+                target: "http://0.0.0.0:4003",
+                changeOrigin: true,
+                rewrite: (path) => path.replace(/^\/analytics/, ""),
             },
         },
     },
+    define: {
+        "process.env.ANALYTICS_URL": JSON.stringify("http://0.0.0.0:4003"),
+    },
     resolve: {
         alias: {
-            '@': path_1.default.resolve(__dirname, './client/src'),
+            "@": path_1.default.resolve(__dirname, "./client/src"),
         },
     },
 });
