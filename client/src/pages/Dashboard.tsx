@@ -21,27 +21,37 @@ export default function Dashboard() {
   const { data: analytics, isError, isLoading, error } = useQuery<AnalyticsData>({
     queryKey: ["analytics"],
     queryFn: async () => {
-      const response = await fetch("/api/analytics/user/1", {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error("Failed to fetch analytics");
+      try {
+        const response = await fetch("http://0.0.0.0:4001/api/analytics/user/1", {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+        });
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch analytics");
+        }
+        
+        const data = await response.json();
+        return {
+          performanceData: Array.isArray(data?.performanceData) ? data.performanceData : studentProgress.nclexDomains,
+          totalStudyTime: data?.totalStudyTime || "0",
+          questionsAttempted: data?.questionsAttempted || 0,
+          averageScore: data?.averageScore || studentProgress.predictedPassRate,
+        };
+      } catch (error) {
+        console.error("Analytics fetch error:", error);
+        return {
+          performanceData: studentProgress.nclexDomains,
+          totalStudyTime: "0",
+          questionsAttempted: 0,
+          averageScore: studentProgress.predictedPassRate,
+        };
       }
-      
-      const data = await response.json();
-      return {
-        performanceData: Array.isArray(data?.performanceData) ? data.performanceData : studentProgress.nclexDomains,
-        totalStudyTime: data?.totalStudyTime || "0",
-        questionsAttempted: data?.questionsAttempted || 0,
-        averageScore: data?.averageScore || studentProgress.predictedPassRate,
-      };
     },
-    retry: 1,
+    retry: 2,
+    retryDelay: 1000,
     refetchOnWindowFocus: false,
   });
 
