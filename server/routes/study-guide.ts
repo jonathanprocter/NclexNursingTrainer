@@ -5,6 +5,14 @@ import { userProgress } from "../db/schema";
 
 const router = Router();
 
+interface PerformanceData {
+  moduleId?: number | null;
+  totalQuestions?: number | null;
+  correctAnswers?: number | null;
+  updatedAt?: Date;
+  userId?: number;
+}
+
 // Get current study guide with enhanced error handling and learner feedback
 router.get("/current", async (req, res) => {
   try {
@@ -14,25 +22,25 @@ router.get("/current", async (req, res) => {
     const performance = await db
       .select()
       .from(userProgress)
-      .where(eq(userProgress.userId, userId));
+      .where(eq(userProgress.userId, userId)) as PerformanceData[];
 
     // Calculate performance metrics
-    const completedModules = performance.filter(p => p.totalQuestions && p.totalQuestions > 0);
+    const completedModules = performance.filter((p: PerformanceData) => p.totalQuestions !== null && p.totalQuestions > 0);
     const averageScore = completedModules.length > 0
       ? completedModules.reduce((acc, curr) => acc + ((curr.correctAnswers || 0) / (curr.totalQuestions || 1) * 100), 0) / completedModules.length
       : 0;
 
     // Generate adaptive recommendations based on performance
     const weakModules = completedModules
-      .filter(p => p.totalQuestions && p.correctAnswers && (p.correctAnswers / p.totalQuestions) < 0.7)
-      .map(p => ({
+      .filter((p: PerformanceData) => p.totalQuestions !== null && p.correctAnswers !== null && (p.correctAnswers / p.totalQuestions) < 0.7)
+      .map((p: PerformanceData) => ({
         moduleId: p.moduleId?.toString(),
         score: ((p.correctAnswers || 0) / (p.totalQuestions || 1) * 100).toFixed(1)
       }));
 
     const strongModules = completedModules
-      .filter(p => p.totalQuestions && p.correctAnswers && (p.correctAnswers / p.totalQuestions) >= 0.7)
-      .map(p => ({
+      .filter((p: PerformanceData) => p.totalQuestions !== null && p.correctAnswers !== null && (p.correctAnswers / p.totalQuestions) >= 0.7)
+      .map((p: PerformanceData) => ({
         moduleId: p.moduleId?.toString(),
         score: ((p.correctAnswers || 0) / (p.totalQuestions || 1) * 100).toFixed(1)
       }));
@@ -124,7 +132,7 @@ router.post("/generate", async (req, res) => {
         moduleId: p.moduleId?.toString(),
         score: Math.round((p.correctAnswers || 0) / (p.totalQuestions || 1) * 100),
         improvement: `Focus on core concepts`,
-        suggestedApproach: timeAvailable ? 
+        suggestedApproach: timeAvailable ?
           `Review fundamentals and practice with ${Math.round(timeAvailable * 0.4)} minutes of targeted questions` :
           'Practice with targeted questions'
       }));
