@@ -31,6 +31,11 @@ app.get('/', (req, res) => {
     res.json({ message: 'Server is running' });
 });
 
+// Placeholder -  analyticsRouter needs to be defined elsewhere and imported
+const analyticsRouter = express.Router(); 
+app.use('/api/analytics', analyticsRouter);
+
+
 app.listen(port, '0.0.0.0', () => {
     console.log('=================================');
     console.log('Server started successfully');
