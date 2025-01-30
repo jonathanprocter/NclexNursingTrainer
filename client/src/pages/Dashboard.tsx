@@ -9,7 +9,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Progress } from "@/components/ui/progress";
 
 export default function Dashboard() {
-  const { data: analytics, isError, isLoading } = useQuery({
+  const { data: analytics, isError, isLoading, error } = useQuery({
     queryKey: ["analytics"],
     queryFn: async () => {
       try {

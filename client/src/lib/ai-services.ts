@@ -196,3 +196,35 @@ export interface AIAnalysisResult {
   recommendedTopics: string[];
   confidence: number;
 }
+import { AnalyticsData } from '@/types/analytics';
+
+export async function fetchAnalytics(userId: string): Promise<AnalyticsData> {
+  const response = await fetch(`/api/analytics/user/${userId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    credentials: 'include'
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch analytics data');
+  }
+
+  return response.json();
+}
+
+export async function updateUserProgress(userId: string, progressData: any): Promise<void> {
+  const response = await fetch(`/api/analytics/progress/${userId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(progressData),
+    credentials: 'include'
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to update progress');
+  }
+}

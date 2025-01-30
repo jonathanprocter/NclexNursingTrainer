@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import studyGuideRouter from "./study-guide";
 import questionsRouter from "./questions";
+import analyticsRouter from "./analytics";
 
 export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
@@ -9,6 +10,7 @@ export function registerRoutes(app: Express): Server {
   // Register routes
   app.use("/api/study-guide", studyGuideRouter);
   app.use("/api/questions", questionsRouter);
+  app.use("/api/analytics", analyticsRouter);
 
   return httpServer;
 }
