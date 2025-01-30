@@ -1,3 +1,4 @@
+
 import 'dotenv/config';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
@@ -6,22 +7,14 @@ import { setupVite } from "./vite";
 import { checkDatabaseHealth } from './db';
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use("/api", require("./routes"));
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use("/api", require("./routes"));
-
 
 // Security middleware
 app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: true }));
 
 // CORS configuration
 app.use(cors({
-  origin: process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : true,
+  origin: process.env.NODE_ENV === 'development' ? 'http://0.0.0.0:3000' : true,
   credentials: true
 }));
 
