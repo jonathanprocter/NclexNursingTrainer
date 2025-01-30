@@ -1,0 +1,19 @@
+{
+  "workflows": [
+    {
+      "name": "Start application",
+      "command": "npm run dev",
+      "wait_for_port": [3000, 4003],
+      "run_forever": true,
+      "environment": {
+        "NODE_ENV": "development",
+        "VITE_DEV_SERVER_PORT": "3000",
+        "VITE_DEV_SERVER_HOST": "0.0.0.0",
+        "EXPRESS_PORT": "4003",
+        "VITE_API_URL": "http://0.0.0.0:4003",
+        "PORT": "4003"
+      },
+      "service_url": "http://0.0.0.0:3000"
+    }
+  ]
+}
