@@ -1,8 +1,7 @@
-
 export interface AnalyticsData {
   performanceData: {
-    module: string;
-    score: number;
+    domain: string;
+    mastery: number;
   }[];
   totalStudyTime: string;
   questionsAttempted: number;

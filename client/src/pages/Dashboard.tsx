@@ -7,59 +7,15 @@ import { useQuery } from "@tanstack/react-query";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { Progress } from "../components/ui/progress";
 import { useBreakpoint } from "../hooks/use-mobile";
-
-interface AnalyticsData {
-  performanceData: {
-    domain: string;
-    mastery: number;
-  }[];
-  totalStudyTime: string;
-  questionsAttempted: number;
-  averageScore: number;
-}
+import { fetchAnalytics } from "@/lib/ai-services";
+import type { AnalyticsData } from "@/types/analytics";
 
 export default function Dashboard() {
   const { isMobile, isTablet } = useBreakpoint();
 
   const { data: analytics, isError, isLoading, error } = useQuery<AnalyticsData>({
     queryKey: ["analytics"],
-    queryFn: async () => {
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:4003'  
-        : import.meta.env.VITE_API_URL;
-
-      try {
-        console.log('Fetching analytics from:', baseUrl);
-        const response = await fetch(`${baseUrl}/api/analytics/user/1`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          credentials: 'include'
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        if (!data || typeof data !== 'object') {
-          throw new Error('Invalid response format');
-        }
-
-        return {
-          performanceData: data?.performanceData || studentProgress.nclexDomains,
-          totalStudyTime: data?.totalStudyTime || "0",
-          questionsAttempted: data?.questionsAttempted || 0,
-          averageScore: data?.averageScore || studentProgress.predictedPassRate,
-        };
-      } catch (error) {
-        console.error("Analytics fetch error:", error);
-        throw error instanceof Error ? error : new Error("Failed to fetch analytics data");
-      }
-    },
+    queryFn: () => fetchAnalytics('1'),
     retry: (failureCount, error) => {
       if (error instanceof Error && error.message.includes('status: 4')) {
         return false;

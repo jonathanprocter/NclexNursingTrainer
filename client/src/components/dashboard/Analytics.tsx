@@ -9,23 +9,9 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { useBreakpoint } from "../../hooks/use-mobile";
-import { useState, useEffect } from 'react';
-
-interface PerformanceData {
-  domain: string;
-  mastery: number;
-}
-
-interface AnalyticsData {
-  performanceData: PerformanceData[];
-  totalStudyTime: string;
-  questionsAttempted: number;
-  averageScore: number;
-}
-
-interface AnalyticsProps {
-  data?: AnalyticsData;
-}
+import { fetchAnalytics } from "@/lib/ai-services";
+import { useQuery } from "@tanstack/react-query";
+import type { AnalyticsData } from "@/types/analytics";
 
 const DEFAULT_ANALYTICS: AnalyticsData = {
   performanceData: [
@@ -39,38 +25,67 @@ const DEFAULT_ANALYTICS: AnalyticsData = {
   averageScore: 0
 };
 
-const analyticsEndpoint = "http://0.0.0.0:4003"; // Added analytics endpoint
+interface AnalyticsProps {
+  data?: AnalyticsData;
+}
 
 export default function Analytics({ data }: AnalyticsProps) {
   const { isMobile, isTablet } = useBreakpoint();
-  const [fetchedData, setFetchedData] = useState<AnalyticsData | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch(analyticsEndpoint);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const jsonData = await response.json();
-        setFetchedData(jsonData);
-      } catch (error: any) {
-        setError(error.message);
-        console.error("Error fetching analytics data:", error);
+  const { data: fetchedData, error, isLoading } = useQuery({
+    queryKey: ['analytics', 'user', '1'],
+    queryFn: () => fetchAnalytics('1'),
+    retry: (failureCount, error) => {
+      if (error instanceof Error && error.message.includes('status: 4')) {
+        return false;
       }
-    };
+      return failureCount < 3;
+    },
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 10000),
+    staleTime: 30000,
+    gcTime: 300000, // Changed from cacheTime to gcTime
+  });
 
-    fetchData();
-  }, []);
-
-
-  // Use default data if not provided or if there's an error or data hasn't fetched yet
-  const analyticsData = fetchedData || data || DEFAULT_ANALYTICS;
+  const analyticsData = data || fetchedData || DEFAULT_ANALYTICS;
   const chartHeight = isMobile ? 250 : isTablet ? 300 : 350;
 
+  if (isLoading) {
+    return (
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-2 animate-pulse">
+        <Card>
+          <CardHeader>
+            <div className="h-6 bg-muted rounded w-1/3"></div>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[250px] bg-muted rounded"></div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <div className="h-6 bg-muted rounded w-1/3"></div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-16 bg-muted rounded"></div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (error) {
-    return <div>Error loading analytics: {error}</div>;
+    console.error('Analytics error:', error);
+    return (
+      <div className="space-y-4">
+        <div className="bg-destructive/10 text-destructive p-4 rounded-md mb-4">
+          Error loading analytics data. Using default values.
+        </div>
+        <Analytics data={DEFAULT_ANALYTICS} />
+      </div>
+    );
   }
 
   return (
