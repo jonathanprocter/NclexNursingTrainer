@@ -13,6 +13,7 @@ const fetchWithRetry = async <T>(url: string, options: RequestInit, retries = 3)
           'Content-Type': 'application/json',
           ...options.headers,
         },
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -37,7 +38,6 @@ const fetchWithRetry = async <T>(url: string, options: RequestInit, retries = 3)
   throw lastError;
 };
 
-
 // Analytics API endpoints
 export async function fetchAnalytics(
   userId: string,
@@ -49,17 +49,16 @@ export async function fetchAnalytics(
     if (fromDate) params.append('from', fromDate.toISOString());
     if (toDate) params.append('to', toDate.toISOString());
 
-    const response = await fetchWithRetry<AnalyticsData>(
-      `/api/analytics/${userId}${params.toString() ? `?${params.toString()}` : ''}`,
-      {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        }
-      }
-    );
+    // Use environment variable with fallback
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://0.0.0.0:4003';
+
+    const url = `${apiUrl}/api/analytics/${userId}${params.toString() ? `?${params.toString()}` : ''}`;
+    console.log('Fetching analytics from:', url);
+
+    const response = await fetchWithRetry<AnalyticsData>(url, {
+      method: 'GET',
+      credentials: 'include',
+    });
 
     // Validate response data structure
     if (!response || typeof response !== 'object' || !Array.isArray(response.performanceData)) {

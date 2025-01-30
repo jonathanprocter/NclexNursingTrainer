@@ -29,6 +29,7 @@ function Analytics({ analytics }: AnalyticsProps) {
       <ErrorBoundary
         FallbackComponent={ErrorFallback}
         onReset={() => {
+          // Force a hard reload to ensure fresh data
           window.location.reload();
         }}
       >
@@ -52,5 +53,7 @@ function Analytics({ analytics }: AnalyticsProps) {
     </div>
   );
 }
+
+ErrorFallback.displayName = "ErrorFallback";
 
 export default memo(Analytics);

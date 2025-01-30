@@ -5,9 +5,9 @@ import { analyticsDataSchema, progressDataSchema } from '../../src/src/types/ana
 
 const router = Router();
 
-// Configure CORS specifically for analytics routes
+// Configure CORS for all origins in development
 router.use(cors({
-  origin: 'http://localhost:3000',
+  origin: true, // Allow all origins in development
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -39,9 +39,11 @@ router.get('/:userId', async (req, res) => {
     // Validate mock data against schema
     const validatedData = analyticsDataSchema.parse(mockAnalyticsData);
 
-    // Add CORS headers explicitly
-    res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
+    // Enable CORS for all origins in development
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
     res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
     res.json(validatedData);
   } catch (error) {
