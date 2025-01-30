@@ -13,7 +13,9 @@ app.use(cors({
         /\.replit\.dev$/,
         /\.repl\.co$/
     ],
-    credentials: true
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json());
@@ -23,22 +25,44 @@ process.on('unhandledRejection', (reason, promise) => {
     console.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
-process.on('uncaughtException', (error) => {
+interface SystemError extends Error {
+    code?: string;
+}
+
+process.on('uncaughtException', (error: SystemError) => {
     console.error('Uncaught Exception:', error);
-    process.exit(1);
+    // Don't exit the process on EADDRINUSE, try a different port
+    if (error.code === 'EADDRINUSE') {
+        console.log(`Port ${port} is in use, trying ${port + 1}`);
+        startServer(port + 1);
+    } else {
+        process.exit(1);
+    }
 });
 
 // Register all routes
-const httpServer = registerRoutes(app);
+function startServer(port: number) {
+    const httpServer = registerRoutes(app);
 
-// Start the server
-httpServer.listen(port, '0.0.0.0', () => {
-    console.log('=================================');
-    console.log('Server started successfully');
-    console.log(`Server is running on port ${port}`);
-    console.log('Frontend URL: http://0.0.0.0:3000');
-    console.log('Backend URL: http://0.0.0.0:4004');
-    console.log('=================================');
-});
+    // Start the server with proper error handling
+    httpServer.listen(port, '0.0.0.0', () => {
+        console.log('=================================');
+        console.log('Server started successfully');
+        console.log(`Server is running on port ${port}`);
+        console.log('Frontend URL: http://0.0.0.0:3000');
+        console.log(`Backend URL: http://0.0.0.0:${port}`);
+        console.log('=================================');
+    }).on('error', (error: SystemError) => {
+        if (error.code === 'EADDRINUSE') {
+            console.log(`Port ${port} is in use, trying ${port + 1}`);
+            startServer(port + 1);
+        } else {
+            console.error('Server error:', error);
+            process.exit(1);
+        }
+    });
+}
+
+startServer(port);
 
 export default app;

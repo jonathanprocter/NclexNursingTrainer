@@ -9,16 +9,6 @@ interface AnalyticsProps {
   analytics: AnalyticsData;
 }
 
-const ErrorFallback = ({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) => (
-  <div className="p-4 bg-destructive/10 rounded-md">
-    <h2 className="text-lg font-semibold mb-2">Analytics Error</h2>
-    <p className="text-sm text-destructive mb-4">{error.message}</p>
-    <button onClick={resetErrorBoundary} className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90">
-      Try again
-    </button>
-  </div>
-);
-
 function PerformanceChart({ data }: { data: { domain: string; mastery: number }[] }) {
   return (
     <div className="h-[400px]">
@@ -42,16 +32,25 @@ function PerformanceChart({ data }: { data: { domain: string; mastery: number }[
 
 function Analytics({ analytics }: AnalyticsProps) {
   if (!analytics?.performanceData) {
-    return <div className="p-4">Loading analytics data...</div>;
+    return <div className="p-4">No analytics data available</div>;
   }
 
   return (
     <div className="space-y-4">
-      <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <ErrorBoundary
+        FallbackComponent={({ error }) => (
+          <div className="p-4 bg-destructive/10 rounded-md">
+            <h2 className="text-lg font-semibold mb-2">Analytics Error</h2>
+            <p className="text-sm text-destructive mb-4">{error.message}</p>
+          </div>
+        )}
+      >
         <Tabs defaultValue="performance" className="space-y-4">
           <TabsList>
             <TabsTrigger value="performance">Performance Analysis</TabsTrigger>
+            <TabsTrigger value="breakdown">Domain Breakdown</TabsTrigger>
           </TabsList>
+
           <TabsContent value="performance">
             <Card>
               <CardHeader>
@@ -59,6 +58,32 @@ function Analytics({ analytics }: AnalyticsProps) {
               </CardHeader>
               <CardContent>
                 <PerformanceChart data={analytics.performanceData} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="breakdown">
+            <Card>
+              <CardHeader>
+                <CardTitle>Domain Mastery Breakdown</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {analytics.performanceData.map((item) => (
+                    <div key={item.domain} className="flex items-center justify-between">
+                      <span className="text-sm font-medium">{item.domain}</span>
+                      <div className="flex items-center gap-4">
+                        <div className="w-48 h-2 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-primary"
+                            style={{ width: `${item.mastery}%` }}
+                          />
+                        </div>
+                        <span className="text-sm font-medium">{item.mastery}%</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

@@ -4,6 +4,7 @@ import { WebSocketServer } from 'ws';
 import { db } from "../server/db";
 import { eq } from "drizzle-orm";
 import studyGuideRouter from './routes/study-guide';
+import analyticsRouter from './routes/analytics';
 import OpenAI from "openai";
 import { studyBuddyChats, modules, questions, quizAttempts, userProgress } from "./db/schema";
 
@@ -17,6 +18,10 @@ const openai = new OpenAI({
 
 export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
+
+  // Register routes
+  app.use('/api/analytics', analyticsRouter);
+  app.use('/api/study-guide', studyGuideRouter);
 
   // WebSocket configuration
   const wss = new WebSocketServer({ 
@@ -76,9 +81,6 @@ export function registerRoutes(app: Express): Server {
     // Send initial connection success message
     ws.send(JSON.stringify({ type: 'connection_status', status: 'connected' }));
   });
-
-  // Study guide routes
-  app.use('/api/study-guide', studyGuideRouter);
 
   // Error handling middleware
   app.use((err: Error, req: any, res: any, next: any) => {

@@ -4,7 +4,7 @@ import Analytics from "@/components/dashboard/Analytics";
 import { AnalyticsData } from "@/types/analytics";
 import { memo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { api } from "@/services/api/client";
+import axios from "axios";
 
 const PerformanceOverview = memo(({ analytics }: { analytics: AnalyticsData }) => (
   <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10">
@@ -49,28 +49,19 @@ const PerformanceOverviewSkeleton = () => (
 );
 
 function Dashboard() {
-  const { data: analytics, isError, isLoading, error } = useQuery<AnalyticsData>({
+  const { data: analytics, isError, isLoading, error } = useQuery({
     queryKey: ["analytics"],
     queryFn: async () => {
       try {
-        const response = await api.get('/analytics');
+        const baseUrl = import.meta.env.VITE_API_URL || window.location.origin;
+        const response = await axios.get<AnalyticsData>(`${baseUrl}/api/analytics`);
+        console.log('Analytics response:', response.data);
         return response.data;
       } catch (error) {
         console.error('Error fetching analytics:', error);
-        // Fallback mock data for development
-        return {
-          performanceData: [
-            { domain: "Pharmacology", mastery: 85 },
-            { domain: "Medical-Surgical", mastery: 78 },
-            { domain: "Pediatrics", mastery: 92 }
-          ],
-          totalStudyTime: "24h",
-          questionsAttempted: 150,
-          averageScore: 85
-        };
+        throw error;
       }
-    },
-    staleTime: 30000,
+    }
   });
 
   if (isLoading) {
