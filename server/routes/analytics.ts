@@ -7,13 +7,10 @@ const router = Router();
 
 // Configure CORS for all origins in development
 router.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'http://0.0.0.0:3000',
-    /\.replit\.dev$/,
-    /\.repl\.co$/,
-    /^http:\/\/localhost:\d+$/
-  ],
+  origin: true,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],

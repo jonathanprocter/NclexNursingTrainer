@@ -3,15 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import Analytics from "@/components/dashboard/Analytics";
 import { Skeleton } from "@/components/ui/skeleton";
-import axios from "axios";
-import { memo } from "react";
 import type { AnalyticsData } from "@/types/analytics";
+import { memo } from "react";
 
-interface PerformanceOverviewProps {
-  analytics: AnalyticsData;
-}
-
-const PerformanceOverview = memo(({ analytics }: PerformanceOverviewProps) => (
+const PerformanceOverview = memo(({ analytics }: { analytics: AnalyticsData }) => (
   <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10">
     <CardHeader>
       <CardTitle className="text-lg sm:text-xl">Performance Overview</CardTitle>
@@ -20,7 +15,7 @@ const PerformanceOverview = memo(({ analytics }: PerformanceOverviewProps) => (
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <div>
           <p className="text-sm text-muted-foreground">Study Time</p>
-          <p className="text-lg font-semibold">{analytics.totalStudyTime}</p>
+          <p className="text-lg font-semibold">{analytics.totalStudyTime}h</p>
         </div>
         <div>
           <p className="text-sm text-muted-foreground">Questions</p>
@@ -36,7 +31,7 @@ const PerformanceOverview = memo(({ analytics }: PerformanceOverviewProps) => (
 ));
 
 const PerformanceOverviewSkeleton = () => (
-  <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10">
+  <Card>
     <CardHeader>
       <Skeleton className="h-6 w-48" />
     </CardHeader>
@@ -54,24 +49,30 @@ const PerformanceOverviewSkeleton = () => (
 );
 
 function Dashboard() {
-  const { data: analytics, isError, isLoading, error } = useQuery({
+  const { data: analytics, isError, isLoading, error } = useQuery<AnalyticsData>({
     queryKey: ["analytics"],
     queryFn: async () => {
       try {
-        const response = await axios.get<{ success: boolean; data: AnalyticsData }>(`http://0.0.0.0:4005/api/analytics`, {
-          withCredentials: true,
-          timeout: 5000
+        const response = await fetch('http://0.0.0.0:4006/api/analytics', {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json'
+          }
         });
-        return response.data.data;
-        return response.data;
-      } catch (err) {
-        console.error('Error fetching analytics:', err);
-        throw err;
+        
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        return data.data;
+      } catch (error) {
+        console.error('Error fetching analytics:', error);
+        throw error;
       }
     },
     retry: 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
-    staleTime: 30000
   });
 
   if (isLoading) {
@@ -85,9 +86,9 @@ function Dashboard() {
 
   if (isError) {
     return (
-      <div className="p-4 bg-destructive/10 rounded-md">
+      <div className="p-4 bg-destructive/10 rounded-md m-4">
         <h2 className="text-lg font-semibold mb-2">Error loading dashboard</h2>
-        <p className="text-sm text-destructive mb-4">
+        <p className="text-sm text-destructive">
           {error instanceof Error ? error.message : "An unknown error occurred"}
         </p>
       </div>
