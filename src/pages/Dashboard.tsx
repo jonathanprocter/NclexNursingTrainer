@@ -58,7 +58,7 @@ function Dashboard() {
     queryKey: ["analytics"],
     queryFn: async () => {
       try {
-        const response = await axios.get<AnalyticsData>(`http://0.0.0.0:4004/api/analytics`, {
+        const response = await axios.get<AnalyticsData>(`http://0.0.0.0:4005/api/analytics`, {
           withCredentials: true,
           timeout: 5000
         });

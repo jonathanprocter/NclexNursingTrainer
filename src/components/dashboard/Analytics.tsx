@@ -49,8 +49,16 @@ const PerformanceChart = memo(({ data }: PerformanceChartProps) => {
   );
 });
 
-function Analytics({ analytics }: { analytics: AnalyticsData }) {
-  if (!analytics?.performanceData?.length) {
+function Analytics({ analytics }: { analytics: AnalyticsData | undefined }) {
+  if (!analytics) {
+    return (
+      <div className="p-4 bg-muted rounded-lg">
+        <p className="text-muted-foreground text-center">Loading analytics data...</p>
+      </div>
+    );
+  }
+
+  if (!analytics.performanceData?.length) {
     return (
       <div className="p-4 bg-muted rounded-lg">
         <p className="text-muted-foreground text-center">No performance data available</p>
