@@ -52,7 +52,7 @@ app.use((err: ErrorWithStatus, _req: Request, res: Response, _next: NextFunction
 
 
 const HOST = '0.0.0.0';
-const PORT = process.env.PORT || 4003;
+const PORT = 4003; // Fixed port
 
 function startServer() {
   return new Promise((resolve, reject) => {

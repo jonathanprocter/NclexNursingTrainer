@@ -6,7 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const vite_1 = require("vite");
 const plugin_react_1 = __importDefault(require("@vitejs/plugin-react"));
 const path_1 = __importDefault(require("path"));
-
 exports.default = (0, vite_1.defineConfig)({
     plugins: [(0, plugin_react_1.default)()],
     root: './client',
@@ -17,19 +16,21 @@ exports.default = (0, vite_1.defineConfig)({
     server: {
         host: "0.0.0.0",
         port: 3000,
+        hmr: {
+            host: process.env.REPL_SLUG ? `${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co` : '0.0.0.0',
+            protocol: 'ws',
+            clientPort: 443
+        },
         watch: {
             usePolling: true,
             interval: 100,
         },
         proxy: {
             '/api': {
-                target: 'http://0.0.0.0:3001',
+                target: 'http://0.0.0.0:4002',
                 changeOrigin: true,
             },
         },
-        allowedHosts: [
-            "28283d82-bfbd-491e-8711-8e29be387da7-00-29i5ngdyjh860.spock.replit.dev"
-        ]
     },
     resolve: {
         alias: {

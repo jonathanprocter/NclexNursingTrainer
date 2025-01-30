@@ -11,7 +11,6 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }
 );
-);
 const table = (
   usernameIdx: index("IDX_").on(table.username),
   roleCreatedIdx: index("IDX_").on(table.role, table.createdAt)
@@ -27,7 +26,6 @@ export const modules = pgTable("modules", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }
-);
 );
 const table = (
   titleIdx: index("IDX_").on(table.title),
@@ -54,7 +52,6 @@ const table = (
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }
 );
-);
 const table = (
   moduleIdx: index("IDX_").on(table.moduleId),
   categoryIdx: index("IDX_").on(table.category),
@@ -76,7 +73,6 @@ const table = (
   attemptContext: json("attempt_context").$type<Record<string, any>()().default({}),
 }
 );
-);
 const table = (
   userIdx: index("IDX_").on(table.userId),
   questionIdx: index("IDX_").on(table.questionId),
@@ -89,7 +85,7 @@ export const quizAttempts = pgTable("quiz_attempts", {
   userId: integer("user_id").references(users.id, { onDelete: "cascade" }).notNull(),
   moduleId: integer("module_id").references(modules.id, { onDelete: "cascade" }).notNull(),
   type: text("type").notNull(),
-  answers: json("answers").$type<Array<{ questionId: number.answer: string.correct: boolean }>()().notNull(),
+  answers: json("answers").$type<Array<{ questionId: number.answer: string; correct: boolean }>()().notNull(),
   score: integer("score").notNull(),
   totalQuestions: integer("total_questions").notNull(),
   startedAt: timestamp("started_at").defaultNow().notNull(),
@@ -118,7 +114,6 @@ export const quizAttempts = pgTable("quiz_attempts", {
   studyGoals: json("study_goals").$type<Record<string, any>()().default({}),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }
-);
 );
 const table = (
   userIdx: index("IDX_").on(table.userId),
