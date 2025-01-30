@@ -136,3 +136,6 @@ export const selectUserProgressSchema = createSelectSchema(userProgress);
 
 export const insertQuestionHistorySchema = createInsertSchema(questionHistory);
 export const selectQuestionHistorySchema = createSelectSchema(questionHistory);
+
+export const questionHistorySchema = createInsertSchema(questionHistory);
+export const userProgressSchema = createInsertSchema(userProgress);
