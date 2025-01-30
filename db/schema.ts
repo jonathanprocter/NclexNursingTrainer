@@ -61,30 +61,11 @@ export const questionHistory = pgTable("question_history", {
   isCorrect: boolean("is_correct").notNull(),
   timeSpent: integer("time_spent").notNull(),
   timestamp: timestamp("timestamp").defaultNow().notNull(),
-  easeFactor: integer("ease_factor").default(250).notNull(),
-  interval: integer("interval").default(1).notNull(),
-  repetitions: integer("repetitions").default(0).notNull(),
-  nextReview: timestamp("next_review"),
   attemptContext: json("attempt_context").$type<Record<string, any>>().default({}),
 }, (table) => ({
   userIdx: index("question_history_user_idx").on(table.userId),
   questionIdx: index("question_history_question_idx").on(table.questionId),
-  reviewIdx: index("question_history_review_idx").on(table.nextReview),
   userQuestionIdx: unique("question_history_user_question_idx").on(table.userId, table.questionId)
-}));
-
-export const studyBuddyChats = pgTable("study_buddy_chats", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id, { onDelete: 'cascade' }).notNull(),
-  sessionId: text("session_id").notNull(),
-  role: text("role").notNull(),
-  content: text("content").notNull(),
-  tone: text("tone").notNull(),
-  timestamp: timestamp("timestamp").defaultNow().notNull(),
-}, (table) => ({
-  sessionIdx: index("study_buddy_chats_session_idx").on(table.sessionId),
-  userIdx: index("study_buddy_chats_user_idx").on(table.userId),
-  timestampIdx: index("study_buddy_chats_timestamp_idx").on(table.timestamp)
 }));
 
 export const userProgress = pgTable("user_progress", {
@@ -103,17 +84,27 @@ export const userProgress = pgTable("user_progress", {
   userModuleIdx: unique("user_progress_user_module_idx").on(table.userId, table.moduleId)
 }));
 
-// Zod schemas for validation
+export const studyBuddyChats = pgTable("study_buddy_chats", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  sessionId: text("session_id").notNull(),
+  role: text("role").notNull(),
+  content: text("content").notNull(),
+  tone: text("tone").notNull(),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+}, (table) => ({
+  sessionIdx: index("study_buddy_chats_session_idx").on(table.sessionId),
+  userIdx: index("study_buddy_chats_user_idx").on(table.userId),
+  timestampIdx: index("study_buddy_chats_timestamp_idx").on(table.timestamp)
+}));
+
+// Validation schemas
 export const questionHistorySchema = z.object({
   userId: z.number().int().positive(),
   questionId: z.number().int().positive(),
   answer: z.string(),
   isCorrect: z.boolean(),
   timeSpent: z.number().int().positive(),
-  easeFactor: z.number().int().min(0).optional(),
-  interval: z.number().int().min(0).optional(),
-  repetitions: z.number().int().min(0).optional(),
-  nextReview: z.date().optional(),
   attemptContext: z.record(z.any()).optional(),
 });
 
@@ -128,20 +119,9 @@ export const userProgressSchema = z.object({
 });
 
 // Type exports
-export type {
-  users as Users,
-  modules as Modules,
-  questions as Questions,
-  questionHistory as QuestionHistory,
-  userProgress as UserProgress,
-  studyBuddyChats as StudyBuddyChats,
-};
-
-export {
-  users,
-  modules,
-  questions,
-  questionHistory,
-  userProgress,
-  studyBuddyChats,
-};
+export type Users = typeof users;
+export type Modules = typeof modules;
+export type Questions = typeof questions;
+export type QuestionHistory = typeof questionHistory;
+export type UserProgress = typeof userProgress;
+export type StudyBuddyChats = typeof studyBuddyChats;

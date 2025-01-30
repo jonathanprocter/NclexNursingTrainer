@@ -1,6 +1,6 @@
 import express from "express";
 import { db } from "../db/index.js";
-import { questions, questionHistory, userProgress } from "../db/schema.js";
+import { questions, questionHistory, userProgress, type Questions, type QuestionHistory, type UserProgress } from "../db/schema.js";
 import { questionHistorySchema, userProgressSchema } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import type { Request, Response } from "express";
@@ -36,7 +36,6 @@ router.post("/:id/answer", async (req: Request<{ id: string }, {}, { answer: str
     const { id } = req.params;
     const { answer, userId, timeSpent } = req.body;
 
-    // Validate input
     const validatedHistory = questionHistorySchema.parse({
       userId: parseInt(userId),
       questionId: parseInt(id),
@@ -45,10 +44,7 @@ router.post("/:id/answer", async (req: Request<{ id: string }, {}, { answer: str
       isCorrect: false // Will be updated after checking
     });
 
-    const question = await db.select()
-      .from(questions)
-      .where(eq(questions.id, parseInt(id)))
-      .limit(1);
+    const question = await db.select().from(questions).where(eq(questions.id, parseInt(id))).limit(1);
 
     if (!question.length) {
       return res.status(404).json({ error: "Question not found" });
@@ -57,15 +53,12 @@ router.post("/:id/answer", async (req: Request<{ id: string }, {}, { answer: str
     const isCorrect = answer === question[0].correctAnswer;
     validatedHistory.isCorrect = isCorrect;
 
-    // Record the answer in history
     await db.insert(questionHistory).values({
       ...validatedHistory,
       timestamp: new Date()
     });
 
-    // Update user progress
-    const progress = await db.select()
-      .from(userProgress)
+    const progress = await db.select().from(userProgress)
       .where(eq(userProgress.userId, parseInt(userId)))
       .limit(1);
 
@@ -115,26 +108,23 @@ router.post("/:id/answer", async (req: Request<{ id: string }, {}, { answer: str
   }
 });
 
-// Get user stats
 router.get("/stats/:userId", async (req: Request<{ userId: string }>, res: Response) => {
   try {
     const { userId } = req.params;
-    const progress = await db.select()
-      .from(questionHistory)
+    const history = await db.select().from(questionHistory)
       .where(eq(questionHistory.userId, parseInt(userId)));
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const userStats = await db.select()
-      .from(userProgress)
+    const userStats = await db.select().from(userProgress)
       .where(eq(userProgress.userId, parseInt(userId)))
       .limit(1);
 
     const stats = {
-      totalAnswered: progress.length,
-      correctAnswers: progress.filter(p => p.isCorrect).length,
-      todayAnswered: progress.filter(p => {
+      totalAnswered: history.length,
+      correctAnswers: history.filter((p: QuestionHistory) => p.isCorrect).length,
+      todayAnswered: history.filter((p: QuestionHistory) => {
         const answerDate = new Date(p.timestamp);
         answerDate.setHours(0, 0, 0, 0);
         return answerDate.getTime() === today.getTime();
