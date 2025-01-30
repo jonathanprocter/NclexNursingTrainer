@@ -63,8 +63,11 @@ export default function Questions() {
 
       <ScrollArea className="h-[calc(100vh-12rem)]">
         <div className="space-y-6">
-          {questions.map((question, index) => (
-            <QuestionCard key={`question-${question.id}-${index}`} question={question} />
+          {questions?.map((question, index) => (
+            <QuestionCard 
+              key={`question-${question.id || index}-${index}`} 
+              question={question} 
+            />
           ))}
         </div>
       </ScrollArea>

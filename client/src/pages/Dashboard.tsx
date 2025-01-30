@@ -140,7 +140,10 @@ export default function Dashboard() {
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={studentProgress.nclexDomains}>
+                <BarChart data={studentProgress.nclexDomains.map((domain, index) => ({
+  ...domain,
+  uniqueId: `domain-${index}-${domain.domain}`
+}))}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="domain" angle={-45} textAnchor="end" height={80} />
                   <YAxis domain={[0, 100]} />
