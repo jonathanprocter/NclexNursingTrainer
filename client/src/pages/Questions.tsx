@@ -1,32 +1,31 @@
-import { useQuery } from "@tanstack/react-query"
-import QuestionCard from "../components/QuestionCard"
-import { ScrollArea } from "../components/ui/scroll-area"
-import { Button } from "../components/ui/button"
-import { RefreshCw } from "lucide-react"
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
+import QuestionCard from "../components/QuestionCard";
+import { Progress } from "@/components/ui/progress";
 
 interface Question {
-  id: string
-  type: string
-  content: string
-  options: string[]
-  correctAnswer: string
-  explanation: string
+  id: string;
+  type: string;
+  content: string;
+  options: string[];
+  correctAnswer: string;
+  explanation: string;
 }
 
 const fetchQuestions = async (): Promise<Question[]> => {
-  const response = await fetch("/api/questions")
+  const response = await fetch("/api/questions");
   if (!response.ok) {
-    throw new Error("Failed to fetch questions")
+    throw new Error("Failed to fetch questions");
   }
-  const data = await response.json()
-  console.log("Fetched questions:", data)
-  // Ensure data is an array of questions. Adjust if your API returns a different shape.
-  return data
-}
+  return response.json();
+};
 
 export default function Questions() {
   const {
-    data: questions = [], // fallback to empty array if undefined
+    data: questions = [],
     isError,
     isLoading,
     refetch,
@@ -34,21 +33,44 @@ export default function Questions() {
     queryKey: ["questions"],
     queryFn: fetchQuestions,
     retry: 1,
-  })
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnWindowFocus: false,
+  });
 
-  // If there's an error from the request
-  if (isError) {
-    return <div>Error loading questions</div>
-  }
-
-  // If request is still in loading state
   if (isLoading) {
-    return <div>Loading questions...</div>
+    return (
+      <div className="container mx-auto py-6 space-y-8">
+        <div className="flex justify-between items-center">
+          <div className="h-8 w-48 bg-muted rounded animate-pulse" />
+          <div className="h-10 w-40 bg-muted rounded animate-pulse" />
+        </div>
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <Card key={`loading-${i}`}>
+              <CardContent className="p-6">
+                <div className="h-24 w-full bg-muted rounded animate-pulse" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
   }
 
-  // Safely check if questions is indeed an array
-  if (!Array.isArray(questions)) {
-    return <div>No valid questions found.</div>
+  if (isError) {
+    return (
+      <div className="container mx-auto py-6">
+        <Card>
+          <CardContent className="p-6 text-center">
+            <p className="text-destructive">Failed to load questions</p>
+            <Button onClick={() => refetch()} variant="outline" className="mt-4">
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Try Again
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
@@ -63,14 +85,14 @@ export default function Questions() {
 
       <ScrollArea className="h-[calc(100vh-12rem)]">
         <div className="space-y-6">
-          {questions?.map((question, index) => (
-            <QuestionCard 
-              key={`question-${question.id || index}-${index}`} 
-              question={question} 
+          {questions.map((question) => (
+            <QuestionCard
+              key={question.id}
+              question={question}
             />
           ))}
         </div>
       </ScrollArea>
     </div>
-  )
+  );
 }

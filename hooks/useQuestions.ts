@@ -5,7 +5,7 @@ import type {
   QuestionState,
   QuestionStats,
 } from "../types/questions";
-import { useToast } from "./use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 export function useQuestions(options: {
   difficulty?: string;
@@ -38,6 +38,8 @@ export function useQuestions(options: {
       if (!response.ok) throw new Error("Failed to fetch questions");
       return response.json();
     },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnWindowFocus: false,
   });
 
   // Submit answer mutation
@@ -103,23 +105,53 @@ export function useQuestions(options: {
     if (!questions.length) return;
 
     // Simple random selection for now
-    // TODO: Implement adaptive selection based on performance
     const remainingQuestions = questions.filter(
       (q) => q.id !== currentQuestion?.id,
     );
 
-    if (!remainingQuestions.length) {
+    const questionPool = remainingQuestions.length > 0 ? remainingQuestions : questions;
+    const randomIndex = Math.floor(Math.random() * questionPool.length);
+    setCurrentQuestion(questionPool[randomIndex]);
+    setQuestionState({ selectedAnswer: null, showExplanation: false });
+  }, [questions, currentQuestion]);
+
+  const skipQuestion = useCallback(() => {
+    nextQuestion();
+    toast({
+      title: "Question Skipped",
+      description: "Moving to the next question...",
+      variant: "default",
+    });
+  }, [nextQuestion, toast]);
+
+  const showHint = useCallback(() => {
+    if (!currentQuestion?.explanation) {
       toast({
-        title: "No more questions",
-        description: "You've completed all available questions in this set.",
+        title: "No hint available",
+        description: "This question doesn't have a hint.",
+        variant: "destructive",
       });
       return;
     }
 
-    const randomIndex = Math.floor(Math.random() * remainingQuestions.length);
-    setCurrentQuestion(remainingQuestions[randomIndex]);
+    toast({
+      title: "Hint",
+      description: currentQuestion.explanation,
+      variant: "default",
+    });
+  }, [currentQuestion, toast]);
+
+  const resetSession = useCallback(() => {
+    setCurrentQuestion(null);
     setQuestionState({ selectedAnswer: null, showExplanation: false });
-  }, [questions, currentQuestion, toast]);
+    setStats({
+      totalAnswered: 0,
+      correctAnswers: 0,
+      incorrectAnswers: 0,
+      streakCount: 0,
+      accuracy: 0,
+    });
+  }, []);
 
   // Initialize first question
   useEffect(() => {
@@ -135,5 +167,8 @@ export function useQuestions(options: {
     isLoading,
     handleAnswer,
     nextQuestion,
+    skipQuestion,
+    showHint,
+    resetSession,
   };
 }

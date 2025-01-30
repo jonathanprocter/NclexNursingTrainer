@@ -42,9 +42,12 @@ export default function QuestionBank() {
       const response = await fetch(`/api/questions${selectedCategory ? `?category=${selectedCategory}` : ''}`);
       if (!response.ok) throw new Error('Failed to fetch questions');
       return response.json();
-    }
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnWindowFocus: false,
   });
 
+  // Initialize current question when questions are loaded
   useEffect(() => {
     if (questions.length > 0 && !currentQuestion) {
       const randomIndex = Math.floor(Math.random() * questions.length);
@@ -65,26 +68,34 @@ export default function QuestionBank() {
   };
 
   const handleNextQuestion = () => {
+    if (!questions.length) return;
+
     setSelectedAnswer(null);
     setShowExplanation(false);
 
     const remainingQuestions = questions.filter(q => q.id !== currentQuestion?.id);
-
-    if (remainingQuestions.length > 0) {
-      const randomIndex = Math.floor(Math.random() * remainingQuestions.length);
-      setCurrentQuestion(remainingQuestions[randomIndex]);
-    } else {
-      const randomIndex = Math.floor(Math.random() * questions.length);
-      setCurrentQuestion(questions[randomIndex]);
-    }
+    const questionPool = remainingQuestions.length > 0 ? remainingQuestions : questions;
+    const randomIndex = Math.floor(Math.random() * questionPool.length);
+    setCurrentQuestion(questionPool[randomIndex]);
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold mb-2">Loading Questions...</h2>
-          <p className="text-muted-foreground">Please wait while we prepare your practice session.</p>
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <div className="h-12 w-64 mx-auto bg-muted rounded animate-pulse" />
+          <Card>
+            <CardHeader>
+              <div className="h-8 w-48 bg-muted rounded animate-pulse" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {[...Array(4)].map((_, i) => (
+                  <div key={`loading-${i}`} className="h-12 w-full bg-muted rounded animate-pulse" />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
@@ -127,7 +138,7 @@ export default function QuestionBank() {
           </CardHeader>
         </Card>
 
-        {currentQuestion && (
+        {currentQuestion && questions.length > 0 ? (
           <Card>
             <CardContent className="pt-6">
               <div className="space-y-6">
@@ -135,15 +146,15 @@ export default function QuestionBank() {
                   <Badge variant="outline">{currentQuestion.category}</Badge>
                   <Badge 
                     variant={
-                      currentQuestion.difficulty === "Easy" ? "success" :
-                      currentQuestion.difficulty === "Medium" ? "warning" :
+                      currentQuestion.difficulty === "Easy" ? "secondary" :
+                      currentQuestion.difficulty === "Medium" ? "default" :
                       "destructive"
                     }
                   >
                     {currentQuestion.difficulty}
                   </Badge>
-                  {currentQuestion.tags.map((tag, index) => (
-                    <Badge key={index} variant="secondary">
+                  {currentQuestion.tags.map((tag) => (
+                    <Badge key={`${currentQuestion.id}-${tag}`} variant="outline">
                       {tag}
                     </Badge>
                   ))}
@@ -156,7 +167,7 @@ export default function QuestionBank() {
                 <div className="space-y-4">
                   {currentQuestion.options.map((option) => (
                     <Button
-                      key={option.id}
+                      key={`${currentQuestion.id}-${option.id}`}
                       variant="outline"
                       className={`w-full justify-start text-left h-auto p-4 ${
                         showExplanation
@@ -200,6 +211,12 @@ export default function QuestionBank() {
                   </div>
                 )}
               </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardContent className="p-8 text-center text-muted-foreground">
+              No questions available for the selected category
             </CardContent>
           </Card>
         )}
