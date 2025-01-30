@@ -1,4 +1,3 @@
-
 import { pgTable, text, serial, integer, boolean, timestamp, json, foreignKey, index, uuid, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { sql } from "drizzle-orm";
@@ -13,6 +12,21 @@ export const users = pgTable("users", {
 }, (table) => ({
   usernameIdx: index("username_idx").on(table.username),
   roleCreatedIdx: index("role_created_idx").on(table.role, table.createdAt)
+}));
+
+export const questionHistory = pgTable("question_history", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  questionId: integer("question_id").references(() => questions.id, { onDelete: 'cascade' }).notNull(),
+  answer: text("answer").notNull(),
+  isCorrect: boolean("is_correct").notNull(),
+  timeSpent: integer("time_spent").notNull(),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  attemptContext: json("attempt_context").$type<Record<string, any>>().default({}),
+}, (table) => ({
+  userIdx: index("question_history_user_idx").on(table.userId),
+  questionIdx: index("question_history_question_idx").on(table.questionId),
+  userQuestionIdx: unique("question_history_user_question_idx").on(table.userId, table.questionId)
 }));
 
 export const modules = pgTable("modules", {
@@ -100,6 +114,10 @@ export type NewQuizAttempt = typeof quizAttempts.$inferInsert;
 export type UserProgress = typeof userProgress.$inferSelect;
 export type NewUserProgress = typeof userProgress.$inferInsert;
 
+export type QuestionHistory = typeof questionHistory.$inferSelect;
+export type NewQuestionHistory = typeof questionHistory.$inferInsert;
+
+
 // Zod validation schemas
 export const insertUserSchema = createInsertSchema(users);
 export const selectUserSchema = createSelectSchema(users);
@@ -115,3 +133,6 @@ export const selectQuizAttemptSchema = createSelectSchema(quizAttempts);
 
 export const insertUserProgressSchema = createInsertSchema(userProgress);
 export const selectUserProgressSchema = createSelectSchema(userProgress);
+
+export const insertQuestionHistorySchema = createInsertSchema(questionHistory);
+export const selectQuestionHistorySchema = createSelectSchema(questionHistory);
