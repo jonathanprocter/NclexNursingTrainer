@@ -45,7 +45,6 @@ export default function Dashboard() {
         console.error('Error fetching analytics:', error);
         throw error;
       }
-      };
     },
     retry: 2,
     retryDelay: 1000,
