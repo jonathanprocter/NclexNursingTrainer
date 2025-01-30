@@ -37,9 +37,8 @@ const fetchWithRetry = async <T>(url: string, options: RequestInit, retries = 3)
   throw lastError;
 };
 
-// Analytics API base URL configuration
-const API_BASE_URL = 'http://localhost:4003';
 
+// Analytics API endpoints
 export async function fetchAnalytics(
   userId: string,
   fromDate?: Date,
@@ -51,12 +50,10 @@ export async function fetchAnalytics(
     if (toDate) params.append('to', toDate.toISOString());
 
     const response = await fetchWithRetry<AnalyticsData>(
-      `${API_BASE_URL}/api/analytics/${userId}?${params.toString()}`,
+      `/api/analytics/${userId}?${params.toString()}`,
       {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        credentials: 'include'
       }
     );
 
@@ -75,7 +72,7 @@ export async function fetchAnalytics(
 export async function updateUserProgress(userId: string, progressData: Record<string, unknown>): Promise<void> {
   try {
     await fetchWithRetry<void>(
-      `${API_BASE_URL}/api/analytics/progress/${userId}`,
+      `/api/analytics/progress/${userId}`,
       {
         method: 'POST',
         body: JSON.stringify(progressData),
@@ -93,7 +90,7 @@ export async function getPathophysiologyHelp(
   context?: string
 ): Promise<{ content: string }> {
   try {
-    const response = await fetchWithRetry<{ content: string }>(`${API_BASE_URL}/api/ai/pathophysiology-help`, {
+    const response = await fetchWithRetry<{ content: string }>(`/api/ai/pathophysiology-help`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ section, context })
@@ -115,7 +112,7 @@ export async function analyzePerformance(
   }>
 ): Promise<AIAnalysisResult> {
   try {
-    const response = await fetchWithRetry<AIAnalysisResult>(`${API_BASE_URL}/api/ai/analyze-performance`, {
+    const response = await fetchWithRetry<AIAnalysisResult>(`/api/ai/analyze-performance`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ answers })
@@ -132,7 +129,7 @@ export async function generateSimulationScenario(
   focus_areas?: string[]
 ): Promise<SimulationScenario> {
   try {
-    const response = await fetchWithRetry<SimulationScenario>(`${API_BASE_URL}/api/ai/simulation-scenario`, {
+    const response = await fetchWithRetry<SimulationScenario>(`/api/ai/simulation-scenario`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ difficulty, focus_areas })
@@ -153,7 +150,7 @@ export async function getSimulationFeedback(
   }[]
 ): Promise<SimulationFeedback> {
   try {
-    const response = await fetchWithRetry<SimulationFeedback>(`${API_BASE_URL}/api/ai/simulation-feedback`, {
+    const response = await fetchWithRetry<SimulationFeedback>(`/api/ai/simulation-feedback`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ scenario, userActions })
@@ -176,7 +173,7 @@ export interface QuestionGenerationParams {
 
 export async function generateAdaptiveQuestions(params: QuestionGenerationParams) {
   try {
-    const response = await fetchWithRetry<any>(`${API_BASE_URL}/api/ai/generate-questions`, {
+    const response = await fetchWithRetry<any>(`/api/ai/generate-questions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(params)
@@ -196,7 +193,7 @@ export async function getStudyRecommendations(
   }[]
 ) {
   try {
-    const response = await fetchWithRetry<any>(`${API_BASE_URL}/api/ai/study-recommendations`, {
+    const response = await fetchWithRetry<any>(`/api/ai/study-recommendations`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ performanceData })

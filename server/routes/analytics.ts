@@ -20,7 +20,7 @@ router.use(cors({
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'OPTIONS']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 }));
 
 // Analytics data schema for validation
@@ -46,7 +46,6 @@ router.get('/:userId', async (req, res) => {
     const { from, to } = queryParamsSchema.parse(req.query);
 
     // Sample data - in a real app, this would be fetched from a database
-    // and filtered based on the date range
     const analyticsData = {
       performanceData: [
         { domain: "Clinical Judgment", mastery: 75 },
