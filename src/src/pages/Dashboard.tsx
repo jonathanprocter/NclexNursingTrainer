@@ -1,5 +1,4 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { useBreakpoint } from "../hooks/use-mobile";
 import { useQuery } from "@tanstack/react-query";
 import Analytics from "../components/dashboard/Analytics";
 import type { AnalyticsData } from "../types/analytics";
@@ -101,5 +100,8 @@ function Dashboard() {
     </div>
   );
 }
+
+PerformanceOverview.displayName = "PerformanceOverview";
+PerformanceOverviewSkeleton.displayName = "PerformanceOverviewSkeleton";
 
 export default memo(Dashboard);
