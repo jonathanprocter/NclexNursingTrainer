@@ -38,7 +38,7 @@ const fetchWithRetry = async <T>(url: string, options: RequestInit, retries = 3)
 };
 
 // Analytics API base URL configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://0.0.0.0:4003';
+const API_BASE_URL = 'http://localhost:4003';
 
 export async function fetchAnalytics(userId: string): Promise<AnalyticsData> {
   try {

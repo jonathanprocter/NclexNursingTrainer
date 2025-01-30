@@ -9,10 +9,10 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { useBreakpoint } from "../../hooks/use-mobile";
-import { fetchAnalytics } from "@/lib/ai-services";
+import { fetchAnalytics } from "../../lib/ai-services";
 import { useQuery } from "@tanstack/react-query";
-import type { AnalyticsData } from "@/types/analytics";
-import { useToast } from "@/hooks/use-toast";
+import type { AnalyticsData } from "../../types/analytics";
+import { useToast } from "../../hooks/use-toast";
 import { ErrorBoundary } from "react-error-boundary";
 
 const DEFAULT_ANALYTICS: AnalyticsData = {
@@ -50,25 +50,18 @@ function AnalyticsContent({ data: propsData }: AnalyticsProps) {
   const { isMobile, isTablet } = useBreakpoint();
   const { toast } = useToast();
 
-  const { data: fetchedData, isLoading, error } = useQuery({
+  const { data: fetchedData, isLoading, error } = useQuery<AnalyticsData, Error>({
     queryKey: ['analytics', 'user', '1'],
     queryFn: () => fetchAnalytics('1'),
-    retry: (failureCount, err) => {
-      if (err instanceof Error && err.message.includes('status: 4')) {
+    retry: (failureCount: number, err: Error) => {
+      if (err.message.includes('status: 4')) {
         return false;
       }
       return failureCount < 3;
     },
-    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 10000),
+    retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 10000),
     staleTime: 30000,
-    gcTime: 300000,
-    onError: (err) => {
-      toast({
-        title: "Error loading analytics",
-        description: err instanceof Error ? err.message : "Failed to load analytics data",
-        variant: "destructive",
-      });
-    }
+    gcTime: 300000
   });
 
   const analyticsData = propsData || fetchedData || DEFAULT_ANALYTICS;
@@ -102,11 +95,17 @@ function AnalyticsContent({ data: propsData }: AnalyticsProps) {
   }
 
   if (error && !propsData) {
+    toast({
+      title: "Error loading analytics",
+      description: error.message,
+      variant: "destructive",
+    });
+
     return (
       <div className="p-4 bg-destructive/10 rounded-md">
         <h2 className="text-lg font-semibold mb-2">Error loading analytics</h2>
         <p className="text-sm text-destructive mb-4">
-          {error instanceof Error ? error.message : "An unknown error occurred"}
+          {error.message}
         </p>
       </div>
     );
@@ -196,7 +195,6 @@ export default function Analytics(props: AnalyticsProps) {
     <ErrorBoundary 
       FallbackComponent={ErrorFallback}
       onReset={() => {
-        // Refetch data when the user clicks "Try again"
         window.location.reload();
       }}
     >

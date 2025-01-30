@@ -1,7 +1,27 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import cors from 'cors';
 
 const router = Router();
+
+// Configure CORS for the analytics routes
+router.use(cors({
+  origin: function(origin, callback) {
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://0.0.0.0:3000',
+      'http://localhost:4003',
+      'http://0.0.0.0:4003'
+    ];
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'OPTIONS']
+}));
 
 // Analytics data schema for validation
 const analyticsDataSchema = z.object({
@@ -36,30 +56,6 @@ router.get('/:userId', async (req, res) => {
   } catch (error) {
     console.error('Analytics error:', error);
     res.status(500).json({ error: 'Failed to fetch analytics data' });
-  }
-});
-
-// Remove duplicate route to avoid conflicts
-router.get('/performance/:userId', async (req, res) => {
-  try {
-    const userId = req.params.userId;
-    const performanceData = {
-      userId: userId,
-      performanceData: [
-        { module: "Pharmacology", mastery: 85 },
-        { module: "Pathophysiology", mastery: 75 },
-        { module: "Med-Surg", mastery: 78 },
-        { module: "Mental Health", mastery: 82 }
-      ],
-      totalStudyTime: "45.5",
-      questionsAttempted: 428,
-      averageScore: 82
-    };
-
-    res.json(performanceData);
-  } catch (error) {
-    console.error('Performance data fetch error:', error);
-    res.status(500).json({ error: 'Failed to fetch performance data' });
   }
 });
 
