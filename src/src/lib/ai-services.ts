@@ -50,10 +50,14 @@ export async function fetchAnalytics(
     if (toDate) params.append('to', toDate.toISOString());
 
     const response = await fetchWithRetry<AnalyticsData>(
-      `/api/analytics/${userId}?${params.toString()}`,
+      `/api/analytics/${userId}${params.toString() ? `?${params.toString()}` : ''}`,
       {
         method: 'GET',
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        }
       }
     );
 

@@ -5,6 +5,7 @@ import Analytics from "../components/dashboard/Analytics";
 import type { AnalyticsData } from "../types/analytics";
 import { fetchAnalytics } from "../lib/ai-services";
 import { memo } from "react";
+import { Skeleton } from "../components/ui/skeleton";
 
 const PerformanceOverview = memo(({ analytics }: { analytics: AnalyticsData }) => (
   <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10">
@@ -30,9 +31,25 @@ const PerformanceOverview = memo(({ analytics }: { analytics: AnalyticsData }) =
   </Card>
 ));
 
-function Dashboard() {
-  const { isMobile, isTablet } = useBreakpoint();
+const PerformanceOverviewSkeleton = () => (
+  <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10">
+    <CardHeader>
+      <Skeleton className="h-6 w-48" />
+    </CardHeader>
+    <CardContent>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i}>
+            <Skeleton className="h-4 w-24 mb-2" />
+            <Skeleton className="h-6 w-16" />
+          </div>
+        ))}
+      </div>
+    </CardContent>
+  </Card>
+);
 
+function Dashboard() {
   const { data: analytics, isError, isLoading, error } = useQuery<AnalyticsData>({
     queryKey: ["analytics", "1"],
     queryFn: () => fetchAnalytics('1'),
@@ -49,8 +66,9 @@ function Dashboard() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <p className="text-lg text-muted-foreground">Loading analytics...</p>
+      <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-6 lg:p-8">
+        <PerformanceOverviewSkeleton />
+        <div className="h-[400px] bg-muted/10 rounded-lg animate-pulse" />
       </div>
     );
   }

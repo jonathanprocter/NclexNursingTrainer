@@ -56,29 +56,6 @@ const StatisticCard = memo(({ title, value, trend }: StatisticCardProps) => (
   </div>
 ));
 
-interface CustomTooltipProps {
-  active?: boolean;
-  payload?: Array<{ value: number }>;
-  label?: string;
-}
-
-const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-background border rounded-lg p-3 shadow-lg">
-        <p className="font-medium mb-1">{label}</p>
-        <p className="text-sm text-muted-foreground">
-          Mastery Level: <span className="font-medium">{payload[0].value}%</span>
-        </p>
-        <p className="text-xs text-muted-foreground mt-1">
-          Click to view detailed breakdown
-        </p>
-      </div>
-    );
-  }
-  return null;
-};
-
 interface DomainBreakdownProps {
   domain: string;
   mastery: number;
@@ -180,13 +157,6 @@ function AnalyticsContent({ data }: AnalyticsContentProps) {
     }
   }, []);
 
-  // Sample trend data
-  const trends = {
-    studyTime: 5,
-    questions: -2,
-    score: 3
-  };
-
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-4 items-center justify-between">
@@ -271,7 +241,7 @@ function AnalyticsContent({ data }: AnalyticsContentProps) {
                     width={40}
                     tickFormatter={(value) => `${value}%`}
                   />
-                  <Tooltip content={<CustomTooltip />} />
+                  <Tooltip content={CustomTooltip} />
                   <Bar
                     dataKey="mastery"
                     fill="hsl(var(--primary))"
@@ -296,17 +266,17 @@ function AnalyticsContent({ data }: AnalyticsContentProps) {
               <StatisticCard
                 title="Total Study Time"
                 value={`${data.totalStudyTime} hours`}
-                trend={trends.studyTime}
+                trend={5}
               />
               <StatisticCard
                 title="Questions Attempted"
                 value={data.questionsAttempted}
-                trend={trends.questions}
+                trend={-2}
               />
               <StatisticCard
                 title="Average Score"
                 value={`${data.averageScore}%`}
-                trend={trends.score}
+                trend={3}
               />
             </div>
           </CardContent>

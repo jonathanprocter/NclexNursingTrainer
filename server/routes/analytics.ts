@@ -6,21 +6,10 @@ const router = Router();
 
 // Configure CORS for the analytics routes
 router.use(cors({
-  origin: function(origin, callback) {
-    const allowedOrigins = [
-      'http://localhost:3000',
-      'http://0.0.0.0:3000',
-      'http://localhost:4003',
-      'http://0.0.0.0:4003'
-    ];
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: true, // Allow all origins in development
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
 // Analytics data schema for validation
@@ -57,6 +46,9 @@ router.get('/:userId', async (req, res) => {
       questionsAttempted: 150,
       averageScore: 78
     };
+
+    // Add CORS headers explicitly for clarity
+    res.header('Access-Control-Allow-Credentials', 'true');
 
     // Validate data against schema
     const validatedData = analyticsDataSchema.parse(analyticsData);
