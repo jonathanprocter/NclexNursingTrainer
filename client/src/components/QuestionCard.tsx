@@ -1,70 +1,132 @@
-import { Card, CardContent, CardHeader } from "./ui/card";
-import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
-import { Label } from "./ui/label";
-import { Button } from "./ui/button";
 import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import type { Question } from "@/types/questions";
 
 interface QuestionCardProps {
-  question: {
-    id: string;
-    type: string;
-    content: string;
-    options: string[];
-    correctAnswer: string;
-    explanation: string;
-  };
+  question: Question;
+  onNext: (answer: string) => void;
+  userAnswer?: string;
+  showAnswer?: boolean;
 }
 
-export default function QuestionCard({ question }: QuestionCardProps) {
+export default function QuestionCard({
+  question,
+  onNext,
+  userAnswer,
+  showAnswer = false,
+}: QuestionCardProps) {
   const [selectedAnswer, setSelectedAnswer] = useState<string>("");
-  const [showExplanation, setShowExplanation] = useState(false);
+
+  const getOptionClass = (optionId: string): string => {
+    if (!showAnswer) return "";
+
+    if (optionId === question.correctAnswer) {
+      return "bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-900";
+    }
+    if ((userAnswer || selectedAnswer) === optionId && optionId !== question.correctAnswer) {
+      return "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-900";
+    }
+    return "";
+  };
 
   const handleSubmit = () => {
-    setShowExplanation(true);
+    if (!selectedAnswer) return;
+    onNext(selectedAnswer);
   };
 
   return (
-    <Card>
-      <CardHeader className="space-y-2">
-        <div className="text-lg font-medium">{question.content}</div>
-        <div className="text-sm text-muted-foreground">Type: {question.type}</div>
+    <Card className="w-full">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg">
+            <div className="flex items-center gap-2">
+              Question {question.id}
+              {question.difficulty && (
+                <Badge
+                  variant={
+                    question.difficulty === "hard"
+                      ? "destructive"
+                      : question.difficulty === "medium"
+                      ? "default"
+                      : "secondary"
+                  }
+                >
+                  {question.difficulty}
+                </Badge>
+              )}
+            </div>
+          </CardTitle>
+        </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+
+      <CardContent className="space-y-6">
+        <p className="text-lg">{question.text}</p>
+
         <RadioGroup
-          value={selectedAnswer}
+          value={userAnswer || selectedAnswer}
           onValueChange={setSelectedAnswer}
-          className="space-y-2"
+          className="space-y-3"
+          disabled={showAnswer}
         >
-          {question.options.map((option, index) => (
-            <div key={`${question.id}-option-${index}`} className="flex items-center space-x-2">
-              <RadioGroupItem value={option} id={`${question.id}-option-${index}`} />
-              <Label htmlFor={`${question.id}-option-${index}`}>{option}</Label>
+          {question.options.map((option) => (
+            <div
+              key={option.id}
+              className={cn(
+                "flex items-center space-x-3 p-3 rounded-lg border transition-colors",
+                getOptionClass(option.id)
+              )}
+            >
+              <RadioGroupItem value={option.id} id={option.id} />
+              <Label htmlFor={option.id} className="flex-1 cursor-pointer">
+                {option.text}
+              </Label>
             </div>
           ))}
         </RadioGroup>
 
-        <Button 
-          onClick={handleSubmit} 
-          disabled={!selectedAnswer}
-          className="w-full"
-        >
-          Submit Answer
-        </Button>
+        {showAnswer && (
+          <div className="mt-4 space-y-4">
+            <div className="p-4 bg-muted rounded-lg">
+              <h4 className="font-semibold mb-2">Explanation:</h4>
+              <p>{question.explanation}</p>
+            </div>
 
-        {showExplanation && (
-          <div className="mt-4 p-4 bg-muted rounded-lg">
-            <p className="font-medium mb-2">
-              {selectedAnswer === question.correctAnswer ? (
-                <span className="text-green-600">Correct!</span>
-              ) : (
-                <span className="text-red-600">Incorrect</span>
-              )}
-            </p>
-            <p className="text-sm">Correct Answer: {question.correctAnswer}</p>
-            <p className="text-sm mt-2">{question.explanation}</p>
+            {question.conceptBreakdown && question.conceptBreakdown.length > 0 && (
+              <div className="p-4 border rounded-lg">
+                <h4 className="font-semibold mb-2">Key Concepts:</h4>
+                <ul className="space-y-2">
+                  {question.conceptBreakdown.map((concept, index) => (
+                    <li key={index}>
+                      <strong>{concept.concept}:</strong> {concept.explanation}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         )}
       </CardContent>
+
+      <CardFooter>
+        <Button
+          className="w-full"
+          onClick={handleSubmit}
+          disabled={!selectedAnswer || showAnswer}
+        >
+          {showAnswer ? "Next Question" : "Submit Answer"}
+        </Button>
+      </CardFooter>
     </Card>
   );
 }
