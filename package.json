@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "dev:client": "vite",
+    "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
+    "dev:client": "vite --port 3000",
     "dev:server": "tsx watch server/index.ts",
     "build": "tsc && vite build",
     "serve": "vite preview",
