@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { useMutation } from "@tanstack/react-query";
+import { Input } from "../components/ui/input";
+import { Button } from "../components/ui/button";
+import { ScrollArea } from "../components/ui/scroll-area";
 import { Loader2, Send, Mic } from "lucide-react";
-import { ToneSelector } from '@/ToneSelector';
-import type { StudyBuddyTone } from '@/ToneSelector';
+import { ToneSelector } from "../components/ToneSelector";
+import type { StudyBuddyTone } from "../components/ToneSelector";
+import { useToast } from "@/hooks/use-toast";
 
 interface Message {
   role: "user" | "assistant";
@@ -19,10 +19,11 @@ export function StudyBuddyChat() {
   const [input, setInput] = useState("");
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [selectedTone, setSelectedTone] = useState<StudyBuddyTone>("professional");
+  const [isListening, setIsListening] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  
-  // Mock student ID for now - in a real app this would come from auth context
-  const studentId = 1;
+  const { toast } = useToast();
+
+  const studentId = "1"; // Mock student ID
 
   const startSession = useMutation({
     mutationFn: async () => {
@@ -75,7 +76,7 @@ export function StudyBuddyChat() {
     }
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
 
@@ -84,20 +85,65 @@ export function StudyBuddyChat() {
       content: input,
       timestamp: new Date()
     };
-    
+
     setMessages(prev => [...prev, userMessage]);
     setInput("");
-    sendMessage.mutate(input);
+    await sendMessage.mutate(input);
   };
 
-  // Start session on component mount
+  const handleVoiceInput = async () => {
+    if (!("webkitSpeechRecognition" in window)) {
+      toast({
+        title: "Not Supported",
+        description: "Speech recognition is not supported in your browser.",
+      });
+      return;
+    }
+
+    try {
+      const SpeechRecognition = window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      setIsListening(true);
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setInput(transcript);
+      };
+
+      recognition.onerror = () => {
+        toast({
+          title: "Error",
+          description: "Failed to recognize speech. Please try again.",
+          variant: "destructive",
+        });
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognition.start();
+    } catch (error) {
+      console.error("Voice input error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to start voice recognition.",
+        variant: "destructive",
+      });
+      setIsListening(false);
+    }
+  };
+
   useEffect(() => {
     if (!sessionId) {
       startSession.mutate();
     }
-  }, []);
+  }, [sessionId]);
 
-  // Auto scroll to bottom when new messages arrive
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -105,15 +151,12 @@ export function StudyBuddyChat() {
   }, [messages]);
 
   return (
-    <div className="flex flex-col h-[600px]">
-      <div className="px-4 py-2 border-b flex justify-between items-center">
-        <ToneSelector 
-          selectedTone={selectedTone}
-          onToneChange={setSelectedTone}
-        />
+    <div className="flex flex-col h-full">
+      <div className="px-4 py-2 border-b">
+        <ToneSelector selectedTone={selectedTone} onToneChange={setSelectedTone} />
       </div>
-      
-      <ScrollArea ref={scrollRef} className="flex-1 p-4">
+
+      <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
           {messages.map((message, index) => (
             <div
@@ -129,7 +172,13 @@ export function StudyBuddyChat() {
                     : "bg-muted"
                 }`}
               >
-                <p className="text-sm">{message.content}</p>
+                <div className="text-sm">
+                  {message.content.split('\n').map((line, i) => (
+                    <p key={i} className="mb-2">
+                      {line.replace(/[#*`]/g, '').trim()}
+                    </p>
+                  ))}
+                </div>
                 <span className="text-xs opacity-50">
                   {new Date(message.timestamp).toLocaleTimeString()}
                 </span>
@@ -163,15 +212,17 @@ export function StudyBuddyChat() {
           <Button
             type="button"
             variant="outline"
-            disabled={true} // Voice feature coming soon
+            onClick={handleVoiceInput}
+            disabled={isListening}
           >
-            <Mic className="h-4 w-4" />
+            {isListening ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Mic className="h-4 w-4" />
+            )}
           </Button>
         </div>
       </form>
     </div>
   );
 }
-
-
-export default StudyBuddyChat;

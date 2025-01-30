@@ -1,8 +1,10 @@
+
 import { useState } from "react";
-import { StudyBuddyChat } from '@/StudyBuddyChat';
-import { Button } from "@/components/ui/button";
+import { StudyBuddyChat } from "./StudyBuddyChat";
+import { Button } from "../components/ui/button";
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 export function FloatingStudyBuddy() {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,10 +17,11 @@ export function FloatingStudyBuddy() {
             initial={{ opacity: 0, x: 300 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 300 }}
+            transition={{ type: "spring", damping: 20 }}
             className="mr-4"
           >
-            <div className="bg-card border rounded-lg shadow-lg w-[400px] h-[600px] flex flex-col">
-              <div className="p-4 border-b flex justify-between items-center">
+            <div className="bg-background border rounded-lg shadow-lg w-[400px] h-[600px] flex flex-col">
+              <div className="p-4 border-b flex justify-between items-center bg-card">
                 <h2 className="font-semibold flex items-center gap-2">
                   <span className="text-xl" role="img" aria-label="bee">🐝</span>
                   Bee Wise
@@ -38,21 +41,26 @@ export function FloatingStudyBuddy() {
           </motion.div>
         )}
       </AnimatePresence>
-
+      
       <Button
         onClick={() => setIsOpen(!isOpen)}
-        className={`rounded-full w-12 h-12 shadow-lg ${
-          isOpen ? "bg-yellow-500/10" : "bg-yellow-500"
-        } hover:bg-yellow-600`}
+        className={cn(
+          "rounded-full w-12 h-12 shadow-lg transition-colors duration-200",
+          isOpen ? "bg-yellow-500/10 hover:bg-yellow-500/20" : "bg-yellow-500 hover:bg-yellow-600"
+        )}
         variant={isOpen ? "ghost" : "default"}
       >
-        <span className={`text-xl ${isOpen ? "text-yellow-600" : "text-white"}`} role="img" aria-label="bee">
+        <span 
+          className={cn(
+            "text-xl",
+            isOpen ? "text-yellow-600" : "text-white"
+          )} 
+          role="img" 
+          aria-label="bee"
+        >
           🐝
         </span>
       </Button>
     </div>
   );
 }
-
-
-export default FloatingStudyBuddy;
