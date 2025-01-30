@@ -63,4 +63,4 @@ export const selectModuleSchema = createSelectSchema(modules);
 export const insertQuestionSchema = createInsertSchema(questions);
 export const selectQuestionSchema = createSelectSchema(questions);
 
-export { questions };
+// Export statements are already present above
