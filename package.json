@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "commonjs",
   "scripts": {
-    "dev:client": "vite --port 3000",
+    "dev:client": "vite --port 3000 --host 0.0.0.0",
     "dev:server": "tsx watch server/index.ts",
     "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
     "build:client": "vite build",
