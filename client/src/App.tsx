@@ -39,7 +39,18 @@ function App() {
           <div className="min-h-screen bg-gray-100">
             <h1>NCLEX Prep</h1>
             <Route path="/dashboard">
-              <ErrorBoundary>
+              <ErrorBoundary FallbackComponent={({ error }) => (
+                <div className="p-4">
+                  <h2 className="text-xl font-bold mb-2">Dashboard Error</h2>
+                  <p className="text-red-600">{error?.message}</p>
+                  <button 
+                    onClick={() => window.location.reload()}
+                    className="mt-4 px-4 py-2 bg-primary text-white rounded"
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}>
                 <Dashboard />
               </ErrorBoundary>
             </Route>

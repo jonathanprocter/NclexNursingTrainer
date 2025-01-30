@@ -9,6 +9,30 @@ import { Progress } from "../components/ui/progress";
 
 export default function Dashboard() {
   const { data: analytics, isError, isLoading } = useQuery({
+    queryKey: ['analytics'],
+    queryFn: async () => {
+      try {
+        const response = await fetch('/api/analytics/user/1');
+        if (!response.ok) {
+          throw new Error('Failed to fetch analytics');
+        }
+        const data = await response.json();
+        return {
+          performanceData: data.performanceData || [],
+          totalStudyTime: data.totalStudyTime || "0",
+          questionsAttempted: data.questionsAttempted || 0,
+          averageScore: data.averageScore || 0
+        };
+      } catch (error) {
+        console.error('Analytics fetch error:', error);
+        return {
+          performanceData: [],
+          totalStudyTime: "0",
+          questionsAttempted: 0,
+          averageScore: 0
+        };
+      }
+    },
     queryKey: ["analytics"],
     queryFn: async () => {
       const response = await fetch("/api/analytics/user/1");

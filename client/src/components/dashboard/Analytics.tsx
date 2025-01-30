@@ -25,18 +25,16 @@ interface AnalyticsProps {
 }
 
 export default function Analytics({ data }: AnalyticsProps) {
-  // Default (fallback) performanceData
-  const fallbackData: AnalyticsData[] = [
+  if (!data) {
+    return <div>Loading analytics data...</div>;
+  }
+
+  const performanceData = Array.isArray(data.performanceData) ? data.performanceData : [
     { module: "Pharmacology", score: 85 },
     { module: "Pathophysiology", score: 75 },
     { module: "Med-Surg", score: 78 },
     { module: "Mental Health", score: 82 },
   ]
-
-  // If data?.performanceData is an array, use it; else fallback
-  const performanceData = Array.isArray(data?.performanceData)
-    ? data!.performanceData
-    : fallbackData
 
   const totalStudyTime = data?.totalStudyTime ?? "45.5"
   const questionsAttempted = data?.questionsAttempted ?? 428
