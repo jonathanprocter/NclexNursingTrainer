@@ -4,9 +4,10 @@ import { Router } from 'express';
 const router = Router();
 
 router.get('/user/:id', async (req, res) => {
-  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Origin', 'https://28283d82-bfbd-491e-8711-8e29be387da7-00-29i5ngdyjh860.spock.replit.dev');
   res.header('Access-Control-Allow-Methods', 'GET');
   res.header('Access-Control-Allow-Headers', 'Content-Type');
+  res.header('Access-Control-Allow-Credentials', 'true');
   try {
     // Mock data for now - replace with actual database query later
     const analyticsData = {
