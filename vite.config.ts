@@ -14,8 +14,10 @@ export default defineConfig({
     host: "0.0.0.0",
     port: 3000,
     hmr: {
-      clientPort: 443,
-      host: '28283d82-bfbd-491e-8711-8e29be387da7-00-29i5ngdyjh860.spock.replit.dev'
+      protocol: 'ws',
+      host: '0.0.0.0',
+      port: 3000,
+      clientPort: 443
     },
     watch: {
       usePolling: true,
