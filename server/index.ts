@@ -1,8 +1,9 @@
 import express from 'express';
 import cors from 'cors';
+import { registerRoutes } from './routes.js';
 
 const app = express();
-const port = process.env.PORT || 4004;
+const port = parseInt(process.env.PORT || '4004');
 
 // Configure CORS to allow Replit domains
 app.use(cors({
@@ -27,21 +28,16 @@ process.on('uncaughtException', (error) => {
     process.exit(1);
 });
 
-app.get('/', (req, res) => {
-    res.json({ message: 'Server is running' });
-});
+// Register all routes
+const httpServer = registerRoutes(app);
 
-// Placeholder -  analyticsRouter needs to be defined elsewhere and imported
-const analyticsRouter = express.Router(); 
-app.use('/api/analytics', analyticsRouter);
-
-
-app.listen(port, '0.0.0.0', () => {
+// Start the server
+httpServer.listen(port, '0.0.0.0', () => {
     console.log('=================================');
     console.log('Server started successfully');
     console.log(`Server is running on port ${port}`);
     console.log('Frontend URL: http://0.0.0.0:3000');
-    console.log('Access URL: http://0.0.0.0:4003');
+    console.log('Backend URL: http://0.0.0.0:4004');
     console.log('=================================');
 });
 
