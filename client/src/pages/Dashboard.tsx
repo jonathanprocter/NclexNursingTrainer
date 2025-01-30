@@ -1,3 +1,4 @@
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Analytics from "@/components/dashboard/Analytics";
@@ -8,58 +9,34 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Progress } from "@/components/ui/progress";
 
 export default function Dashboard() {
-  // Fetch analytics data with React Query
-  const fetchAnalytics = async () => {
-    try {
-      const response = await fetch("/api/analytics/user/1");
-      if (!response.ok) {
-        throw new Error("Failed to fetch analytics");
-      }
-      const data = await response.json();
-      return {
-        performanceData: Array.isArray(data?.performanceData) ? data.performanceData : [],
-        totalStudyTime: data?.totalStudyTime || "0",
-        questionsAttempted: data?.questionsAttempted || 0,
-        averageScore: data?.averageScore || 0,
-      };
-    } catch (error) {
-      console.error("Analytics fetch error:", error);
-      return {
-        performanceData: [],
-        totalStudyTime: "0",
-        questionsAttempted: 0,
-        averageScore: 0,
-      };
-    }
-  };
-
   const { data: analytics, isError, isLoading } = useQuery({
     queryKey: ["analytics"],
-    queryFn: fetchAnalytics,
+    queryFn: async () => {
+      try {
+        const response = await fetch("http://0.0.0.0:4001/api/analytics/user/1");
+        if (!response.ok) {
+          throw new Error("Failed to fetch analytics");
+        }
+        const data = await response.json();
+        return {
+          performanceData: Array.isArray(data?.performanceData) ? data.performanceData : [],
+          totalStudyTime: data?.totalStudyTime || "0",
+          questionsAttempted: data?.questionsAttempted || 0,
+          averageScore: data?.averageScore || 0,
+        };
+      } catch (error) {
+        console.error("Analytics fetch error:", error);
+        return {
+          performanceData: [],
+          totalStudyTime: "0",
+          questionsAttempted: 0,
+          averageScore: 0,
+        };
+      }
+    },
     retry: 1,
     refetchOnWindowFocus: false,
   });
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center space-y-4">
-          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
-          <p className="text-muted-foreground">Loading dashboard data...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center space-y-4">
-          <p className="text-red-500">Error loading dashboard data. Please try again.</p>
-        </div>
-      </div>
-    );
-  }
 
   const studentProgress = {
     name: "Bianca",
@@ -82,9 +59,30 @@ export default function Dashboard() {
     ],
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center space-y-4">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
+          <p className="text-muted-foreground">Loading dashboard data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center space-y-4">
+          <p className="text-red-500">Error loading dashboard data. Please try again.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      <Card className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50">
+    <div className="space-y-6 p-6">
+      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50">
         <CardHeader>
           <CardTitle className="text-2xl">Welcome back, {studentProgress.name}! 🌟</CardTitle>
         </CardHeader>
@@ -142,12 +140,7 @@ export default function Dashboard() {
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={studentProgress.nclexDomains.map((domain, index) => ({
-                    ...domain,
-                    uniqueId: `domain-${index}-${domain.domain}`,
-                  }))}
-                >
+                <BarChart data={studentProgress.nclexDomains}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="domain" angle={-45} textAnchor="end" height={80} />
                   <YAxis domain={[0, 100]} />

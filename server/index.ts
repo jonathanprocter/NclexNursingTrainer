@@ -3,6 +3,8 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { registerRoutes } from "./routes";
 import { setupVite } from "./vite";
+import analyticsRouter from './routes/analytics'; // Added import for analytics router
+
 
 const app = express();
 
@@ -20,6 +22,7 @@ if (process.env.NODE_ENV === 'development') {
 
 // Register API routes
 registerRoutes(app);
+app.use('/api/analytics', analyticsRouter); // Added analytics route registration
 
 // Setup Vite development server middleware in development mode
 if (process.env.NODE_ENV === 'development') {
