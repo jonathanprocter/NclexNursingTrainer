@@ -82,20 +82,20 @@ app.use((err: ErrorWithStatus, _req: Request, res: Response, _next: NextFunction
   });
 });
 
-const PORT = parseInt(process.env.PORT || '4002', 10);
+const MAX_PORT_ATTEMPTS = 5;
+let currentPort = parseInt(process.env.PORT || '4002', 10);
 const HOST = '0.0.0.0';
 
 function startServer() {
   return new Promise((resolve, reject) => {
     try {
-      let retries = 0;
-      const maxRetries = 5;
+      let attempts = 0;
       const startServerWithRetry = () => {
-        const serverInstance = server.listen(PORT, HOST, () => {
+        const serverInstance = server.listen(currentPort, HOST, () => {
           console.log('=================================');
           console.log('Server started successfully');
-          console.log(`Server is running on port ${PORT}`);
-          console.log(`Access URL: http://${HOST}:${PORT}`);
+          console.log(`Server is running on port ${currentPort}`);
+          console.log(`Access URL: http://${HOST}:${currentPort}`);
           console.log('=================================');
 
           // Signal that the server is ready
@@ -108,12 +108,14 @@ function startServer() {
 
         serverInstance.on('error', (err: NodeJS.ErrnoException) => {
           if (err.code === 'EADDRINUSE') {
-            console.error(`Port ${PORT} is in use. Retrying...`);
-            retries++;
-            if (retries < maxRetries) {
+            console.error(`Port ${currentPort} is in use. Retrying...`);
+            currentPort++;
+            if (attempts < MAX_PORT_ATTEMPTS) {
+              attempts++;
+              console.log(`Attempting to use port ${currentPort}...`);
               setTimeout(startServerWithRetry, 1000);
             } else {
-              console.error(`Failed to start server after ${maxRetries} retries`);
+              console.error(`Failed to find available port after ${MAX_PORT_ATTEMPTS} attempts`);
               reject(err);
             }
           } else {
