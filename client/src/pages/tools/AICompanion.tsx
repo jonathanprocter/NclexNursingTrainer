@@ -1,14 +1,32 @@
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Button } from "../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
 import { Mic, StopCircle, History, Lightbulb } from "lucide-react";
-import { Badge } from "../components/ui/badge";
+import { Badge } from "../../components/ui/badge";
 import { useState, useEffect } from 'react';
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "../../hooks/use-toast";
+import { Alert, AlertDescription } from "../../components/ui/alert";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../components/ui/dialog";
+
+interface RecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+  error: Error;
+}
+
+interface SpeechRecognition {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: (event: RecognitionEvent) => void;
+  onerror: (event: RecognitionEvent) => void;
+  onend: () => void;
+  start: () => void;
+  stop: () => void;
+}
 
 declare global {
   interface Window {
-    SpeechRecognition: typeof SpeechRecognition;
-    webkitSpeechRecognition: typeof SpeechRecognition;
+    SpeechRecognition: new () => SpeechRecognition;
+    webkitSpeechRecognition: new () => SpeechRecognition;
   }
 }
 

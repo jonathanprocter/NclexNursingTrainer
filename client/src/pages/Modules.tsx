@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Progress } from "../components/ui/progress";
+import { Button } from "../components/ui/button";
 import { Link } from "wouter";
 import { BookOpen, Brain, PenSquare, Beaker, Heart, Stethoscope } from "lucide-react";
 
@@ -67,7 +67,7 @@ const mockModules = [
   },
 ];
 
-const AIHelpButton = ({ title, description, topic }: { title: string; description: string; topic: string }) => (
+const AIHelpButton = ({ topic }: { topic: string }) => (
   <Button variant="outline" size="sm" className="flex items-center gap-2">
     <Brain className="h-4 w-4" />
     AI Help
@@ -125,11 +125,7 @@ export default function Modules() {
                       <p className="text-muted-foreground">Units completed</p>
                     </div>
                     <div className="flex gap-2">
-                      <AIHelpButton
-                        title={module.title}
-                        description={`Get AI assistance with ${module.title.toLowerCase()} concepts and topics.`}
-                        topic={module.type}
-                      />
+                      <AIHelpButton topic={module.type} />
                       <Link href={`/modules/${module.type}`}>
                         <Button>Start Learning</Button>
                       </Link>

@@ -1,7 +1,7 @@
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { AIHelpButton } from "../components/ui/ai-help-button";
-import { ScrollArea } from "../components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AIHelpButton } from "@/components/ui/ai-help-button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const topics = [
   {
