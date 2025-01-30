@@ -1,6 +1,6 @@
 import { pgTable, text, serial, integer, boolean, timestamp, json, foreignKey, index, uuid, unique } from "drizzle-orm/pg-core";
-import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { sql } from "drizzle-orm";
+import { z } from "zod";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -40,6 +40,10 @@ export const questions = pgTable("questions", {
   aiGenerated: boolean("ai_generated").default(false).notNull(),
   category: text("category").notNull(),
   subcategory: text("subcategory").notNull(),
+  conceptBreakdown: json("concept_breakdown").$type<Array<{ concept: string; explanation: string }>>(),
+  faqs: json("faqs").$type<Array<{ question: string; answer: string }>>(),
+  relatedTopics: json("related_topics").$type<string[]>(),
+  references: json("references").$type<string[]>(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 }, (table) => ({
@@ -87,81 +91,57 @@ export const userProgress = pgTable("user_progress", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id, { onDelete: 'cascade' }).notNull(),
   moduleId: integer("module_id").references(() => modules.id, { onDelete: 'cascade' }).notNull(),
-  questionId: integer("question_id").references(() => questions.id, { onDelete: 'set null' }),
-  totalQuestions: integer("total_questions").default(0).notNull(),
+  completedQuestions: integer("completed_questions").default(0).notNull(),
   correctAnswers: integer("correct_answers").default(0).notNull(),
-  lastStudied: timestamp("last_studied"),
-  studyStreak: integer("study_streak").default(0).notNull(),
-  masteryLevel: integer("mastery_level").default(0).notNull(),
-  easeFactor: integer("ease_factor").default(250).notNull(),
-  interval: integer("interval").default(1).notNull(),
-  repetitions: integer("repetitions").default(0).notNull(),
-  nextReview: timestamp("next_review"),
-  isCorrect: boolean("is_correct").default(false).notNull(),
-  weakAreas: json("weak_areas").$type<string[]>().default([]),
-  strongAreas: json("strong_areas").$type<string[]>().default([]),
-  studyGoals: json("study_goals").$type<Record<string, any>>().default({}),
+  lastAttempt: timestamp("last_attempt"),
+  learningPath: json("learning_path").$type<Record<string, any>>().default({}),
+  performanceMetrics: json("performance_metrics").$type<Record<string, any>>().default({}),
   updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 }, (table) => ({
   userIdx: index("user_progress_user_idx").on(table.userId),
   moduleIdx: index("user_progress_module_idx").on(table.moduleId),
-  questionIdx: index("user_progress_question_idx").on(table.questionId),
-  reviewIdx: index("user_progress_review_idx").on(table.nextReview),
   userModuleIdx: unique("user_progress_user_module_idx").on(table.userId, table.moduleId)
 }));
 
-export const quizAttempts = pgTable("quiz_attempts", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id, { onDelete: 'cascade' }).notNull(),
-  moduleId: integer("module_id").references(() => modules.id, { onDelete: 'cascade' }).notNull(),
-  type: text("type").notNull(),
-  answers: json("answers").$type<Array<{ questionId: number; answer: string; correct: boolean }>>().notNull(),
-  score: integer("score").notNull(),
-  totalQuestions: integer("total_questions").notNull(),
-  startedAt: timestamp("started_at").defaultNow().notNull(),
-  completedAt: timestamp("completed_at"),
-  aiAnalysis: json("ai_analysis").$type<Record<string, any>>(),
-  strengthAreas: json("strength_areas").$type<string[]>().default([]),
-  weaknessAreas: json("weakness_areas").$type<string[]>().default([])
+// Zod schemas for validation
+export const questionHistorySchema = z.object({
+  userId: z.number().int().positive(),
+  questionId: z.number().int().positive(),
+  answer: z.string(),
+  isCorrect: z.boolean(),
+  timeSpent: z.number().int().positive(),
+  easeFactor: z.number().int().min(0).optional(),
+  interval: z.number().int().min(0).optional(),
+  repetitions: z.number().int().min(0).optional(),
+  nextReview: z.date().optional(),
+  attemptContext: z.record(z.any()).optional(),
 });
 
-// Type inference helpers
-export type User = typeof users.$inferSelect;
-export type NewUser = typeof users.$inferInsert;
+export const userProgressSchema = z.object({
+  userId: z.number().int().positive(),
+  moduleId: z.number().int().positive(),
+  completedQuestions: z.number().int().min(0),
+  correctAnswers: z.number().int().min(0),
+  lastAttempt: z.date().optional(),
+  learningPath: z.record(z.any()).optional(),
+  performanceMetrics: z.record(z.any()).optional(),
+});
 
-export type Module = typeof modules.$inferSelect;
-export type NewModule = typeof modules.$inferInsert;
+// Type exports
+export type {
+  users as Users,
+  modules as Modules,
+  questions as Questions,
+  questionHistory as QuestionHistory,
+  userProgress as UserProgress,
+  studyBuddyChats as StudyBuddyChats,
+};
 
-export type Question = typeof questions.$inferSelect;
-export type NewQuestion = typeof questions.$inferInsert;
-
-export type QuestionHistory = typeof questionHistory.$inferSelect;
-export type NewQuestionHistory = typeof questionHistory.$inferInsert;
-
-export type UserProgress = typeof userProgress.$inferSelect;
-export type NewUserProgress = typeof userProgress.$inferInsert;
-
-export type StudyBuddyChat = typeof studyBuddyChats.$inferSelect;
-export type NewStudyBuddyChat = typeof studyBuddyChats.$inferInsert;
-
-export type QuizAttempt = typeof quizAttempts.$inferSelect;
-export type NewQuizAttempt = typeof quizAttempts.$inferInsert;
-
-// Zod validation schemas
-export const insertUserSchema = createInsertSchema(users);
-export const selectUserSchema = createSelectSchema(users);
-
-export const insertModuleSchema = createInsertSchema(modules);
-export const selectModuleSchema = createSelectSchema(modules);
-
-export const insertQuestionSchema = createInsertSchema(questions);
-export const selectQuestionSchema = createSelectSchema(questions);
-
-export const insertQuestionHistorySchema = createInsertSchema(questionHistory);
-export const selectQuestionHistorySchema = createSelectSchema(questionHistory);
-
-export const insertUserProgressSchema = createInsertSchema(userProgress);
-export const selectUserProgressSchema = createSelectSchema(userProgress);
-
-export const insertQuizAttemptSchema = createInsertSchema(quizAttempts);
-export const selectQuizAttemptSchema = createSelectSchema(quizAttempts);
+export {
+  users,
+  modules,
+  questions,
+  questionHistory,
+  userProgress,
+  studyBuddyChats,
+};
