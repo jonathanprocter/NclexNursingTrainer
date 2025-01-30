@@ -1,10 +1,10 @@
-
 import { memo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { ErrorBoundary } from "react-error-boundary";
 import type { AnalyticsData } from "@/types/analytics";
+import { useQuery } from "@tanstack/react-query";
 
 interface PerformanceChartProps {
   data: AnalyticsData['performanceData'];
@@ -12,7 +12,7 @@ interface PerformanceChartProps {
 
 const PerformanceChart = memo(({ data }: PerformanceChartProps) => {
   if (!data?.length) return null;
-  
+
   return (
     <div className="h-[400px]">
       <ResponsiveContainer width="100%" height="100%">
@@ -49,8 +49,12 @@ const PerformanceChart = memo(({ data }: PerformanceChartProps) => {
   );
 });
 
-function Analytics({ analytics }: { analytics: AnalyticsData | undefined }) {
-  if (!analytics) {
+function Analytics() {
+  const { data: analytics, isLoading, error } = useQuery<AnalyticsData>({
+    queryKey: ['/api/analytics'],
+  });
+
+  if (isLoading) {
     return (
       <div className="p-4 bg-muted rounded-lg">
         <p className="text-muted-foreground text-center">Loading analytics data...</p>
@@ -58,7 +62,15 @@ function Analytics({ analytics }: { analytics: AnalyticsData | undefined }) {
     );
   }
 
-  if (!analytics.performanceData?.length) {
+  if (error) {
+    return (
+      <div className="p-4 bg-destructive/10 rounded-md">
+        <p className="text-destructive">Error loading analytics data</p>
+      </div>
+    );
+  }
+
+  if (!analytics?.performanceData?.length) {
     return (
       <div className="p-4 bg-muted rounded-lg">
         <p className="text-muted-foreground text-center">No performance data available</p>

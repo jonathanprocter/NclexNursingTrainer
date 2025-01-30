@@ -1,14 +1,15 @@
 import express from 'express';
-import fs from 'fs';
-import path from 'path';
+import analyticsRouter from './analytics';
+import questionsRouter from './questions';
+import practiceRouter from './practice';
+import simulationsRouter from './simulations';
 
 const router = express.Router();
-const routeFiles = fs.readdirSync(__dirname)
-    .filter(file => file !== 'index.ts' && file.endsWith('.ts'));
 
-for (const file of routeFiles) {
-    const route = require(path.join(__dirname, file));
-    router.use('/', route.default || route);
-}
+// Register all routes with /api prefix
+router.use('/api/analytics', analyticsRouter);
+router.use('/api/questions', questionsRouter);
+router.use('/api/practice', practiceRouter);
+router.use('/api/simulations', simulationsRouter);
 
 export default router;
