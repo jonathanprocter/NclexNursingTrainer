@@ -21,13 +21,16 @@ export default function Dashboard() {
   const { data: analytics, isError, isLoading, error } = useQuery<AnalyticsData>({
     queryKey: ["analytics"],
     queryFn: async () => {
-      const baseUrl = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:4001`;
+      const port = '4001';
+      const baseUrl = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:${port}`;
       try {
         const response = await fetch(`${baseUrl}/api/analytics/user/1`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json'
           },
+          credentials: 'same-origin'
         });
 
         if (!response.ok) {
