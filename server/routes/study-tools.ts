@@ -1,8 +1,9 @@
 import express from "express";
 import { db } from "../db/index";
-import { modules, userProgress } from "../db/schema";
+import { modules, userProgress, type Module, type UserProgress } from "../db/schema";
 import { eq } from "drizzle-orm";
 import type { RequestHandler } from "express";
+import { z } from "zod";
 
 const router = express.Router();
 
@@ -15,39 +16,57 @@ interface StudyScheduleResponse {
   focusAreas: string[];
 }
 
-interface StudyGoalsRequest {
-  goals: Record<string, any>;
-}
+const userIdSchema = z.object({
+  userId: z.string().regex(/^\d+$/).transform(Number)
+});
+
+const moduleIdSchema = z.object({
+  moduleId: z.string().regex(/^\d+$/).transform(Number)
+});
+
+const studyGoalsSchema = z.object({
+  goals: z.record(z.unknown())
+});
 
 // Get study schedule
-const getStudySchedule: RequestHandler = async (req, res, next) => {
+const getStudySchedule: RequestHandler<{ userId: string }> = async (req, res, next) => {
   try {
-    const userId = parseInt(req.params.userId);
+    const result = userIdSchema.safeParse({ userId: req.params.userId });
 
-    if (isNaN(userId)) {
-      res.status(400).json([]);
+    if (!result.success) {
+      res.status(400).json({ 
+        error: "Invalid user ID",
+        details: result.error.issues
+      });
       return;
     }
 
+    const { userId } = result.data;
+
     const progress = await db.query.userProgress.findMany({
       where: eq(userProgress.userId, userId),
+      columns: {
+        moduleId: true,
+        masteryLevel: true,
+        nextReview: true,
+        weakAreas: true
+      },
       with: {
         module: {
           columns: {
-            id: true,
             title: true
           }
         }
       }
-    });
+    }) satisfies (UserProgress & { module: Module | null })[];
 
     const schedule: StudyScheduleResponse[] = progress.map(p => ({
       moduleId: p.moduleId,
-      moduleName: p.module?.title || 'Unknown Module',
+      moduleName: p.module?.title ?? 'Unknown Module',
       nextReview: p.nextReview,
       masteryLevel: p.masteryLevel,
       recommendedStudyTime: p.masteryLevel < 70 ? 60 : 30, // minutes
-      focusAreas: p.weakAreas || []
+      focusAreas: p.weakAreas ?? []
     }));
 
     res.json(schedule);
@@ -58,15 +77,24 @@ const getStudySchedule: RequestHandler = async (req, res, next) => {
 };
 
 // Create/Update study goals
-const updateStudyGoals: RequestHandler = async (req, res, next) => {
+const updateStudyGoals: RequestHandler<{ userId: string }> = async (req, res, next) => {
   try {
-    const userId = parseInt(req.params.userId);
-    const { goals } = req.body as StudyGoalsRequest;
+    const userResult = userIdSchema.safeParse({ userId: req.params.userId });
+    const goalsResult = studyGoalsSchema.safeParse(req.body);
 
-    if (isNaN(userId)) {
-      res.status(400).json({ error: "Invalid user ID" });
+    if (!userResult.success || !goalsResult.success) {
+      res.status(400).json({ 
+        error: "Invalid request data",
+        details: {
+          ...(userResult.success ? {} : { userId: userResult.error.issues }),
+          ...(goalsResult.success ? {} : { goals: goalsResult.error.issues })
+        }
+      });
       return;
     }
+
+    const { userId } = userResult.data;
+    const { goals } = goalsResult.data;
 
     await db.update(userProgress)
       .set({ 
@@ -83,25 +111,34 @@ const updateStudyGoals: RequestHandler = async (req, res, next) => {
 };
 
 // Get concept maps
-const getConceptMap: RequestHandler = async (req, res, next) => {
+const getConceptMap: RequestHandler<{ moduleId: string }> = async (req, res, next) => {
   try {
-    const moduleId = parseInt(req.params.moduleId);
+    const result = moduleIdSchema.safeParse({ moduleId: req.params.moduleId });
 
-    if (isNaN(moduleId)) {
-      res.status(400).json({ error: "Invalid module ID" });
+    if (!result.success) {
+      res.status(400).json({ 
+        error: "Invalid module ID",
+        details: result.error.issues
+      });
       return;
     }
 
+    const { moduleId } = result.data;
+
     const module = await db.query.modules.findFirst({
-      where: eq(modules.id, moduleId)
-    });
+      where: eq(modules.id, moduleId),
+      columns: {
+        id: true,
+        aiGeneratedContent: true
+      }
+    }) satisfies Module | undefined;
 
     if (!module) {
       res.status(404).json({ error: "Module not found" });
       return;
     }
 
-    const conceptMap = module.aiGeneratedContent?.conceptMap || {
+    const conceptMap = module.aiGeneratedContent?.conceptMap ?? {
       nodes: [],
       edges: []
     };

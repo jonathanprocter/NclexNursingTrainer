@@ -3,7 +3,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { registerRoutes } from "./routes";
 import { setupVite } from "./vite";
-import { db } from './db';
+import { db, testConnection } from './db';
 
 const app = express();
 
@@ -20,8 +20,10 @@ app.use(cors({
 // Database health check
 app.get('/health', async (_req: Request, res: Response) => {
   try {
-    // Try a simple query to verify database connection
-    await db.query.modules.findFirst();
+    const isConnected = await testConnection();
+    if (!isConnected) {
+      throw new Error('Database connection test failed');
+    }
     res.json({ 
       status: 'healthy', 
       database: 'connected',
@@ -33,7 +35,7 @@ app.get('/health', async (_req: Request, res: Response) => {
       status: 'unhealthy',
       database: 'disconnected',
       timestamp: new Date().toISOString(),
-      error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
+      error: process.env.NODE_ENV === 'development' ? (error as Error).message : 'Internal Server Error'
     });
   }
 });
