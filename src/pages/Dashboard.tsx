@@ -1,10 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import Analytics from "@/components/dashboard/Analytics";
-import { AnalyticsData } from "@/types/analytics";
-import { memo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import axios from "axios";
+import { memo } from "react";
+import type { AnalyticsData } from "@/types/analytics";
 
 interface PerformanceOverviewProps {
   analytics: AnalyticsData;
@@ -19,7 +19,7 @@ const PerformanceOverview = memo(({ analytics }: PerformanceOverviewProps) => (
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <div>
           <p className="text-sm text-muted-foreground">Study Time</p>
-          <p className="text-lg font-semibold">{analytics.totalStudyTime}h</p>
+          <p className="text-lg font-semibold">{analytics.totalStudyTime}</p>
         </div>
         <div>
           <p className="text-sm text-muted-foreground">Questions</p>
@@ -53,53 +53,25 @@ const PerformanceOverviewSkeleton = () => (
 );
 
 function Dashboard() {
-  // Use environment variable with fallback
-  const apiUrl = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:4005`;
+  const apiUrl = `http://${window.location.hostname}:4004`;
 
-  console.log('Dashboard mounting, API URL:', apiUrl);
-
-  const { data: analyticsResponse, isError, isLoading, error } = useQuery({
-    queryKey: ["analytics", "user", "1"], // Using a static userId for now
+  const { data: analytics, isError, isLoading, error } = useQuery({
+    queryKey: ["analytics"],
     queryFn: async () => {
       try {
-        console.log('Fetching analytics data...');
-
-        const response = await axios.get<{ success: boolean; data: AnalyticsData; error?: string }>(
-          `${apiUrl}/api/analytics/1`,
-          {
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json'
-            },
-            withCredentials: true,
-            timeout: 5000 // 5 second timeout
-          }
-        );
-
-        console.log('Received analytics response:', response.data);
-
-        if (!response.data.success) {
-          throw new Error(response.data.error || 'Failed to fetch analytics');
-        }
-
-        return response.data.data;
-      } catch (error) {
-        console.error('Error fetching analytics:', error);
-        if (axios.isAxiosError(error)) {
-          if (error.code === 'ECONNABORTED') {
-            throw new Error('Request timed out. Please try again.');
-          }
-          if (!error.response) {
-            throw new Error('Cannot connect to server. Please check your connection.');
-          }
-          throw new Error(error.response.data?.error || error.message);
-        }
-        throw error;
+        const response = await axios.get<AnalyticsData>(`${apiUrl}/api/analytics`, {
+          withCredentials: true,
+          timeout: 5000
+        });
+        return response.data;
+      } catch (err) {
+        console.error('Error fetching analytics:', err);
+        throw err;
       }
     },
     retry: 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
-    staleTime: 30000 // Consider data fresh for 30 seconds
+    staleTime: 30000
   });
 
   if (isLoading) {
@@ -115,17 +87,14 @@ function Dashboard() {
     return (
       <div className="p-4 bg-destructive/10 rounded-md">
         <h2 className="text-lg font-semibold mb-2">Error loading dashboard</h2>
-        <p className="text-sm text-destructive">
+        <p className="text-sm text-destructive mb-4">
           {error instanceof Error ? error.message : "An unknown error occurred"}
-        </p>
-        <p className="text-sm text-muted-foreground mt-2">
-          API URL: {apiUrl}
         </p>
       </div>
     );
   }
 
-  if (!analyticsResponse) {
+  if (!analytics) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="text-center space-y-4">
@@ -137,8 +106,8 @@ function Dashboard() {
 
   return (
     <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-6 lg:p-8">
-      <PerformanceOverview analytics={analyticsResponse} />
-      <Analytics analytics={analyticsResponse} />
+      <PerformanceOverview analytics={analytics} />
+      <Analytics analytics={analytics} />
     </div>
   );
 }

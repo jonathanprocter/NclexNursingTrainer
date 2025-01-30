@@ -49,10 +49,10 @@ interface AnalyticsProps {
 }
 
 function Analytics({ analytics }: AnalyticsProps) {
-  if (!analytics?.performanceData) {
+  if (!analytics?.performanceData?.length) {
     return (
       <div className="p-4 bg-muted rounded-lg">
-        <p className="text-muted-foreground text-center">No analytics data available</p>
+        <p className="text-muted-foreground text-center">No performance data available</p>
       </div>
     );
   }
