@@ -16,6 +16,12 @@ export default defineConfig({
     strictPort: true,
     hmr: {
       clientPort: 443
-    }
+    },
+    allowedHosts: [
+      'localhost',
+      '0.0.0.0',
+      '.replit.dev',
+      '.spock.replit.dev'
+    ]
   }
 });
