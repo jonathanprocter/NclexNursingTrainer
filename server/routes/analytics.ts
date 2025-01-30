@@ -34,9 +34,19 @@ const analyticsDataSchema = z.object({
   averageScore: z.number().min(0).max(100)
 });
 
+// Query parameters schema
+const queryParamsSchema = z.object({
+  from: z.string().datetime().optional(),
+  to: z.string().datetime().optional(),
+});
+
 router.get('/:userId', async (req, res) => {
   try {
-    // Provide validated analytics data
+    // Validate and parse query parameters
+    const { from, to } = queryParamsSchema.parse(req.query);
+
+    // Sample data - in a real app, this would be fetched from a database
+    // and filtered based on the date range
     const analyticsData = {
       performanceData: [
         { domain: "Clinical Judgment", mastery: 75 },

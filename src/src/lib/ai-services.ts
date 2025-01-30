@@ -40,10 +40,18 @@ const fetchWithRetry = async <T>(url: string, options: RequestInit, retries = 3)
 // Analytics API base URL configuration
 const API_BASE_URL = 'http://localhost:4003';
 
-export async function fetchAnalytics(userId: string): Promise<AnalyticsData> {
+export async function fetchAnalytics(
+  userId: string,
+  fromDate?: Date,
+  toDate?: Date
+): Promise<AnalyticsData> {
   try {
+    const params = new URLSearchParams();
+    if (fromDate) params.append('from', fromDate.toISOString());
+    if (toDate) params.append('to', toDate.toISOString());
+
     const response = await fetchWithRetry<AnalyticsData>(
-      `${API_BASE_URL}/api/analytics/${userId}`,
+      `${API_BASE_URL}/api/analytics/${userId}?${params.toString()}`,
       {
         method: 'GET',
         headers: {
