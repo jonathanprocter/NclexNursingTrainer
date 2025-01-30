@@ -26,8 +26,13 @@ interface AnalyticsProps {
 
 export default function Analytics({ data }: AnalyticsProps) {
   if (!data) {
-    return <div>Loading analytics data...</div>;
+    return <div className="p-4">Loading analytics data...</div>;
   }
+
+  const performanceData = data.performanceData?.map((item, index) => ({
+    ...item,
+    id: `performance-${index}`
+  })) || [];
 
   const performanceData = Array.isArray(data.performanceData) ? data.performanceData : [
     { module: "Pharmacology", score: 85 },

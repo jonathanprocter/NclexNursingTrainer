@@ -19,14 +19,19 @@ export default function Dashboard() {
         }
         const data = await response.json();
         return {
-          performanceData: data.performanceData || [],
-          totalStudyTime: data.totalStudyTime || "0",
-          questionsAttempted: data.questionsAttempted || 0,
-          averageScore: data.averageScore || 0
+          performanceData: data?.performanceData || [],
+          totalStudyTime: data?.totalStudyTime || "0",
+          questionsAttempted: data?.questionsAttempted || 0,
+          averageScore: data?.averageScore || 0
         };
       } catch (error) {
         console.error('Analytics fetch error:', error);
-        throw error;
+        return {
+          performanceData: [],
+          totalStudyTime: "0",
+          questionsAttempted: 0,
+          averageScore: 0
+        };
       }
     },
     retry: 1,
