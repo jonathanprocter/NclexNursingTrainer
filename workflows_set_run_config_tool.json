@@ -2,7 +2,7 @@
   "workflows": [
     {
       "name": "Start application",
-      "command": "npm run dev",
+      "command": "npx tsx port-wait.ts && npm run dev",
       "wait_for_port": [3000, 4005],
       "run_forever": true,
       "environment": {
