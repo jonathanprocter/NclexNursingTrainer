@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import Analytics from "@/components/dashboard/Analytics";
@@ -53,13 +54,11 @@ const PerformanceOverviewSkeleton = () => (
 );
 
 function Dashboard() {
-  const apiUrl = `http://${window.location.hostname}:4004`;
-
   const { data: analytics, isError, isLoading, error } = useQuery({
     queryKey: ["analytics"],
     queryFn: async () => {
       try {
-        const response = await axios.get<AnalyticsData>(`${apiUrl}/api/analytics`, {
+        const response = await axios.get<AnalyticsData>(`http://0.0.0.0:4004/api/analytics`, {
           withCredentials: true,
           timeout: 5000
         });
