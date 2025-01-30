@@ -9,23 +9,11 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { useBreakpoint } from "../../hooks/use-mobile";
-import { useState, useEffect } from 'react';
-
-interface PerformanceData {
-  domain: string;
-  mastery: number;
-}
-
-interface AnalyticsData {
-  performanceData: PerformanceData[];
-  totalStudyTime: string;
-  questionsAttempted: number;
-  averageScore: number;
-}
-
-interface AnalyticsProps {
-  data?: AnalyticsData;
-}
+import { fetchAnalytics } from "@/lib/ai-services";
+import { useQuery } from "@tanstack/react-query";
+import type { AnalyticsData } from "@/types/analytics";
+import { useToast } from "@/hooks/use-toast";
+import { ErrorBoundary } from "react-error-boundary";
 
 const DEFAULT_ANALYTICS: AnalyticsData = {
   performanceData: [
@@ -39,38 +27,89 @@ const DEFAULT_ANALYTICS: AnalyticsData = {
   averageScore: 0
 };
 
-const analyticsEndpoint = "http://0.0.0.0:4003"; // Added analytics endpoint
+interface AnalyticsProps {
+  data?: AnalyticsData;
+}
 
-export default function Analytics({ data }: AnalyticsProps) {
+function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
+  return (
+    <div className="p-4 bg-destructive/10 rounded-md">
+      <h2 className="text-lg font-semibold mb-2">Something went wrong:</h2>
+      <p className="text-sm text-destructive mb-4">{error.message}</p>
+      <button
+        onClick={resetErrorBoundary}
+        className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+      >
+        Try again
+      </button>
+    </div>
+  );
+}
+
+function AnalyticsContent({ data: propsData }: AnalyticsProps) {
   const { isMobile, isTablet } = useBreakpoint();
-  const [fetchedData, setFetchedData] = useState<AnalyticsData | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch(analyticsEndpoint);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const jsonData = await response.json();
-        setFetchedData(jsonData);
-      } catch (error: any) {
-        setError(error.message);
-        console.error("Error fetching analytics data:", error);
+  const { data: fetchedData, isLoading, error } = useQuery({
+    queryKey: ['analytics', 'user', '1'],
+    queryFn: () => fetchAnalytics('1'),
+    retry: (failureCount, err) => {
+      if (err instanceof Error && err.message.includes('status: 4')) {
+        return false;
       }
-    };
+      return failureCount < 3;
+    },
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 10000),
+    staleTime: 30000,
+    gcTime: 300000,
+    onError: (err) => {
+      toast({
+        title: "Error loading analytics",
+        description: err instanceof Error ? err.message : "Failed to load analytics data",
+        variant: "destructive",
+      });
+    }
+  });
 
-    fetchData();
-  }, []);
-
-
-  // Use default data if not provided or if there's an error or data hasn't fetched yet
-  const analyticsData = fetchedData || data || DEFAULT_ANALYTICS;
+  const analyticsData = propsData || fetchedData || DEFAULT_ANALYTICS;
   const chartHeight = isMobile ? 250 : isTablet ? 300 : 350;
 
-  if (error) {
-    return <div>Error loading analytics: {error}</div>;
+  if (isLoading) {
+    return (
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-2 animate-pulse">
+        <Card>
+          <CardHeader>
+            <div className="h-6 bg-muted rounded w-1/3"></div>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[250px] bg-muted rounded"></div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <div className="h-6 bg-muted rounded w-1/3"></div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-16 bg-muted rounded"></div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error && !propsData) {
+    return (
+      <div className="p-4 bg-destructive/10 rounded-md">
+        <h2 className="text-lg font-semibold mb-2">Error loading analytics</h2>
+        <p className="text-sm text-destructive mb-4">
+          {error instanceof Error ? error.message : "An unknown error occurred"}
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -149,5 +188,19 @@ export default function Analytics({ data }: AnalyticsProps) {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function Analytics(props: AnalyticsProps) {
+  return (
+    <ErrorBoundary 
+      FallbackComponent={ErrorFallback}
+      onReset={() => {
+        // Refetch data when the user clicks "Try again"
+        window.location.reload();
+      }}
+    >
+      <AnalyticsContent {...props} />
+    </ErrorBoundary>
   );
 }

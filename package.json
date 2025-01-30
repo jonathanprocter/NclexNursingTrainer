@@ -3,13 +3,14 @@
   "version": "1.0.0",
   "type": "commonjs",
   "scripts": {
+    "predev": "./scripts/port-manager.sh",
     "dev:client": "vite --port 3000 --host 0.0.0.0",
-    "dev:server": "tsx watch server/index.ts",
+    "dev:server": "tsx server/index.ts",
     "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
     "build:client": "vite build",
     "build:server": "tsc -p tsconfig.server.json",
     "build": "npm run build:client && npm run build:server",
-    "start": "npm run dev-server"
+    "start": "NODE_ENV=production tsx server/index.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.3",
