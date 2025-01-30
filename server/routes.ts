@@ -1,10 +1,10 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { db } from "@db";
+import { db } from "../db";
 import { eq } from "drizzle-orm";
 import studyGuideRouter from './routes/study-guide';
 import OpenAI from "openai";
-import { studyBuddyChats, modules, questions, quizAttempts, userProgress } from "@db/schema";
+import { studyBuddyChats, modules, questions, quizAttempts, userProgress } from "../db/schema";
 
 if (!process.env.OPENAI_API_KEY) {
   throw new Error("OPENAI_API_KEY must be set in environment variables");
