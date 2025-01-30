@@ -11,29 +11,29 @@ const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// CORS configuration - using a simpler, less error-prone approach
+// CORS configuration
 app.use(cors({
-  origin: '*', // Allow requests from any origin for simplicity.  Should be refined for production.
+  origin: process.env.FRONTEND_URL || 'http://localhost:3001',
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-
-// Database health check (from original code)
+// Database health check
 app.get('/health', async (_req: Request, res: Response) => {
   const health = await checkDatabaseHealth();
   res.status(health.status === 'healthy' ? 200 : 503).json(health);
 });
 
-// Register all API routes (from original code)
+// Register all API routes
 const server = registerRoutes(app);
 
-// Setup Vite development server middleware in development mode (from original code)
+// Setup Vite development server middleware in development mode
 if (process.env.NODE_ENV === 'development') {
   setupVite(app, server);
 }
 
-// Global error handling middleware (simplified from original and edited)
+// Global error handling middleware
 interface ErrorWithStatus extends Error {
   status?: number;
   statusCode?: number;
@@ -50,36 +50,40 @@ app.use((err: ErrorWithStatus, _req: Request, res: Response, _next: NextFunction
   });
 });
 
-
+const PORT = Number(process.env.PORT || 4003);
 const HOST = '0.0.0.0';
-const PORT = process.env.PORT || 4003;
 
 function startServer() {
   return new Promise((resolve, reject) => {
-    const serverInstance = server.listen(PORT, HOST, () => {
-          console.log('=================================');
-          console.log('Server started successfully');
-          console.log(`Server is running on port ${PORT}`);
-          console.log(`Access URL: http://${HOST}:${PORT}`);
-          console.log('=================================');
+    try {
+      const serverInstance = server.listen(PORT, HOST, () => {
+        console.log('=================================');
+        console.log('Server started successfully');
+        console.log(`Server is running on port ${PORT}`);
+        console.log(`Frontend URL: ${process.env.FRONTEND_URL}`);
+        console.log(`Access URL: http://${HOST}:${PORT}`);
+        console.log('=================================');
 
-          // Signal that the server is ready
-          if (process.send) {
-            process.send('ready');
-          }
+        // Signal that the server is ready
+        if (process.send) {
+          process.send('ready');
+        }
 
-          resolve(serverInstance);
-        });
+        resolve(serverInstance);
+      });
 
-    serverInstance.on('error', (err: NodeJS.ErrnoException) => {
-          console.error('Server error:', err);
-          reject(err);
-        });
+      serverInstance.on('error', (err: NodeJS.ErrnoException) => {
+        console.error('Server error:', err);
+        reject(err);
+      });
+    } catch (error) {
+      console.error('Failed to start server:', error);
+      reject(error);
+    }
   });
 }
 
-
-// Handle process signals (from original code)
+// Handle process signals
 process.on('SIGTERM', () => {
   console.log('SIGTERM received. Shutting down gracefully...');
   server.close(() => {
@@ -88,7 +92,7 @@ process.on('SIGTERM', () => {
   });
 });
 
-// Start the server and export for testing (from original code)
+// Start the server
 startServer()
   .catch((error) => {
     console.error('Server startup failed:', error);

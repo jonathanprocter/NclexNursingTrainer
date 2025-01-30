@@ -24,10 +24,12 @@ export default function Dashboard() {
   const { data: analytics, isError, isLoading, error } = useQuery<AnalyticsData>({
     queryKey: ["analytics"],
     queryFn: async () => {
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://0.0.0.0:4002';
+      const baseUrl = process.env.NODE_ENV === 'development' 
+        ? 'http://localhost:4003'  
+        : import.meta.env.VITE_API_URL;
 
       try {
-        console.log('Attempting to fetch analytics from:', baseUrl);
+        console.log('Fetching analytics from:', baseUrl);
         const response = await fetch(`${baseUrl}/api/analytics/user/1`, {
           method: 'GET',
           headers: {
@@ -47,7 +49,6 @@ export default function Dashboard() {
           throw new Error('Invalid response format');
         }
 
-        // Provide sensible defaults for missing data
         return {
           performanceData: data?.performanceData || studentProgress.nclexDomains,
           totalStudyTime: data?.totalStudyTime || "0",
@@ -60,7 +61,6 @@ export default function Dashboard() {
       }
     },
     retry: (failureCount, error) => {
-      // Only retry up to 3 times and not on 4xx errors
       if (error instanceof Error && error.message.includes('status: 4')) {
         return false;
       }
