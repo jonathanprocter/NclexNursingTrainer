@@ -53,16 +53,27 @@ const PerformanceOverviewSkeleton = () => (
 );
 
 function Dashboard() {
+  // Use environment variable with fallback
+  const apiUrl = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:4005`;
+
+  console.log('Dashboard mounting, API URL:', apiUrl);
+
   const { data: analyticsResponse, isError, isLoading, error } = useQuery({
     queryKey: ["analytics", "user", "1"], // Using a static userId for now
     queryFn: async () => {
       try {
         console.log('Fetching analytics data...');
-        const baseUrl = import.meta.env.VITE_API_URL || `${window.location.protocol}//${window.location.hostname}:4005`;
-        console.log('Using API URL:', baseUrl);
 
         const response = await axios.get<{ success: boolean; data: AnalyticsData; error?: string }>(
-          `${baseUrl}/api/analytics/1`
+          `${apiUrl}/api/analytics/1`,
+          {
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            withCredentials: true,
+            timeout: 5000 // 5 second timeout
+          }
         );
 
         console.log('Received analytics response:', response.data);
@@ -74,9 +85,21 @@ function Dashboard() {
         return response.data.data;
       } catch (error) {
         console.error('Error fetching analytics:', error);
+        if (axios.isAxiosError(error)) {
+          if (error.code === 'ECONNABORTED') {
+            throw new Error('Request timed out. Please try again.');
+          }
+          if (!error.response) {
+            throw new Error('Cannot connect to server. Please check your connection.');
+          }
+          throw new Error(error.response.data?.error || error.message);
+        }
         throw error;
       }
-    }
+    },
+    retry: 2,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+    staleTime: 30000 // Consider data fresh for 30 seconds
   });
 
   if (isLoading) {
@@ -94,6 +117,9 @@ function Dashboard() {
         <h2 className="text-lg font-semibold mb-2">Error loading dashboard</h2>
         <p className="text-sm text-destructive">
           {error instanceof Error ? error.message : "An unknown error occurred"}
+        </p>
+        <p className="text-sm text-muted-foreground mt-2">
+          API URL: {apiUrl}
         </p>
       </div>
     );

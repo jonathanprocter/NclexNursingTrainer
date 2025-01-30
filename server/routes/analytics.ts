@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import cors from 'cors';
-import { analyticsDataSchema, progressDataSchema } from '../../src/types/analytics';
+import { analyticsDataSchema, progressDataSchema } from '@/types/analytics';
 
 const router = Router();
 
@@ -11,11 +11,12 @@ router.use(cors({
     'http://localhost:3000',
     'http://0.0.0.0:3000',
     /\.replit\.dev$/,
-    /\.repl\.co$/
+    /\.repl\.co$/,
+    /^http:\/\/localhost:\d+$/
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
 }));
 
 // Sample data - in a real app, this would be fetched from a database
@@ -34,6 +35,7 @@ const mockAnalyticsData = {
 router.get('/:userId', async (req, res) => {
   try {
     console.log(`Fetching analytics data for user ${req.params.userId}`);
+    console.log('Request origin:', req.headers.origin);
 
     // Parse and validate query parameters
     const queryParamsSchema = z.object({
@@ -45,6 +47,12 @@ router.get('/:userId', async (req, res) => {
 
     // Validate mock data against schema
     const validatedData = analyticsDataSchema.parse(mockAnalyticsData);
+
+    // Set explicit CORS headers for the response
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
 
     res.json({ 
       success: true, 
