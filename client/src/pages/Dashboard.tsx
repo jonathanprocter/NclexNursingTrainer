@@ -26,13 +26,15 @@ export default function Dashboard() {
         const response = await fetch(`${baseUrl}/api/analytics/user/1`, {
           method: 'GET',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
           },
-          credentials: 'include'
+          credentials: 'include',
+          mode: 'cors'
         });
 
         if (!response.ok) {
-          throw new Error("Failed to fetch analytics");
+          throw new Error(`Failed to fetch analytics: ${response.status} ${response.statusText}`);
         }
 
         const data = await response.json();
