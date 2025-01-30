@@ -1,6 +1,14 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer
+} from "recharts";
 import { Progress } from "../components/ui/progress";
 import Analytics from "../components/dashboard/Analytics";
 import PerformanceMetrics from "../components/dashboard/PerformanceMetrics";
