@@ -1,9 +1,9 @@
 import express from 'express';
 import cors from 'cors';
-import { registerRoutes } from './routes.js';
+import { registerRoutes } from './routes/index.js';
 
 const app = express();
-const port = parseInt(process.env.PORT || '4005'); // Changed default port to 4005
+const port = parseInt(process.env.PORT || '4005');
 const HOSTNAME = '0.0.0.0';
 
 // Configure CORS to allow Replit domains
@@ -21,49 +21,34 @@ app.use(cors({
 
 app.use(express.json());
 
+// Register all routes with /api prefix
+app.use('/api', registerRoutes());
+
 // Global error handling
-process.on('unhandledRejection', (reason, promise) => {
-    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+    console.error('Global Error:', err);
+    res.status(err.status || 500).json({
+        error: err.message || 'Internal Server Error',
+        ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    });
 });
 
-interface SystemError extends Error {
-    code?: string;
-}
-
-process.on('uncaughtException', (error: SystemError) => {
-    console.error('Uncaught Exception:', error);
-    // Don't exit the process on EADDRINUSE, try a different port
+// Start the server
+app.listen(port, HOSTNAME, () => {
+    console.log('=================================');
+    console.log('Server started successfully');
+    console.log(`Server is running on port ${port}`);
+    console.log(`Frontend URL: http://${HOSTNAME}:3000`);
+    console.log(`Backend URL: http://${HOSTNAME}:${port}`);
+    console.log('=================================');
+}).on('error', (error: any) => {
     if (error.code === 'EADDRINUSE') {
         console.log(`Port ${port} is in use, trying ${port + 1}`);
-        startServer(port + 1);
+        app.listen(port + 1, HOSTNAME);
     } else {
+        console.error('Server error:', error);
         process.exit(1);
     }
 });
-
-// Register all routes
-function startServer(port: number) {
-    const httpServer = registerRoutes(app);
-
-    // Start the server with proper error handling
-    httpServer.listen(port, HOSTNAME, () => { // Added HOSTNAME
-        console.log('=================================');
-        console.log('Server started successfully');
-        console.log(`Server is running on port ${port}`);
-        console.log(`Frontend URL: http://${HOSTNAME}:3000`); // Updated URL
-        console.log(`Backend URL: http://${HOSTNAME}:${port}`); // Updated URL
-        console.log('=================================');
-    }).on('error', (error: SystemError) => {
-        if (error.code === 'EADDRINUSE') {
-            console.log(`Port ${port} is in use, trying ${port + 1}`);
-            startServer(port + 1);
-        } else {
-            console.error('Server error:', error);
-            process.exit(1);
-        }
-    });
-}
-
-startServer(port);
 
 export default app;

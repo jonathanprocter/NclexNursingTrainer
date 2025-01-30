@@ -1,15 +1,26 @@
 import express from 'express';
-import analyticsRouter from './analytics';
-import questionsRouter from './questions';
-import practiceRouter from './practice';
-import simulationsRouter from './simulations';
+import analyticsRouter from './analytics.js';
+import questionsRouter from './questions.js';
+import practiceRouter from './practice.js';
+import simulationsRouter from './simulations.js';
 
-const router = express.Router();
+export function registerRoutes() {
+  const router = express.Router();
 
-// Register all routes with /api prefix
-router.use('/api/analytics', analyticsRouter);
-router.use('/api/questions', questionsRouter);
-router.use('/api/practice', practiceRouter);
-router.use('/api/simulations', simulationsRouter);
+  // Register all routes
+  router.use('/analytics', analyticsRouter);
+  router.use('/questions', questionsRouter);
+  router.use('/practice', practiceRouter);
+  router.use('/simulations', simulationsRouter);
 
-export default router;
+  // Add error handling middleware
+  router.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+    console.error('API Error:', err);
+    res.status(err.status || 500).json({
+      error: err.message || 'Internal Server Error',
+      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    });
+  });
+
+  return router;
+}

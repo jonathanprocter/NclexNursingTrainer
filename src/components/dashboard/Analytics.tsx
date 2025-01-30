@@ -5,6 +5,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { ErrorBoundary } from "react-error-boundary";
 import type { AnalyticsData } from "@/types/analytics";
 import { useQuery } from "@tanstack/react-query";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface PerformanceChartProps {
   data: AnalyticsData['performanceData'];
@@ -49,6 +50,18 @@ const PerformanceChart = memo(({ data }: PerformanceChartProps) => {
   );
 });
 
+function AnalyticsSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-[250px]" />
+        <Skeleton className="h-4 w-[200px]" />
+      </div>
+      <Skeleton className="h-[400px] w-full" />
+    </div>
+  );
+}
+
 function Analytics() {
   const { data: analytics, isLoading, error } = useQuery<AnalyticsData>({
     queryKey: ['/api/analytics'],
@@ -56,41 +69,60 @@ function Analytics() {
 
   if (isLoading) {
     return (
-      <div className="p-4 bg-muted rounded-lg">
-        <p className="text-muted-foreground text-center">Loading analytics data...</p>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Performance Analytics</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <AnalyticsSkeleton />
+        </CardContent>
+      </Card>
     );
   }
 
   if (error) {
     return (
-      <div className="p-4 bg-destructive/10 rounded-md">
-        <p className="text-destructive">Error loading analytics data</p>
-      </div>
+      <Card className="bg-destructive/10">
+        <CardHeader>
+          <CardTitle className="text-destructive">Error Loading Analytics</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-destructive">Failed to load analytics data. Please try again later.</p>
+        </CardContent>
+      </Card>
     );
   }
 
   if (!analytics?.performanceData?.length) {
     return (
-      <div className="p-4 bg-muted rounded-lg">
-        <p className="text-muted-foreground text-center">No performance data available</p>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>No Data Available</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">Start practicing to see your performance analytics.</p>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
     <ErrorBoundary
       FallbackComponent={({ error, resetErrorBoundary }) => (
-        <div className="p-4 bg-destructive/10 rounded-md">
-          <h2 className="text-lg font-semibold mb-2">Analytics Error</h2>
-          <p className="text-sm text-destructive mb-4">{error.message}</p>
-          <button
-            onClick={resetErrorBoundary}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
-          >
-            Retry
-          </button>
-        </div>
+        <Card className="bg-destructive/10">
+          <CardHeader>
+            <CardTitle className="text-destructive">Analytics Error</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-destructive mb-4">{error.message}</p>
+            <button
+              onClick={resetErrorBoundary}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+            >
+              Retry
+            </button>
+          </CardContent>
+        </Card>
       )}
       onReset={() => window.location.reload()}
     >
