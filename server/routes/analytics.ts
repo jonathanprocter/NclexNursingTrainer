@@ -34,8 +34,15 @@ const mockAnalyticsData = {
 
 router.get('/:userId', async (req, res) => {
   try {
-    console.log(`Fetching analytics data for user ${req.params.userId}`);
-    console.log('Request origin:', req.headers.origin);
+    const userId = req.params.userId;
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        error: 'User ID is required'
+      });
+    }
+    
+    console.log(`Fetching analytics data for user ${userId}`);
 
     // Parse and validate query parameters
     const queryParamsSchema = z.object({
