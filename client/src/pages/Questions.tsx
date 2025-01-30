@@ -1,39 +1,54 @@
-import { useQuery } from "@tanstack/react-query";
-import QuestionCard from "../components/QuestionCard";
-import { ScrollArea } from "../components/ui/scroll-area";
-import { Button } from "../components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { useQuery } from "@tanstack/react-query"
+import QuestionCard from "../components/QuestionCard"
+import { ScrollArea } from "../components/ui/scroll-area"
+import { Button } from "../components/ui/button"
+import { RefreshCw } from "lucide-react"
 
 interface Question {
-  id: string;
-  type: string;
-  content: string;
-  options: string[];
-  correctAnswer: string;
-  explanation: string;
+  id: string
+  type: string
+  content: string
+  options: string[]
+  correctAnswer: string
+  explanation: string
 }
 
-const fetchQuestions = async () => {
-  const response = await fetch("/api/questions");
+const fetchQuestions = async (): Promise<Question[]> => {
+  const response = await fetch("/api/questions")
   if (!response.ok) {
-    throw new Error("Failed to fetch questions");
+    throw new Error("Failed to fetch questions")
   }
-  return response.json();
-};
+  const data = await response.json()
+  console.log("Fetched questions:", data)
+  // Ensure data is an array of questions. Adjust if your API returns a different shape.
+  return data
+}
 
 export default function Questions() {
-  const { data: questions = [], isError, isLoading, refetch } = useQuery({
+  const {
+    data: questions = [], // fallback to empty array if undefined
+    isError,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ["questions"],
     queryFn: fetchQuestions,
-    retry: 1
-  });
+    retry: 1,
+  })
 
+  // If there's an error from the request
   if (isError) {
-    return <div>Error loading questions</div>;
+    return <div>Error loading questions</div>
   }
 
+  // If request is still in loading state
   if (isLoading) {
-    return <div>Loading questions...</div>;
+    return <div>Loading questions...</div>
+  }
+
+  // Safely check if questions is indeed an array
+  if (!Array.isArray(questions)) {
+    return <div>No valid questions found.</div>
   }
 
   return (
@@ -54,5 +69,5 @@ export default function Questions() {
         </div>
       </ScrollArea>
     </div>
-  );
+  )
 }
