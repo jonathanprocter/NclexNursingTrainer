@@ -9,6 +9,18 @@ interface AnalyticsProps {
   analytics: AnalyticsData;
 }
 
+function Analytics({ analytics }: AnalyticsProps) {
+  if (!analytics?.performanceData) {
+    return <div>Loading analytics data...</div>;
+  }
+
+  return (
+    <div className="grid gap-4">
+      <PerformanceChart data={analytics.performanceData} />
+    </div>
+  );
+}
+
 const ErrorFallback = memo(({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) => (
   <div className="p-4 bg-destructive/10 rounded-md">
     <h2 className="text-lg font-semibold mb-2">Something went wrong:</h2>

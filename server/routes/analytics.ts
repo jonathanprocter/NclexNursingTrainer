@@ -27,13 +27,19 @@ const mockAnalyticsData = {
 
 router.get('/:userId', async (req, res) => {
   try {
-    // Parse and validate query parameters
-    const queryParamsSchema = z.object({
-      from: z.string().datetime().optional(),
-      to: z.string().datetime().optional(),
-    });
-
-    const { from, to } = queryParamsSchema.parse(req.query);
+    const mockData = {
+      performanceData: [
+        { domain: "Clinical Judgment", mastery: 75 },
+        { domain: "Patient Safety", mastery: 80 },
+        { domain: "Care Management", mastery: 65 },
+        { domain: "Health Promotion", mastery: 70 }
+      ],
+      totalStudyTime: "24h",
+      questionsAttempted: 150,
+      averageScore: 78
+    };
+    
+    res.json(mockData);
 
     // Validate mock data against schema
     const validatedData = analyticsDataSchema.parse(mockAnalyticsData);

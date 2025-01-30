@@ -64,12 +64,14 @@ function Dashboard() {
     queryKey: ["analytics"],
     queryFn: async () => {
       try {
-        const response = await fetch('http://0.0.0.0:4003/api/analytics/1');
-        if (!response.ok) {
-          console.error('API Error:', await response.text());
-          throw new Error('API request failed');
-        }
-        return await response.json();
+        const response = await fetch('http://0.0.0.0:4003/api/analytics/1', {
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        });
+        const data = await response.json();
+        return data || mockAnalytics;
       } catch (e) {
         console.error('Fetch Error:', e);
         return mockAnalytics;
