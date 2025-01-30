@@ -1,4 +1,3 @@
-
 import 'dotenv/config';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
@@ -49,28 +48,28 @@ app.use((err: ErrorWithStatus, _req: Request, res: Response, _next: NextFunction
   });
 });
 
-const PORT = parseInt(process.env.PORT || '4001', 10);
+const startPort = parseInt(process.env.PORT || '4001', 10);
 const HOST = '0.0.0.0';
 
 const startServer = (port: number) => {
-  try {
-    server.listen(port, HOST, () => {
+  server.listen(port, HOST)
+    .on('listening', () => {
       console.log('=================================');
       console.log('Server started successfully');
       console.log(`Server is running on port ${port}`);
       console.log(`Access URL: http://${HOST}:${port}`);
       console.log('=================================');
+    })
+    .on('error', (err: NodeJS.ErrnoException) => {
+      if (err.code === 'EADDRINUSE') {
+        console.log(`Port ${port} is busy, trying ${port + 1}`);
+        startServer(port + 1);
+      } else {
+        throw err;
+      }
     });
-  } catch (error) {
-    if ((error as any).code === 'EADDRINUSE') {
-      console.log(`Port ${port} is busy, trying ${port + 1}`);
-      startServer(port + 1);
-    } else {
-      throw error;
-    }
-  }
 };
 
-startServer(PORT);
+startServer(startPort);
 
 export default app;
