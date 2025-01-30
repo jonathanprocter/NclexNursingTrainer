@@ -1,8 +1,8 @@
 import { FC } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
-import { Badge } from "../ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 interface Student {
@@ -88,24 +88,24 @@ const InstructorDashboard: FC = () => {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
+        <TabsList className="w-full justify-start">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="students">Students</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {Object.entries(classStats).map(([key, value]) => (
-              <Card key={key}>
-                <CardHeader>
+              <Card key={key} className="hover:shadow-md transition-shadow">
+                <CardHeader className="pb-2">
                   <CardTitle className="text-lg">
                     {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-3xl font-bold">{value}{key.includes("Rate") || key.includes("Progress") || key.includes("Engagement") ? "%" : ""}</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground mt-1">
                     {key === "totalStudents" ? "Active Enrollments" : 
                      key === "atRiskCount" ? "Need Attention" :
                      key === "topPerformers" ? "Above 90%" :
@@ -124,40 +124,42 @@ const InstructorDashboard: FC = () => {
               <CardTitle>Student Progress Overview</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Student Name</TableHead>
-                    <TableHead>Progress</TableHead>
-                    <TableHead>Last Active</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Areas for Review</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {mockStudents.map((student) => (
-                    <TableRow key={student.id}>
-                      <TableCell className="font-medium">{student.name}</TableCell>
-                      <TableCell>{student.progress}%</TableCell>
-                      <TableCell>{student.lastActive}</TableCell>
-                      <TableCell>
-                        <Badge variant={getStatusBadgeVariant(student.status)}>
-                          {student.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1 flex-wrap">
-                          {student.weakAreas.map((area) => (
-                            <Badge key={area} variant="outline">
-                              {area}
-                            </Badge>
-                          ))}
-                        </div>
-                      </TableCell>
+              <div className="rounded-lg border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Student Name</TableHead>
+                      <TableHead>Progress</TableHead>
+                      <TableHead>Last Active</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Areas for Review</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {mockStudents.map((student) => (
+                      <TableRow key={student.id}>
+                        <TableCell className="font-medium">{student.name}</TableCell>
+                        <TableCell>{student.progress}%</TableCell>
+                        <TableCell>{student.lastActive}</TableCell>
+                        <TableCell>
+                          <Badge variant={getStatusBadgeVariant(student.status)}>
+                            {student.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1 flex-wrap">
+                            {student.weakAreas.map((area) => (
+                              <Badge key={area} variant="outline">
+                                {area}
+                              </Badge>
+                            ))}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -168,7 +170,7 @@ const InstructorDashboard: FC = () => {
               <CardTitle>Performance Trends</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-[400px]">
+              <div className="h-[400px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -183,6 +185,7 @@ const InstructorDashboard: FC = () => {
                         dataKey="score"
                         stroke={`hsl(${index * 120}, 70%, 50%)`}
                         strokeWidth={2}
+                        dot={true}
                       />
                     ))}
                   </LineChart>

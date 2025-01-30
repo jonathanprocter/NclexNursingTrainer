@@ -6,9 +6,9 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-} from "../ui/navigation-menu";
-import { cn } from "../../lib/utils";
-import { Button } from "../ui/button";
+} from "@/components/ui/navigation-menu";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import {
   BookOpen,
   Brain,
@@ -34,8 +34,8 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription 
-} from "../ui/sheet";
-import { useState } from "react";
+} from "@/components/ui/sheet";
+import { useState, useEffect } from "react";
 
 const dashboardItems = [
   {
@@ -141,11 +141,21 @@ const studyTools = [
 
 export default function NavBar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+
+  useEffect(() => {
+    const updatePath = () => setCurrentPath(window.location.pathname);
+    window.addEventListener('popstate', updatePath);
+    return () => window.removeEventListener('popstate', updatePath);
+  }, []);
 
   const MobileNavItem = ({ href, children, onClick }: { href: string; children: React.ReactNode; onClick?: () => void }) => (
     <Link href={href}>
       <div
-        className="block px-4 py-2 text-sm hover:bg-accent rounded-md cursor-pointer"
+        className={cn(
+          "block px-4 py-2 text-sm hover:bg-accent rounded-md cursor-pointer",
+          currentPath === href && "bg-accent text-accent-foreground"
+        )}
         onClick={onClick}
       >
         {children}
@@ -154,14 +164,13 @@ export default function NavBar() {
   );
 
   return (
-    <nav className="border-b bg-white">
+    <nav className="border-b bg-white sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <Link href="/">
             <h1 className="text-xl font-bold text-primary cursor-pointer">NCLEX Prep</h1>
           </Link>
 
-          {/* Desktop Navigation */}
           <div className="hidden md:block">
             <NavigationMenu>
               <NavigationMenuList>
@@ -175,6 +184,7 @@ export default function NavBar() {
                           title={item.title}
                           href={item.href}
                           icon={item.icon}
+                          active={currentPath === item.href}
                         >
                           {item.description}
                         </ListItem>
@@ -182,7 +192,6 @@ export default function NavBar() {
                     </ul>
                   </NavigationMenuContent>
                 </NavigationMenuItem>
-
                 <NavigationMenuItem>
                   <NavigationMenuTrigger>Learning Modules</NavigationMenuTrigger>
                   <NavigationMenuContent>
@@ -193,6 +202,7 @@ export default function NavBar() {
                           title={item.title}
                           href={item.href}
                           icon={item.icon}
+                          active={currentPath === item.href}
                         >
                           {item.description}
                         </ListItem>
@@ -200,7 +210,6 @@ export default function NavBar() {
                     </ul>
                   </NavigationMenuContent>
                 </NavigationMenuItem>
-
                 <NavigationMenuItem>
                   <NavigationMenuTrigger>Practice & Simulation</NavigationMenuTrigger>
                   <NavigationMenuContent>
@@ -211,6 +220,7 @@ export default function NavBar() {
                           title={item.title}
                           href={item.href}
                           icon={item.icon}
+                          active={currentPath === item.href}
                         >
                           {item.description}
                         </ListItem>
@@ -218,7 +228,6 @@ export default function NavBar() {
                     </ul>
                   </NavigationMenuContent>
                 </NavigationMenuItem>
-
                 <NavigationMenuItem>
                   <NavigationMenuTrigger>Study Tools</NavigationMenuTrigger>
                   <NavigationMenuContent>
@@ -229,6 +238,7 @@ export default function NavBar() {
                           title={item.title}
                           href={item.href}
                           icon={item.icon}
+                          active={currentPath === item.href}
                         >
                           {item.description}
                         </ListItem>
@@ -240,7 +250,6 @@ export default function NavBar() {
             </NavigationMenu>
           </div>
 
-          {/* Mobile Navigation */}
           <div className="md:hidden">
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
@@ -270,7 +279,6 @@ export default function NavBar() {
                       </MobileNavItem>
                     ))}
                   </div>
-
                   <div className="px-4 py-2">
                     {learningModules.map((item) => (
                       <MobileNavItem
@@ -285,7 +293,6 @@ export default function NavBar() {
                       </MobileNavItem>
                     ))}
                   </div>
-
                   <div className="px-4 py-2">
                     {practiceItems.map((item) => (
                       <MobileNavItem
@@ -300,7 +307,6 @@ export default function NavBar() {
                       </MobileNavItem>
                     ))}
                   </div>
-
                   <div className="px-4 py-2">
                     {studyTools.map((item) => (
                       <MobileNavItem
@@ -330,16 +336,18 @@ interface ListItemProps {
   href: string;
   children: React.ReactNode;
   icon: any;
+  active?: boolean;
 }
 
-function ListItem({ title, href, children, icon: Icon }: ListItemProps) {
+function ListItem({ title, href, children, icon: Icon, active }: ListItemProps) {
   return (
     <li>
       <NavigationMenuLink asChild>
         <Link href={href}>
           <div
             className={cn(
-              "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground cursor-pointer"
+              "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground cursor-pointer",
+              active && "bg-accent text-accent-foreground"
             )}
           >
             <div className="flex items-center gap-2 text-sm font-medium leading-none">
