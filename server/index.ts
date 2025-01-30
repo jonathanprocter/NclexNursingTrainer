@@ -52,12 +52,25 @@ app.use((err: ErrorWithStatus, _req: Request, res: Response, _next: NextFunction
 const PORT = parseInt(process.env.PORT || '4001', 10);
 const HOST = '0.0.0.0';
 
-server.listen(PORT, HOST, () => {
-  console.log('=================================');
-  console.log('Server started successfully');
-  console.log(`Server is running on port ${PORT}`);
-  console.log(`Access URL: http://${HOST}:${PORT}`);
-  console.log('=================================');
-});
+const startServer = (port: number) => {
+  try {
+    server.listen(port, HOST, () => {
+      console.log('=================================');
+      console.log('Server started successfully');
+      console.log(`Server is running on port ${port}`);
+      console.log(`Access URL: http://${HOST}:${port}`);
+      console.log('=================================');
+    });
+  } catch (error) {
+    if ((error as any).code === 'EADDRINUSE') {
+      console.log(`Port ${port} is busy, trying ${port + 1}`);
+      startServer(port + 1);
+    } else {
+      throw error;
+    }
+  }
+};
+
+startServer(PORT);
 
 export default app;
