@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Progress } from "../components/ui/progress";
-import { Button } from "../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { BookOpen, Brain, PenSquare, Beaker, Heart, Stethoscope } from "lucide-react";
+import { AIHelpButton } from "@/components/ui/ai-help-button";
 
 interface Module {
   id: number;

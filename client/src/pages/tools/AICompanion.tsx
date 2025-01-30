@@ -4,33 +4,33 @@ import { Mic, StopCircle, History, Lightbulb } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface SpeechRecognitionResult {
   transcript: string;
   isFinal: boolean;
 }
 
-interface SpeechRecognitionResultList {
-  [index: number]: SpeechRecognitionResult;
-  length: number;
+interface CustomSpeechRecognitionEvent extends Event {
+  results: {
+    [index: number]: {
+      [index: number]: {
+        transcript: string;
+        isFinal: boolean;
+      };
+    };
+  };
 }
 
-interface SpeechRecognitionEvent extends Event {
-  results: SpeechRecognitionResultList;
-}
-
-interface SpeechRecognitionErrorEvent extends Event {
+interface CustomSpeechRecognitionErrorEvent extends Event {
   error: string;
 }
 
-interface SpeechRecognition {
+interface CustomSpeechRecognition extends EventTarget {
   continuous: boolean;
   interimResults: boolean;
   lang: string;
-  onresult: (event: SpeechRecognitionEvent) => void;
-  onerror: (event: SpeechRecognitionErrorEvent) => void;
+  onresult: (event: CustomSpeechRecognitionEvent) => void;
+  onerror: (event: CustomSpeechRecognitionErrorEvent) => void;
   onend: () => void;
   start: () => void;
   stop: () => void;
@@ -38,15 +38,15 @@ interface SpeechRecognition {
 
 declare global {
   interface Window {
-    SpeechRecognition: new () => SpeechRecognition;
-    webkitSpeechRecognition: new () => SpeechRecognition;
+    SpeechRecognition: new () => CustomSpeechRecognition;
+    webkitSpeechRecognition: new () => CustomSpeechRecognition;
   }
 }
 
 export default function AICompanion() {
   const { toast } = useToast();
   const [microphoneEnabled, setMicrophoneEnabled] = useState(false);
-  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+  const [recognition, setRecognition] = useState<CustomSpeechRecognition | null>(null);
   const [transcript, setTranscript] = useState('');
   const [aiResponse, setAiResponse] = useState('');
 
@@ -63,8 +63,6 @@ export default function AICompanion() {
       });
 
       if (!response.ok) {
-        const errorData = await response.text();
-        console.error('Server error:', errorData);
         throw new Error(`Server error: ${response.status}`);
       }
 
@@ -79,7 +77,7 @@ export default function AICompanion() {
       setAiResponse('');
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to get AI response. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to get AI response",
         variant: "destructive",
       });
     }
@@ -97,18 +95,18 @@ export default function AICompanion() {
         recognition.interimResults = true;
         recognition.lang = 'en-US';
 
-        recognition.onresult = (event) => {
-          const transcript = Array.from(event.results)
-            .map(result => result[0])
-            .map(result => result.transcript)
-            .join('');
-          setTranscript(transcript);
-          if (event.results[0].isFinal) {
-            getAIResponse(transcript);
+        recognition.onresult = (event: CustomSpeechRecognitionEvent) => {
+          let finalTranscript = '';
+          for (let i = 0; i < event.results.length; i++) {
+            finalTranscript += event.results[i][0].transcript;
+            if (event.results[i][0].isFinal) {
+              getAIResponse(finalTranscript);
+            }
           }
+          setTranscript(finalTranscript);
         };
 
-        recognition.onerror = (event) => {
+        recognition.onerror = (event: CustomSpeechRecognitionErrorEvent) => {
           console.error('Speech recognition error:', event.error);
           setMicrophoneEnabled(false);
           toast({

@@ -109,7 +109,7 @@ export function AIHelpButton({ title, description, topic }: AIHelpButtonProps) {
           <ScrollArea className="h-[400px] pr-4">
             {messages.map((message, i) => (
               <div
-                key={i}
+                key={`message-${i}`}
                 className={`mb-4 ${
                   message.role === "assistant"
                     ? "bg-muted p-4 rounded-lg"
@@ -136,7 +136,7 @@ export function AIHelpButton({ title, description, topic }: AIHelpButtonProps) {
           <form onSubmit={handleSubmit} className="flex gap-2">
             <Input
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInput(e.target.value)}
               placeholder="Type your question..."
               disabled={isLoading}
             />

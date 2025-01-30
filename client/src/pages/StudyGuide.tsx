@@ -1,9 +1,21 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AIHelpButton } from "@/components/ui/ai-help-button";
+import { Button } from "@/components/ui/button";
+import { Brain } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const topics = [
+interface TopicSection {
+  subtitle: string;
+  points: string[];
+}
+
+interface Topic {
+  id: string;
+  title: string;
+  content: TopicSection[];
+}
+
+const topics: Topic[] = [
   {
     id: "safe-care",
     title: "Safe and Effective Care Environment",
@@ -29,7 +41,7 @@ const topics = [
       }
     ]
   },
-  // Add more topics
+  // Add more topics as needed
 ];
 
 export default function StudyGuide() {
@@ -56,24 +68,31 @@ export default function StudyGuide() {
         {topics.map((topic) => (
           <TabsContent key={topic.id} value={topic.id} className="space-y-4">
             {topic.content.map((section, idx) => (
-              <Card key={idx}>
+              <Card key={`${topic.id}-section-${idx}`}>
                 <CardHeader>
                   <CardTitle className="text-lg">{section.subtitle}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ul className="list-disc pl-6 space-y-2">
                     {section.points.map((point, pointIdx) => (
-                      <li key={pointIdx} className="text-muted-foreground">
+                      <li key={`${topic.id}-point-${pointIdx}`} className="text-muted-foreground">
                         {point}
                       </li>
                     ))}
                   </ul>
                   <div className="mt-4">
-                    <AIHelpButton
-                      title={section.subtitle}
-                      description={`Get AI assistance with understanding and mastering ${section.subtitle} concepts`}
-                      topic={topic.id}
-                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2"
+                      onClick={() => {
+                        // AI help functionality will be implemented later
+                        console.log('AI help requested for:', section.subtitle);
+                      }}
+                    >
+                      <Brain className="h-4 w-4" />
+                      AI Help
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
