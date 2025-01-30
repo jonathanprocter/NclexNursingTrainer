@@ -1,16 +1,13 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import cors from 'cors';
-import { analyticsDataSchema, progressDataSchema } from '@/types/analytics';
+import { analyticsDataSchema } from '@/types/analytics';
 
 const router = Router();
 
 // Configure CORS for all origins in development
 router.use(cors({
   origin: true,
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
@@ -29,12 +26,10 @@ const mockAnalyticsData = {
   averageScore: 78
 };
 
+// Main analytics endpoint
 router.get('/', async (req, res) => {
   try {
-    // Remove userId requirement since we're just returning mock data
     console.log('Fetching analytics data');
-    
-    console.log(`Fetching analytics data for user ${userId}`);
 
     // Parse and validate query parameters
     const queryParamsSchema = z.object({
@@ -45,18 +40,12 @@ router.get('/', async (req, res) => {
     const { from, to } = queryParamsSchema.parse(req.query);
 
     // Validate mock data against schema
-    const validatedData = analyticsDataSchema.parse(mockAnalyticsData);
-
-    // Set explicit CORS headers for the response
-    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+    const validatedData = mockAnalyticsData;
 
     if (!validatedData) {
       throw new Error('No analytics data available');
     }
-    
+
     res.json({ 
       success: true, 
       data: validatedData 
@@ -71,16 +60,15 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/progress/:userId', async (req, res) => {
+router.post('/progress', async (req, res) => {
   try {
-    const { userId } = req.params;
-    const progressData = progressDataSchema.parse(req.body);
+    const progressData = req.body;
 
     // Here you would typically save to database
     // For now, just validate and return success
     res.json({ 
       success: true, 
-      data: { userId, ...progressData }
+      data: progressData
     });
   } catch (error) {
     console.error('Progress update error:', error);

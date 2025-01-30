@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import Analytics from "@/components/dashboard/Analytics";
@@ -53,17 +52,17 @@ function Dashboard() {
     queryKey: ["analytics"],
     queryFn: async () => {
       try {
-        const response = await fetch('http://0.0.0.0:4006/api/analytics', {
+        const response = await fetch('http://0.0.0.0:4005/api/analytics', {
           credentials: 'include',
           headers: {
             'Content-Type': 'application/json'
           }
         });
-        
+
         if (!response.ok) {
           throw new Error(`API error: ${response.status}`);
         }
-        
+
         const data = await response.json();
         return data.data;
       } catch (error) {
