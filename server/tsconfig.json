@@ -3,7 +3,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "NodeNext",
+    "moduleResolution": "node",
     "outDir": "../dist/server",
     "rootDir": ".",
     "strict": true,
@@ -15,11 +15,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]
-    }
-  },
-  "ts-node": {
-    "esm": true,
-    "experimentalSpecifierResolution": "node"
+    },
+    "types": ["node"]
   },
   "include": ["./**/*.ts"],
   "exclude": ["node_modules"]
