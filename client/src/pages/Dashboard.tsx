@@ -1,3 +1,4 @@
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import Analytics from "../components/dashboard/Analytics";
@@ -25,27 +26,8 @@ export default function Dashboard() {
         };
       } catch (error) {
         console.error('Analytics fetch error:', error);
-        return {
-          performanceData: [],
-          totalStudyTime: "0",
-          questionsAttempted: 0,
-          averageScore: 0
-        };
+        throw error;
       }
-    },
-    queryKey: ["analytics"],
-    queryFn: async () => {
-      const response = await fetch("/api/analytics/user/1");
-      if (!response.ok) {
-        throw new Error('Failed to fetch analytics');
-      }
-      const data = await response.json();
-      return {
-        performanceData: data.performanceData || [],
-        totalStudyTime: data.totalStudyTime || "0",
-        questionsAttempted: data.questionsAttempted || 0,
-        averageScore: data.averageScore || 0
-      };
     },
     retry: 1,
     refetchOnWindowFocus: false
@@ -63,7 +45,13 @@ export default function Dashboard() {
   }
 
   if (isError) {
-    return <div>Error loading dashboard data. Please try again.</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center space-y-4">
+          <p className="text-red-500">Error loading dashboard data. Please try again.</p>
+        </div>
+      </div>
+    );
   }
 
   const studentProgress = {
@@ -147,10 +135,7 @@ export default function Dashboard() {
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={studentProgress.nclexDomains.map((domain, index) => ({
-                  ...domain,
-                  key: `domain-${index}`
-                }))}>
+                <BarChart data={studentProgress.nclexDomains}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="domain" angle={-45} textAnchor="end" height={80} />
                   <YAxis domain={[0, 100]} />
