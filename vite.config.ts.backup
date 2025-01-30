@@ -13,14 +13,7 @@ export default defineConfig({
                 changeOrigin: true,
                 secure: false,
             }
-        },
-        // Allow all Replit domains and local development
-        allowedHosts: [
-            'localhost',
-            '0.0.0.0',
-            '.replit.dev',
-            '.repl.co'
-        ]
+        }
     },
     build: {
         target: 'esnext',

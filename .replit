@@ -1,4 +1,4 @@
-modules = ["nodejs-20", "postgresql-16", "web"]
+modules = ["nodejs-20", "postgresql-16", "web", "typescript-language-server", "vue-node-20", "vue-node-18", "docker", "python-with-prybar-3.10", "nodejs-with-prybar-18", "gcloud", "bash"]
 run = "npm run dev"
 hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
@@ -12,70 +12,15 @@ run = ["npm", "run", "start"]
 
 [[ports]]
 localPort = 3000
-externalPort = 8080
-
-[[ports]]
-localPort = 3001
-externalPort = 8081
-
-[[ports]]
-localPort = 3002
-externalPort = 8099
-
-[[ports]]
-localPort = 3003
-externalPort = 9000
-
-[[ports]]
-localPort = 4000
-externalPort = 3003
-exposeLocalhost = true
-
-[[ports]]
-localPort = 4001
-externalPort = 4200
-
-[[ports]]
-localPort = 4002
-externalPort = 5000
+externalPort = 3000
 
 [[ports]]
 localPort = 4003
-externalPort = 6000
-
-[[ports]]
-localPort = 4004
-externalPort = 6800
-
-[[ports]]
-localPort = 4005
-externalPort = 8000
+externalPort = 3001
 
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 5173
-externalPort = 5173
-exposeLocalhost = true
-
-[[ports]]
-localPort = 5174
-externalPort = 3000
-exposeLocalhost = true
-
-[[ports]]
-localPort = 5175
-externalPort = 3001
-
-[[ports]]
-localPort = 5176
-externalPort = 3002
-
-[[ports]]
-localPort = 24678
-externalPort = 8008
 
 [workflows]
 runButton = "Start application"
