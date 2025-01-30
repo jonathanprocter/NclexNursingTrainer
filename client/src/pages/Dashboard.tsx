@@ -22,7 +22,7 @@ export default function Dashboard() {
     queryKey: ["analytics"],
     queryFn: async () => {
       const port = '4001';
-      const baseUrl = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:${port}`;
+      const baseUrl = import.meta.env.VITE_API_URL || `http://0.0.0.0:${port}`;
       try {
         const response = await fetch(`${baseUrl}/api/analytics/user/1`, {
           method: 'GET',
@@ -33,7 +33,14 @@ export default function Dashboard() {
           credentials: 'include'
         });
 
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
+        if (!data) {
+          throw new Error('No data received from server');
+        }
         
         return {
           performanceData: Array.isArray(data?.performanceData) ? data.performanceData : studentProgress.nclexDomains,
