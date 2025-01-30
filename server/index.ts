@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 
 const app = express();
-const port = process.env.PORT || 4003;
+const port = process.env.PORT || 4004;
 
 // Configure CORS to allow Replit domains
 app.use(cors({

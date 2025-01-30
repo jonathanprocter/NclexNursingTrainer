@@ -1,76 +1,71 @@
 
 import { memo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { ErrorBoundary } from "react-error-boundary";
 import type { AnalyticsData } from "../../types/analytics";
 
-function Analytics() {
-  const { data: analytics, isError, isLoading } = useQuery<AnalyticsData>({
-    queryKey: ["analytics"],
-    queryFn: async () => {
-      const response = await fetch("/api/analytics");
-      if (!response.ok) {
-        throw new Error("Failed to fetch analytics");
-      }
-      return response.json();
-    },
-  });
+interface AnalyticsProps {
+  analytics: AnalyticsData;
+}
 
-  if (isLoading) {
-    return (
-      <Card className="w-full h-[400px] animate-pulse">
-        <CardHeader>
-          <div className="h-6 w-1/3 bg-muted rounded" />
-        </CardHeader>
-        <CardContent>
-          <div className="h-[300px] bg-muted rounded" />
-        </CardContent>
-      </Card>
-    );
-  }
+const ErrorFallback = ({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) => (
+  <div className="p-4 bg-destructive/10 rounded-md">
+    <h2 className="text-lg font-semibold mb-2">Analytics Error</h2>
+    <p className="text-sm text-destructive mb-4">{error.message}</p>
+    <button onClick={resetErrorBoundary} className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90">
+      Try again
+    </button>
+  </div>
+);
 
-  if (isError) {
-    return (
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle>Error Loading Analytics</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-destructive">Failed to load analytics data. Please try again later.</p>
-        </CardContent>
-      </Card>
-    );
-  }
+function PerformanceChart({ data }: { data: { domain: string; mastery: number }[] }) {
+  return (
+    <div className="h-[400px]">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="domain" />
+          <YAxis domain={[0, 100]} />
+          <Tooltip />
+          <Line 
+            type="monotone" 
+            dataKey="mastery" 
+            stroke="hsl(var(--primary))" 
+            strokeWidth={2}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
 
+function Analytics({ analytics }: AnalyticsProps) {
   if (!analytics?.performanceData) {
-    return null;
+    return <div className="p-4">Loading analytics data...</div>;
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Performance Analytics</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="h-[400px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={analytics.performanceData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="domain" />
-              <YAxis domain={[0, 100]} />
-              <Tooltip />
-              <Line 
-                type="monotone" 
-                dataKey="mastery" 
-                stroke="hsl(var(--primary))" 
-                strokeWidth={2}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <Tabs defaultValue="performance" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="performance">Performance Analysis</TabsTrigger>
+          </TabsList>
+          <TabsContent value="performance">
+            <Card>
+              <CardHeader>
+                <CardTitle>Performance Trends</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <PerformanceChart data={analytics.performanceData} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </ErrorBoundary>
+    </div>
   );
 }
 
