@@ -4,6 +4,7 @@ import cors from 'cors';
 import { registerRoutes } from "./routes";
 import { setupVite } from "./vite";
 import { checkDatabaseHealth } from './db';
+import analyticsRoutes from './routes/analytics'; // Added import for analytics routes
 
 const app = express();
 
@@ -26,7 +27,10 @@ app.get('/health', async (_req: Request, res: Response) => {
 });
 
 // Register all API routes
+// Updated route registration to include analytics routes
+app.use('/api/analytics', analyticsRoutes); // Added analytics route
 const server = registerRoutes(app);
+
 
 // Setup Vite development server middleware in development mode
 if (process.env.NODE_ENV === 'development') {

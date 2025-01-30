@@ -50,20 +50,21 @@ const API_BASE_URL = (() => {
 
 export async function fetchAnalytics(userId: string): Promise<AnalyticsData> {
   try {
-    const data = await fetchWithRetry<AnalyticsData>(
-      `${API_BASE_URL}/api/analytics/user/${userId}`,
+    const response = await fetchWithRetry<AnalyticsData>(
+      `${API_BASE_URL}/api/analytics/${userId}`, // Corrected URL
       {
         method: 'GET',
         credentials: 'include'
       }
     );
 
+
     // Validate response data structure
-    if (!data || typeof data !== 'object' || !Array.isArray(data.performanceData)) {
+    if (!response || typeof response !== 'object' || !Array.isArray(response.performanceData)) {
       throw new Error('Invalid analytics data format');
     }
 
-    return data;
+    return response;
   } catch (error) {
     console.error('Analytics API error:', error);
     throw error instanceof Error ? error : new Error('Failed to fetch analytics data');
