@@ -125,34 +125,6 @@ export const quizAttempts = pgTable("quiz_attempts", {
   weaknessAreas: json("weakness_areas").$type<string[]>().default([])
 });
 
-export const userProgress = pgTable("user_progress", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id, { onDelete: 'cascade' }).notNull(),
-  moduleId: integer("module_id").references(() => modules.id, { onDelete: 'cascade' }).notNull(),
-  questionId: integer("question_id").references(() => questions.id, { onDelete: 'set null' }),
-  totalQuestions: integer("total_questions").default(0).notNull(),
-  correctAnswers: integer("correct_answers").default(0).notNull(),
-  lastStudied: timestamp("last_studied"),
-  studyStreak: integer("study_streak").default(0).notNull(),
-  masteryLevel: integer("mastery_level").default(0).notNull(),
-  easeFactor: integer("ease_factor").default(250).notNull(),
-  interval: integer("interval").default(1).notNull(),
-  repetitions: integer("repetitions").default(0).notNull(),
-  nextReview: timestamp("next_review"),
-  isCorrect: boolean("is_correct").default(false).notNull(),
-  weakAreas: json("weak_areas").$type<string[]>().default([]),
-  strongAreas: json("strong_areas").$type<string[]>().default([]),
-  studyGoals: json("study_goals").$type<Record<string, any>>().default({}),
-  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
-}, (table) => ({
-  userIdx: index("user_progress_user_idx").on(table.userId),
-  moduleIdx: index("user_progress_module_idx").on(table.moduleId),
-  questionIdx: index("user_progress_question_idx").on(table.questionId),
-  reviewIdx: index("user_progress_review_idx").on(table.nextReview),
-  userModuleIdx: unique("user_progress_user_module_idx").on(table.userId, table.moduleId)
-}));
-
-
 // Type inference helpers
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -175,8 +147,7 @@ export type NewStudyBuddyChat = typeof studyBuddyChats.$inferInsert;
 export type QuizAttempt = typeof quizAttempts.$inferSelect;
 export type NewQuizAttempt = typeof quizAttempts.$inferInsert;
 
-
-// Zod validation schemas with enhanced validation
+// Zod validation schemas
 export const insertUserSchema = createInsertSchema(users);
 export const selectUserSchema = createSelectSchema(users);
 
