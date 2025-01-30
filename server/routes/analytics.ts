@@ -1,10 +1,22 @@
 import { Router } from 'express';
+import { z } from 'zod';
 
 const router = Router();
 
+// Analytics data schema for validation
+const analyticsDataSchema = z.object({
+  performanceData: z.array(z.object({
+    domain: z.string(),
+    mastery: z.number().min(0).max(100)
+  })),
+  totalStudyTime: z.string(),
+  questionsAttempted: z.number(),
+  averageScore: z.number().min(0).max(100)
+});
+
 router.get('/:userId', async (req, res) => {
   try {
-    // Provide default analytics data for now
+    // Provide validated analytics data
     const analyticsData = {
       performanceData: [
         { domain: "Clinical Judgment", mastery: 75 },
@@ -17,34 +29,37 @@ router.get('/:userId', async (req, res) => {
       averageScore: 78
     };
 
-    res.json(analyticsData);
+    // Validate data against schema
+    const validatedData = analyticsDataSchema.parse(analyticsData);
+
+    res.json(validatedData);
   } catch (error) {
     console.error('Analytics error:', error);
     res.status(500).json({ error: 'Failed to fetch analytics data' });
   }
 });
 
-router.get('/user/:id', async (req, res) => {
+// Remove duplicate route to avoid conflicts
+router.get('/performance/:userId', async (req, res) => {
   try {
-    // More realistic mock data
-    const userId = req.params.id;
-    const analyticsData = {
+    const userId = req.params.userId;
+    const performanceData = {
       userId: userId,
       performanceData: [
-        { module: "Pharmacology", score: 85 },
-        { module: "Pathophysiology", score: 75 },
-        { module: "Med-Surg", score: 78 },
-        { module: "Mental Health", score: 82 }
+        { module: "Pharmacology", mastery: 85 },
+        { module: "Pathophysiology", mastery: 75 },
+        { module: "Med-Surg", mastery: 78 },
+        { module: "Mental Health", mastery: 82 }
       ],
       totalStudyTime: "45.5",
       questionsAttempted: 428,
       averageScore: 82
     };
 
-    res.json(analyticsData);
+    res.json(performanceData);
   } catch (error) {
-    console.error('Analytics fetch error:', error);
-    res.status(500).json({ error: 'Failed to fetch analytics data' });
+    console.error('Performance data fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch performance data' });
   }
 });
 

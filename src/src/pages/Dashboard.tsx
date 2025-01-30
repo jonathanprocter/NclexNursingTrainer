@@ -7,8 +7,8 @@ import { useQuery } from "@tanstack/react-query";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { Progress } from "../components/ui/progress";
 import { useBreakpoint } from "../hooks/use-mobile";
-import { fetchAnalytics } from "@/lib/ai-services";
-import type { AnalyticsData } from "@/types/analytics";
+import { fetchAnalytics } from "../lib/ai-services";
+import type { AnalyticsData } from "../types/analytics";
 
 export default function Dashboard() {
   const { isMobile, isTablet } = useBreakpoint();

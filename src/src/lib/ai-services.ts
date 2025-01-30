@@ -1,9 +1,9 @@
 import { AIAnalysisResult, SimulationFeedback, SimulationScenario } from './types';
-import { AnalyticsData } from '@/types/analytics';
+import { AnalyticsData } from '../types/analytics';
 
 // Utility function for API calls with retry logic
 const fetchWithRetry = async <T>(url: string, options: RequestInit, retries = 3): Promise<T> => {
-  let lastError: Error;
+  let lastError: Error = new Error('Initial error state');
 
   for (let i = 0; i < retries; i++) {
     try {
@@ -38,26 +38,19 @@ const fetchWithRetry = async <T>(url: string, options: RequestInit, retries = 3)
 };
 
 // Analytics API base URL configuration
-const API_BASE_URL = (() => {
-  const defaultUrl = 'http://0.0.0.0:4003';
-  try {
-    return import.meta.env.VITE_API_URL || defaultUrl;
-  } catch (e) {
-    console.warn('Environment variables not available, using default URL');
-    return defaultUrl;
-  }
-})();
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://0.0.0.0:4003';
 
 export async function fetchAnalytics(userId: string): Promise<AnalyticsData> {
   try {
     const response = await fetchWithRetry<AnalyticsData>(
-      `${API_BASE_URL}/api/analytics/${userId}`, // Using configured base URL
+      `${API_BASE_URL}/api/analytics/${userId}`,
       {
         method: 'GET',
-        credentials: 'include'
+        headers: {
+          'Content-Type': 'application/json'
+        }
       }
     );
-
 
     // Validate response data structure
     if (!response || typeof response !== 'object' || !Array.isArray(response.performanceData)) {
