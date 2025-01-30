@@ -9,15 +9,17 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
     "allowJs": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]
     }
+  },
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
   },
   "include": ["./**/*"],
   "exclude": ["node_modules"]
