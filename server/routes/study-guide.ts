@@ -25,21 +25,21 @@ router.get("/current", async (req, res) => {
       .where(eq(userProgress.userId, userId)) as PerformanceData[];
 
     // Calculate performance metrics
-    const completedModules = performance.filter((p: PerformanceData) => p.totalQuestions !== null && p.totalQuestions > 0);
+    const completedModules = performance.filter((p: PerformanceData) => p.totalQuestions != null && p.totalQuestions > 0);
     const averageScore = completedModules.length > 0
       ? completedModules.reduce((acc, curr) => acc + ((curr.correctAnswers || 0) / (curr.totalQuestions || 1) * 100), 0) / completedModules.length
       : 0;
 
     // Generate adaptive recommendations based on performance
     const weakModules = completedModules
-      .filter((p: PerformanceData) => p.totalQuestions !== null && p.correctAnswers !== null && (p.correctAnswers / p.totalQuestions) < 0.7)
+      .filter((p: PerformanceData) => p.totalQuestions != null && p.correctAnswers != null && (p.correctAnswers / p.totalQuestions) < 0.7)
       .map((p: PerformanceData) => ({
         moduleId: p.moduleId?.toString(),
         score: ((p.correctAnswers || 0) / (p.totalQuestions || 1) * 100).toFixed(1)
       }));
 
     const strongModules = completedModules
-      .filter((p: PerformanceData) => p.totalQuestions !== null && p.correctAnswers !== null && (p.correctAnswers / p.totalQuestions) >= 0.7)
+      .filter((p: PerformanceData) => p.totalQuestions != null && p.correctAnswers != null && (p.correctAnswers / p.totalQuestions) >= 0.7)
       .map((p: PerformanceData) => ({
         moduleId: p.moduleId?.toString(),
         score: ((p.correctAnswers || 0) / (p.totalQuestions || 1) * 100).toFixed(1)

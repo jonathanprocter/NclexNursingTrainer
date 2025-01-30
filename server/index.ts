@@ -6,6 +6,14 @@ import { setupVite } from "./vite";
 import { checkDatabaseHealth } from './db';
 
 const app = express();
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use("/api", require("./routes"));
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use("/api", require("./routes"));
+
 
 // Security middleware
 app.use(express.json({ limit: '10mb' }));
