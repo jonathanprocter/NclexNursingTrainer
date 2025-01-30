@@ -32,15 +32,10 @@ const mockAnalyticsData = {
   averageScore: 78
 };
 
-router.get('/:userId', async (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    const userId = req.params.userId;
-    if (!userId) {
-      return res.status(400).json({
-        success: false,
-        error: 'User ID is required'
-      });
-    }
+    // Remove userId requirement since we're just returning mock data
+    console.log('Fetching analytics data');
     
     console.log(`Fetching analytics data for user ${userId}`);
 
@@ -61,16 +56,20 @@ router.get('/:userId', async (req, res) => {
     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
 
+    if (!validatedData) {
+      throw new Error('No analytics data available');
+    }
+    
     res.json({ 
       success: true, 
       data: validatedData 
     });
   } catch (error) {
     console.error('Analytics error:', error);
-    res.status(500).json({ 
+    res.status(error instanceof Error && error.message.includes('No analytics') ? 404 : 500).json({ 
       success: false, 
       error: 'Failed to fetch analytics data',
-      details: error instanceof Error ? error.message : undefined 
+      details: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });
