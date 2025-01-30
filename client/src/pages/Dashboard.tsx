@@ -24,11 +24,10 @@ export default function Dashboard() {
   const { data: analytics, isError, isLoading, error } = useQuery<AnalyticsData>({
     queryKey: ["analytics"],
     queryFn: async () => {
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://0.0.0.0:4002'
-        : '';
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://0.0.0.0:4002';
 
       try {
+        console.log('Attempting to fetch analytics from:', baseUrl);
         const response = await fetch(`${baseUrl}/api/analytics/user/1`, {
           method: 'GET',
           headers: {
@@ -39,10 +38,16 @@ export default function Dashboard() {
         });
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
+        if (!data || typeof data !== 'object') {
+          throw new Error('Invalid response format');
+        }
+
+        // Provide sensible defaults for missing data
         return {
           performanceData: data?.performanceData || studentProgress.nclexDomains,
           totalStudyTime: data?.totalStudyTime || "0",
@@ -51,11 +56,17 @@ export default function Dashboard() {
         };
       } catch (error) {
         console.error("Analytics fetch error:", error);
-        throw new Error("Failed to fetch analytics data");
+        throw error instanceof Error ? error : new Error("Failed to fetch analytics data");
       }
     },
-    retry: 2,
-    retryDelay: 1000,
+    retry: (failureCount, error) => {
+      // Only retry up to 3 times and not on 4xx errors
+      if (error instanceof Error && error.message.includes('status: 4')) {
+        return false;
+      }
+      return failureCount < 3;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
     refetchOnWindowFocus: false,
   });
 
@@ -151,21 +162,21 @@ export default function Dashboard() {
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={studentProgress.recentProgress}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="week" 
-                    tick={{ fontSize: isMobile ? 12 : 14 }} 
+                  <XAxis
+                    dataKey="week"
+                    tick={{ fontSize: isMobile ? 12 : 14 }}
                     height={40}
                   />
-                  <YAxis 
-                    domain={[0, 100]} 
+                  <YAxis
+                    domain={[0, 100]}
                     tick={{ fontSize: isMobile ? 12 : 14 }}
                     width={40}
                   />
                   <Tooltip />
-                  <Line 
-                    type="monotone" 
-                    dataKey="score" 
-                    stroke="hsl(var(--primary))" 
+                  <Line
+                    type="monotone"
+                    dataKey="score"
+                    stroke="hsl(var(--primary))"
                     name="Weekly Score"
                     strokeWidth={2}
                     dot={{ strokeWidth: 2 }}
@@ -185,23 +196,23 @@ export default function Dashboard() {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={studentProgress.nclexDomains}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="domain" 
-                    angle={isMobile ? -45 : -30} 
-                    textAnchor="end" 
+                  <XAxis
+                    dataKey="domain"
+                    angle={isMobile ? -45 : -30}
+                    textAnchor="end"
                     height={100}
                     tick={{ fontSize: isMobile ? 10 : 12 }}
                     interval={0}
                   />
-                  <YAxis 
-                    domain={[0, 100]} 
+                  <YAxis
+                    domain={[0, 100]}
                     tick={{ fontSize: isMobile ? 12 : 14 }}
                     width={40}
                   />
                   <Tooltip />
-                  <Bar 
-                    dataKey="mastery" 
-                    fill="hsl(var(--primary))" 
+                  <Bar
+                    dataKey="mastery"
+                    fill="hsl(var(--primary))"
                     name="Domain Mastery"
                   />
                 </BarChart>

@@ -11,12 +11,35 @@ const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// CORS configuration with appropriate settings for development
+// Enhanced CORS configuration for development
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://0.0.0.0:3000',
+  'http://0.0.0.0:4002',
+  'http://localhost:4002',
+  process.env.NODE_ENV === 'production' ? process.env.PRODUCTION_URL : null,
+  // Handle Replit preview URLs
+  /\.repl\.co$/,
+  /\.replit\.dev$/
+].filter(Boolean);
+
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://0.0.0.0:3000'],
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.some(allowed => 
+      typeof allowed === 'string' 
+        ? allowed === origin 
+        : allowed.test(origin)
+    )) {
+      callback(null, true);
+    } else {
+      console.warn(`Blocked by CORS: ${origin} not allowed`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range']
 }));
 
 // Database health check
@@ -43,33 +66,37 @@ app.use((err: ErrorWithStatus, _req: Request, res: Response, _next: NextFunction
   console.error('Error:', err);
   const status = err.status || err.statusCode || 500;
   const message = err.message || "Internal Server Error";
-  res.status(status).json({ 
+  res.status(status).json({
     success: false,
     message,
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   });
 });
 
-const startPort = parseInt(process.env.PORT || '4001', 10);
+const startPort = parseInt(process.env.PORT || '4002', 10);
 const HOST = '0.0.0.0';
 
 const startServer = (port: number) => {
-  server.listen(port, HOST)
-    .on('listening', () => {
+  try {
+    server.listen(port, HOST, () => {
       console.log('=================================');
       console.log('Server started successfully');
       console.log(`Server is running on port ${port}`);
       console.log(`Access URL: http://${HOST}:${port}`);
       console.log('=================================');
-    })
-    .on('error', (err: NodeJS.ErrnoException) => {
+    }).on('error', (err: NodeJS.ErrnoException) => {
       if (err.code === 'EADDRINUSE') {
         console.log(`Port ${port} is busy, trying ${port + 1}`);
         startServer(port + 1);
       } else {
-        throw err;
+        console.error('Server error:', err);
+        process.exit(1);
       }
     });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
 };
 
 startServer(startPort);

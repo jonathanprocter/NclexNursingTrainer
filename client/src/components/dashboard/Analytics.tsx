@@ -26,31 +26,23 @@ interface AnalyticsProps {
   data?: AnalyticsData;
 }
 
+const DEFAULT_ANALYTICS: AnalyticsData = {
+  performanceData: [
+    { domain: "Clinical Judgment", mastery: 75 },
+    { domain: "Patient Safety", mastery: 80 },
+    { domain: "Care Management", mastery: 65 },
+    { domain: "Health Promotion", mastery: 70 }
+  ],
+  totalStudyTime: "0",
+  questionsAttempted: 0,
+  averageScore: 0
+};
+
 export default function Analytics({ data }: AnalyticsProps) {
   const { isMobile, isTablet } = useBreakpoint();
 
-  if (!data) {
-    return (
-      <div className="flex items-center justify-center p-6" role="alert" aria-busy="true">
-        <div className="text-center space-y-2">
-          <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto"></div>
-          <p className="text-muted-foreground">Loading analytics...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const performanceData = data.performanceData || [
-    { domain: "Clinical Judgment", mastery: 85 },
-    { domain: "Patient Safety", mastery: 82 },
-    { domain: "Pharmacology", mastery: 75 },
-    { domain: "Risk Management", mastery: 78 },
-  ];
-
-  const totalStudyTime = data.totalStudyTime ?? "45.5"
-  const questionsAttempted = data.questionsAttempted ?? 428
-  const averageScore = data.averageScore ?? 82
-
+  // Use default data if not provided or if there's an error
+  const analyticsData = data || DEFAULT_ANALYTICS;
   const chartHeight = isMobile ? 250 : isTablet ? 300 : 350;
 
   return (
@@ -63,7 +55,7 @@ export default function Analytics({ data }: AnalyticsProps) {
           <div style={{ height: chartHeight }} className={isMobile ? '-mx-4' : ''}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={performanceData}
+                data={analyticsData.performanceData}
                 margin={{ 
                   top: 5, 
                   right: isMobile ? 10 : 20, 
@@ -115,19 +107,19 @@ export default function Analytics({ data }: AnalyticsProps) {
           <div className="grid gap-4">
             <div className="bg-muted p-4 rounded-lg">
               <p className="text-sm text-muted-foreground">Total Study Time</p>
-              <p className="text-2xl font-bold">{totalStudyTime} hours</p>
+              <p className="text-2xl font-bold">{analyticsData.totalStudyTime} hours</p>
             </div>
             <div className="bg-muted p-4 rounded-lg">
               <p className="text-sm text-muted-foreground">Questions Attempted</p>
-              <p className="text-2xl font-bold">{questionsAttempted}</p>
+              <p className="text-2xl font-bold">{analyticsData.questionsAttempted}</p>
             </div>
             <div className="bg-muted p-4 rounded-lg">
               <p className="text-sm text-muted-foreground">Average Score</p>
-              <p className="text-2xl font-bold">{averageScore}%</p>
+              <p className="text-2xl font-bold">{analyticsData.averageScore}%</p>
             </div>
           </div>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

@@ -382,37 +382,74 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Analytics routes with AI insights
+  // Analytics routes with improved error handling
   app.get("/api/analytics/user/:userId", async (req, res) => {
     try {
+      console.log(`Fetching analytics for user ${req.params.userId}`);
+
+      if (!req.params.userId || isNaN(parseInt(req.params.userId))) {
+        return res.status(400).json({
+          message: "Invalid user ID provided",
+          success: false
+        });
+      }
+
+      const userId = parseInt(req.params.userId);
+
       const attempts = await db.query.quizAttempts.findMany({
-        where: eq(quizAttempts.userId, parseInt(req.params.userId)),
+        where: eq(quizAttempts.userId, userId),
         orderBy: (quizAttempts, { desc }) => [desc(quizAttempts.startedAt)],
       });
 
       const progress = await db.query.userProgress.findMany({
-        where: eq(userProgress.userId, parseInt(req.params.userId)),
+        where: eq(userProgress.userId, userId),
       });
+
+      if (!attempts && !progress) {
+        console.log('No data found for user');
+        return res.status(404).json({
+          message: "No analytics data found for user",
+          success: false
+        });
+      }
 
       // Analyze overall performance
       const overallAnalysis = await analyzePerformance(
-        attempts.flatMap((a: any) => a.answers as any[])
+        attempts?.flatMap(attempt => attempt.answers || []) || []
       );
 
-      res.json({
-        attempts,
-        progress,
-        analysis: overallAnalysis,
-        summary: {
-          totalAttempts: attempts.length,
-          averageScore: attempts.reduce((acc, curr) => acc + curr.score, 0) / attempts.length || 0,
-          strengths: overallAnalysis?.strengths || [],
-          weaknesses: overallAnalysis?.weaknesses || [],
-          confidence: overallAnalysis?.confidence || 0
-        },
-      });
+      console.log('Successfully generated analytics response');
+
+      // Format the response data with defaults
+      const analyticsResponse = {
+        success: true,
+        data: {
+          attempts: attempts || [],
+          progress: progress || [],
+          analysis: overallAnalysis || {
+            strengths: [],
+            weaknesses: [],
+            confidence: 0,
+            recommendedTopics: []
+          },
+          summary: {
+            totalAttempts: attempts?.length || 0,
+            averageScore: attempts?.reduce((acc, curr) => acc + (curr.score || 0), 0) / (attempts?.length || 1) || 0,
+            strengths: overallAnalysis?.strengths || [],
+            weaknesses: overallAnalysis?.weaknesses || [],
+            confidence: overallAnalysis?.confidence || 0
+          },
+        }
+      };
+
+      res.json(analyticsResponse);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch analytics" });
+      console.error("Error in analytics endpoint:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch analytics",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 
@@ -765,11 +802,16 @@ async function analyzePerformance(answers: any[]) {
       ]
     });
 
+    const strengths = completion.choices[0]?.message?.content?.split(', ') || ["Clinical reasoning", "Patient safety"];
+    const weaknesses = completion.choices[0]?.message?.content?.split(', ') || ["Pharmacology calculations", "Priority setting"];
+    const confidence = parseFloat(completion.choices[0]?.message?.content?.split(', ')[2]) || 0.75;
+    const recommendedTopics = completion.choices[0]?.message?.content?.split(', ') || ["Medication administration", "Critical thinking"];
+
     return {
-      strengths: ["Clinical reasoning", "Patient safety"],
-      weaknesses: ["Pharmacology calculations", "Priority setting"],
-      confidence: 0.75,
-      recommendedTopics: ["Medication administration", "Critical thinking"]
+      strengths,
+      weaknesses,
+      confidence,
+      recommendedTopics
     };
   } catch (error) {
     console.error("Error analyzing performance:", error);
@@ -893,10 +935,10 @@ const practiceQuestions = {
         { id: "c", text: "Notify healthcare provider" },
         { id: "d", text: "Apply ice pack to affected area" }
       ],
-      correctAnswer: "a",
+correctAnswer: "a",
       explanation: "Pain assessment should be conducted first to determine appropriate interventions.",
       category: "Patient Care",
       difficulty: "Medium"
-    }
-  ]
-};
+    }]
+  }
+}
