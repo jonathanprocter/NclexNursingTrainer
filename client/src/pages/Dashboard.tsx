@@ -30,13 +30,21 @@ export default function Dashboard() {
           credentials: 'include'
         });
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch analytics");
-      }
+        if (!response.ok) {
+          throw new Error("Failed to fetch analytics");
+        }
 
-      const data = await response.json();
-      return {
-        performanceData: Array.isArray(data?.performanceData) ? data.performanceData : studentProgress.nclexDomains,
+        const data = await response.json();
+        return {
+          performanceData: Array.isArray(data?.performanceData) ? data.performanceData : studentProgress.nclexDomains,
+          totalStudyTime: data?.totalStudyTime || "0",
+          questionsAttempted: data?.questionsAttempted || 0,
+          averageScore: data?.averageScore || studentProgress.predictedPassRate,
+        };
+      } catch (error) {
+        console.error('Error fetching analytics:', error);
+        throw error;
+      }
         totalStudyTime: data?.totalStudyTime || "0",
         questionsAttempted: data?.questionsAttempted || 0,
         averageScore: data?.averageScore || studentProgress.predictedPassRate,
