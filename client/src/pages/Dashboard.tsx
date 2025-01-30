@@ -21,14 +21,14 @@ export default function Dashboard() {
   const { data: analytics, isError, isLoading, error } = useQuery<AnalyticsData>({
     queryKey: ["analytics"],
     queryFn: async () => {
-      const baseUrl = import.meta.env.DEV ? 'http://0.0.0.0:4001' : '';
-      const response = await fetch(`${baseUrl}/api/analytics/user/1`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include'
-      });
+      try {
+        const response = await fetch('/api/analytics/user/1', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        });
 
       if (!response.ok) {
         throw new Error("Failed to fetch analytics");
