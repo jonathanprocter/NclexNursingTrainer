@@ -21,7 +21,7 @@ export default function Dashboard() {
   const { data: analytics, isError, isLoading, error } = useQuery<AnalyticsData>({
     queryKey: ["analytics"],
     queryFn: async () => {
-      const response = await fetch("http://0.0.0.0:4001/api/analytics/user/1", {
+      const response = await fetch("/api/analytics/user/1", {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
