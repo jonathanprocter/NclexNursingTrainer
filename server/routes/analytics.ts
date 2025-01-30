@@ -1,13 +1,18 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import cors from 'cors';
-import { analyticsDataSchema } from '../../src/types/analytics.js';
+import { analyticsDataSchema, progressDataSchema } from '../../src/types/analytics';
 
 const router = Router();
 
 // Configure CORS for all origins in development
 router.use(cors({
-  origin: true, // Allow all origins in development
+  origin: [
+    'http://localhost:3000',
+    'http://0.0.0.0:3000',
+    /\.replit\.dev$/,
+    /\.repl\.co$/
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -28,6 +33,8 @@ const mockAnalyticsData = {
 
 router.get('/:userId', async (req, res) => {
   try {
+    console.log(`Fetching analytics data for user ${req.params.userId}`);
+
     // Parse and validate query parameters
     const queryParamsSchema = z.object({
       from: z.string().datetime().optional(),
@@ -39,16 +46,38 @@ router.get('/:userId', async (req, res) => {
     // Validate mock data against schema
     const validatedData = analyticsDataSchema.parse(mockAnalyticsData);
 
-    // Enable CORS for all origins in development
-    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-    res.json(validatedData);
+    res.json({ 
+      success: true, 
+      data: validatedData 
+    });
   } catch (error) {
     console.error('Analytics error:', error);
-    res.status(500).json({ error: 'Failed to fetch analytics data' });
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch analytics data',
+      details: error instanceof Error ? error.message : undefined 
+    });
+  }
+});
+
+router.post('/progress/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const progressData = progressDataSchema.parse(req.body);
+
+    // Here you would typically save to database
+    // For now, just validate and return success
+    res.json({ 
+      success: true, 
+      data: { userId, ...progressData }
+    });
+  } catch (error) {
+    console.error('Progress update error:', error);
+    res.status(400).json({ 
+      success: false,
+      error: 'Invalid progress data',
+      details: error instanceof Error ? error.message : undefined
+    });
   }
 });
 

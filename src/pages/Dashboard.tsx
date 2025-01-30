@@ -6,7 +6,11 @@ import { memo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import axios from "axios";
 
-const PerformanceOverview = memo(({ analytics }: { analytics: AnalyticsData }) => (
+interface PerformanceOverviewProps {
+  analytics: AnalyticsData;
+}
+
+const PerformanceOverview = memo(({ analytics }: PerformanceOverviewProps) => (
   <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10">
     <CardHeader>
       <CardTitle className="text-lg sm:text-xl">Performance Overview</CardTitle>
@@ -15,7 +19,7 @@ const PerformanceOverview = memo(({ analytics }: { analytics: AnalyticsData }) =
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <div>
           <p className="text-sm text-muted-foreground">Study Time</p>
-          <p className="text-lg font-semibold">{analytics.totalStudyTime}</p>
+          <p className="text-lg font-semibold">{analytics.totalStudyTime}h</p>
         </div>
         <div>
           <p className="text-sm text-muted-foreground">Questions</p>
@@ -49,14 +53,25 @@ const PerformanceOverviewSkeleton = () => (
 );
 
 function Dashboard() {
-  const { data: analytics, isError, isLoading, error } = useQuery({
-    queryKey: ["analytics"],
+  const { data: analyticsResponse, isError, isLoading, error } = useQuery({
+    queryKey: ["analytics", "user", "1"], // Using a static userId for now
     queryFn: async () => {
       try {
-        const baseUrl = import.meta.env.VITE_API_URL || window.location.origin;
-        const response = await axios.get<AnalyticsData>(`${baseUrl}/api/analytics`);
-        console.log('Analytics response:', response.data);
-        return response.data;
+        console.log('Fetching analytics data...');
+        const baseUrl = import.meta.env.VITE_API_URL || `${window.location.protocol}//${window.location.hostname}:4005`;
+        console.log('Using API URL:', baseUrl);
+
+        const response = await axios.get<{ success: boolean; data: AnalyticsData; error?: string }>(
+          `${baseUrl}/api/analytics/1`
+        );
+
+        console.log('Received analytics response:', response.data);
+
+        if (!response.data.success) {
+          throw new Error(response.data.error || 'Failed to fetch analytics');
+        }
+
+        return response.data.data;
       } catch (error) {
         console.error('Error fetching analytics:', error);
         throw error;
@@ -84,7 +99,7 @@ function Dashboard() {
     );
   }
 
-  if (!analytics) {
+  if (!analyticsResponse) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="text-center space-y-4">
@@ -96,8 +111,8 @@ function Dashboard() {
 
   return (
     <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-6 lg:p-8">
-      <PerformanceOverview analytics={analytics} />
-      <Analytics analytics={analytics} />
+      <PerformanceOverview analytics={analyticsResponse} />
+      <Analytics analytics={analyticsResponse} />
     </div>
   );
 }
