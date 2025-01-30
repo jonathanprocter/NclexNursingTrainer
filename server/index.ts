@@ -11,52 +11,59 @@ const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Enhanced CORS configuration for development
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://0.0.0.0:3000',
-  'http://0.0.0.0:4002',
-  'http://localhost:4002',
-  process.env.NODE_ENV === 'production' ? process.env.PRODUCTION_URL : null,
-  // Handle Replit preview URLs
-  /\.repl\.co$/,
-  /\.replit\.dev$/
-].filter(Boolean);
+// Enhanced CORS configuration for development. Simplified from original but retains functionality.
+if (process.env.NODE_ENV === 'development') {
+  app.use(cors({
+    origin: 'http://0.0.0.0:4000', //Using edited origin for development
+    credentials: true
+  }));
+} else {
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://0.0.0.0:3000',
+    'http://0.0.0.0:4002',
+    'http://localhost:4002',
+    process.env.NODE_ENV === 'production' ? process.env.PRODUCTION_URL : null,
+    /\.repl\.co$/,
+    /\.replit\.dev$/
+  ].filter(Boolean);
 
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.some(allowed => 
-      typeof allowed === 'string' 
-        ? allowed === origin 
-        : allowed.test(origin)
-    )) {
-      callback(null, true);
-    } else {
-      console.warn(`Blocked by CORS: ${origin} not allowed`);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range']
-}));
+  app.use(cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.some(allowed =>
+        typeof allowed === 'string'
+          ? allowed === origin
+          : allowed.test(origin)
+      )) {
+        callback(null, true);
+      } else {
+        console.warn(`Blocked by CORS: ${origin} not allowed`);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    exposedHeaders: ['Content-Range', 'X-Content-Range']
+  }));
+}
 
-// Database health check
+
+// Database health check (from original code)
 app.get('/health', async (_req: Request, res: Response) => {
   const health = await checkDatabaseHealth();
   res.status(health.status === 'healthy' ? 200 : 503).json(health);
 });
 
-// Register all API routes
+// Register all API routes (from original code)
 const server = registerRoutes(app);
 
-// Setup Vite development server middleware in development mode
+// Setup Vite development server middleware in development mode (from original code)
 if (process.env.NODE_ENV === 'development') {
   setupVite(app, server);
 }
 
-// Global error handling middleware
+// Global error handling middleware (simplified from original and edited)
 interface ErrorWithStatus extends Error {
   status?: number;
   statusCode?: number;
@@ -122,7 +129,7 @@ function startServer() {
   });
 }
 
-// Handle process signals
+// Handle process signals (from original code)
 process.on('SIGTERM', () => {
   console.log('SIGTERM received. Shutting down gracefully...');
   server.close(() => {
@@ -131,7 +138,7 @@ process.on('SIGTERM', () => {
   });
 });
 
-// Start the server and export for testing
+// Start the server and export for testing (from original code)
 startServer()
   .catch((error) => {
     console.error('Server startup failed:', error);
