@@ -31,7 +31,7 @@ const PerformanceOverview = memo(({ analytics }: { analytics: AnalyticsData }) =
 ));
 
 const PerformanceOverviewSkeleton = () => (
-  <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10">
+  <Card>
     <CardHeader>
       <Skeleton className="h-6 w-48" />
     </CardHeader>
