@@ -3,13 +3,11 @@ import { Router } from 'express';
 const router = Router();
 
 router.get('/user/:id', async (req, res) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '');
+  const origin = req.headers.origin || 'http://0.0.0.0:3000';
+  res.header('Access-Control-Allow-Origin', origin);
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Accept');
-  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Accept');
-  res.header('Access-Control-Allow-Credentials', 'true');
   
   if (req.method === 'OPTIONS') {
     return res.status(200).end();

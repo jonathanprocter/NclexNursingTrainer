@@ -23,16 +23,14 @@ export default function Dashboard() {
     queryFn: async () => {
       try {
         const port = '4001';
-        const hostname = window.location.hostname;
-        const baseUrl = import.meta.env.VITE_API_URL || `https://${hostname}:${port}`;
+        const baseUrl = import.meta.env.VITE_API_URL || `http://0.0.0.0:${port}`;
         const response = await fetch(`${baseUrl}/api/analytics/user/1`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
           },
-          credentials: 'include',
-          mode: 'cors'
+          credentials: 'include'
         });
 
         if (!response.ok) {
