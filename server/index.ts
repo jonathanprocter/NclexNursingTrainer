@@ -7,7 +7,7 @@ import type { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { registerRoutes } from "./routes.js";
 import { setupVite } from "./vite.js";
-import { checkDatabaseHealth } from './db.js';
+import { checkDatabaseHealth } from './db';
 import analyticsRoutes from './routes/analytics.js';
 
 const app = express();
