@@ -29,11 +29,11 @@ export default function Dashboard() {
         },
         credentials: 'include'
       });
-      
+
       if (!response.ok) {
         throw new Error("Failed to fetch analytics");
       }
-      
+
       const data = await response.json();
       return {
         performanceData: Array.isArray(data?.performanceData) ? data.performanceData : studentProgress.nclexDomains,

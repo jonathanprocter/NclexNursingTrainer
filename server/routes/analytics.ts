@@ -1,4 +1,3 @@
-
 import { Router } from 'express';
 
 const router = Router();
@@ -23,7 +22,20 @@ router.get('/user/:id', async (req, res) => {
       questionsAttempted: 428,
       averageScore: 82
     };
-    
+
+    res.status(200).json(analyticsData);
+  } catch (error) {
+    console.error('Analytics fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch analytics data' });
+  }
+});
+
+router.get('/api/analytics', async (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET');
+  try {
+    // Replace with actual analytics data fetching logic
+    const analyticsData = { message: 'Analytics data' };
     res.status(200).json(analyticsData);
   } catch (error) {
     console.error('Analytics fetch error:', error);
