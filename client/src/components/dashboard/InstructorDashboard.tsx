@@ -1,11 +1,31 @@
+import { FC } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Badge } from "../ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
-export default function InstructorDashboard() {
-  const mockStudents = [
+interface Student {
+  id: number;
+  name: string;
+  progress: number;
+  lastActive: string;
+  status: "Excellent" | "On Track" | "Needs Review";
+  weakAreas: string[];
+  recentScores: number[];
+}
+
+interface ClassStats {
+  averageProgress: number;
+  totalStudents: number;
+  atRiskCount: number;
+  topPerformers: number;
+  completionRate: number;
+  averageEngagement: number;
+}
+
+const InstructorDashboard: FC = () => {
+  const mockStudents: Student[] = [
     {
       id: 1,
       name: "Sarah Johnson",
@@ -43,13 +63,26 @@ export default function InstructorDashboard() {
     })),
   }));
 
-  const classStats = {
+  const classStats: ClassStats = {
     averageProgress: 75,
     totalStudents: 24,
     atRiskCount: 3,
     topPerformers: 5,
     completionRate: 68,
     averageEngagement: 82,
+  };
+
+  const getStatusVariant = (status: Student["status"]) => {
+    switch (status) {
+      case "Excellent":
+        return "default";
+      case "On Track":
+        return "secondary";
+      case "Needs Review":
+        return "destructive";
+      default:
+        return "secondary";
+    }
   };
 
   return (
@@ -63,65 +96,25 @@ export default function InstructorDashboard() {
 
         <TabsContent value="overview">
           <div className="grid md:grid-cols-3 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Total Students</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">{classStats.totalStudents}</p>
-                <p className="text-sm text-muted-foreground">Active Enrollments</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Class Average</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">{classStats.averageProgress}%</p>
-                <p className="text-sm text-muted-foreground">Overall Progress</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">At-Risk Students</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">{classStats.atRiskCount}</p>
-                <p className="text-sm text-muted-foreground">Need Attention</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Top Performers</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">{classStats.topPerformers}</p>
-                <p className="text-sm text-muted-foreground">Above 90%</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Completion Rate</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">{classStats.completionRate}%</p>
-                <p className="text-sm text-muted-foreground">Module Completion</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Engagement</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">{classStats.averageEngagement}%</p>
-                <p className="text-sm text-muted-foreground">Average Activity</p>
-              </CardContent>
-            </Card>
+            {Object.entries(classStats).map(([key, value]) => (
+              <Card key={key}>
+                <CardHeader>
+                  <CardTitle className="text-lg">
+                    {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-3xl font-bold">{value}{key.includes("Rate") || key.includes("Progress") || key.includes("Engagement") ? "%" : ""}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {key === "totalStudents" ? "Active Enrollments" : 
+                     key === "atRiskCount" ? "Need Attention" :
+                     key === "topPerformers" ? "Above 90%" :
+                     key === "completionRate" ? "Module Completion" :
+                     "Overall Performance"}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </TabsContent>
 
@@ -148,25 +141,14 @@ export default function InstructorDashboard() {
                       <TableCell>{student.progress}%</TableCell>
                       <TableCell>{student.lastActive}</TableCell>
                       <TableCell>
-                        <Badge
-                          className={
-                            student.status === "Excellent"
-                              ? "bg-green-100 text-green-800"
-                              : student.status === "On Track"
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-red-100 text-red-800"
-                          }
-                        >
+                        <Badge variant={getStatusVariant(student.status)}>
                           {student.status}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1 flex-wrap">
                           {student.weakAreas.map((area) => (
-                            <Badge
-                              key={area}
-                              className="bg-gray-100 text-gray-800"
-                            >
+                            <Badge key={area} variant="outline">
                               {area}
                             </Badge>
                           ))}
@@ -188,12 +170,12 @@ export default function InstructorDashboard() {
             <CardContent>
               <div className="h-[400px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={performanceData[0]?.data || []}>
+                  <LineChart>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="day" />
                     <YAxis domain={[0, 100]} />
                     <Tooltip />
-                    {(performanceData || []).map((student, index) => (
+                    {performanceData.map((student, index) => (
                       <Line
                         key={student.name}
                         data={student.data}
@@ -203,7 +185,6 @@ export default function InstructorDashboard() {
                         strokeWidth={2}
                       />
                     ))}
-                    
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -213,4 +194,6 @@ export default function InstructorDashboard() {
       </Tabs>
     </div>
   );
-}
+};
+
+export default InstructorDashboard;

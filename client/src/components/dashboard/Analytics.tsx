@@ -1,4 +1,3 @@
-
 import {
   BarChart,
   Bar,
@@ -10,18 +9,20 @@ import {
 } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
 
+interface PerformanceData {
+  domain: string;
+  mastery: number;
+}
+
 interface AnalyticsData {
-  module: string
-  score: number
+  performanceData: PerformanceData[];
+  totalStudyTime: string;
+  questionsAttempted: number;
+  averageScore: number;
 }
 
 interface AnalyticsProps {
-  data?: {
-    performanceData?: AnalyticsData[]
-    totalStudyTime?: string
-    questionsAttempted?: number
-    averageScore?: number
-  }
+  data?: AnalyticsData;
 }
 
 export default function Analytics({ data }: AnalyticsProps) {
@@ -37,15 +38,15 @@ export default function Analytics({ data }: AnalyticsProps) {
   }
 
   const performanceData = data.performanceData || [
-    { module: "Pharmacology", score: 85 },
-    { module: "Pathophysiology", score: 75 },
-    { module: "Med-Surg", score: 78 },
-    { module: "Mental Health", score: 82 },
-  ]
+    { domain: "Pharmacology", mastery: 85 },
+    { domain: "Pathophysiology", mastery: 75 },
+    { domain: "Med-Surg", mastery: 78 },
+    { domain: "Mental Health", mastery: 82 },
+  ];
 
-  const totalStudyTime = data?.totalStudyTime ?? "45.5"
-  const questionsAttempted = data?.questionsAttempted ?? 428
-  const averageScore = data?.averageScore ?? 82
+  const totalStudyTime = data.totalStudyTime ?? "45.5"
+  const questionsAttempted = data.questionsAttempted ?? 428
+  const averageScore = data.averageScore ?? 82
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
@@ -61,11 +62,11 @@ export default function Analytics({ data }: AnalyticsProps) {
                 margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="module" tick={{ fontSize: 12 }} />
+                <XAxis dataKey="domain" tick={{ fontSize: 12 }} />
                 <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
                 <Tooltip />
                 <Bar
-                  dataKey="score"
+                  dataKey="mastery"
                   fill="hsl(var(--primary))"
                   radius={[4, 4, 0, 0]}
                 />

@@ -2,7 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from 'react-error-boundary';
-import Dashboard from '@/pages/Dashboard'; // Ensure correct alias usage
+import Dashboard from '@/pages/Dashboard';
+import { Toaster } from '@/components/ui/toaster';
 
 // Initialize Query Client
 const queryClient = new QueryClient({
@@ -33,15 +34,21 @@ function ErrorFallback({ error }: { error: Error }) {
   );
 }
 
-// Main App Component
 function App() {
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
       <Router>
         <QueryClientProvider client={queryClient}>
-          <div className="min-h-screen bg-gray-100">
-            <h1>NCLEX Prep</h1>
+          <div className="min-h-screen bg-background">
             <Routes>
+              <Route 
+                path="/" 
+                element={
+                  <ErrorBoundary FallbackComponent={ErrorFallback}>
+                    <Dashboard />
+                  </ErrorBoundary>
+                } 
+              />
               <Route 
                 path="/dashboard" 
                 element={
@@ -52,6 +59,7 @@ function App() {
               />
             </Routes>
           </div>
+          <Toaster />
         </QueryClientProvider>
       </Router>
     </ErrorBoundary>

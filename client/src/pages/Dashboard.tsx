@@ -1,4 +1,3 @@
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Analytics from "@/components/dashboard/Analytics";
@@ -8,8 +7,18 @@ import { useQuery } from "@tanstack/react-query";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { Progress } from "@/components/ui/progress";
 
+interface AnalyticsData {
+  performanceData: {
+    domain: string;
+    mastery: number;
+  }[];
+  totalStudyTime: string;
+  questionsAttempted: number;
+  averageScore: number;
+}
+
 export default function Dashboard() {
-  const { data: analytics, isError, isLoading, error } = useQuery({
+  const { data: analytics, isError, isLoading, error } = useQuery<AnalyticsData>({
     queryKey: ["analytics"],
     queryFn: async () => {
       try {
@@ -81,7 +90,7 @@ export default function Dashboard() {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center space-y-4">
-          <p className="text-red-500">Error loading dashboard data. Please try again.</p>
+          <p className="text-red-500">Error loading dashboard data: {error instanceof Error ? error.message : 'Unknown error'}</p>
         </div>
       </div>
     );
@@ -89,7 +98,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6 p-6">
-      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50">
+      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10">
         <CardHeader>
           <CardTitle className="text-2xl">Welcome back, {studentProgress.name}! 🌟</CardTitle>
         </CardHeader>
@@ -112,7 +121,7 @@ export default function Dashboard() {
             <div className="mt-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="font-medium">Predicted NCLEX Pass Rate</span>
-                <span className="text-green-600 font-bold">{studentProgress.predictedPassRate}%</span>
+                <span className="text-green-600 dark:text-green-400 font-bold">{studentProgress.predictedPassRate}%</span>
               </div>
               <Progress value={studentProgress.predictedPassRate} className="h-2" />
             </div>
@@ -133,7 +142,13 @@ export default function Dashboard() {
                   <XAxis dataKey="week" />
                   <YAxis domain={[0, 100]} />
                   <Tooltip />
-                  <Line type="monotone" dataKey="score" stroke="#8884d8" name="Weekly Score" />
+                  <Line 
+                    type="monotone" 
+                    dataKey="score" 
+                    stroke="hsl(var(--primary))" 
+                    name="Weekly Score"
+                    strokeWidth={2} 
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -152,7 +167,11 @@ export default function Dashboard() {
                   <XAxis dataKey="domain" angle={-45} textAnchor="end" height={80} />
                   <YAxis domain={[0, 100]} />
                   <Tooltip />
-                  <Bar dataKey="mastery" fill="#82ca9d" name="Domain Mastery" />
+                  <Bar 
+                    dataKey="mastery" 
+                    fill="hsl(var(--primary))" 
+                    name="Domain Mastery" 
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>

@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Progress } from "../ui/progress";
 import { Badge } from "../ui/badge";
@@ -12,11 +11,40 @@ interface Metric {
 
 interface PerformanceMetricsProps {
   data?: {
-    metrics?: Metric[];
+    performanceData: Array<{
+      domain: string;
+      mastery: number;
+    }>;
+    averageScore: number;
   };
 }
 
 export default function PerformanceMetrics({ data }: PerformanceMetricsProps) {
+  const transformDataToMetrics = (data: PerformanceMetricsProps['data']): Metric[] => {
+    if (!data?.performanceData) return mockMetrics;
+
+    return data.performanceData.map(item => ({
+      category: item.domain,
+      score: item.mastery,
+      status: getStatus(item.mastery),
+      details: getDetailsForDomain(item.domain, item.mastery)
+    }));
+  };
+
+  const getStatus = (score: number): string => {
+    if (score >= 85) return "Strong";
+    if (score >= 75) return "Good";
+    return "Needs Improvement";
+  };
+
+  const getDetailsForDomain = (domain: string, score: number): string[] => {
+    const baseDetails = [
+      score >= 80 ? "Strong understanding demonstrated" : "Basic concepts grasped",
+      score >= 85 ? "Excellent application skills" : "Practice needed for mastery"
+    ];
+    return baseDetails;
+  };
+
   const mockMetrics = [
     {
       category: "Critical Thinking",
@@ -44,11 +72,11 @@ export default function PerformanceMetrics({ data }: PerformanceMetricsProps) {
     },
   ];
 
-  const metrics = data?.metrics && Array.isArray(data.metrics) && data.metrics.length > 0 ? data.metrics : mockMetrics;
+  const metrics = data ? transformDataToMetrics(data) : mockMetrics;
 
   return (
     <div className="space-y-6">
-      {metrics.map((metric, index) => (
+      {metrics.map((metric) => (
         <Card key={metric.category}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg font-medium">
@@ -68,7 +96,7 @@ export default function PerformanceMetrics({ data }: PerformanceMetricsProps) {
                 <Progress value={metric.score} className="h-2" />
               </div>
               <ul className="text-sm text-muted-foreground list-disc pl-4 space-y-1">
-                {metric.details.map((detail: string, index: number) => (
+                {metric.details.map((detail, index) => (
                   <li key={index}>{detail}</li>
                 ))}
               </ul>
