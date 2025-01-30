@@ -1,11 +1,41 @@
 import type { AIAnalysisResult, SimulationFeedback, SimulationScenario } from './types';
 
+
+const fetchWithRetry = async (url, options, retries = 3) => {
+  try {
+    const response = await fetchWithRetry(url, options);
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    if (retries > 0) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return fetchWithRetry(url, options, retries - 1);
+    }
+    throw error;
+  }
+};
+
+
+const fetchWithRetry = async (url, options, retries = 3) => {
+  try {
+    const response = await fetch(url, options);
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    if (retries > 0) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return fetchWithRetry(url, options, retries - 1);
+    }
+    throw error;
+  }
+};
+
 export async function getPathophysiologyHelp(
   section: string,
   context?: string
 ): Promise<{ content: string }> {
   try {
-    const response = await fetch('/api/ai/pathophysiology-help', {
+    const response = await fetchWithRetry('/api/ai/pathophysiology-help', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ section, context })
@@ -32,7 +62,7 @@ export async function analyzePerformance(
   }>
 ): Promise<AIAnalysisResult> {
   try {
-    const response = await fetch('/api/ai/analyze-performance', {
+    const response = await fetchWithRetry('/api/ai/analyze-performance', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ answers })
@@ -87,7 +117,7 @@ export async function generateSimulationScenario(
   focus_areas?: string[]
 ): Promise<SimulationScenario> {
   try {
-    const response = await fetch('/api/ai/simulation-scenario', {
+    const response = await fetchWithRetry('/api/ai/simulation-scenario', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ difficulty, focus_areas })
@@ -120,7 +150,7 @@ export async function getSimulationFeedback(
   }[]
 ): Promise<SimulationFeedback> {
   try {
-    const response = await fetch('/api/ai/simulation-feedback', {
+    const response = await fetchWithRetry('/api/ai/simulation-feedback', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ scenario, userActions })
@@ -148,7 +178,7 @@ export interface QuestionGenerationParams {
 
 export async function generateAdaptiveQuestions(params: QuestionGenerationParams) {
   try {
-    const response = await fetch('/api/ai/generate-questions', {
+    const response = await fetchWithRetry('/api/ai/generate-questions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(params)
@@ -173,7 +203,7 @@ export async function getStudyRecommendations(
   }[]
 ) {
   try {
-    const response = await fetch('/api/ai/study-recommendations', {
+    const response = await fetchWithRetry('/api/ai/study-recommendations', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ performanceData })
@@ -199,7 +229,7 @@ export interface AIAnalysisResult {
 import { AnalyticsData } from '@/types/analytics';
 
 export async function fetchAnalytics(userId: string): Promise<AnalyticsData> {
-  const response = await fetch(`/api/analytics/user/${userId}`, {
+  const response = await fetchWithRetry(`/api/analytics/user/${userId}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json'
@@ -215,7 +245,7 @@ export async function fetchAnalytics(userId: string): Promise<AnalyticsData> {
 }
 
 export async function updateUserProgress(userId: string, progressData: any): Promise<void> {
-  const response = await fetch(`/api/analytics/progress/${userId}`, {
+  const response = await fetchWithRetry(`/api/analytics/progress/${userId}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'

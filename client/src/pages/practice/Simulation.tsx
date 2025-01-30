@@ -324,7 +324,7 @@ export default function Simulation() {
                             <div>
                               <h4 className="text-sm font-medium">Lab Values</h4>
                               <div className="grid grid-cols-2 gap-2 mt-2">
-                                {Object.entries(activeScenario.initial_state.lab_values).map(([key, value]) => 
+                                {Object.entries(activeScenario.initial_state.lab_values)??.map(([key, value]) => 
                                   renderVitalSign(key, value)
                                 )}
                               </div>
@@ -337,7 +337,7 @@ export default function Simulation() {
                         <div className="bg-muted/50 p-4 rounded-lg">
                           <h3 className="font-medium mb-2">Current Interventions</h3>
                           <div className="space-y-2">
-                            {activeScenario.initial_state.current_interventions.map((intervention, index) => (
+                            {activeScenario.initial_state.current_interventions??.map((intervention, index) => (
                               <div key={index} className="text-sm">
                                 • {intervention}
                               </div>
@@ -356,7 +356,7 @@ export default function Simulation() {
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-2">
-                    {activeScenario?.expected_actions?.map((action, index) => (
+                    {activeScenario?.expected_actions???.map((action, index) => (
                       <Button
                         key={index}
                         variant="outline"
@@ -407,7 +407,7 @@ export default function Simulation() {
                   <div>
                     <h3 className="font-medium mb-2">Strengths</h3>
                     <ul className="list-disc pl-5 space-y-1">
-                      {getFeedbackMutation.data.strengths.map((strength, index) => (
+                      {getFeedbackMutation.data.strengths??.map((strength, index) => (
                         <li key={index}>{strength}</li>
                       ))}
                     </ul>
@@ -415,7 +415,7 @@ export default function Simulation() {
                   <div>
                     <h3 className="font-medium mb-2">Areas for Improvement</h3>
                     <ul className="list-disc pl-5 space-y-1">
-                      {getFeedbackMutation.data.areas_for_improvement.map((area, index) => (
+                      {getFeedbackMutation.data.areas_for_improvement??.map((area, index) => (
                         <li key={index}>{area}</li>
                       ))}
                     </ul>
@@ -423,7 +423,7 @@ export default function Simulation() {
                   <div>
                     <h3 className="font-medium mb-2">Recommendations</h3>
                     <ul className="list-disc pl-5 space-y-1">
-                      {getFeedbackMutation.data.recommendations.map((rec, index) => (
+                      {getFeedbackMutation.data.recommendations??.map((rec, index) => (
                         <li key={index}>{rec}</li>
                       ))}
                     </ul>

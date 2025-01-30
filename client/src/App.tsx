@@ -1,4 +1,46 @@
-import React from 'react';
+import React, { Component }
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('Error caught by boundary:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <h1>Something went wrong. Please try again.</h1>;
+    }
+    return this.props.children;
+  }
+}, { Component }
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('Error caught by boundary:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <h1>Something went wrong. Please try again.</h1>;
+    }
+    return this.props.children;
+  }
+} from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -37,11 +79,11 @@ function ErrorFallback({ error }: { error: Error }) {
 function App() {
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
-      <Router>
+      <ErrorBoundary><ErrorBoundary><Router>
         <QueryClientProvider client={queryClient}>
           <div className="min-h-screen bg-background">
-            <Routes>
-              <Route 
+            <ErrorBoundary><ErrorBoundary><Routes>
+              <ErrorBoundary><ErrorBoundary><Route 
                 path="/" 
                 element={
                   <ErrorBoundary FallbackComponent={ErrorFallback}>
@@ -49,7 +91,7 @@ function App() {
                   </ErrorBoundary>
                 } 
               />
-              <Route 
+              <ErrorBoundary><ErrorBoundary><Route 
                 path="/dashboard" 
                 element={
                   <ErrorBoundary FallbackComponent={ErrorFallback}>

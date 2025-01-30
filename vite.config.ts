@@ -4,6 +4,24 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 
 export default defineConfig({
+
+
+  optimizeDeps: {
+
+
+    disabled: false
+
+
+  },
+
+
+  optimizeDeps: {
+
+
+    disabled: false
+
+
+  },
   plugins: [react()],
   root: './client',
   build: {
