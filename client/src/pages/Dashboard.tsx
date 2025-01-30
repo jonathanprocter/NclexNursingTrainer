@@ -1,11 +1,11 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Analytics from "@/components/dashboard/Analytics";
-import PerformanceMetrics from "@/components/dashboard/PerformanceMetrics";
-import InstructorDashboard from "@/components/dashboard/InstructorDashboard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import Analytics from "../components/dashboard/Analytics";
+import PerformanceMetrics from "../components/dashboard/PerformanceMetrics";
+import InstructorDashboard from "../components/dashboard/InstructorDashboard";
 import { useQuery } from "@tanstack/react-query";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
-import { Progress } from "@/components/ui/progress";
+import { Progress } from "../components/ui/progress";
 
 interface AnalyticsData {
   performanceData: {

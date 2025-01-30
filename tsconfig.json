@@ -1,11 +1,20 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
     "strict": true,
     "skipLibCheck": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "allowJs": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["client/src/*"]
+    }
   },
-  "include": ["server", "client"]
+  "include": ["client/src", "server"],
+  "references": [
+    { "path": "./tsconfig.node.json" }
+  ]
 }
