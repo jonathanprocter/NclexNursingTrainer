@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import Analytics from "../components/dashboard/Analytics";
-import type { AnalyticsData } from "../types/analytics";
+import { AnalyticsData } from "../types/analytics";
 import { fetchAnalytics } from "../lib/ai-services";
 import { memo } from "react";
 import { Skeleton } from "../components/ui/skeleton";
@@ -49,9 +49,17 @@ const PerformanceOverviewSkeleton = () => (
 );
 
 function Dashboard() {
+  // Mock analytics data for initial development
+  const mockAnalytics: AnalyticsData = {
+    totalStudyTime: 24,
+    questionsAttempted: 150,
+    averageScore: 85,
+    // Add other required fields based on your AnalyticsData type
+  };
+
   const { data: analytics, isError, isLoading, error } = useQuery<AnalyticsData>({
     queryKey: ["analytics", "1"],
-    queryFn: () => fetchAnalytics('1'),
+    queryFn: () => Promise.resolve(mockAnalytics), // Using mock data for now
     retry: (failureCount, error) => {
       if (error instanceof Error && error.message.includes('status: 4')) {
         return false;

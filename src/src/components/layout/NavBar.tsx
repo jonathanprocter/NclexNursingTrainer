@@ -1,4 +1,4 @@
-import { Link, useLocation } from "wouter";
+import { Link } from "wouter";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -6,10 +6,9 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-  navigationMenuTriggerStyle,
-} from "../components/ui/navigation-menu";
-import { cn } from "@/lib/utils";
-import { Button } from "../components/ui/button";
+} from "../ui/navigation-menu";
+import { cn } from "../../lib/utils";
+import { Button } from "../ui/button";
 import {
   BookOpen,
   Brain,
@@ -35,7 +34,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription 
-} from "../components/ui/sheet";
+} from "../ui/sheet";
 import { useState } from "react";
 
 const dashboardItems = [
@@ -141,7 +140,6 @@ const studyTools = [
 ];
 
 export default function NavBar() {
-  const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
 
   const MobileNavItem = ({ href, children, onClick }: { href: string; children: React.ReactNode; onClick?: () => void }) => (
@@ -259,7 +257,6 @@ export default function NavBar() {
                 </SheetHeader>
                 <nav className="flex flex-col gap-4 mt-6">
                   <div className="px-4 py-2">
-                    
                     {dashboardItems.map((item) => (
                       <MobileNavItem
                         key={item.title}
@@ -275,7 +272,6 @@ export default function NavBar() {
                   </div>
 
                   <div className="px-4 py-2">
-                    
                     {learningModules.map((item) => (
                       <MobileNavItem
                         key={item.title}
@@ -291,7 +287,6 @@ export default function NavBar() {
                   </div>
 
                   <div className="px-4 py-2">
-                    
                     {practiceItems.map((item) => (
                       <MobileNavItem
                         key={item.title}
@@ -307,7 +302,6 @@ export default function NavBar() {
                   </div>
 
                   <div className="px-4 py-2">
-                    
                     {studyTools.map((item) => (
                       <MobileNavItem
                         key={item.title}

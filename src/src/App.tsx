@@ -1,9 +1,10 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Route, Switch } from 'wouter';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from 'react-error-boundary';
-import Dashboard from '@/pages/Dashboard';
-import { Toaster } from '@/components/ui/toaster';
+import Dashboard from './pages/Dashboard';
+import { Toaster } from './components/ui/toaster';
+import NavBar from './components/layout/NavBar';
+import InstructorDashboard from './components/dashboard/InstructorDashboard';
 
 // Initialize Query Client
 const queryClient = new QueryClient({
@@ -37,31 +38,22 @@ function ErrorFallback({ error }: { error: Error }) {
 function App() {
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
-      <Router>
-        <QueryClientProvider client={queryClient}>
-          <div className="min-h-screen bg-background">
-            <Routes>
-              <Route 
-                path="/" 
-                element={
-                  <ErrorBoundary FallbackComponent={ErrorFallback}>
-                    <Dashboard />
-                  </ErrorBoundary>
-                } 
-              />
-              <Route 
-                path="/dashboard" 
-                element={
-                  <ErrorBoundary FallbackComponent={ErrorFallback}>
-                    <Dashboard />
-                  </ErrorBoundary>
-                } 
-              />
-            </Routes>
-          </div>
-          <Toaster />
-        </QueryClientProvider>
-      </Router>
+      <QueryClientProvider client={queryClient}>
+        <div className="min-h-screen bg-background">
+          <NavBar />
+          <main className="container mx-auto px-4 py-6">
+            <Switch>
+              <Route path="/" component={Dashboard} />
+              <Route path="/dashboard" component={Dashboard} />
+              <Route path="/dashboard/instructor" component={InstructorDashboard} />
+              <Route>
+                <ErrorFallback error={new Error('Page not found')} />
+              </Route>
+            </Switch>
+          </main>
+        </div>
+        <Toaster />
+      </QueryClientProvider>
     </ErrorBoundary>
   );
 }

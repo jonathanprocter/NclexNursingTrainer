@@ -72,7 +72,7 @@ const InstructorDashboard: FC = () => {
     averageEngagement: 82,
   };
 
-  const getStatusVariant = (status: Student["status"]) => {
+  const getStatusBadgeVariant = (status: Student["status"]): "default" | "secondary" | "destructive" | "outline" => {
     switch (status) {
       case "Excellent":
         return "default";
@@ -81,7 +81,7 @@ const InstructorDashboard: FC = () => {
       case "Needs Review":
         return "destructive";
       default:
-        return "secondary";
+        return "default";
     }
   };
 
@@ -141,7 +141,7 @@ const InstructorDashboard: FC = () => {
                       <TableCell>{student.progress}%</TableCell>
                       <TableCell>{student.lastActive}</TableCell>
                       <TableCell>
-                        <Badge variant={getStatusVariant(student.status)}>
+                        <Badge variant={getStatusBadgeVariant(student.status)}>
                           {student.status}
                         </Badge>
                       </TableCell>
