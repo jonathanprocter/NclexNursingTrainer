@@ -37,6 +37,9 @@ const PerformanceChart = memo(({ data }: { data: AnalyticsData['performanceData'
 ));
 
 function Analytics({ analytics }: AnalyticsProps) {
+  if (!analytics) {
+    return <div>Loading analytics data...</div>;
+  }
   return (
     <div className="space-y-4">
       <ErrorBoundary

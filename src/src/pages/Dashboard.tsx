@@ -61,15 +61,19 @@ function Dashboard() {
   };
 
   const { data: analytics, isError, isLoading, error } = useQuery<AnalyticsData>({
-    queryKey: ["analytics", "1"],
-    queryFn: () => Promise.resolve(mockAnalytics), // Using mock data for now
-    retry: (failureCount, error) => {
-      if (error instanceof Error && error.message.includes('status: 4')) {
-        return false;
+    queryKey: ["analytics"],
+    queryFn: async () => {
+      // First try to fetch from API
+      try {
+        const response = await fetch('http://0.0.0.0:4003/api/analytics');
+        if (!response.ok) throw new Error('API request failed');
+        return await response.json();
+      } catch (e) {
+        // Fallback to mock data if API fails
+        return mockAnalytics;
       }
-      return failureCount < 3;
     },
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+    retry: 1,
     refetchOnWindowFocus: false,
     staleTime: 30000,
   });
