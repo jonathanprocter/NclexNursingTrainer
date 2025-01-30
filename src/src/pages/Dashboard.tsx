@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import Analytics from "../components/dashboard/Analytics";
@@ -48,7 +49,6 @@ const PerformanceOverviewSkeleton = () => (
 );
 
 function Dashboard() {
-  // Mock analytics data for initial development
   const mockAnalytics: AnalyticsData = {
     performanceData: [
       { domain: "Pharmacology", mastery: 85 },
@@ -63,11 +63,7 @@ function Dashboard() {
   const { data: analytics, isError, isLoading, error } = useQuery<AnalyticsData>({
     queryKey: ["analytics"],
     queryFn: () => Promise.resolve(mockAnalytics),
-    staleTime: 30000,
-    refetchOnWindowFocus: false,
-    retry: 1,
-    refetchOnWindowFocus: false,
-    staleTime: 30000,
+    staleTime: 30000
   });
 
   if (isLoading) {
