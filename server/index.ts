@@ -1,10 +1,12 @@
-import 'dotenv/config.js';
-import express, { Request, Response, NextFunction } from 'express';
+import * as dotenv from 'dotenv';
+dotenv.config();
+import express from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
-import { registerRoutes } from "./routes";
-import { setupVite } from "./vite";
-import { checkDatabaseHealth } from './db';
-import analyticsRoutes from './routes/analytics'; // Added import for analytics routes
+import { registerRoutes } from "./routes.js";
+import { setupVite } from "./vite.js";
+import { checkDatabaseHealth } from './db.js';
+import analyticsRoutes from './routes/analytics.js'; // Added import for analytics routes
 
 const app = express();
 
