@@ -1,4 +1,3 @@
-
 import { Router } from 'express';
 
 const router = Router();
@@ -17,7 +16,7 @@ router.get('/:userId', async (req, res) => {
       questionsAttempted: 150,
       averageScore: 78
     };
-    
+
     res.json(analyticsData);
   } catch (error) {
     console.error('Analytics error:', error);
@@ -27,8 +26,10 @@ router.get('/:userId', async (req, res) => {
 
 router.get('/user/:id', async (req, res) => {
   try {
-    // Mock data for now - replace with actual database query later
+    // More realistic mock data
+    const userId = req.params.id;
     const analyticsData = {
+      userId: userId,
       performanceData: [
         { module: "Pharmacology", score: 85 },
         { module: "Pathophysiology", score: 75 },
@@ -39,7 +40,7 @@ router.get('/user/:id', async (req, res) => {
       questionsAttempted: 428,
       averageScore: 82
     };
-    
+
     res.json(analyticsData);
   } catch (error) {
     console.error('Analytics fetch error:', error);

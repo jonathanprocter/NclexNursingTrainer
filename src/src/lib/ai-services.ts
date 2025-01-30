@@ -51,7 +51,7 @@ const API_BASE_URL = (() => {
 export async function fetchAnalytics(userId: string): Promise<AnalyticsData> {
   try {
     const response = await fetchWithRetry<AnalyticsData>(
-      `${API_BASE_URL}/api/analytics/${userId}`, // Corrected URL
+      `${API_BASE_URL}/api/analytics/${userId}`, // Using configured base URL
       {
         method: 'GET',
         credentials: 'include'
