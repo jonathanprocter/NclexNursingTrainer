@@ -132,6 +132,10 @@ function AnalyticsContent({ data }: AnalyticsContentProps) {
   });
   const [selectedDomain, setSelectedDomain] = useState<{ domain: string; mastery: number } | null>(null);
 
+  const handleDateRangeChange = useCallback((range: DateRange | undefined) => {
+    setDate(range || { from: undefined, to: undefined });
+  }, []);
+
   const handleExport = useCallback(() => {
     try {
       const exportData = {
@@ -167,8 +171,8 @@ function AnalyticsContent({ data }: AnalyticsContentProps) {
     }
   }, [data, date, toast]);
 
-  const handleBarClick = useCallback((data: any) => {
-    if (data && data.payload) {
+  const handleBarClick = useCallback((data: { payload: { domain: string; mastery: number } }) => {
+    if (data?.payload) {
       setSelectedDomain({
         domain: data.payload.domain,
         mastery: data.payload.mastery
@@ -176,7 +180,7 @@ function AnalyticsContent({ data }: AnalyticsContentProps) {
     }
   }, []);
 
-  // Sample trend data - in a real app, this would come from the API
+  // Sample trend data
   const trends = {
     studyTime: 5,
     questions: -2,
@@ -217,7 +221,7 @@ function AnalyticsContent({ data }: AnalyticsContentProps) {
                 mode="range"
                 defaultMonth={date.from}
                 selected={date}
-                onSelect={(range) => setDate(range || { from: undefined, to: undefined })}
+                onSelect={handleDateRangeChange}
                 numberOfMonths={2}
               />
             </PopoverContent>
@@ -289,18 +293,18 @@ function AnalyticsContent({ data }: AnalyticsContentProps) {
           </CardHeader>
           <CardContent>
             <div className="grid gap-4">
-              <StatisticCard 
-                title="Total Study Time" 
+              <StatisticCard
+                title="Total Study Time"
                 value={`${data.totalStudyTime} hours`}
                 trend={trends.studyTime}
               />
-              <StatisticCard 
-                title="Questions Attempted" 
+              <StatisticCard
+                title="Questions Attempted"
                 value={data.questionsAttempted}
                 trend={trends.questions}
               />
-              <StatisticCard 
-                title="Average Score" 
+              <StatisticCard
+                title="Average Score"
                 value={`${data.averageScore}%`}
                 trend={trends.score}
               />

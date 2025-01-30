@@ -20,18 +20,6 @@ import InstructorDashboard from "./InstructorDashboard";
 import AnalyticsContent from "./AnalyticsContent";
 import { ErrorBoundary } from "react-error-boundary";
 
-const DEFAULT_ANALYTICS: AnalyticsData = {
-  performanceData: [
-    { domain: "Clinical Judgment", mastery: 75 },
-    { domain: "Patient Safety", mastery: 80 },
-    { domain: "Care Management", mastery: 65 },
-    { domain: "Health Promotion", mastery: 70 }
-  ],
-  totalStudyTime: "0",
-  questionsAttempted: 0,
-  averageScore: 0
-};
-
 const LoadingSkeleton = memo(() => (
   <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-6 lg:p-8 animate-pulse">
     <Card>
