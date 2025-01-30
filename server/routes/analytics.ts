@@ -1,62 +1,66 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import cors from 'cors';
+import { analyticsDataSchema, progressDataSchema } from '../../src/src/types/analytics';
 
 const router = Router();
 
-// Configure CORS for the analytics routes
+// Configure CORS specifically for analytics routes
 router.use(cors({
-  origin: true, // Allow all origins in development
+  origin: 'http://localhost:3000',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
-// Analytics data schema for validation
-const analyticsDataSchema = z.object({
-  performanceData: z.array(z.object({
-    domain: z.string(),
-    mastery: z.number().min(0).max(100)
-  })),
-  totalStudyTime: z.string(),
-  questionsAttempted: z.number(),
-  averageScore: z.number().min(0).max(100)
-});
-
-// Query parameters schema
-const queryParamsSchema = z.object({
-  from: z.string().datetime().optional(),
-  to: z.string().datetime().optional(),
-});
+// Sample data - in a real app, this would be fetched from a database
+const mockAnalyticsData = {
+  performanceData: [
+    { domain: "Clinical Judgment", mastery: 75 },
+    { domain: "Patient Safety", mastery: 80 },
+    { domain: "Care Management", mastery: 65 },
+    { domain: "Health Promotion", mastery: 70 }
+  ],
+  totalStudyTime: "24",
+  questionsAttempted: 150,
+  averageScore: 78
+};
 
 router.get('/:userId', async (req, res) => {
   try {
-    // Validate and parse query parameters
+    // Parse and validate query parameters
+    const queryParamsSchema = z.object({
+      from: z.string().datetime().optional(),
+      to: z.string().datetime().optional(),
+    });
+
     const { from, to } = queryParamsSchema.parse(req.query);
 
-    // Sample data - in a real app, this would be fetched from a database
-    const analyticsData = {
-      performanceData: [
-        { domain: "Clinical Judgment", mastery: 75 },
-        { domain: "Patient Safety", mastery: 80 },
-        { domain: "Care Management", mastery: 65 },
-        { domain: "Health Promotion", mastery: 70 }
-      ],
-      totalStudyTime: "24",
-      questionsAttempted: 150,
-      averageScore: 78
-    };
+    // Validate mock data against schema
+    const validatedData = analyticsDataSchema.parse(mockAnalyticsData);
 
-    // Add CORS headers explicitly for clarity
+    // Add CORS headers explicitly
+    res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
     res.header('Access-Control-Allow-Credentials', 'true');
-
-    // Validate data against schema
-    const validatedData = analyticsDataSchema.parse(analyticsData);
 
     res.json(validatedData);
   } catch (error) {
     console.error('Analytics error:', error);
     res.status(500).json({ error: 'Failed to fetch analytics data' });
+  }
+});
+
+router.post('/progress/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const progressData = progressDataSchema.parse(req.body);
+
+    // Here you would typically save to database
+    // For now, just validate and return success
+    res.json({ success: true, userId, data: progressData });
+  } catch (error) {
+    console.error('Progress update error:', error);
+    res.status(400).json({ error: 'Invalid progress data' });
   }
 });
 

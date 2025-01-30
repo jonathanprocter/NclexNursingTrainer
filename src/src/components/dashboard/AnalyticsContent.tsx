@@ -7,8 +7,10 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer
+  ResponsiveContainer,
+  TooltipProps
 } from "recharts";
+import { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent";
 import { useBreakpoint } from "../../hooks/use-mobile";
 import { useToast } from "../../hooks/use-toast";
 import { Button } from "../ui/button";
@@ -229,7 +231,11 @@ function AnalyticsContent({ data }: AnalyticsContentProps) {
                       width={40}
                       tickFormatter={(value) => `${value}%`}
                     />
-                    <Tooltip content={ChartTooltip} />
+                    <Tooltip
+                      content={({ active, payload, label }: TooltipProps<ValueType, NameType>) => (
+                        <ChartTooltip active={active} payload={payload} label={label} />
+                      )}
+                    />
                     <Bar
                       dataKey="mastery"
                       fill="hsl(var(--primary))"

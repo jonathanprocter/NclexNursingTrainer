@@ -8,17 +8,42 @@ NC='\033[0m'
 
 echo -e "${BLUE}Starting port cleanup...${NC}"
 
-# Kill all Node.js processes
+# Function to check if a port is in use
+check_port() {
+    lsof -i :$1 >/dev/null 2>&1
+}
+
+# Function to kill process using a specific port
+kill_port() {
+    local port=$1
+    if check_port $port; then
+        echo -e "${BLUE}Killing process on port $port...${NC}"
+        fuser -k $port/tcp 2>/dev/null || true
+    fi
+}
+
+# Kill processes on specific ports
+kill_port 3000
+kill_port 4003
+
+# Kill all Node.js processes for good measure
 pkill -f "node" 2>/dev/null || true
 pkill -f "vite" 2>/dev/null || true
 
 # Wait for processes to close
 sleep 2
 
-# Update package.json scripts
+# Verify ports are free
+for port in 3000 4003; do
+    if check_port $port; then
+        echo -e "${RED}Failed to free port $port${NC}"
+        exit 1
+    fi
+done
+
 echo -e "${BLUE}Updating package.json scripts...${NC}"
 
-# Use node to update package.json
+# Use node to update package.json with correct port configuration
 node -e '
 const fs = require("fs");
 const pkg = JSON.parse(fs.readFileSync("package.json"));
@@ -36,4 +61,4 @@ pkg.scripts = {
 fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2) + "\n");
 '
 
-echo -e "${GREEN}Port cleanup complete! All Node.js processes have been terminated.${NC}"
+echo -e "${GREEN}Port cleanup complete! All ports have been freed.${NC}"
