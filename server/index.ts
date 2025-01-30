@@ -3,8 +3,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { registerRoutes } from "./routes";
 import { setupVite } from "./vite";
-import analyticsRouter from './routes/analytics'; // Added import for analytics router
-
+import { db } from './db';
 
 const app = express();
 
@@ -20,16 +19,35 @@ if (process.env.NODE_ENV === 'development') {
   }));
 }
 
-// Register API routes
-registerRoutes(app);
-app.use('/api/analytics', analyticsRouter); // Added analytics route registration
+// Database health check
+app.get('/health', async (_req, res) => {
+  try {
+    // Try a simple query to verify database connection
+    await db.query.modules.findFirst();
+    res.json({ 
+      status: 'healthy', 
+      database: 'connected',
+      timestamp: new Date().toISOString() 
+    });
+  } catch (error) {
+    console.error('Database health check failed:', error);
+    res.status(503).json({ 
+      status: 'unhealthy',
+      database: 'disconnected',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Register all API routes
+const server = registerRoutes(app);
 
 // Setup Vite development server middleware in development mode
 if (process.env.NODE_ENV === 'development') {
-  setupVite(app);
+  setupVite(app, server);
 }
 
-// Error handling middleware
+// Global error handling middleware
 interface ErrorWithStatus extends Error {
   status?: number;
   statusCode?: number;
@@ -49,7 +67,7 @@ app.use((err: ErrorWithStatus, _req: Request, res: Response, _next: NextFunction
 const PORT = parseInt(process.env.PORT || '3001', 10);
 const HOST = process.env.HOST || '0.0.0.0';
 
-app.listen(PORT, HOST, () => {
+server.listen(PORT, HOST, () => {
   console.log('=================================');
   console.log('Server started successfully');
   console.log(`Server is running on port ${PORT}`);

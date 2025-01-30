@@ -38,11 +38,6 @@ export const questions = pgTable("questions", {
   explanation: text("explanation").default('').notNull(),
   difficulty: integer("difficulty").notNull(),
   aiGenerated: boolean("ai_generated").default(false).notNull(),
-  topicTags: json("topic_tags").$type<string[]>().default([]),
-  conceptBreakdown: json("concept_breakdown").$type<Array<{ concept: string; explanation: string }>>().default([]),
-  faqs: json("faqs").$type<Array<{ question: string; answer: string }>>().default([]),
-  relatedTopics: json("related_topics").$type<string[]>().default([]),
-  references: json("references").$type<Array<{ title: string; url: string }>>().default([]),
   category: text("category").notNull(),
   subcategory: text("subcategory").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -100,13 +95,8 @@ export const quizAttempts = pgTable("quiz_attempts", {
   completedAt: timestamp("completed_at"),
   aiAnalysis: json("ai_analysis").$type<Record<string, any>>(),
   strengthAreas: json("strength_areas").$type<string[]>().default([]),
-  weaknessAreas: json("weakness_areas").$type<string[]>().default([]),
-}, (table) => ({
-  userIdx: index("quiz_attempts_user_idx").on(table.userId),
-  moduleIdx: index("quiz_attempts_module_idx").on(table.moduleId),
-  scoreIdx: index("quiz_attempts_score_idx").on(table.score),
-  userModuleIdx: index("quiz_attempts_user_module_idx").on(table.userId, table.moduleId)
-}));
+  weaknessAreas: json("weakness_areas").$type<string[]>().default([])
+});
 
 export const userProgress = pgTable("user_progress", {
   id: serial("id").primaryKey(),
@@ -135,6 +125,7 @@ export const userProgress = pgTable("user_progress", {
   userModuleIdx: unique("user_progress_user_module_idx").on(table.userId, table.moduleId)
 }));
 
+
 // Type inference helpers
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -154,9 +145,16 @@ export type NewUserProgress = typeof userProgress.$inferInsert;
 export type StudyBuddyChat = typeof studyBuddyChats.$inferSelect;
 export type NewStudyBuddyChat = typeof studyBuddyChats.$inferInsert;
 
+export type QuizAttempt = typeof quizAttempts.$inferSelect;
+export type NewQuizAttempt = typeof quizAttempts.$inferInsert;
+
+
 // Zod validation schemas with enhanced validation
 export const insertUserSchema = createInsertSchema(users);
 export const selectUserSchema = createSelectSchema(users);
+
+export const insertModuleSchema = createInsertSchema(modules);
+export const selectModuleSchema = createSelectSchema(modules);
 
 export const insertQuestionSchema = createInsertSchema(questions);
 export const selectQuestionSchema = createSelectSchema(questions);
@@ -166,3 +164,6 @@ export const selectQuestionHistorySchema = createSelectSchema(questionHistory);
 
 export const insertUserProgressSchema = createInsertSchema(userProgress);
 export const selectUserProgressSchema = createSelectSchema(userProgress);
+
+export const insertQuizAttemptSchema = createInsertSchema(quizAttempts);
+export const selectQuizAttemptSchema = createSelectSchema(quizAttempts);
