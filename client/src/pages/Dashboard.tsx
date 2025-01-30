@@ -45,9 +45,6 @@ export default function Dashboard() {
         console.error('Error fetching analytics:', error);
         throw error;
       }
-        totalStudyTime: data?.totalStudyTime || "0",
-        questionsAttempted: data?.questionsAttempted || 0,
-        averageScore: data?.averageScore || studentProgress.predictedPassRate,
       };
     },
     retry: 2,
