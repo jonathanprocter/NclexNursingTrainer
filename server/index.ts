@@ -3,7 +3,8 @@ import cors from 'cors';
 import { registerRoutes } from './routes.js';
 
 const app = express();
-const port = parseInt(process.env.PORT || '4004');
+const port = parseInt(process.env.PORT || '4005'); // Changed default port to 4005
+const HOSTNAME = '0.0.0.0';
 
 // Configure CORS to allow Replit domains
 app.use(cors({
@@ -45,12 +46,12 @@ function startServer(port: number) {
     const httpServer = registerRoutes(app);
 
     // Start the server with proper error handling
-    httpServer.listen(port, '0.0.0.0', () => {
+    httpServer.listen(port, HOSTNAME, () => { // Added HOSTNAME
         console.log('=================================');
         console.log('Server started successfully');
         console.log(`Server is running on port ${port}`);
-        console.log('Frontend URL: http://0.0.0.0:3000');
-        console.log(`Backend URL: http://0.0.0.0:${port}`);
+        console.log(`Frontend URL: http://${HOSTNAME}:3000`); // Updated URL
+        console.log(`Backend URL: http://${HOSTNAME}:${port}`); // Updated URL
         console.log('=================================');
     }).on('error', (error: SystemError) => {
         if (error.code === 'EADDRINUSE') {
