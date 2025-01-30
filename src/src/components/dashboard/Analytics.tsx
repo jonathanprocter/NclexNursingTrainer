@@ -1,3 +1,4 @@
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -18,9 +19,7 @@ function Analytics({ analytics }: AnalyticsProps) {
     <div className="space-y-4">
       <ErrorBoundary
         FallbackComponent={ErrorFallback}
-        onReset={() => {
-          window.location.reload();
-        }}
+        onReset={() => window.location.reload()}
       >
         <Tabs defaultValue="performance" className="space-y-4">
           <TabsList>

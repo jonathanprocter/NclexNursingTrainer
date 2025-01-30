@@ -63,7 +63,7 @@ function Dashboard() {
   const { data: analytics, isError, isLoading, error } = useQuery<AnalyticsData>({
     queryKey: ["analytics"],
     queryFn: () => Promise.resolve(mockAnalytics),
-    staleTime: 30000
+    staleTime: 30000,
   });
 
   if (isLoading) {
