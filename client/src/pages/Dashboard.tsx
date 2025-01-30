@@ -30,20 +30,11 @@ export default function Dashboard() {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
           },
-          credentials: 'same-origin'
+          credentials: 'include'
         });
 
-        if (!response.ok) {
-          console.error('Analytics response not ok:', response.status, response.statusText);
-          return {
-            performanceData: studentProgress.nclexDomains,
-            totalStudyTime: "0",
-            questionsAttempted: 0,
-            averageScore: studentProgress.predictedPassRate,
-          };
-        }
-
         const data = await response.json();
+        
         return {
           performanceData: Array.isArray(data?.performanceData) ? data.performanceData : studentProgress.nclexDomains,
           totalStudyTime: data?.totalStudyTime || "0",
@@ -52,12 +43,19 @@ export default function Dashboard() {
         };
       } catch (error) {
         console.error('Error fetching analytics:', error);
-        throw error;
+        return {
+          performanceData: studentProgress.nclexDomains,
+          totalStudyTime: "0",
+          questionsAttempted: 0,
+          averageScore: studentProgress.predictedPassRate,
+        };
       }
     },
-    retry: 2,
+    retry: 1,
     retryDelay: 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    staleTime: 30000,
   });
 
   const studentProgress = {
