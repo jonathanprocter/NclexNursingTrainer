@@ -11,7 +11,7 @@ export default defineConfig({
     emptyOutDir: true
   },
   server: {
-    host: "0.0.0.0", 
+    host: "0.0.0.0",
     port: 3000,
     watch: {
       usePolling: true,
@@ -19,7 +19,7 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'http://0.0.0.0:3001',
+        target: 'http://0.0.0.0:4001',
         changeOrigin: true,
       },
     },
