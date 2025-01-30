@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import Anthropic from '@anthropic-ai/sdk';
-import { rateLimit } from '../utils/rate-limit';
+import { rateLimit } from '../utils/rate-limit.js';
 
 if (!process.env.OPENAI_API_KEY) {
   throw new Error("OPENAI_API_KEY must be set in environment variables");
@@ -17,6 +17,14 @@ const openai = new OpenAI({
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
+
+// Apply more restrictive rate limits for AI endpoints
+const aiRateLimit = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  maxRequests: 20 // 20 requests per minute for AI endpoints
+});
+
+export { aiRateLimit };
 
 export async function generateClinicalJudgment(topic: string, context?: string) {
   try {
@@ -38,10 +46,14 @@ export async function generateClinicalJudgment(topic: string, context?: string) 
       max_tokens: 1000,
     });
 
-    return completion.choices[0]?.message?.content;
+    if (!completion.choices[0]?.message?.content) {
+      throw new Error("No content generated from OpenAI");
+    }
+
+    return completion.choices[0].message.content;
   } catch (error) {
     console.error("Error in clinical judgment generation:", error);
-    throw error;
+    throw new Error(error instanceof Error ? error.message : "Failed to generate clinical judgment");
   }
 }
 
@@ -57,10 +69,14 @@ export async function generateStudyMaterials(topic: string, difficulty: string =
       }]
     });
 
+    if (!message.content) {
+      throw new Error("No content generated from Anthropic");
+    }
+
     return message.content;
   } catch (error) {
     console.error("Error generating study materials:", error);
-    throw error;
+    throw new Error(error instanceof Error ? error.message : "Failed to generate study materials");
   }
 }
 
@@ -76,10 +92,14 @@ export async function analyzeUserResponse(response: string, questionContext: str
       }]
     });
 
+    if (!message.content) {
+      throw new Error("No content generated from Anthropic");
+    }
+
     return message.content;
   } catch (error) {
     console.error("Error analyzing user response:", error);
-    throw error;
+    throw new Error(error instanceof Error ? error.message : "Failed to analyze user response");
   }
 }
 
@@ -97,9 +117,13 @@ export async function generateQuestionSet(topic: string, difficulty: string = "m
       max_tokens: 2000,
     });
 
-    return completion.choices[0]?.message?.content;
+    if (!completion.choices[0]?.message?.content) {
+      throw new Error("No content generated from OpenAI");
+    }
+
+    return completion.choices[0].message.content;
   } catch (error) {
     console.error("Error generating questions:", error);
-    throw error;
+    throw new Error(error instanceof Error ? error.message : "Failed to generate questions");
   }
 }
