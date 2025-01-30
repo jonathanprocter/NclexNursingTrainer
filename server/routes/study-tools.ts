@@ -1,7 +1,8 @@
-import express, { Request, Response } from "express";
-import { db } from "../db";
+import express from "express";
+import { db } from "../db/index";
 import { modules, userProgress } from "../db/schema";
 import { eq } from "drizzle-orm";
+import type { RequestHandler } from "express";
 
 const router = express.Router();
 
@@ -19,25 +20,30 @@ interface StudyGoalsRequest {
 }
 
 // Get study schedule
-router.get("/schedule/:userId", async (req: Request<{ userId: string }>, res: Response) => {
+const getStudySchedule: RequestHandler = async (req, res, next) => {
   try {
     const userId = parseInt(req.params.userId);
 
     if (isNaN(userId)) {
-      return res.status(400).json({ error: "Invalid user ID" });
+      res.status(400).json([]);
+      return;
     }
 
     const progress = await db.query.userProgress.findMany({
       where: eq(userProgress.userId, userId),
       with: {
-        module: true
+        module: {
+          columns: {
+            id: true,
+            title: true
+          }
+        }
       }
     });
 
-    // Generate study recommendations based on progress
     const schedule: StudyScheduleResponse[] = progress.map(p => ({
       moduleId: p.moduleId,
-      moduleName: p.module.title,
+      moduleName: p.module?.title || 'Unknown Module',
       nextReview: p.nextReview,
       masteryLevel: p.masteryLevel,
       recommendedStudyTime: p.masteryLevel < 70 ? 60 : 30, // minutes
@@ -47,18 +53,19 @@ router.get("/schedule/:userId", async (req: Request<{ userId: string }>, res: Re
     res.json(schedule);
   } catch (error) {
     console.error("Error fetching study schedule:", error);
-    res.status(500).json({ error: "Failed to fetch study schedule" });
+    next(error);
   }
-});
+};
 
 // Create/Update study goals
-router.post("/goals/:userId", async (req: Request<{ userId: string }, {}, StudyGoalsRequest>, res: Response) => {
+const updateStudyGoals: RequestHandler = async (req, res, next) => {
   try {
     const userId = parseInt(req.params.userId);
-    const { goals } = req.body;
+    const { goals } = req.body as StudyGoalsRequest;
 
     if (isNaN(userId)) {
-      return res.status(400).json({ error: "Invalid user ID" });
+      res.status(400).json({ error: "Invalid user ID" });
+      return;
     }
 
     await db.update(userProgress)
@@ -71,17 +78,18 @@ router.post("/goals/:userId", async (req: Request<{ userId: string }, {}, StudyG
     res.json({ success: true, message: "Study goals updated successfully" });
   } catch (error) {
     console.error("Error updating study goals:", error);
-    res.status(500).json({ error: "Failed to update study goals" });
+    next(error);
   }
-});
+};
 
 // Get concept maps
-router.get("/concept-maps/:moduleId", async (req: Request<{ moduleId: string }>, res: Response) => {
+const getConceptMap: RequestHandler = async (req, res, next) => {
   try {
     const moduleId = parseInt(req.params.moduleId);
 
     if (isNaN(moduleId)) {
-      return res.status(400).json({ error: "Invalid module ID" });
+      res.status(400).json({ error: "Invalid module ID" });
+      return;
     }
 
     const module = await db.query.modules.findFirst({
@@ -89,10 +97,10 @@ router.get("/concept-maps/:moduleId", async (req: Request<{ moduleId: string }>,
     });
 
     if (!module) {
-      return res.status(404).json({ error: "Module not found" });
+      res.status(404).json({ error: "Module not found" });
+      return;
     }
 
-    // Generate concept map from module content
     const conceptMap = module.aiGeneratedContent?.conceptMap || {
       nodes: [],
       edges: []
@@ -101,8 +109,12 @@ router.get("/concept-maps/:moduleId", async (req: Request<{ moduleId: string }>,
     res.json(conceptMap);
   } catch (error) {
     console.error("Error fetching concept map:", error);
-    res.status(500).json({ error: "Failed to fetch concept map" });
+    next(error);
   }
-});
+};
+
+router.get("/schedule/:userId", getStudySchedule);
+router.post("/goals/:userId", updateStudyGoals);
+router.get("/concept-maps/:moduleId", getConceptMap);
 
 export default router;

@@ -11,16 +11,14 @@ const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false }));
 
-// CORS configuration for development
-if (process.env.NODE_ENV === 'development') {
-  app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-    credentials: true
-  }));
-}
+// CORS configuration
+app.use(cors({
+  origin: process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : true,
+  credentials: true
+}));
 
 // Database health check
-app.get('/health', async (_req, res) => {
+app.get('/health', async (_req: Request, res: Response) => {
   try {
     // Try a simple query to verify database connection
     await db.query.modules.findFirst();
@@ -34,7 +32,8 @@ app.get('/health', async (_req, res) => {
     res.status(503).json({ 
       status: 'unhealthy',
       database: 'disconnected',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
     });
   }
 });
@@ -64,8 +63,8 @@ app.use((err: ErrorWithStatus, _req: Request, res: Response, _next: NextFunction
   });
 });
 
-const PORT = parseInt(process.env.PORT || '3001', 10);
-const HOST = process.env.HOST || '0.0.0.0';
+const PORT = parseInt(process.env.PORT || '4001', 10);
+const HOST = '0.0.0.0';
 
 server.listen(PORT, HOST, () => {
   console.log('=================================');

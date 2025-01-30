@@ -1,7 +1,8 @@
-import express, { Request, Response } from "express";
-import { db } from "../db";
+import express from "express";
+import { db } from "../db/index";
 import { questions, quizAttempts, questionHistory } from "../db/schema";
 import { eq } from "drizzle-orm";
+import type { RequestHandler } from "express";
 
 const router = express.Router();
 
@@ -20,12 +21,13 @@ interface AnswerSubmissionRequest {
 }
 
 // Start a new practice session
-router.post("/start", async (req: Request<{}, {}, StartPracticeRequest>, res: Response) => {
+const startPractice: RequestHandler = async (req, res, next) => {
   try {
-    const { userId, moduleId, type } = req.body;
+    const { userId, moduleId, type } = req.body as StartPracticeRequest;
 
     if (!userId || !moduleId || !type) {
-      return res.status(400).json({ error: "Missing required fields" });
+      res.status(400).json({ error: "Missing required fields" });
+      return;
     }
 
     // Get questions for this practice session
@@ -56,21 +58,22 @@ router.post("/start", async (req: Request<{}, {}, StartPracticeRequest>, res: Re
     });
   } catch (error) {
     console.error("Error starting practice session:", error);
-    res.status(500).json({ error: "Failed to start practice session" });
+    next(error);
   }
-});
+};
 
 // Submit answer for a question
-router.post("/answer", async (req: Request<{}, {}, AnswerSubmissionRequest>, res: Response) => {
+const submitAnswer: RequestHandler = async (req, res, next) => {
   try {
-    const { sessionId, questionId, userId, answer, timeSpent } = req.body;
+    const { sessionId, questionId, userId, answer, timeSpent } = req.body as AnswerSubmissionRequest;
 
     const question = await db.query.questions.findFirst({
       where: eq(questions.id, questionId)
     });
 
     if (!question) {
-      return res.status(404).json({ error: "Question not found" });
+      res.status(404).json({ error: "Question not found" });
+      return;
     }
 
     const isCorrect = answer === question.correctAnswer;
@@ -110,8 +113,11 @@ router.post("/answer", async (req: Request<{}, {}, AnswerSubmissionRequest>, res
     });
   } catch (error) {
     console.error("Error submitting answer:", error);
-    res.status(500).json({ error: "Failed to submit answer" });
+    next(error);
   }
-});
+};
+
+router.post("/start", startPractice);
+router.post("/answer", submitAnswer);
 
 export default router;
