@@ -14,7 +14,7 @@ app.use(express.urlencoded({ extended: true }));
 // Enhanced CORS configuration for development. Simplified from original but retains functionality.
 if (process.env.NODE_ENV === 'development') {
   app.use(cors({
-    origin: 'http://0.0.0.0:4000', //Using edited origin for development
+    origin: ['http://0.0.0.0:3000', 'http://localhost:3000'],
     credentials: true
   }));
 } else {
