@@ -1,5 +1,7 @@
-import { config } from 'dotenv';
-config();
+
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
