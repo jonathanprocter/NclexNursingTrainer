@@ -1,63 +1,43 @@
-
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import Analytics from "../components/dashboard/Analytics";
-import PerformanceMetrics from "../components/dashboard/PerformanceMetrics";
-import InstructorDashboard from "../components/dashboard/InstructorDashboard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Analytics from "@/components/dashboard/Analytics";
+import PerformanceMetrics from "@/components/dashboard/PerformanceMetrics";
+import InstructorDashboard from "@/components/dashboard/InstructorDashboard";
 import { useQuery } from "@tanstack/react-query";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
-import { Progress } from "../components/ui/progress";
+import { Progress } from "@/components/ui/progress";
 
 export default function Dashboard() {
+  // Fetch analytics data with React Query
+  const fetchAnalytics = async () => {
+    try {
+      const response = await fetch("/api/analytics/user/1");
+      if (!response.ok) {
+        throw new Error("Failed to fetch analytics");
+      }
+      const data = await response.json();
+      return {
+        performanceData: Array.isArray(data?.performanceData) ? data.performanceData : [],
+        totalStudyTime: data?.totalStudyTime || "0",
+        questionsAttempted: data?.questionsAttempted || 0,
+        averageScore: data?.averageScore || 0,
+      };
+    } catch (error) {
+      console.error("Analytics fetch error:", error);
+      return {
+        performanceData: [],
+        totalStudyTime: "0",
+        questionsAttempted: 0,
+        averageScore: 0,
+      };
+    }
+  };
+
   const { data: analytics, isError, isLoading } = useQuery({
-    queryKey: ['analytics'],
-    queryFn: async () => {
-      try {
-        const response = await fetch('/api/analytics/user/1');
-        if (!response.ok) {
-          throw new Error('Failed to fetch analytics');
-        }
-        const data = await response.json();
-        return {
-          performanceData: Array.isArray(data?.performanceData) ? data.performanceData : [],
-          totalStudyTime: data?.totalStudyTime || "0",
-          questionsAttempted: data?.questionsAttempted || 0,
-          averageScore: data?.averageScore || 0
-        };
-      } catch (error) {
-        console.error('Analytics fetch error:', error);
-        return {
-          performanceData: [],
-          totalStudyTime: "0",
-          questionsAttempted: 0,
-          averageScore: 0
-        };
-      }
-    },
-      try {
-        const response = await fetch('/api/analytics/user/1');
-        if (!response.ok) {
-          throw new Error('Failed to fetch analytics');
-        }
-        const data = await response.json();
-        return {
-          performanceData: data?.performanceData || [],
-          totalStudyTime: data?.totalStudyTime || "0",
-          questionsAttempted: data?.questionsAttempted || 0,
-          averageScore: data?.averageScore || 0
-        };
-      } catch (error) {
-        console.error('Analytics fetch error:', error);
-        return {
-          performanceData: [],
-          totalStudyTime: "0",
-          questionsAttempted: 0,
-          averageScore: 0
-        };
-      }
-    },
+    queryKey: ["analytics"],
+    queryFn: fetchAnalytics,
     retry: 1,
-    refetchOnWindowFocus: false
+    refetchOnWindowFocus: false,
   });
 
   if (isLoading) {
@@ -90,7 +70,7 @@ export default function Dashboard() {
       { week: "Week 1", score: 72 },
       { week: "Week 2", score: 78 },
       { week: "Week 3", score: 83 },
-      { week: "Week 4", score: 85 }
+      { week: "Week 4", score: 85 },
     ],
     nclexDomains: [
       { domain: "Clinical Judgment", mastery: 88 },
@@ -98,8 +78,8 @@ export default function Dashboard() {
       { domain: "Pharmacology", mastery: 72 },
       { domain: "Risk Management", mastery: 75 },
       { domain: "Care Management", mastery: 82 },
-      { domain: "Health Promotion", mastery: 80 }
-    ]
+      { domain: "Health Promotion", mastery: 80 },
+    ],
   };
 
   return (
@@ -162,10 +142,12 @@ export default function Dashboard() {
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={studentProgress.nclexDomains.map((domain, index) => ({
-  ...domain,
-  uniqueId: `domain-${index}-${domain.domain}`
-}))}>
+                <BarChart
+                  data={studentProgress.nclexDomains.map((domain, index) => ({
+                    ...domain,
+                    uniqueId: `domain-${index}-${domain.domain}`,
+                  }))}
+                >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="domain" angle={-45} textAnchor="end" height={80} />
                   <YAxis domain={[0, 100]} />

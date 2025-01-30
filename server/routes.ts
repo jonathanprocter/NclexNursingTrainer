@@ -24,7 +24,7 @@ export function registerRoutes(app: Express): Server {
   app.use((err: Error, req: any, res: any, next: any) => {
     console.error('Error:', err);
     // Send appropriate error response
-    res.status(err.status || 500).json({
+    res.status(err["status"] || 500).json({
       message: process.env.NODE_ENV === 'development' ? err.message : 'Internal Server Error',
       ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
     });

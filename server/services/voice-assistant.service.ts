@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import OpenAI from "openai";
-import { db } from "@db";
+import { db } from "../db";
 import { eq } from "drizzle-orm";
 
 // Enhanced schema for voice commands with learning context

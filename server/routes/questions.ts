@@ -1,38 +1,48 @@
 import express from "express";
 import { db } from "../db";
 import { questions, questionHistory, userProgress } from "../db/schema";
-import { eq, and, lt, desc } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 const router = express.Router();
 
+// Fetch all questions
 router.get("/", async (req, res) => {
   try {
-    let questions = await db.query.questions.findMany();
-    if (!questions || questions.length === 0) {
-      questions = [{
-        id: "sample_1",
-        question: "Sample Question",
-        answer: "Sample Answer",
-        category: "General",
-        explanation: "This is a sample question"
-      }]);
+    let fetchedQuestions = await db.query.questions.findMany();
+
+    if (!fetchedQuestions || fetchedQuestions.length === 0) {
+      fetchedQuestions = [
+        {
+          id: "sample_1",
+          question: "Sample Question",
+          answer: "Sample Answer",
+          category: "General",
+          explanation: "This is a sample question",
+        },
+      ];
     }
-    res.json(questions);
+
+    res.json(fetchedQuestions);
   } catch (error) {
     console.error("Questions fetch error:", error);
     res.status(500).json({ error: "Failed to fetch questions" });
   }
 });
 
+// Submit an answer to a question
 router.post("/:id/answer", async (req, res) => {
   try {
     const { id } = req.params;
     const { answer, userId, timeSpent } = req.body;
 
-    const question = await db.select()
-      .from(questions)
-      .where(eq(questions.id, parseInt(id)))
-      .limit(1);
+    const parsedId = parseInt(id);
+    const parsedUserId = parseInt(userId);
+
+    if (isNaN(parsedId) || isNaN(parsedUserId)) {
+      return res.status(400).json({ error: "Invalid question or user ID" });
+    }
+
+    const question = await db.select().from(questions).where(eq(questions.id, parsedId)).limit(1);
 
     if (!question.length) {
       return res.status(404).json({ error: "Question not found" });
@@ -40,20 +50,18 @@ router.post("/:id/answer", async (req, res) => {
 
     const isCorrect = answer === question[0].correctAnswer;
 
+    // Insert answer into question history
     await db.insert(questionHistory).values({
-      userId: parseInt(userId),
-      questionId: parseInt(id),
+      userId: parsedUserId,
+      questionId: parsedId,
       answer,
       isCorrect,
       timeSpent,
       timestamp: new Date(),
     });
 
-    const progress = await db
-      .select()
-      .from(userProgress)
-      .where(eq(userProgress.userId, parseInt(userId)))
-      .limit(1);
+    // Update user progress
+    const progress = await db.select().from(userProgress).where(eq(userProgress.userId, parsedUserId)).limit(1);
 
     if (progress.length) {
       await db
@@ -63,13 +71,13 @@ router.post("/:id/answer", async (req, res) => {
           correctAnswers: progress[0].correctAnswers + (isCorrect ? 1 : 0),
           lastStudied: new Date(),
         })
-        .where(eq(userProgress.userId, parseInt(userId)));
+        .where(eq(userProgress.userId, parsedUserId));
     }
 
     res.json({
       isCorrect,
       explanation: question[0].explanation,
-      conceptBreakdown: question[0].conceptBreakdown,
+      conceptBreakdown: question[0].conceptBreakdown || "No concept breakdown available.",
     });
   } catch (error) {
     console.error("Error submitting answer:", error);

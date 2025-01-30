@@ -1,15 +1,10 @@
-import { Route } from 'wouter';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from "@/components/ui/toaster";
-import NavBar from "@/components/layout/NavBar";
-import Dashboard from "@/pages/Dashboard";
-import Questions from "@/pages/Questions";
-import QuestionBank from "@/pages/QuestionBank";
-import Modules from "@/pages/Modules";
-import StudyGuide from "@/pages/StudyGuide";
-import AICompanion from "@/pages/tools/AICompanion";
-import { useToast } from "@/hooks/use-toast";
+import { ErrorBoundary } from 'react-error-boundary';
+import Dashboard from '@/pages/Dashboard'; // Ensure correct alias usage
 
+// Initialize Query Client
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -20,49 +15,46 @@ const queryClient = new QueryClient({
   },
 });
 
-function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
-  const { toast } = useToast();
-
+// Error Fallback Component
+function ErrorFallback({ error }: { error: Error }) {
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="p-6 max-w-sm bg-white rounded-lg shadow-lg">
-        <h2 className="text-xl font-bold text-destructive mb-4">Something went wrong</h2>
-        <pre className="text-sm overflow-auto bg-muted p-2 rounded">
-          {error.message}
-        </pre>
+        <h2 className="text-xl font-bold text-red-600 mb-4">Something went wrong</h2>
+        <pre className="text-sm overflow-auto">{error.message}</pre>
         <button
-          onClick={() => {
-            resetErrorBoundary();
-            toast({
-              title: "Reset",
-              description: "Attempting to recover from error",
-            });
-          }}
-          className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
+          onClick={() => window.location.reload()}
+          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
         >
-          Try again
+          Retry
         </button>
       </div>
     </div>
   );
 }
 
+// Main App Component
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen bg-background">
-        <NavBar />
-        <main className="container mx-auto py-6">
-          <Route path="/" component={Dashboard} />
-          <Route path="/questions" component={Questions} />
-          <Route path="/question-bank" component={QuestionBank} />
-          <Route path="/modules" component={Modules} />
-          <Route path="/study-guide" component={StudyGuide} />
-          <Route path="/tools/ai-companion" component={AICompanion} />
-        </main>
-      </div>
-      <Toaster />
-    </QueryClientProvider>
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <Router>
+        <QueryClientProvider client={queryClient}>
+          <div className="min-h-screen bg-gray-100">
+            <h1>NCLEX Prep</h1>
+            <Routes>
+              <Route 
+                path="/dashboard" 
+                element={
+                  <ErrorBoundary FallbackComponent={ErrorFallback}>
+                    <Dashboard />
+                  </ErrorBoundary>
+                } 
+              />
+            </Routes>
+          </div>
+        </QueryClientProvider>
+      </Router>
+    </ErrorBoundary>
   );
 }
 

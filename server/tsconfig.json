@@ -1,14 +1,13 @@
 {
   "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "node",
     "baseUrl": "./",
     "paths": {
       "@db/*": ["server/db/*"]
     },
-    "module": "esnext",
-    "moduleResolution": "node",
     "rootDir": "./",
     "strict": false,
-    "noImplicitAny": false,
-    "skipLibCheck": true
+    "noImplicitAny": false
   }
 }
