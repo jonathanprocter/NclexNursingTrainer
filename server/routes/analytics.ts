@@ -7,8 +7,7 @@ const router = Router();
 
 // Configure CORS for all origins in development
 router.use(cors({
-  origin: true, // Allow all origins in development
-  credentials: true,
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));

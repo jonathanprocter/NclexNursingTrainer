@@ -63,13 +63,15 @@ function Dashboard() {
   const { data: analytics, isError, isLoading, error } = useQuery<AnalyticsData>({
     queryKey: ["analytics"],
     queryFn: async () => {
-      // First try to fetch from API
       try {
-        const response = await fetch('http://0.0.0.0:4003/api/analytics');
-        if (!response.ok) throw new Error('API request failed');
+        const response = await fetch('http://0.0.0.0:4003/api/analytics/1');
+        if (!response.ok) {
+          console.error('API Error:', await response.text());
+          throw new Error('API request failed');
+        }
         return await response.json();
       } catch (e) {
-        // Fallback to mock data if API fails
+        console.error('Fetch Error:', e);
         return mockAnalytics;
       }
     },
