@@ -6,8 +6,8 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer
-} from "recharts"
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
+} from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { useBreakpoint } from "../../hooks/use-mobile";
 
 interface PerformanceData {
@@ -46,13 +46,13 @@ export default function Analytics({ data }: AnalyticsProps) {
   const chartHeight = isMobile ? 250 : isTablet ? 300 : 350;
 
   return (
-    <div className="grid gap-6 md:grid-cols-2">
+    <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
       <Card>
         <CardHeader>
           <CardTitle>Module Performance</CardTitle>
         </CardHeader>
         <CardContent>
-          <div style={{ height: chartHeight }} className={isMobile ? '-mx-4' : ''}>
+          <div style={{ height: chartHeight }} className={isMobile ? '-mx-2 sm:-mx-4' : ''}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={analyticsData.performanceData}

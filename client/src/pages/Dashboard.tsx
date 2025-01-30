@@ -116,23 +116,31 @@ export default function Dashboard() {
   }
 
   const chartHeight = isMobile ? 250 : isTablet ? 300 : 350;
+  const chartMargins = {
+    top: 5,
+    right: isMobile ? 10 : 20,
+    bottom: isMobile ? 60 : 40,
+    left: isMobile ? 30 : 40
+  };
 
   return (
-    <div className="space-y-6 p-4 md:p-6 lg:p-8">
+    <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-6 lg:p-8">
       <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10">
-        <CardHeader>
-          <CardTitle className="text-xl md:text-2xl lg:text-3xl">Welcome back, {studentProgress.name}! 🌟</CardTitle>
+        <CardHeader className="space-y-2">
+          <CardTitle className="text-lg sm:text-xl md:text-2xl lg:text-3xl">
+            Welcome back, {studentProgress.name}! 🌟
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <p className="text-sm md:text-base lg:text-lg text-muted-foreground">
+            <p className="text-sm sm:text-base lg:text-lg text-muted-foreground">
               You're making excellent progress! Your strengths in {studentProgress.strengths.join(" and ")} are really showing.
               Let's focus on strengthening {studentProgress.areasForGrowth.join(" and ")} to boost your overall performance.
             </p>
 
             <div className="mt-4">
-              <h3 className="font-semibold mb-2 text-sm md:text-base lg:text-lg">Today's AI Study Plan:</h3>
-              <ul className="list-disc pl-6 space-y-2 text-sm md:text-base">
+              <h3 className="font-semibold mb-2 text-sm sm:text-base lg:text-lg">Today's AI Study Plan:</h3>
+              <ul className="list-disc pl-6 space-y-2 text-sm sm:text-base">
                 <li>Review {studentProgress.areasForGrowth[0]} fundamentals (45 mins)</li>
                 <li>Practice {studentProgress.areasForGrowth[1]} scenarios (30 mins)</li>
                 <li>Quick review of your strong areas to maintain mastery (15 mins)</li>
@@ -141,7 +149,7 @@ export default function Dashboard() {
 
             <div className="mt-6">
               <div className="flex items-center justify-between mb-2">
-                <span className="font-medium text-sm md:text-base">Predicted NCLEX Pass Rate</span>
+                <span className="font-medium text-sm sm:text-base">Predicted NCLEX Pass Rate</span>
                 <span className="text-green-600 dark:text-green-400 font-bold">
                   {studentProgress.predictedPassRate}%
                 </span>
@@ -152,27 +160,37 @@ export default function Dashboard() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base md:text-lg">Progress Trend</CardTitle>
+            <CardTitle className="text-sm sm:text-base md:text-lg">Progress Trend</CardTitle>
           </CardHeader>
           <CardContent>
-            <div style={{ height: chartHeight }} className={isMobile ? '-mx-4' : ''}>
+            <div style={{ height: chartHeight }} className={isMobile ? '-mx-2 sm:-mx-4' : ''}>
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={studentProgress.recentProgress}>
+                <LineChart 
+                  data={studentProgress.recentProgress}
+                  margin={chartMargins}
+                >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis
                     dataKey="week"
-                    tick={{ fontSize: isMobile ? 12 : 14 }}
+                    tick={{ fontSize: isMobile ? 10 : 12 }}
                     height={40}
                   />
                   <YAxis
                     domain={[0, 100]}
-                    tick={{ fontSize: isMobile ? 12 : 14 }}
-                    width={40}
+                    tick={{ fontSize: isMobile ? 10 : 12 }}
+                    width={35}
                   />
-                  <Tooltip />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--background))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '6px',
+                      fontSize: isMobile ? '12px' : '14px'
+                    }}
+                  />
                   <Line
                     type="monotone"
                     dataKey="score"
@@ -189,31 +207,42 @@ export default function Dashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base md:text-lg">NCLEX Domain Mastery</CardTitle>
+            <CardTitle className="text-sm sm:text-base md:text-lg">Domain Mastery</CardTitle>
           </CardHeader>
           <CardContent>
-            <div style={{ height: chartHeight }} className={isMobile ? '-mx-4' : ''}>
+            <div style={{ height: chartHeight }} className={isMobile ? '-mx-2 sm:-mx-4' : ''}>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={studentProgress.nclexDomains}>
+                <BarChart 
+                  data={studentProgress.nclexDomains}
+                  margin={chartMargins}
+                >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis
                     dataKey="domain"
                     angle={isMobile ? -45 : -30}
                     textAnchor="end"
                     height={100}
-                    tick={{ fontSize: isMobile ? 10 : 12 }}
+                    tick={{ fontSize: isMobile ? 8 : 10 }}
                     interval={0}
                   />
                   <YAxis
                     domain={[0, 100]}
-                    tick={{ fontSize: isMobile ? 12 : 14 }}
-                    width={40}
+                    tick={{ fontSize: isMobile ? 10 : 12 }}
+                    width={35}
                   />
-                  <Tooltip />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--background))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '6px',
+                      fontSize: isMobile ? '12px' : '14px'
+                    }}
+                  />
                   <Bar
                     dataKey="mastery"
                     fill="hsl(var(--primary))"
                     name="Domain Mastery"
+                    radius={[4, 4, 0, 0]}
                   />
                 </BarChart>
               </ResponsiveContainer>

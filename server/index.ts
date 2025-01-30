@@ -73,32 +73,69 @@ app.use((err: ErrorWithStatus, _req: Request, res: Response, _next: NextFunction
   });
 });
 
-const startPort = parseInt(process.env.PORT || '4002', 10);
+const PORT = parseInt(process.env.PORT || '4002', 10);
 const HOST = '0.0.0.0';
 
-const startServer = (port: number) => {
-  try {
-    server.listen(port, HOST, () => {
-      console.log('=================================');
-      console.log('Server started successfully');
-      console.log(`Server is running on port ${port}`);
-      console.log(`Access URL: http://${HOST}:${port}`);
-      console.log('=================================');
-    }).on('error', (err: NodeJS.ErrnoException) => {
-      if (err.code === 'EADDRINUSE') {
-        console.log(`Port ${port} is busy, trying ${port + 1}`);
-        startServer(port + 1);
-      } else {
-        console.error('Server error:', err);
-        process.exit(1);
-      }
-    });
-  } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
-  }
-};
+function startServer() {
+  return new Promise((resolve, reject) => {
+    try {
+      let retries = 0;
+      const maxRetries = 5;
+      const startServerWithRetry = () => {
+        const serverInstance = server.listen(PORT, HOST, () => {
+          console.log('=================================');
+          console.log('Server started successfully');
+          console.log(`Server is running on port ${PORT}`);
+          console.log(`Access URL: http://${HOST}:${PORT}`);
+          console.log('=================================');
 
-startServer(startPort);
+          // Signal that the server is ready
+          if (process.send) {
+            process.send('ready');
+          }
+
+          resolve(serverInstance);
+        });
+
+        serverInstance.on('error', (err: NodeJS.ErrnoException) => {
+          if (err.code === 'EADDRINUSE') {
+            console.error(`Port ${PORT} is in use. Retrying...`);
+            retries++;
+            if (retries < maxRetries) {
+              setTimeout(startServerWithRetry, 1000);
+            } else {
+              console.error(`Failed to start server after ${maxRetries} retries`);
+              reject(err);
+            }
+          } else {
+            console.error('Server error:', err);
+            reject(err);
+          }
+        });
+      };
+
+      startServerWithRetry();
+    } catch (error) {
+      console.error('Failed to start server:', error);
+      reject(error);
+    }
+  });
+}
+
+// Handle process signals
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received. Shutting down gracefully...');
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
+});
+
+// Start the server and export for testing
+startServer()
+  .catch((error) => {
+    console.error('Server startup failed:', error);
+    process.exit(1);
+  });
 
 export default app;

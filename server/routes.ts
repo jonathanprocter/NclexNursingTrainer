@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { WebSocketServer } from 'ws';
 import { db } from "../server/db";
 import { eq } from "drizzle-orm";
 import studyGuideRouter from './routes/study-guide';
@@ -16,6 +17,65 @@ const openai = new OpenAI({
 
 export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
+
+  // WebSocket configuration
+  const wss = new WebSocketServer({ 
+    noServer: true,
+    perMessageDeflate: {
+      zlibDeflateOptions: {
+        chunkSize: 1024,
+        memLevel: 7,
+        level: 3
+      },
+      zlibInflateOptions: {
+        chunkSize: 10 * 1024
+      }
+    }
+  });
+
+  // Handle WebSocket connections
+  httpServer.on('upgrade', (request, socket, head) => {
+    // Skip vite HMR requests
+    if (request.headers['sec-websocket-protocol'] === 'vite-hmr') {
+      return;
+    }
+
+    wss.handleUpgrade(request, socket, head, (ws) => {
+      wss.emit('connection', ws, request);
+    });
+  });
+
+  // WebSocket connection handler
+  wss.on('connection', (ws) => {
+    console.log('New WebSocket connection established');
+
+    ws.on('message', async (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+
+        // Handle different message types
+        switch (data.type) {
+          case 'study_update':
+            // Handle study progress updates
+            break;
+          case 'question_response':
+            // Handle real-time question responses
+            break;
+          default:
+            console.warn('Unknown message type:', data.type);
+        }
+      } catch (error) {
+        console.error('WebSocket message handling error:', error);
+      }
+    });
+
+    ws.on('close', () => {
+      console.log('Client disconnected');
+    });
+
+    // Send initial connection success message
+    ws.send(JSON.stringify({ type: 'connection_status', status: 'connected' }));
+  });
 
   // Study guide routes
   app.use('/api/study-guide', studyGuideRouter);
@@ -276,7 +336,6 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/generate-calculation", async (req, res) => {
     try {
       const { difficulty } = req.body;
-
 
       // Generate a sample calculation problem based on difficulty
       const problem = {
@@ -872,16 +931,6 @@ async function generateNewQuestions(userId: number, examType: string) {
       throw new Error("No questions available");
     }
 
-    if (examType === 'cat') {
-      // For computer adaptive testing, sort by difficulty
-      const sortedQuestions = availableQuestions.sort((a: any, b: any) => {
-        if (!a.difficulty || !b.difficulty) return 0;
-        return difficultyToNumber(a.difficulty) - difficultyToNumber(b.difficulty);
-      });
-      return formatQuestion(sortedQuestions[0]);
-    }
-
-    // For other exam types, return a random question
     const randomIndex = Math.floor(Math.random() * availableQuestions.length);
     return formatQuestion(availableQuestions[randomIndex]);
   } catch (error) {
@@ -895,9 +944,7 @@ function difficultyToNumber(difficulty: string): number {
   switch (difficulty.toLowerCase()) {
     case 'easy': return 1;
     case 'medium': return 2;
-    case 'hard': return 3;
-    default: return 2;
-  }
+    case 'hard': return 3;    default: return 2;  }
 }
 
 function formatQuestion(question: any) {
@@ -906,9 +953,7 @@ function formatQuestion(question: any) {
     text: question.text,
     options: question.options,
     correctAnswer: question.correctAnswer,
-    explanation: question.explanation,
-    category: question.category,
-    difficulty: question.difficulty
+    explanation: question.explanation
   };
 }
 
@@ -935,10 +980,24 @@ const practiceQuestions = {
         { id: "c", text: "Notify healthcare provider" },
         { id: "d", text: "Apply ice pack to affected area" }
       ],
-correctAnswer: "a",
+      correctAnswer: "a",
       explanation: "Pain assessment should be conducted first to determine appropriate interventions.",
       category: "Patient Care",
       difficulty: "Medium"
-    }]
-  }
-}
+    }
+  ],
+  basic: [
+    {
+      id: 'basic_1',
+      question: 'What is the first step in the nursing process?',
+      options: [
+        { id: 'a', text: 'Assessment' },
+        { id: 'b', text: 'Planning' },
+        { id: 'c', text: 'Implementation' },
+        { id: 'd', text: 'Evaluation' }
+      ],
+      correctAnswer: 'a',
+      explanation: 'Assessment is the first step in the nursing process...'
+    }
+  ]
+};
