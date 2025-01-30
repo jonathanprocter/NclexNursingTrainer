@@ -1,33 +1,55 @@
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import { neon, neonConfig } from '@neondatabase/serverless';
-import { WebSocket } from 'ws';
+import { drizzle } from 'drizzle-orm/neon-http';
+import { neon } from '@neondatabase/serverless';
 import * as schema from './schema';
 
-// Configure neon to use WebSocket for better connection stability
-neonConfig.webSocketConstructor = WebSocket;
-
-// Ensure DATABASE_URL is defined
+// Validate environment variables
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL environment variable is required');
 }
 
-// Create the SQL connection
+// Create SQL connection with proper error handling
 const sql = neon(process.env.DATABASE_URL);
 
-// Create database connection with proper typing
-export const db = drizzle(sql, { schema });
+// Initialize Drizzle with the schema
+export const db = drizzle(sql, { 
+  schema,
+  logger: process.env.NODE_ENV === 'development'
+});
 
-// Export schema for use in routes
+// Export schema types
 export * from './schema';
 
-// Add a function to test the database connection
+// Database connection test function
 export async function testConnection() {
   try {
-    // Try a simple query
     const result = await db.query.modules.findFirst();
     return true;
   } catch (error) {
     console.error('Database connection test failed:', error);
     return false;
+  }
+}
+
+// Helper function to perform database health check
+export async function checkDatabaseHealth() {
+  try {
+    const isConnected = await testConnection();
+    if (!isConnected) {
+      throw new Error('Database connection test failed');
+    }
+    return {
+      status: 'healthy',
+      database: 'connected',
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    return {
+      status: 'unhealthy',
+      database: 'disconnected',
+      timestamp: new Date().toISOString(),
+      error: process.env.NODE_ENV === 'development' 
+        ? (error as Error).message 
+        : 'Internal Server Error'
+    };
   }
 }
