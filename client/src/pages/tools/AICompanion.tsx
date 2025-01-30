@@ -1,23 +1,36 @@
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Mic, StopCircle, History, Lightbulb } from "lucide-react";
-import { Badge } from "../../components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from 'react';
-import { useToast } from "../../hooks/use-toast";
-import { Alert, AlertDescription } from "../../components/ui/alert";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-interface RecognitionEvent extends Event {
+interface SpeechRecognitionResult {
+  transcript: string;
+  isFinal: boolean;
+}
+
+interface SpeechRecognitionResultList {
+  [index: number]: SpeechRecognitionResult;
+  length: number;
+}
+
+interface SpeechRecognitionEvent extends Event {
   results: SpeechRecognitionResultList;
-  error: Error;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
 }
 
 interface SpeechRecognition {
   continuous: boolean;
   interimResults: boolean;
   lang: string;
-  onresult: (event: RecognitionEvent) => void;
-  onerror: (event: RecognitionEvent) => void;
+  onresult: (event: SpeechRecognitionEvent) => void;
+  onerror: (event: SpeechRecognitionErrorEvent) => void;
   onend: () => void;
   start: () => void;
   stop: () => void;
