@@ -9,6 +9,7 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { useBreakpoint } from "../../hooks/use-mobile";
+import { useState, useEffect } from 'react';
 
 interface PerformanceData {
   domain: string;
@@ -38,12 +39,39 @@ const DEFAULT_ANALYTICS: AnalyticsData = {
   averageScore: 0
 };
 
+const analyticsEndpoint = "http://0.0.0.0:4003"; // Added analytics endpoint
+
 export default function Analytics({ data }: AnalyticsProps) {
   const { isMobile, isTablet } = useBreakpoint();
+  const [fetchedData, setFetchedData] = useState<AnalyticsData | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  // Use default data if not provided or if there's an error
-  const analyticsData = data || DEFAULT_ANALYTICS;
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(analyticsEndpoint);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const jsonData = await response.json();
+        setFetchedData(jsonData);
+      } catch (error: any) {
+        setError(error.message);
+        console.error("Error fetching analytics data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+
+  // Use default data if not provided or if there's an error or data hasn't fetched yet
+  const analyticsData = fetchedData || data || DEFAULT_ANALYTICS;
   const chartHeight = isMobile ? 250 : isTablet ? 300 : 350;
+
+  if (error) {
+    return <div>Error loading analytics: {error}</div>;
+  }
 
   return (
     <div className="grid gap-4 sm:gap-6 md:grid-cols-2">

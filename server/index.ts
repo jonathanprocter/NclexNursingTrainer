@@ -11,44 +11,12 @@ const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Enhanced CORS configuration for development. Simplified from original but retains functionality.
-if (process.env.NODE_ENV === 'development') {
-  app.use(cors({
-    origin: true,
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-  }));
-} else {
-  const allowedOrigins = [
-    'http://localhost:3000',
-    'http://0.0.0.0:3000',
-    'http://0.0.0.0:4002',
-    'http://localhost:4002',
-    process.env.NODE_ENV === 'production' ? process.env.PRODUCTION_URL : null,
-    /\.repl\.co$/,
-    /\.replit\.dev$/
-  ].filter(Boolean);
-
-  app.use(cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.some(allowed =>
-        typeof allowed === 'string'
-          ? allowed === origin
-          : allowed.test(origin)
-      )) {
-        callback(null, true);
-      } else {
-        console.warn(`Blocked by CORS: ${origin} not allowed`);
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-    exposedHeaders: ['Content-Range', 'X-Content-Range']
-  }));
-}
+// CORS configuration - using a simpler, less error-prone approach
+app.use(cors({
+  origin: '*', // Allow requests from any origin for simplicity.  Should be refined for production.
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 
 // Database health check (from original code)
@@ -82,20 +50,17 @@ app.use((err: ErrorWithStatus, _req: Request, res: Response, _next: NextFunction
   });
 });
 
-const MAX_PORT_ATTEMPTS = 5;
-let currentPort = parseInt(process.env.PORT || '4002', 10);
+
 const HOST = '0.0.0.0';
+const PORT = 4003; // Fixed port
 
 function startServer() {
   return new Promise((resolve, reject) => {
-    try {
-      let attempts = 0;
-      const startServerWithRetry = () => {
-        const serverInstance = server.listen(currentPort, HOST, () => {
+    const serverInstance = server.listen(PORT, HOST, () => {
           console.log('=================================');
           console.log('Server started successfully');
-          console.log(`Server is running on port ${currentPort}`);
-          console.log(`Access URL: http://${HOST}:${currentPort}`);
+          console.log(`Server is running on port ${PORT}`);
+          console.log(`Access URL: http://${HOST}:${PORT}`);
           console.log('=================================');
 
           // Signal that the server is ready
@@ -106,32 +71,13 @@ function startServer() {
           resolve(serverInstance);
         });
 
-        serverInstance.on('error', (err: NodeJS.ErrnoException) => {
-          if (err.code === 'EADDRINUSE') {
-            console.error(`Port ${currentPort} is in use. Retrying...`);
-            currentPort++;
-            if (attempts < MAX_PORT_ATTEMPTS) {
-              attempts++;
-              console.log(`Attempting to use port ${currentPort}...`);
-              setTimeout(startServerWithRetry, 1000);
-            } else {
-              console.error(`Failed to find available port after ${MAX_PORT_ATTEMPTS} attempts`);
-              reject(err);
-            }
-          } else {
-            console.error('Server error:', err);
-            reject(err);
-          }
+    serverInstance.on('error', (err: NodeJS.ErrnoException) => {
+          console.error('Server error:', err);
+          reject(err);
         });
-      };
-
-      startServerWithRetry();
-    } catch (error) {
-      console.error('Failed to start server:', error);
-      reject(error);
-    }
   });
 }
+
 
 // Handle process signals (from original code)
 process.on('SIGTERM', () => {
