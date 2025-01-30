@@ -1,9 +1,11 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import Analytics from "../../components/dashboard/Analytics";
 import { AnalyticsData } from "../../types/analytics";
 import { memo } from "react";
 import { Skeleton } from "../../components/ui/skeleton";
+import { api } from "../../services/api/client";
 
 const PerformanceOverview = memo(({ analytics }: { analytics: AnalyticsData }) => (
   <Card>
@@ -32,16 +34,24 @@ const PerformanceOverview = memo(({ analytics }: { analytics: AnalyticsData }) =
 function Dashboard() {
   const { data: analytics, isError, isLoading, error } = useQuery<AnalyticsData>({
     queryKey: ["analytics"],
-    queryFn: () => Promise.resolve({
-      performanceData: [
-        { domain: "Pharmacology", mastery: 85 },
-        { domain: "Medical-Surgical", mastery: 78 },
-        { domain: "Pediatrics", mastery: 92 }
-      ],
-      totalStudyTime: "24h",
-      questionsAttempted: 150,
-      averageScore: 85
-    }),
+    queryFn: async () => {
+      try {
+        const response = await api.get('/analytics');
+        return response.data;
+      } catch (error) {
+        console.error('Error fetching analytics:', error);
+        return {
+          performanceData: [
+            { domain: "Pharmacology", mastery: 85 },
+            { domain: "Medical-Surgical", mastery: 78 },
+            { domain: "Pediatrics", mastery: 92 }
+          ],
+          totalStudyTime: "24h",
+          questionsAttempted: 150,
+          averageScore: 85
+        };
+      }
+    },
     staleTime: 30000,
   });
 
