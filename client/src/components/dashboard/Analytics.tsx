@@ -1,3 +1,4 @@
+
 import {
   BarChart,
   Bar,
@@ -15,7 +16,6 @@ interface AnalyticsData {
 }
 
 interface AnalyticsProps {
-  // data might be undefined or partially undefined
   data?: {
     performanceData?: AnalyticsData[]
     totalStudyTime?: string
@@ -25,14 +25,7 @@ interface AnalyticsProps {
 }
 
 export default function Analytics({ data }: AnalyticsProps) {
-  if (!data) {
-    return <div className="p-4">Loading analytics data...</div>;
-  }
-
-  const performanceData = Array.isArray(data.performanceData) ? data.performanceData.map((item, index) => ({
-    ...item,
-    id: `performance-${index}`
-  })) : [
+  const performanceData = data?.performanceData || [
     { module: "Pharmacology", score: 85 },
     { module: "Pathophysiology", score: 75 },
     { module: "Med-Surg", score: 78 },
@@ -45,7 +38,6 @@ export default function Analytics({ data }: AnalyticsProps) {
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
-      {/* Card 1: Performance Bar Chart */}
       <Card>
         <CardHeader>
           <CardTitle>Module Performance</CardTitle>
@@ -72,7 +64,6 @@ export default function Analytics({ data }: AnalyticsProps) {
         </CardContent>
       </Card>
 
-      {/* Card 2: Other Statistics */}
       <Card>
         <CardHeader>
           <CardTitle>Study Statistics</CardTitle>

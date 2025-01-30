@@ -13,7 +13,7 @@ export default function Dashboard() {
     queryKey: ["analytics"],
     queryFn: async () => {
       try {
-        const response = await fetch("http://0.0.0.0:4001/api/analytics/user/1", {
+        const response = await fetch("/api/analytics/user/1", {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'
