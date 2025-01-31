@@ -1,6 +1,6 @@
 import { drizzle } from 'drizzle-orm/neon-http';
 import { neon } from '@neondatabase/serverless';
-import * as schema from './schema';
+import * as schema from './schema.js';
 
 // Validate environment variables
 if (!process.env.DATABASE_URL) {
@@ -14,7 +14,7 @@ const sql = neon(process.env.DATABASE_URL);
 export const db = drizzle(sql, { schema });
 
 // Export schema types
-export * from './schema';
+export * from './schema.js';
 
 // Helper function to perform database health check
 export async function checkDatabaseHealth() {
@@ -30,7 +30,7 @@ export async function checkDatabaseHealth() {
       status: 'unhealthy',
       database: 'disconnected',
       timestamp: new Date().toISOString(),
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal Server Error'
+      error: error instanceof Error ? error.message : 'Internal Server Error'
     };
   }
 }

@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import { registerRoutes } from './routes.js';
 
 const app = express();
 const PORT = 4003;
@@ -29,9 +30,13 @@ process.on('uncaughtException', (error) => {
     }
 });
 
+// Base route for quick health check
 app.get('/', (req, res) => {
     res.json({ message: 'Server is running' });
 });
+
+// Register all routes
+registerRoutes(app);
 
 app.listen(PORT, '0.0.0.0', () => {
     console.log('=================================');
