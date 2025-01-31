@@ -33,7 +33,13 @@ export function FloatingStudyBuddy() {
   useEffect(() => {
     if (!isBrowserSupported) return;
 
-    const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
+    // @ts-ignore - SpeechRecognition types
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      console.error('Speech recognition not supported');
+      return;
+    }
+    
     const recognition = new SpeechRecognition();
 
     recognition.continuous = true;
