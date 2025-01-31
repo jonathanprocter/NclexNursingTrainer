@@ -1,3 +1,4 @@
+
 import express from "express";
 import analyticsRouter from "./analytics";
 import questionsRouter from "./questions";
@@ -17,18 +18,11 @@ router.use("/practice", practiceRouter);
 router.use("/simulations", simulationsRouter);
 
 // Error handling middleware
-router.use(
-  (
-    err: Error,
-    _req: express.Request,
-    res: express.Response,
-    _next: express.NextFunction,
-  ) => {
-    console.error("API Error:", err);
-    res.status(500).json({
-      error: err.message || "Internal Server Error",
-    });
-  },
-);
+router.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error("API Error:", err);
+  res.status(500).json({
+    error: err.message || "Internal Server Error",
+  });
+});
 
-export default router;
+export = router;
