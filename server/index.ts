@@ -1,6 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import { registerRoutes } from './routes.js';
 
 const app = express();
 const PORT = 4003;
@@ -30,9 +29,11 @@ process.on('uncaughtException', (error) => {
     }
 });
 
-const server = registerRoutes(app);
+app.get('/', (req, res) => {
+    res.json({ message: 'Server is running' });
+});
 
-server.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log('=================================');
     console.log('Server started successfully');
     console.log(`Server is running on port ${PORT}`);

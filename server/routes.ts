@@ -1,11 +1,16 @@
 import type { Express, Request, Response, NextFunction } from "express";
-import { createServer, type Server } from "http";
-import { WebSocket, WebSocketServer } from 'ws';
 import { db } from "./db/index.js";
 import { eq, desc } from "drizzle-orm";
 import studyGuideRouter from './routes/study-guide.js';
 import OpenAI from "openai";
-import { studyBuddyChats, modules, questions, quizAttempts, userProgress, type QuizAttempt } from "./db/schema.js";
+import { 
+  studyBuddyChats, 
+  modules, 
+  questions, 
+  quizAttempts, 
+  userProgress,
+  type QuizAttempt 
+} from "./db/schema.js";
 
 // Type definitions for practice questions
 interface QuestionOption {
@@ -37,76 +42,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-// Helper functions
-function difficultyToNumber(difficulty: string): number {
-  const difficultyMap: Record<string, number> = {
-    'Easy': 1,
-    'Medium': 2,
-    'Hard': 3
-  };
-  return difficultyMap[difficulty] || 2;
-}
-
-function generateBackupQuestions(): PracticeQuestion[] {
-  return [
-    {
-      id: `backup_${Date.now()}_1`,
-      text: "What is the first step in the nursing process?",
-      options: [
-        { id: "a", text: "Assessment" },
-        { id: "b", text: "Planning" },
-        { id: "c", text: "Implementation" },
-        { id: "d", text: "Evaluation" }
-      ],
-      correctAnswer: "a",
-      explanation: "Assessment is always the first step in the nursing process.",
-      category: "Nursing Process",
-      difficulty: "Easy"
-    }
-  ];
-}
-
-async function generateNewQuestions(userId: number, examType: string): Promise<PracticeQuestion> {
-  try {
-    const backupQuestion = generateBackupQuestions()[0];
-    return backupQuestion;
-  } catch (error) {
-    console.error("Error generating questions:", error);
-    return generateBackupQuestions()[0];
-  }
-}
-
-export function registerRoutes(app: Express): Server {
-  const httpServer = createServer(app);
-
-  // Initialize WebSocket with proper error handling
-  const wss = new WebSocketServer({ 
-    noServer: true,
-    clientTracking: true,
-    perMessageDeflate: false
-  });
-
-  // Handle WebSocket upgrade with proper error handling
-  httpServer.on('upgrade', (request, socket, head) => {
-    if (request.headers['sec-websocket-protocol'] === 'vite-hmr') {
-      return;
-    }
-
-    socket.on('error', (err) => {
-      console.error('Socket error:', err);
-      socket.destroy();
-    });
-
-    try {
-      wss.handleUpgrade(request, socket, head, (ws: WebSocket) => {
-        wss.emit('connection', ws, request);
-      });
-    } catch (error) {
-      console.error('WebSocket upgrade error:', error);
-      socket.destroy();
-    }
-  });
-
+export function registerRoutes(app: Express) {
   // Study guide routes
   app.use('/api/study-guide', studyGuideRouter);
 
@@ -117,6 +53,11 @@ export function registerRoutes(app: Express): Server {
       message: process.env.NODE_ENV === 'development' ? err.message : 'Internal Server Error',
       ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
     });
+  });
+
+  // Basic health check route
+  app.get('/api/health', (req: Request, res: Response) => {
+    res.json({ status: 'ok' });
   });
 
   // Modules routes with proper error handling
@@ -864,16 +805,53 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  return httpServer;
+  return app;
 }
 
-// Export types and interfaces
-export type { PracticeQuestion, QuestionOption };
+// Export types
+export type { PracticeQuestion, QuestionOption, PerformanceData };
 
-// Helper functions with proper typing
+// Helper function with proper typing
 async function getStudyRecommendations(performanceData: PerformanceData[]): Promise<any[]> {
-  // Implement your AI recommendation logic here
   return [];
+}
+
+function difficultyToNumber(difficulty: string): number {
+  const difficultyMap: Record<string, number> = {
+    'Easy': 1,
+    'Medium': 2,
+    'Hard': 3
+  };
+  return difficultyMap[difficulty] || 2;
+}
+
+function generateBackupQuestions(): PracticeQuestion[] {
+  return [
+    {
+      id: `backup_${Date.now()}_1`,
+      text: "What is the first step in the nursing process?",
+      options: [
+        { id: "a", text: "Assessment" },
+        { id: "b", text: "Planning" },
+        { id: "c", text: "Implementation" },
+        { id: "d", text: "Evaluation" }
+      ],
+      correctAnswer: "a",
+      explanation: "Assessment is always the first step in the nursing process.",
+      category: "Nursing Process",
+      difficulty: "Easy"
+    }
+  ];
+}
+
+async function generateNewQuestions(userId: number, examType: string): Promise<PracticeQuestion> {
+  try {
+    const backupQuestion = generateBackupQuestions()[0];
+    return backupQuestion;
+  } catch (error) {
+    console.error("Error generating questions:", error);
+    return generateBackupQuestions()[0];
+  }
 }
 
 async function analyzePerformance(answers: Array<{correct: boolean}>): Promise<{
