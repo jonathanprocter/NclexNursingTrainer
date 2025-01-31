@@ -168,7 +168,7 @@ export default function Pharmacology() {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      onClick={() => handleAIHelp("knowledge_development", "Explain core pharmacological concepts including drug classifications, mechanisms of action, and safety protocols")}
+                      onClick={() => handleAIHelp("pharmacology_knowledge", "Explain drug classes, pharmacokinetics, pharmacodynamics, and therapeutic effects of medications in clinical practice")}
                     >
                       <Bot className="h-4 w-4 mr-2" />
                       AI Help
@@ -217,7 +217,7 @@ export default function Pharmacology() {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      onClick={() => handleAIHelp("skills_application", "Explain practical medication administration skills, calculations, and clinical competencies")}
+                      onClick={() => handleAIHelp("medication_skills", "Explain medication administration techniques, dosage calculations, and therapeutic monitoring in clinical practice")}
                     >
                       <Bot className="h-4 w-4 mr-2" />
                       AI Help
@@ -266,7 +266,7 @@ export default function Pharmacology() {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      onClick={() => handleAIHelp("clinical_awareness", "Explain advanced clinical judgment, safety protocols, and risk management in medication administration")}
+                      onClick={() => handleAIHelp("pharmacology_clinical", "Explain drug interactions, adverse effects, contraindications, and therapeutic monitoring in medication therapy")}
                     >
                       <Bot className="h-4 w-4 mr-2" />
                       AI Help
