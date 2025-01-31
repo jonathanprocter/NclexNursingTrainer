@@ -1,10 +1,9 @@
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import Analytics from "../components/dashboard/Analytics";
 import { Skeleton } from "../components/ui/skeleton";
 import type { AnalyticsData } from "../types/analytics";
-import { memo, useEffect } from "react";
-import ErrorBoundary from "../components/ErrorBoundary";
+import { memo } from "react";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 
 const PerformanceOverview = memo(({ analytics }: { analytics: AnalyticsData }) => (
@@ -31,26 +30,7 @@ const PerformanceOverview = memo(({ analytics }: { analytics: AnalyticsData }) =
   </Card>
 ));
 
-const PerformanceOverviewSkeleton = () => (
-  <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10">
-    <CardHeader>
-      <Skeleton className="h-6 w-48" />
-    </CardHeader>
-    <CardContent>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i}>
-            <Skeleton className="h-4 w-24 mb-2" />
-            <Skeleton className="h-6 w-16" />
-          </div>
-        ))}
-      </div>
-    </CardContent>
-  </Card>
-);
-
 function DashboardContent() {
-  // Mock analytics data for initial development
   const mockAnalytics: AnalyticsData = {
     performanceData: [
       { domain: "Pharmacology", mastery: 85 },
@@ -66,59 +46,38 @@ function DashboardContent() {
 
   const { data: analytics, isError, isLoading, error } = useQuery<AnalyticsData>({
     queryKey: ["analytics"],
-    queryFn: async () => {
-      // For now, return mock data
-      return mockAnalytics;
-    },
+    queryFn: () => Promise.resolve(mockAnalytics),
     staleTime: 30000
   });
 
-  useEffect(() => {
-    // Force a re-render to ensure styles are applied
-    document.body.style.display = 'none';
-    document.body.offsetHeight;
-    document.body.style.display = '';
-  }, []);
-
   if (isLoading) {
-    return (
-      <div className="space-y-4 sm:space-y-6">
-        <PerformanceOverviewSkeleton />
-        <div className="h-[400px] bg-muted/10 rounded-lg animate-pulse" />
-      </div>
-    );
+    return <div className="space-y-4"><Skeleton className="h-[200px] w-full" /></div>;
   }
 
-  if (isError && !analytics) {
+  if (isError) {
     return (
       <div className="p-4 bg-destructive/10 rounded-md">
-        <h2 className="text-lg font-semibold mb-2">Something went wrong</h2>
-        <p className="text-sm text-destructive mb-4">
-          {error instanceof Error ? error.message : "An unknown error occurred"}
+        <p className="text-sm text-destructive">
+          {error instanceof Error ? error.message : "Failed to load dashboard"}
         </p>
       </div>
     );
   }
 
-  const displayData = analytics || mockAnalytics;
-
   return (
-    <div className="space-y-4 sm:space-y-6 bg-background">
-      <PerformanceOverview analytics={displayData} />
-      <Analytics analytics={displayData} />
+    <div className="space-y-4 sm:space-y-6">
+      <PerformanceOverview analytics={analytics || mockAnalytics} />
+      <Analytics analytics={analytics || mockAnalytics} />
     </div>
   );
 }
 
-export default function DashboardPage() {
+export default function Dashboard() {
   return (
     <DashboardLayout>
-      <ErrorBoundary>
-        <DashboardContent />
-      </ErrorBoundary>
+      <DashboardContent />
     </DashboardLayout>
   );
 }
 
 PerformanceOverview.displayName = "PerformanceOverview";
-PerformanceOverviewSkeleton.displayName = "PerformanceOverviewSkeleton";

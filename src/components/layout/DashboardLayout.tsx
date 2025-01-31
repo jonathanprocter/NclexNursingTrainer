@@ -1,10 +1,5 @@
-import { Link } from "wouter";
-import { Card } from "../ui/card";
+import { Link } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
-import Analytics from "../dashboard/Analytics";
-import PracticeHistory from "../dashboard/PracticeHistory";
-import ProgressDisplay from "../dashboard/ProgressDisplay";
-import { useQuery } from "@tanstack/react-query";
 import type { AnalyticsData } from "../../types/analytics";
 
 interface DashboardLayoutProps {
@@ -12,11 +7,6 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { data: analytics } = useQuery<AnalyticsData>({
-    queryKey: ['analytics'],
-    staleTime: 30000
-  });
-
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-background">
       <div className="container mx-auto px-4 py-8">
@@ -24,12 +14,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="flex justify-between items-center">
             <h1 className="text-3xl font-bold tracking-tight text-foreground">Dashboard</h1>
             <nav className="flex items-center space-x-4">
-              <Link href="/practice">
+              <Link to="/practice">
                 <span className="text-sm font-medium text-foreground/80 hover:text-primary cursor-pointer">
                   Practice Questions
                 </span>
               </Link>
-              <Link href="/simulations">
+              <Link to="/simulations">
                 <span className="text-sm font-medium text-foreground/80 hover:text-primary cursor-pointer">
                   Simulations
                 </span>
@@ -43,21 +33,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <TabsTrigger value="performance">Performance</TabsTrigger>
               <TabsTrigger value="practice">Practice History</TabsTrigger>
             </TabsList>
-
-            <TabsContent value="overview" className="bg-background">
-              {children}
-            </TabsContent>
-
+            <TabsContent value="overview">{children}</TabsContent>
             <TabsContent value="performance">
-              <Card className="p-6">
-                {analytics && <Analytics analytics={analytics} />}
-              </Card>
+              <div className="space-y-4">
+                {/* Performance content will be added here */}
+              </div>
             </TabsContent>
-
             <TabsContent value="practice">
-              <Card className="p-6">
-                <PracticeHistory />
-              </Card>
+              <div className="space-y-4">
+                {/* Practice history content will be added here */}
+              </div>
             </TabsContent>
           </Tabs>
         </div>
