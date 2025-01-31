@@ -5,6 +5,21 @@ import './index.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ErrorBoundary from './components/ErrorBoundary';
 
+async function initializeMockServiceWorker() {
+  if (import.meta.env.DEV) {
+    console.log('Initializing MSW...');
+    try {
+      const { worker } = await import('./mocks/browser');
+      await worker.start({
+        onUnhandledRequest: 'bypass',
+      });
+      console.log('MSW initialized successfully');
+    } catch (error) {
+      console.error('Failed to initialize MSW:', error);
+    }
+  }
+}
+
 // Initialize Query Client with defaults
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,13 +36,15 @@ const queryClient = new QueryClient({
   },
 });
 
-// Create Root and Render App
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <React.StrictMode>
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <App />
-      </QueryClientProvider>
-    </ErrorBoundary>
-  </React.StrictMode>
-);
+// Initialize MSW and then render the app
+initializeMockServiceWorker().then(() => {
+  ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+    <React.StrictMode>
+      <ErrorBoundary>
+        <QueryClientProvider client={queryClient}>
+          <App />
+        </QueryClientProvider>
+      </ErrorBoundary>
+    </React.StrictMode>
+  );
+});

@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
 import NavBar from '@/components/layout/NavBar';
 
-// Initialize Query Client
+// Initialize Query Client with proper config
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -23,28 +23,20 @@ const queryClient = new QueryClient({
   },
 });
 
-// Error Fallback Component
-function ErrorFallback({ error }: { error: Error }) {
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Card className="p-6 max-w-sm">
-        <h2 className="text-xl font-bold text-destructive mb-4">Something went wrong</h2>
-        <pre className="text-sm overflow-auto mb-4">{error.message}</pre>
-        <button
-          onClick={() => window.location.reload()}
-          className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
-        >
-          Try again
-        </button>
-      </Card>
-    </div>
-  );
-}
-
 // Initialize MSW in development
-if (process.env.NODE_ENV === 'development') {
-  const { worker } = require('./mocks/browser');
-  worker.start();
+if (import.meta.env.DEV) {
+  console.log('Starting MSW initialization from App...');
+  import('./mocks/browser')
+    .then(({ worker }) => {
+      worker.start({
+        onUnhandledRequest: 'bypass',
+      }).then(() => {
+        console.log('MSW started successfully from App');
+      });
+    })
+    .catch((error) => {
+      console.error('Failed to start MSW from App:', error);
+    });
 }
 
 function App() {
@@ -53,6 +45,7 @@ function App() {
   // Handle hydration mismatch
   useEffect(() => {
     setMounted(true);
+    console.log('App component mounted');
   }, []);
 
   if (!mounted) {
@@ -60,11 +53,26 @@ function App() {
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen bg-background text-foreground">
-        <NavBar />
-        <main className="container mx-auto px-4 py-6">
-          <ErrorBoundary FallbackComponent={ErrorFallback}>
+    <ErrorBoundary
+      FallbackComponent={({ error }) => (
+        <div className="min-h-screen flex items-center justify-center">
+          <Card className="p-6 max-w-sm">
+            <h2 className="text-xl font-bold text-destructive mb-4">Something went wrong</h2>
+            <pre className="text-sm overflow-auto mb-4">{error.message}</pre>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
+            >
+              Try again
+            </button>
+          </Card>
+        </div>
+      )}
+    >
+      <QueryClientProvider client={queryClient}>
+        <div className="min-h-screen bg-background text-foreground">
+          <NavBar />
+          <main className="container mx-auto px-4 py-6">
             <Switch>
               <Route path="/" component={Dashboard} />
               <Route path="/dashboard" component={Dashboard} />
@@ -85,11 +93,11 @@ function App() {
                 </div>
               </Route>
             </Switch>
-          </ErrorBoundary>
-        </main>
-        <Toaster />
-      </div>
-    </QueryClientProvider>
+          </main>
+          <Toaster />
+        </div>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
