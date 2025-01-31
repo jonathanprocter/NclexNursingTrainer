@@ -92,23 +92,18 @@ export async function generateSimulationScenario(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         difficulty, 
-        focus_areas,
+        focus_areas: focus_areas || [],
         previousScenarios: []
       })
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Server error:', errorText);
       throw new Error(`Server error: ${response.status}`);
     }
 
-    const text = await response.text();
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch (e) {
-      console.error('Failed to parse response:', text);
-      throw new Error('Invalid response format from server');
-    }
+    const data = await response.json();
     
     if (!data || typeof data !== 'object') {
       throw new Error('Invalid response format');
