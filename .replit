@@ -63,7 +63,7 @@ localPort = 5000
 externalPort = 80
 
 [workflows]
-runButton = "Start application"
+runButton = "Start"
 
 [[workflows.workflow]]
 name = "Project"
@@ -80,6 +80,14 @@ author = "agent"
 
 [workflows.workflow.metadata]
 agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"
+
+[[workflows.workflow]]
+name = "Start"
+author = 37925715
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
