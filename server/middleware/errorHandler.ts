@@ -1,10 +1,19 @@
 
 import { Request, Response, NextFunction } from 'express';
 
-export const errorHandler = (err: Error, req: Request, res: Response, _next: NextFunction) => {
-  console.error('Server Error:', err);
+export const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
+  console.error(`Error processing ${req.method} ${req.url}:`, err);
+  
+  if (res.headersSent) {
+    return next(err);
+  }
+
   res.status(500).json({
-    error: 'Internal Server Error',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+    error: {
+      message: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message,
+      timestamp: new Date().toISOString(),
+      path: req.url,
+      method: req.method
+    }
   });
 };
