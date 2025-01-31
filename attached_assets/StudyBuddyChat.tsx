@@ -14,13 +14,26 @@ interface Message {
   timestamp: Date;
 }
 
-export function StudyBuddyChat() {
+export interface StudyBuddyChatHandle {
+  handleVoiceInput: (transcript: string) => void;
+}
+
+interface StudyBuddyChatProps {
+  isListening?: boolean;
+  onVoiceInputToggle?: () => void;
+}
+
+export const StudyBuddyChat = ({ 
+  isListening = false, 
+  onVoiceInputToggle 
+}: StudyBuddyChatProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [selectedTone, setSelectedTone] = useState<StudyBuddyTone>("professional");
   const scrollRef = useRef<HTMLDivElement>(null);
-  
+  const inputRef = useRef<HTMLInputElement>(null);
+
   // Mock student ID for now - in a real app this would come from auth context
   const studentId = 1;
 
@@ -104,6 +117,11 @@ export function StudyBuddyChat() {
     }
   }, [messages]);
 
+  const handleVoiceInput = (transcript: string) => {
+    setInput(transcript);
+    handleSubmit({preventDefault: () => {}} as any); //Simulate submit event
+  }
+
   return (
     <div className="flex flex-col h-[600px]">
       <div className="px-4 py-2 border-b flex justify-between items-center">
@@ -152,23 +170,27 @@ export function StudyBuddyChat() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask anything about NCLEX..."
-            disabled={startSession.isPending || sendMessage.isPending}
+            disabled={isListening}
+            ref={inputRef}
           />
           <Button
             type="submit"
-            disabled={startSession.isPending || sendMessage.isPending}
+            disabled={isListening}
           >
             <Send className="h-4 w-4" />
           </Button>
           <Button
             type="button"
             variant="outline"
-            disabled={true} // Voice feature coming soon
+            onClick={onVoiceInputToggle}
+            className={isListening ? "text-primary" : ""}
           >
-            <Mic className="h-4 w-4" />
+            <Mic className={`h-4 w-4 ${isListening ? "animate-pulse" : ""}`} />
           </Button>
         </div>
       </form>
     </div>
   );
-}
+};
+
+export default StudyBuddyChat;

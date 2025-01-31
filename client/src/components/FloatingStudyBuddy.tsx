@@ -42,6 +42,7 @@ export function FloatingStudyBuddy() {
 
     recognition.onstart = () => {
       setIsListening(true);
+      setTranscriptBuffer("");
       toast({
         title: "Voice Input Active",
         description: "Speak your message...",
@@ -51,10 +52,6 @@ export function FloatingStudyBuddy() {
     recognition.onend = () => {
       setIsListening(false);
       setTranscriptBuffer("");
-      toast({
-        title: "Voice Input Ended",
-        description: "Click the microphone icon to speak again.",
-      });
     };
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
@@ -101,7 +98,6 @@ export function FloatingStudyBuddy() {
 
     recognitionRef.current = recognition;
 
-    // Cleanup on unmount
     return () => {
       if (recognitionRef.current) {
         recognitionRef.current.abort();
@@ -136,8 +132,8 @@ export function FloatingStudyBuddy() {
     } catch (error) {
       console.error("Microphone access error:", error);
       toast({
-        title: "Error",
-        description: "Unable to access microphone. Please check your permissions.",
+        title: "Microphone Access Required",
+        description: "Please allow microphone access to use voice features.",
         variant: "destructive",
       });
       setIsListening(false);
@@ -197,12 +193,13 @@ export function FloatingStudyBuddy() {
                 <StudyBuddyChat 
                   ref={chatComponentRef}
                   isListening={isListening}
+                  onVoiceInputToggle={toggleVoiceInput}
                 />
               </div>
               {isListening && transcriptBuffer && (
                 <div className="px-4 py-2 bg-primary/5 border-t">
                   <p className="text-sm text-muted-foreground">
-                    {transcriptBuffer}...
+                    {transcriptBuffer}
                   </p>
                 </div>
               )}

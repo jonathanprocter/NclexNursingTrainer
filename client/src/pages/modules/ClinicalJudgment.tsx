@@ -29,22 +29,23 @@ export default function ClinicalJudgment() {
 
   // Initialize speech recognition
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+    if (typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
+      recognition.lang = 'en-US';
 
-      recognition.onresult = (event) => {
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
         const transcript = Array.from(event.results)
           .map(result => result[0])
           .map(result => result.transcript)
           .join('');
 
-        setQuestion(prev => transcript);
+        setQuestion(transcript);
       };
 
-      recognition.onerror = (event) => {
+      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
         console.error('Speech recognition error', event.error);
         setIsListening(false);
         toast({
@@ -110,10 +111,7 @@ export default function ClinicalJudgment() {
         }
 
         const data = await response.json();
-        return {
-          content: data.response || data.content || "No content available",
-          error: null
-        };
+        return data;
       } catch (error) {
         console.error("Error in AI help mutation:", error);
         throw new Error(error instanceof Error ? error.message : "Failed to get AI assistance");
@@ -135,7 +133,7 @@ export default function ClinicalJudgment() {
 
     try {
       const result = await aiHelpMutation.mutateAsync({ topic, context });
-      setAiContent(result.content || result.response);
+      setAiContent(result.content);
     } catch (error) {
       // Error is handled by mutation's onError
       setIsDialogOpen(false);
@@ -160,7 +158,6 @@ export default function ClinicalJudgment() {
       setAiContent(result.content);
       setIsQuestionDialogOpen(false);
       setIsDialogOpen(true);
-      // Only reset question after successful submission
       setQuestion("");
     } catch (error) {
       toast({
@@ -177,7 +174,6 @@ export default function ClinicalJudgment() {
       onOpenChange={(open) => {
         setIsQuestionDialogOpen(open);
         if (!open) {
-          // Only reset question when dialog is explicitly closed
           setQuestion("");
           if (isListening) {
             recognition?.stop();
