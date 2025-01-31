@@ -859,7 +859,7 @@ export function registerRoutes(app: Express): Server {
         messages: [
           {
             role: "system",
-            content: "You are a nursing educator. Generate a realistic simulation scenario."
+            content: "You are a nursing educator. Generate a realistic simulation scenario. Return response in valid JSON format only."
           },
           {
             role: "user",
@@ -888,8 +888,7 @@ export function registerRoutes(app: Express): Server {
 }`
           }
         ],
-        temperature: 0.7,
-        response_format: { type: "json_object" }
+        temperature: 0.7
       });
       
       const scenarioContent = completion.choices[0]?.message?.content;
