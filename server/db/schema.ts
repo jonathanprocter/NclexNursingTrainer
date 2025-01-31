@@ -17,10 +17,22 @@ export const questionHistory = pgTable('question_history', {
   timestamp: timestamp('timestamp').defaultNow(),
 });
 
+export const modules = pgTable('modules', {
+    id: serial('id').primaryKey(),
+    name: text('name').notNull(),
+    description: text('description'),
+});
+
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type QuestionHistory = typeof questionHistory.$inferSelect;
 export type NewQuestionHistory = typeof questionHistory.$inferInsert;
+export type Module = typeof modules.$inferSelect;
+export type NewModule = typeof modules.$inferInsert;
 
+// Zod validation schemas
 export const insertUserSchema = createInsertSchema(users);
 export const selectUserSchema = createSelectSchema(users);
+export const insertModuleSchema = createInsertSchema(modules);
+export const selectModuleSchema = createSelectSchema(modules);
