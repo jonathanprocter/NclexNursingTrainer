@@ -202,3 +202,32 @@ export interface AIAnalysisResult {
   recommendedTopics: string[];
   confidence: number;
 }
+export async function startSkillPractice(
+  level: 'basic' | 'advanced',
+  skillName: string
+): Promise<{
+  scenario: string;
+  objectives: string[];
+  steps: Array<{
+    instruction: string;
+    feedback?: string;
+    completed?: boolean;
+  }>;
+}> {
+  try {
+    const response = await fetch('/api/ai/skill-practice', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ level, skillName })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to start skill practice');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error starting skill practice:', error);
+    throw new Error('Failed to start skill practice');
+  }
+}

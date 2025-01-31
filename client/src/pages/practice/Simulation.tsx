@@ -151,26 +151,50 @@ export default function Simulation() {
                 attempting complex scenarios.
               </p>
               <div className="grid gap-4 md:grid-cols-2">
-                <Card>
+                <Card className="hover:shadow-lg transition-shadow">
                   <CardContent className="p-4">
                     <h3 className="font-medium mb-2">Basic Skills</h3>
-                    <ul className="space-y-2 text-sm text-muted-foreground">
-                      <li>• Patient Assessment</li>
-                      <li>• Vital Signs Monitoring</li>
-                      <li>• Medication Administration</li>
-                      <li>• Documentation</li>
-                    </ul>
+                    <div className="space-y-2">
+                      {[
+                        { name: 'Patient Assessment', icon: <Stethoscope className="h-4 w-4" /> },
+                        { name: 'Vital Signs Monitoring', icon: <Activity className="h-4 w-4" /> },
+                        { name: 'Medication Administration', icon: <Pill className="h-4 w-4" /> },
+                        { name: 'Documentation', icon: <FileText className="h-4 w-4" /> }
+                      ].map((skill) => (
+                        <Button
+                          key={skill.name}
+                          variant="outline"
+                          className="w-full justify-start gap-2"
+                          onClick={() => handleStartSkillPractice('basic', skill.name)}
+                        >
+                          {skill.icon}
+                          {skill.name}
+                        </Button>
+                      ))}
+                    </div>
                   </CardContent>
                 </Card>
-                <Card>
+                <Card className="hover:shadow-lg transition-shadow">
                   <CardContent className="p-4">
                     <h3 className="font-medium mb-2">Advanced Skills</h3>
-                    <ul className="space-y-2 text-sm text-muted-foreground">
-                      <li>• Complex Procedures</li>
-                      <li>• Emergency Interventions</li>
-                      <li>• Critical Care Monitoring</li>
-                      <li>• Team Leadership</li>
-                    </ul>
+                    <div className="space-y-2">
+                      {[
+                        { name: 'Complex Procedures', icon: <Syringe className="h-4 w-4" /> },
+                        { name: 'Emergency Interventions', icon: <AlertTriangle className="h-4 w-4" /> },
+                        { name: 'Critical Care Monitoring', icon: <Heart className="h-4 w-4" /> },
+                        { name: 'Team Leadership', icon: <Users className="h-4 w-4" /> }
+                      ].map((skill) => (
+                        <Button
+                          key={skill.name}
+                          variant="outline"
+                          className="w-full justify-start gap-2"
+                          onClick={() => handleStartSkillPractice('advanced', skill.name)}
+                        >
+                          {skill.icon}
+                          {skill.name}
+                        </Button>
+                      ))}
+                    </div>
                   </CardContent>
                 </Card>
               </div>
