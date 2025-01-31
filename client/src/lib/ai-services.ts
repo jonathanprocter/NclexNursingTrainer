@@ -97,18 +97,20 @@ export async function generateSimulationScenario(
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Server error: ${response.status} - ${errorText}`);
+      const error = await response.text();
+      throw new Error(`Failed to generate simulation scenario: ${error}`);
     }
 
-    const data = await response.json();
-
-    // Validate required fields
-    if (!data?.title || !data?.initial_state || !Array.isArray(data?.expected_actions)) {
-      throw new Error('Invalid scenario format - missing required fields');
+    try {
+      const data = await response.json();
+      if (!data?.title || !data?.initial_state || !Array.isArray(data?.expected_actions)) {
+        throw new Error('Invalid scenario format - missing required fields');
+      }
+      return data;
+    } catch (error) {
+      console.error('Error parsing scenario:', error);
+      throw new Error('Failed to parse simulation scenario');
     }
-
-    return data;
   } catch (error) {
     console.error('Error generating simulation scenario:', error);
     throw error instanceof Error ? error : new Error('Unknown error occurred');

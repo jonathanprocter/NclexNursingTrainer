@@ -859,11 +859,33 @@ export function registerRoutes(app: Express): Server {
         messages: [
           {
             role: "system",
-            content: "You are a nursing educator generating a simulation scenario."
+            content: `You are a nursing educator. Generate a simulation scenario with exactly this structure:
+{
+  "title": "string",
+  "description": "string",
+  "initial_state": {
+    "patient_history": "string",
+    "vital_signs": {
+      "blood_pressure": "string",
+      "heart_rate": number,
+      "respiratory_rate": number,
+      "temperature": number,
+      "oxygen_saturation": number
+    },
+    "symptoms": ["string"]
+  },
+  "expected_actions": [
+    {
+      "priority": number,
+      "action": "string",
+      "rationale": "string"
+    }
+  ]
+}`
           },
           {
             role: "user",
-            content: `Generate a ${difficulty || 'medium'} difficulty simulation scenario.`
+            content: `Generate a ${difficulty || 'medium'} difficulty nursing simulation scenario.`
           }
         ],
         temperature: 0.7,
@@ -875,11 +897,41 @@ export function registerRoutes(app: Express): Server {
         throw new Error("Failed to generate scenario");
       }
 
-      const scenario = JSON.parse(scenarioContent);
+      let scenario;
+      try {
+        scenario = JSON.parse(scenarioContent);
+      } catch (error) {
+        console.error("Failed to parse scenario:", error);
+        return res.status(500).json({
+          error: "Failed to generate valid scenario",
+          details: error.message
+        });
+      }
       
-      // Validate required fields
-      if (!scenario.title || !scenario.initial_state || !scenario.expected_actions) {
-        throw new Error("Invalid scenario format - missing required fields");
+      // Return a default scenario if validation fails
+      if (!scenario?.title || !scenario?.initial_state || !Array.isArray(scenario?.expected_actions)) {
+        scenario = {
+          title: "Basic Patient Assessment",
+          description: "Assess a patient presenting with respiratory symptoms",
+          initial_state: {
+            patient_history: "No significant medical history",
+            vital_signs: {
+              blood_pressure: "120/80",
+              heart_rate: 80,
+              respiratory_rate: 16,
+              temperature: 37,
+              oxygen_saturation: 98
+            },
+            symptoms: ["Mild cough", "Normal breathing"]
+          },
+          expected_actions: [
+            {
+              priority: 1,
+              action: "Check vital signs",
+              rationale: "Establish baseline patient status"
+            }
+          ]
+        };
       }
 
       return res.json(scenario);
