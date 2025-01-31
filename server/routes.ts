@@ -7,6 +7,22 @@ import studyGuideRouter from './routes/study-guide.js';
 import OpenAI from "openai";
 import { studyBuddyChats, modules, questions, quizAttempts, userProgress, type QuizAttempt } from "./db/schema.js";
 
+// Type definitions for practice questions
+interface QuestionOption {
+  id: string;
+  text: string;
+}
+
+interface PracticeQuestion {
+  id: string;
+  text: string;
+  options: QuestionOption[];
+  correctAnswer: string;
+  explanation: string;
+  category: string;
+  difficulty: string;
+}
+
 if (!process.env.OPENAI_API_KEY) {
   throw new Error("OPENAI_API_KEY must be set in environment variables");
 }
@@ -15,6 +31,86 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
+// Helper functions
+function difficultyToNumber(difficulty: string): number {
+  const difficultyMap: Record<string, number> = {
+    'Easy': 1,
+    'Medium': 2,
+    'Hard': 3
+  };
+  return difficultyMap[difficulty] || 2;
+}
+
+function generateBackupQuestions(): PracticeQuestion[] {
+  return [
+    {
+      id: `backup_${Date.now()}_1`,
+      text: "What is the first step in the nursing process?",
+      options: [
+        { id: "a", text: "Assessment" },
+        { id: "b", text: "Planning" },
+        { id: "c", text: "Implementation" },
+        { id: "d", text: "Evaluation" }
+      ],
+      correctAnswer: "a",
+      explanation: "Assessment is always the first step in the nursing process.",
+      category: "Nursing Process",
+      difficulty: "Easy"
+    }
+  ];
+}
+
+const practiceQuestions: Record<string, PracticeQuestion[]> = {
+  standard: [
+    {
+      id: "std_1",
+      text: "Which nursing intervention is most appropriate for a client with acute pain?",
+      options: [
+        { id: "a", text: "Assess pain characteristics" },
+        { id: "b", text: "Administer PRN pain medication immediately" },
+        { id: "c", text: "Notify healthcare provider" },
+        { id: "d", text: "Apply ice pack to affected area" }
+      ],
+      correctAnswer: "a",
+      explanation: "Pain assessment should be conducted first to determine appropriate interventions.",
+      category: "Patient Care",
+      difficulty: "Medium"
+    }
+  ],
+  clinical: [
+    {
+      id: 'clinical_1',
+      text: 'A patient presents with sudden onset chest pain. What is the priority nursing action?',
+      options: [
+        { id: 'a', text: 'Obtain vital signs' },
+        { id: 'b', text: 'Call the physician' },
+        { id: 'c', text: 'Administer oxygen' },
+        { id: 'd', text: 'Complete pain assessment' }
+      ],
+      correctAnswer: 'a',
+      explanation: 'Initial vital signs are crucial for assessing patient status and establishing baseline data.',
+      category: "Patient Care",
+      difficulty: "Medium"
+    }
+  ]
+};
+
+async function generateNewQuestions(userId: number, examType: string): Promise<PracticeQuestion> {
+  try {
+    const questions = Object.values(practiceQuestions).flat();
+
+    if (questions.length === 0) {
+      return generateBackupQuestions()[0];
+    }
+
+    // Filter out previously seen questions (implement this when question history is added)
+    return questions[Math.floor(Math.random() * questions.length)];
+  } catch (error) {
+    console.error("Error generating questions:", error);
+    return generateBackupQuestions()[0];
+  }
+}
+
 export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
 
@@ -22,7 +118,7 @@ export function registerRoutes(app: Express): Server {
   const wss = new WebSocketServer({ 
     noServer: true,
     clientTracking: true,
-    perMessageDeflate: false // Disable compression to prevent memory issues
+    perMessageDeflate: false
   });
 
   // Handle WebSocket upgrade with proper error handling
@@ -46,7 +142,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // WebSocket connection handler with proper cleanup
+  // WebSocket connection handler
   wss.on('connection', (ws: WebSocket) => {
     console.log('New WebSocket connection established');
 
@@ -855,158 +951,5 @@ export function registerRoutes(app: Express): Server {
   return httpServer;
 }
 
-// Helper functions remain unchanged
-async function analyzePerformance(answers: any[]) {
-  try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        {
-          role: "system",
-          content: "You are an expert nursing educator analyzing student performance on NCLEX-style questions. Provide detailed feedback on strengths and areas for improvement."
-        },
-        {
-          role: "user",
-          content: `Analyze these question responses: ${JSON.stringify(answers)}`
-        }
-      ]
-    });
-
-    const strengths = completion.choices[0]?.message?.content?.split(', ') || ["Clinical reasoning", "Patient safety"];
-    const weaknesses = completion.choices[0]?.message?.content?.split(', ') || ["Pharmacology calculations", "Priority setting"];
-    const confidence = parseFloat(completion.choices[0]?.message?.content?.split(', ')[2]) || 0.75;
-    const recommendedTopics = completion.choices[0]?.message?.content?.split(', ') || ["Medication administration", "Critical thinking"];
-
-    return {
-      strengths,
-      weaknesses,
-      confidence,
-      recommendedTopics
-    };
-  } catch (error) {
-    console.error("Error analyzing performance:", error);
-    return null;
-  }
-}
-
-async function getStudyRecommendations(performanceData: {
-  topic: string;
-  score: number;
-  timeSpent: number;
-}[]) {
-  try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        {
-          role: "system",
-          content: "You are an expert nursing educator providing personalized study recommendations based on student performance data."
-        },
-        {
-          role: "user",
-          content: `Analyze this performance data and provide study recommendations: ${JSON.stringify(performanceData)}`
-        }
-      ]
-    });
-
-    const response = completion.choices[0]?.message?.content;
-    if (!response) {
-      throw new Error("No recommendation generated");
-    }
-
-    return {
-      recommendations: response,
-      focusAreas: performanceData
-        .filter(data => data.score < 70)
-        .map(data => data.topic),
-      strengthAreas: performanceData
-        .filter(data => data.score >= 85)
-        .map(data => data.topic)
-    };
-  } catch (error) {
-    console.error("Error generating study recommendations:", error);
-    return {
-      recommendations: "Focus on reviewing core concepts and practice questions in areas with lower scores.",
-      focusAreas: [],
-      strengthAreas: []
-    };
-  }
-}
-
-// Fix the generateNewQuestions function
-async function generateNewQuestions(userId: number, examType: string) {
-  try {
-    const availableQuestions = Object.values(practiceQuestions).).flat();
-
-    if (availableQuestions.length === 0) {
-      throw new Error("No questions available");
-    }
-
-    const randomIndex = Math.floor(Math.random() * availableQuestions.length);
-    return formatQuestion(availableQuestions[randomIndex]);
-  } catch (error) {
-    console.error("Error generating questions:", error);
-    throw new Error("Failed to generate questions");
-  }
-}
-
-// Helper function to convert difficulty to number for sorting
-function difficultyToNumber(difficulty: string): number {
-  switch (difficulty.toLowerCase()) {
-    case 'easy': return 1;
-    case 'medium': return 2;
-    case 'hard': return 3;    default: return 2;  }
-}
-
-function formatQuestion(question: any) {
-  return {
-    id: question.id,
-    text: question.text,
-    options: question.options,
-    correctAnswer: question.correctAnswer,
-    explanation: question.explanation
-  };
-}
-
-// Consolidated function for generating backup questions
-function generateBackupQuestions() {
-  return [
-    {
-      id: `backup_${Date.now()}_1`,
-      text: "What is the first step in the nursing process?",
-      options: [
-        { id: "a", text: "Assessment" },
-        { id: "b", text: "Planning" },
-        { id: "c", text: "Implementation" },
-        { id: "d", text: "Evaluation" }
-      ],
-      correctAnswer: "a",
-      explanation: "Assessment is always the first step in the nursing process.",
-      category: "Nursing Process",
-      difficulty: "Easy"
-    }
-  ];
-}
-
-const practiceQuestions = {
-  standard: [
-    {
-      id: "std_1",
-      text: "Which nursing intervention is most appropriate for a client with acute pain?",
-      options: [
-        { id: "a", text: "Assess pain characteristics" },
-        { id: "b", text: "Administer PRN pain medication immediately" },
-        { id: "c", text: "Notify healthcare provider" },
-        { id: "d", text: "Apply ice pack to affected area" }
-      ],
-      correctAnswer: "a",
-      explanation: "Pain assessment should be conducted first to determine appropriate interventions.",
-      category: "Patient Care",
-      difficulty: "Medium"
-    }
-  ]
-};
-
-// Export the practiceQuestions for use in other parts of the application
-export { practiceQuestions };
-}
+// Export types and constants
+export { practiceQuestions, type PracticeQuestion, type QuestionOption };
