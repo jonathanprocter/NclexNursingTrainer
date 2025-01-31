@@ -6,6 +6,7 @@ import practiceRouter from './practice';
 import simulationsRouter from './simulations';
 import { healthCheck } from './health';
 
+// Create router instance
 const router = express.Router();
 
 // Health check endpoint
