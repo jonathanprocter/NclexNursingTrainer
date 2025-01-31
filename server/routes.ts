@@ -677,12 +677,13 @@ export function registerRoutes(app: Express): Server {
       }
 
       try {
-        // Ensure we have a valid JSON string
-        const cleanContent = scenarioContent
-          .replace(/```json\n?|\n?```/g, '')
-          .replace(/\\n/g, '\n')
-          .replace(/\\/g, '')
-          .trim();
+        let cleanContent = scenarioContent;
+        if (scenarioContent.includes('```json')) {
+          cleanContent = scenarioContent
+            .split('```json')[1]
+            .split('```')[0]
+            .trim();
+        }
 
         const scenario = JSON.parse(cleanContent);
 

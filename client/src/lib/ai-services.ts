@@ -98,12 +98,17 @@ export async function generateSimulationScenario(
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Server response:', errorText);
       throw new Error(`Server error: ${response.status}`);
     }
 
-    const data = await response.json();
+    const text = await response.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      console.error('Failed to parse response:', text);
+      throw new Error('Invalid response format from server');
+    }
     
     if (!data || typeof data !== 'object') {
       throw new Error('Invalid response format');
