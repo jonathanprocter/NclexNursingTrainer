@@ -23,6 +23,46 @@ export const modules = pgTable('modules', {
     description: text('description'),
 });
 
+export const questions = pgTable('questions', {
+    id: serial('id').primaryKey(),
+    moduleId: integer('module_id').references(() => modules.id),
+    text: text('text').notNull(),
+    options: json('options'),
+    correctAnswer: text('correct_answer'),
+    explanation: text('explanation'),
+    difficulty: text('difficulty'),
+    createdAt: timestamp('created_at').defaultNow(),
+});
+
+export const quizAttempts = pgTable('quiz_attempts', {
+    id: serial('id').primaryKey(),
+    userId: integer('user_id').references(() => users.id),
+    moduleId: integer('module_id').references(() => modules.id),
+    score: integer('score'),
+    answers: json('answers'),
+    startedAt: timestamp('started_at').defaultNow(),
+});
+
+export const userProgress = pgTable('user_progress', {
+    id: serial('id').primaryKey(),
+    userId: integer('user_id').references(() => users.id),
+    moduleId: integer('module_id').references(() => modules.id),
+    completedQuestions: integer('completed_questions').default(0),
+    correctAnswers: integer('correct_answers').default(0),
+    lastAttempt: timestamp('last_attempt'),
+    updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+export const studyBuddyChats = pgTable('study_buddy_chats', {
+    id: serial('id').primaryKey(),
+    userId: integer('user_id').references(() => users.id),
+    sessionId: text('session_id').notNull(),
+    role: text('role').notNull(),
+    content: text('content').notNull(),
+    tone: text('tone'),
+    createdAt: timestamp('created_at').defaultNow(),
+});
+
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
