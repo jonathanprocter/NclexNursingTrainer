@@ -1,5 +1,6 @@
 import { pgTable, text, uuid, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { relations } from "drizzle-orm";
 
 // Users table
 export const users = pgTable('users', {
@@ -64,6 +65,18 @@ export const userProgress = pgTable('user_progress', {
   updatedAt: timestamp('updated_at').defaultNow()
 });
 
+// Define relations
+export const usersRelations = relations(users, ({ many }) => ({
+  quizAttempts: many(quizAttempts),
+  progress: many(userProgress),
+  analytics: many(analytics)
+}));
+
+export const modulesRelations = relations(modules, ({ many }) => ({
+  questions: many(questions),
+  attempts: many(quizAttempts)
+}));
+
 // Type exports
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -78,7 +91,7 @@ export type NewAnalytics = typeof analytics.$inferInsert;
 export type UserProgress = typeof userProgress.$inferSelect;
 export type NewUserProgress = typeof userProgress.$inferInsert;
 
-// Zod schemas
+// Zod schemas for validation
 export const insertUserSchema = createInsertSchema(users);
 export const selectUserSchema = createSelectSchema(users);
 export const insertModuleSchema = createInsertSchema(modules);

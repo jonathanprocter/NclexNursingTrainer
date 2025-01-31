@@ -25,7 +25,7 @@ const quizSubmissionSchema = z.object({
 });
 
 // Modules routes
-router.get("/modules", async (req, res) => {
+router.get("/modules", async (req: Request, res: Response) => {
   try {
     const allModules = await db.select().from(modules);
     if (!allModules || allModules.length === 0) {
@@ -48,7 +48,7 @@ router.get("/modules", async (req, res) => {
 });
 
 // Questions routes
-router.get("/questions/:moduleId", async (req, res) => {
+router.get("/questions/:moduleId", async (req: Request, res: Response) => {
   try {
     const moduleQuestions = await db.query.questions.findMany({
       where: eq(questions.moduleId, req.params.moduleId),
@@ -67,12 +67,12 @@ router.get("/questions/:moduleId", async (req, res) => {
 });
 
 // Quiz attempts routes
-router.post("/quiz-attempts", async (req, res) => {
+router.post("/quiz-attempts", async (req: Request, res: Response) => {
   try {
-    const { userId, moduleId, answers } = req.body;
+    const { userId, moduleId, answers } = await quizSubmissionSchema.parseAsync(req.body);
 
     // Calculate score
-    const score = answers.filter((a: any) => a.correct).length / answers.length * 100;
+    const score = answers.filter(a => a.correct).length / answers.length * 100;
 
     const [newAttempt] = await db.insert(quizAttempts).values({
       userId,
@@ -82,14 +82,14 @@ router.post("/quiz-attempts", async (req, res) => {
       startedAt: new Date()
     }).returning();
 
-    // Update user progress
+    // Get or create user progress
     const userProgressRecord = await db.query.userProgress.findFirst({
       where: eq(userProgress.userId, userId)
     });
 
     if (userProgressRecord) {
       const completedQuestions = parseInt(userProgressRecord.completedQuestions || '0') + answers.length;
-      const correctAnswers = parseInt(userProgressRecord.correctAnswers || '0') + answers.filter((a: any) => a.correct).length;
+      const correctAnswers = parseInt(userProgressRecord.correctAnswers || '0') + answers.filter(a => a.correct).length;
 
       await db.update(userProgress)
         .set({
@@ -98,6 +98,14 @@ router.post("/quiz-attempts", async (req, res) => {
           lastAttempt: new Date()
         })
         .where(eq(userProgress.userId, userId));
+    } else {
+      await db.insert(userProgress).values({
+        userId,
+        moduleId,
+        completedQuestions: answers.length.toString(),
+        correctAnswers: answers.filter(a => a.correct).length.toString(),
+        lastAttempt: new Date()
+      });
     }
 
     res.json({ 
@@ -108,16 +116,19 @@ router.post("/quiz-attempts", async (req, res) => {
     console.error("Error saving quiz attempt:", error);
     res.status(500).json({ 
       success: false,
-      message: "Failed to save quiz attempt" 
+      message: "Failed to save quiz attempt",
+      error: error instanceof Error ? error.message : "Unknown error"
     });
   }
 });
 
 // User progress routes
-router.get("/progress/:userId", async (req, res) => {
+router.get("/progress/:userId", async (req: Request, res: Response) => {
   try {
+    const { userId } = await userIdParamSchema.parseAsync({ userId: req.params.userId });
+
     const progress = await db.select().from(userProgress)
-      .where(eq(userProgress.userId, req.params.userId));
+      .where(eq(userProgress.userId, userId));
 
     res.json({ 
       success: true,
@@ -127,7 +138,8 @@ router.get("/progress/:userId", async (req, res) => {
     console.error("Error fetching user progress:", error);
     res.status(500).json({ 
       success: false,
-      message: "Failed to fetch user progress" 
+      message: "Failed to fetch user progress",
+      error: error instanceof Error ? error.message : "Unknown error"
     });
   }
 });
