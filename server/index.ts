@@ -1,21 +1,14 @@
 import express from 'express';
 import cors from 'cors';
+import { router } from './routes';
+import { db } from './db';
 
 const app = express();
-const port = process.env.PORT || 4003;
+const port = process.env.PORT || 3001;
 
-// Configure CORS to allow Replit domains
-app.use(cors({
-    origin: [
-        'http://localhost:3000',
-        'http://0.0.0.0:3000',
-        /\.replit\.dev$/,
-        /\.repl\.co$/
-    ],
-    credentials: true
-}));
-
+app.use(cors());
 app.use(express.json());
+app.use('/api', router);
 
 // Global error handling
 process.on('unhandledRejection', (reason, promise) => {
@@ -32,12 +25,7 @@ app.get('/', (req, res) => {
 });
 
 app.listen(port, '0.0.0.0', () => {
-    console.log('=================================');
-    console.log('Server started successfully');
-    console.log(`Server is running on port ${port}`);
-    console.log('Frontend URL: http://0.0.0.0:3000');
-    console.log('Access URL: http://0.0.0.0:4003');
-    console.log('=================================');
+  console.log(`Server running on port ${port}`);
 });
 
 export default app;
