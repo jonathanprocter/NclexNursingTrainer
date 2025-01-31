@@ -5,17 +5,90 @@ import { modules, questions, quizAttempts, userProgress } from "./db/schema.js";
 import studyGuideRouter from './routes/study-guide.js';
 import OpenAI from "openai";
 import { 
-  questions, 
-  quizAttempts, 
-  userProgress,
-  type QuizAttempt 
-} from "./db/schema.js";
+  type PracticeQuestion,
+  type QuestionOption,
+  type PerformanceData,
+  quizSubmissionSchema,
+  userIdParamSchema
+} from "./types.js";
+import { Router } from 'express';
 
-interface PerformanceData {
-  topic: string;
-  score: number;
-  timeSpent: number;
-}
+const router = Router();
+
+// Modules routes
+router.get("/modules", async (req, res) => {
+  try {
+    const allModules = await db.select().from(modules);
+    if (!allModules || allModules.length === 0) {
+      return res.status(404).json({ message: "No modules found" });
+    }
+    res.json(allModules);
+  } catch (error) {
+    console.error("Error fetching modules:", error);
+    res.status(500).json({ message: "Failed to fetch modules" });
+  }
+});
+
+// Questions routes
+router.get("/questions/:moduleId", async (req, res) => {
+  try {
+    const moduleQuestions = await db.query.questions.findMany({
+      where: eq(questions.moduleId, parseInt(req.params.moduleId)),
+    });
+    res.json(moduleQuestions);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch questions" });
+  }
+});
+
+// Quiz attempts routes
+router.post("/quiz-attempts", async (req, res) => {
+  try {
+    const { userId, moduleId, answers } = req.body;
+
+    // Calculate score
+    const score = answers.filter(a => a.correct).length / answers.length * 100;
+
+    const [newAttempt] = await db.insert(quizAttempts).values({
+      userId,
+      moduleId,
+      score,
+      answers,
+      startedAt: new Date()
+    }).returning();
+
+    // Update user progress
+    await db.update(userProgress)
+      .set({
+        completedQuestions: userProgress.completedQuestions + answers.length,
+        correctAnswers: userProgress.correctAnswers + answers.filter(a => a.correct).length,
+        lastAttempt: new Date()
+      })
+      .where(eq(userProgress.userId, userId));
+
+    res.json(newAttempt);
+  } catch (error) {
+    console.error("Error saving quiz attempt:", error);
+    res.status(500).json({ message: "Failed to save quiz attempt" });
+  }
+});
+
+// User progress routes
+router.get("/progress/:userId", async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    const progress = await db.select().from(userProgress)
+      .where(eq(userProgress.userId, userId));
+
+    res.json(progress);
+  } catch (error) {
+    console.error("Error fetching user progress:", error);
+    res.status(500).json({ message: "Failed to fetch user progress" });
+  }
+});
+
+export default router;
+
 
 if (!process.env.OPENAI_API_KEY) {
   throw new Error("OPENAI_API_KEY must be set in environment variables");
@@ -24,6 +97,24 @@ if (!process.env.OPENAI_API_KEY) {
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
+
+// Middleware for request validation
+const validateRequest = (schema: any) => async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    req.body = await schema.parseAsync(req.body);
+    next();
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(400).json({ 
+        success: false,
+        error: 'Validation failed',
+        details: error.message
+      });
+    } else {
+      next(error);
+    }
+  }
+};
 
 export function registerRoutes(app: Express) {
   // Base route
@@ -39,76 +130,30 @@ export function registerRoutes(app: Express) {
   // Study guide routes
   app.use('/api/study-guide', studyGuideRouter);
 
-  // Modules routes with proper error handling
-  app.get("/api/modules", async (req: Request, res: Response) => {
-    try {
-      const allModules = await db.select().from(modules);
-      if (!allModules || allModules.length === 0) {
-        return res.status(404).json({ message: "No modules found" });
-      }
-      res.json(allModules);
-    } catch (error) {
-      console.error("Error fetching modules:", error);
-      res.status(500).json({ 
-        message: "Failed to fetch modules",
-        details: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
-      });
-    }
-  });
+  app.use('/api', router); // Use the new router for API routes
 
 
-  // User progress routes with proper type safety
-  app.get("/api/progress/:userId", async (req: Request, res: Response) => {
-    try {
-      const userId = parseInt(req.params.userId);
-      const progress = await db.select().from(userProgress)
-        .where(eq(userProgress.userId, userId));
-
-      // Safely map performance data with null checks
-      const performanceData = progress.map(p => ({
-        topic: p.moduleId?.toString() || "Unknown",
-        score: p.correctAnswers && p.completedQuestions ? 
-          (p.correctAnswers / p.completedQuestions) * 100 : 0,
-        timeSpent: p.lastAttempt && p.updatedAt ? 
-          (new Date(p.lastAttempt).getTime() - new Date(p.updatedAt).getTime()) / 1000 : 0
-      }));
-
-      const recommendations = await getStudyRecommendations(performanceData);
-
-      res.json({
-        progress,
-        recommendations,
-      });
-    } catch (error) {
-      console.error("Error fetching user progress:", error);
-      res.status(500).json({ 
-        message: "Failed to fetch user progress",
-        error: error instanceof Error ? error.message : "Unknown error"
-      });
-    }
-  });
-
-  // Analytics routes with improved type safety
+  // Analytics routes with improved error handling
   app.get("/api/analytics/user/:userId", async (req: Request, res: Response) => {
     try {
-      const userId = parseInt(req.params.userId);
-      if (isNaN(userId)) {
-        return res.status(400).json({
-          message: "Invalid user ID provided",
-          success: false
-        });
-      }
+      console.log(`Fetching analytics for user ${req.params.userId}`);
 
-      const attempts = await db.select().from(quizAttempts)
-        .where(eq(quizAttempts.userId, userId));
+      const { userId } = await userIdParamSchema.parseAsync({ userId: req.params.userId });
+      
+      const attempts = await db.query.quizAttempts.findMany({
+        where: eq(quizAttempts.userId, userId),
+        orderBy: (quizAttempts, { desc }) => [desc(quizAttempts.startedAt)],
+      });
 
-      const progress = await db.select().from(userProgress)
-        .where(eq(userProgress.userId, userId));
+      const progress = await db.query.userProgress.findMany({
+        where: eq(userProgress.userId, userId),
+      });
 
       if (!attempts.length && !progress.length) {
+        console.log('No data found for user');
         return res.status(404).json({
+          success: false,
           message: "No analytics data found for user",
-          success: false
         });
       }
 
@@ -182,12 +227,16 @@ export function registerRoutes(app: Express) {
       //await db.insert(studyBuddyChats).values({ ... }); // This line requires the studyBuddyChats table definition
 
       res.json({
-        sessionId,
-        message
+        success: true,
+        data: {
+          sessionId,
+          message
+        }
       });
     } catch (error) {
       console.error("Error starting study session:", error);
       res.status(500).json({
+        success: false,
         message: "Failed to start study session",
         error: error instanceof Error ? error.message : "Unknown error"
       });
@@ -224,10 +273,11 @@ export function registerRoutes(app: Express) {
       // Store assistant response (Assuming studyBuddyChats table exists)
       //await db.insert(studyBuddyChats).values({ ... }); // This line requires the studyBuddyChats table definition
 
-      res.json({ message: response });
+      res.json({ success: true, data: {message: response }});
     } catch (error) {
       console.error("Error in study buddy chat:", error);
       res.status(500).json({
+        success: false,
         message: "Failed to process message",
         error: error instanceof Error ? error.message : "Unknown error"
       });
@@ -263,10 +313,11 @@ export function registerRoutes(app: Express) {
         throw new Error("No response generated");
       }
 
-      res.json({ response });
+      res.json({ success: true, data: {response} });
     } catch (error) {
       console.error("Error in Clinical Judgment AI endpoint:", error);
       res.status(500).json({
+        success: false,
         message: "Failed to get AI assistance",
         error: error instanceof Error ? error.message : "Unknown error"
       });
@@ -300,10 +351,11 @@ export function registerRoutes(app: Express) {
         throw new Error("No response generated");
       }
 
-      res.json({ content: response });
+      res.json({ success: true, data: {content: response} });
     } catch (error) {
       console.error("Error in AI help endpoint:", error);
       res.status(500).json({
+        success: false,
         message: "Failed to get AI assistance",
         error: error instanceof Error ? error.message : "Unknown error"
       });
@@ -344,17 +396,18 @@ export function registerRoutes(app: Express) {
         throw new Error("No response generated");
       }
 
-      res.json({ response });
+      res.json({ success: true, data: {response} });
     } catch (error) {
       console.error("Error in AI chat endpoint:", error);
       res.status(500).json({
+        success: false,
         message: "Failed to get AI assistance",
         error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
 
-  // Questions routes
+
   // Drug calculation generation endpoint
   app.post("/api/generate-calculation", async (req: Request, res: Response) => {
     try {
@@ -380,154 +433,13 @@ export function registerRoutes(app: Express) {
         ]
       };
 
-      res.json(problem);
+      res.json({ success: true, data: problem });
     } catch (error) {
       console.error("Error generating calculation:", error);
-      res.status(500).json({ message: "Failed to generate calculation problem" });
+      res.status(500).json({ success: false, message: "Failed to generate calculation problem" });
     }
   });
 
-  app.get("/api/questions/:moduleId", async (req: Request, res: Response) => {
-    try {
-      const moduleQuestions = await db.query.questions.findMany({
-        where: eq(questions.moduleId, parseInt(req.params.moduleId)),
-      });
-      res.json(moduleQuestions);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch questions" });
-    }
-  });
-
-  // Quiz attempts routes with AI analysis
-  app.post("/api/quiz-attempts", async (req: Request, res: Response) => {
-    try {
-      const { userId, moduleId, answers } = req.body;
-
-      // Calculate score
-      const score = answers.filter((a: {correct: boolean}) => a.correct).length / answers.length * 100;
-
-      const [newAttempt] = await db.insert(quizAttempts).values({
-        userId,
-        moduleId,
-        score,
-        answers,
-        startedAt: new Date()
-      }).returning();
-
-      // Update user progress
-      await db.update(userProgress)
-        .set({
-          completedQuestions: userProgress.completedQuestions + answers.length,
-          correctAnswers: userProgress.correctAnswers + answers.filter((a: {correct: boolean}) => a.correct).length,
-          lastAttempt: new Date()
-        })
-        .where(eq(userProgress.userId, userId));
-
-      res.json(newAttempt);
-    } catch (error) {
-      console.error("Error saving quiz attempt:", error);
-      res.status(500).json({ message: "Failed to save quiz attempt" });
-    }
-  });
-
-
-  // User progress routes with AI recommendations
-  app.get("/api/progress/:userId", async (req: Request, res: Response) => {
-    try {
-      const userId = parseInt(req.params.userId);
-      const progress = await db.select().from(userProgress).where(eq(userProgress.userId, userId));
-
-      // Safely map performance data with null checks
-      const performanceData = progress.map(p => ({
-        topic: p.moduleId?.toString() || "Unknown",
-        score: p.correctAnswers && p.completedQuestions ? (p.correctAnswers / p.completedQuestions) * 100 : 0,
-        timeSpent: p.lastAttempt && p.updatedAt ? (new Date(p.lastAttempt).getTime() - new Date(p.updatedAt).getTime()) / 1000 : 0
-      }));
-
-      const recommendations = await getStudyRecommendations(performanceData);
-
-      res.json({
-        progress,
-        recommendations,
-      });
-    } catch (error) {
-      console.error("Error fetching user progress:", error);
-      res.status(500).json({
-        message: "Failed to fetch user progress",
-        error: error instanceof Error ? error.message : "Unknown error"
-      });
-    }
-  });
-
-  // Analytics routes with improved error handling
-  app.get("/api/analytics/user/:userId", async (req: Request, res: Response) => {
-    try {
-      console.log(`Fetching analytics for user ${req.params.userId}`);
-
-      const userId = parseInt(req.params.userId);
-      if (isNaN(userId)) {
-        return res.status(400).json({
-          message: "Invalid user ID provided",
-          success: false
-        });
-      }
-
-      const attempts = await db.query.quizAttempts.findMany({
-        where: eq(quizAttempts.userId, userId),
-        orderBy: (quizAttempts, { desc }) => [desc(quizAttempts.startedAt)],
-      });
-
-      const progress = await db.query.userProgress.findMany({
-        where: eq(userProgress.userId, userId),
-      });
-
-      if (!attempts.length && !progress.length) {
-        console.log('No data found for user');
-        return res.status(404).json({
-          message: "No analytics data found for user",
-          success: false
-        });
-      }
-
-      // Analyze overall performance
-      const overallAnalysis = await analyzePerformance(
-        attempts?.flatMap(attempt => attempt.answers || []) || []
-      );
-
-      console.log('Successfully generated analytics response');
-
-      // Format the response data with defaults
-      const analyticsResponse = {
-        success: true,
-        data: {
-          attempts: attempts || [],
-          progress: progress || [],
-          analysis: overallAnalysis || {
-            strengths: [],
-            weaknesses: [],
-            confidence: 0,
-            recommendedTopics: []
-          },
-          summary: {
-            totalAttempts: attempts?.length || 0,
-            averageScore: attempts?.reduce((acc, curr) => acc + (curr.score || 0), 0) / (attempts?.length || 1) || 0,
-            strengths: overallAnalysis?.strengths || [],
-            weaknesses: overallAnalysis?.weaknesses || [],
-            confidence: overallAnalysis?.confidence || 0
-          },
-        }
-      };
-
-      res.json(analyticsResponse);
-    } catch (error) {
-      console.error("Error in analytics endpoint:", error);
-      res.status(500).json({
-        success: false,
-        message: "Failed to fetch analytics",
-        error: error instanceof Error ? error.message : "Unknown error"
-      });
-    }
-  });
 
   // Quiz question generation endpoint
   app.post("/api/generate-questions", async (req: Request, res: Response) => {
@@ -582,10 +494,11 @@ export function registerRoutes(app: Express) {
         difficulty: q.difficulty || 'Medium'
       }));
 
-      res.json(formattedQuestions);
+      res.json({ success: true, data: formattedQuestions });
     } catch (error) {
       console.error("Error generating questions:", error);
       res.status(500).json({
+        success: false,
         message: "Failed to generate questions",
         error: error instanceof Error ? error.message : "Unknown error"
       });
@@ -602,10 +515,11 @@ export function registerRoutes(app: Express) {
       const userId = 1;
       const question = await generateNewQuestions(userId, type);
 
-      res.json(question);
+      res.json({ success: true, data: question });
     } catch (error) {
       console.error("Error generating exam question:", error);
       res.status(500).json({
+        success: false,
         message: error instanceof Error ? error.message : "Failed to generate question"
       });
     }
@@ -670,16 +584,17 @@ export function registerRoutes(app: Express) {
           throw new Error("Response is not an array");
         }
 
-        res.json(questions);
+        res.json({ success: true, data: questions });
       } catch (parseError) {
         console.error("Error parsing OpenAI response:", parseError);
         console.log("Raw response:", response);
         // If parsing fails, use backup questions
-        res.json(generateBackupQuestions());
+        res.json({ success: false, data: generateBackupQuestions() });
       }
     } catch (error) {
       console.error("Error generating prevention questions:", error);
       res.status(500).json({
+        success: false,
         message: "Failed to generate questions",
         error: error instanceof Error ? error.message : "Unknown error"
       });
@@ -743,10 +658,11 @@ export function registerRoutes(app: Express) {
       }
 
       const scenario = JSON.parse(scenarioContent);
-      res.json(scenario);
+      res.json({ success: true, data: scenario });
     } catch (error) {
       console.error("Error generating scenario:", error);
       res.status(500).json({
+        success: false,
         message: "Failed to generate scenario",
         error: error instanceof Error ? error.message : "Unknown error"
       });
@@ -802,10 +718,11 @@ export function registerRoutes(app: Express) {
       }
 
       const evaluation = JSON.parse(evaluationContent);
-      res.json(evaluation);
+      res.json({ success: true, data: evaluation });
     } catch (error) {
       console.error("Error evaluating scenario:", error);
       res.status(500).json({
+        success: false,
         message: "Failed to evaluate scenario",
         error: error instanceof Error ? error.message : "Unknown error"
       });
@@ -836,7 +753,7 @@ export function registerRoutes(app: Express) {
           },
           {
             role: "user",
-            content: `Provide a hint for scenario ${scenarioId} based on the current state and return it as a JSON object. Current state: ${JSON.stringify(currentState)}`
+            content: `Provide a hint for scenario ${scenarioId} based on the currentstate and return it as a JSON object. Current state: ${JSON.stringify(currentState)}`
           }
         ],
         response_format: { type: "json_object" }
@@ -848,10 +765,11 @@ export function registerRoutes(app: Express) {
       }
 
       const hint = JSON.parse(hintContent);
-      res.json(hint);
+      res.json({ success: true, data: hint });
     } catch (error) {
       console.error("Error generating hint:", error);
       res.status(500).json({
+        success: false,
         message: "Failed to generate hint",
         error: error instanceof Error ? error.message : "Unknown error"
       });
@@ -862,6 +780,7 @@ export function registerRoutes(app: Express) {
   app.use((err: Error & { status?: number }, req: Request, res: Response, next: NextFunction) => {
     console.error('Error:', err);
     res.status(err.status || 500).json({
+      success: false,
       message: process.env.NODE_ENV === 'development' ? err.message : 'Internal Server Error',
       ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
     });
@@ -870,27 +789,17 @@ export function registerRoutes(app: Express) {
   return app;
 }
 
-// Export types
-export type { PracticeQuestion, QuestionOption, PerformanceData };
-
 // Helper function with proper typing
 async function getStudyRecommendations(performanceData: Array<{
   topic: string;
   score: number;
   timeSpent: number;
 }>): Promise<string[]> {
+  // TODO: Implement AI-based recommendations
   return [];
 }
 
-function difficultyToNumber(difficulty: string): number {
-  const difficultyMap: Record<string, number> = {
-    'Easy': 1,
-    'Medium': 2,
-    'Hard': 3
-  };
-  return difficultyMap[difficulty] || 2;
-}
-
+// Helper function to generate backup questions
 function generateBackupQuestions(): PracticeQuestion[] {
   return [
     {
@@ -912,7 +821,7 @@ function generateBackupQuestions(): PracticeQuestion[] {
 
 async function generateNewQuestions(userId: number, examType: string): Promise<PracticeQuestion> {
   try {
-const backupQuestion = generateBackupQuestions()[0];
+    const backupQuestion = generateBackupQuestions()[0];
     return backupQuestion;
   } catch (error) {
     console.error("Error generating questions:", error);

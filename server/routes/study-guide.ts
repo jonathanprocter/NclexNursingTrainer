@@ -2,131 +2,124 @@ import { Router } from 'express';
 import { db } from "../db/index.js";
 import { eq } from "drizzle-orm";
 import { userProgress } from "../db/schema.js";
+import { 
+  StudyGuideRequest, 
+  StudyGuideResponse,
+  studyGuideRequestSchema
+} from "../types.js";
+import { z } from 'zod';
 
 const router = Router();
 
-interface PerformanceData {
-  moduleId: number | null;
-  totalQuestions: number | null;
-  correctAnswers: number | null;
-  updatedAt: Date;
-  userId: number;
-}
+// Middleware for validation
+const validateRequest = <T>(schema: z.ZodSchema<T>) => (
+  async (req: any, res: any, next: any) => {
+    try {
+      req.validatedData = await schema.parseAsync(req.body);
+      next();
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({
+          success: false,
+          error: 'Validation failed',
+          details: error.errors
+        });
+      } else {
+        next(error);
+      }
+    }
+  }
+);
 
-// Get current study guide with enhanced error handling and learner feedback
+// Get current study guide
 router.get("/current", async (req, res) => {
   try {
-    const userId = 1; // TODO: Replace with actual user ID from auth
+    const userId = req.query.userId as string;
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required"
+      });
+    }
 
-    // Get recent performance data for personalized recommendations
     const performance = await db
       .select()
       .from(userProgress)
-      .where(eq(userProgress.userId, userId)) as PerformanceData[];
+      .where(eq(userProgress.userId, userId));
 
     // Calculate performance metrics
-    const completedModules = performance.filter((p: PerformanceData) => p.totalQuestions != null && p.totalQuestions > 0);
+    const completedModules = performance.filter(p => p.completedQuestions && parseInt(p.completedQuestions) > 0);
     const averageScore = completedModules.length > 0
-      ? completedModules.reduce((acc: number, curr: PerformanceData) => 
-          acc + ((curr.correctAnswers || 0) / (curr.totalQuestions || 1) * 100), 0) / completedModules.length
+      ? completedModules.reduce((acc, curr) => 
+          acc + ((parseInt(curr.correctAnswers || '0') / parseInt(curr.completedQuestions || '1')) * 100), 0) / completedModules.length
       : 0;
 
-    // Generate adaptive recommendations based on performance
-    const weakModules = completedModules
-      .filter((p: PerformanceData) => p.totalQuestions != null && p.correctAnswers != null && 
-        (p.correctAnswers / p.totalQuestions) < 0.7)
-      .map((p: PerformanceData) => ({
-        moduleId: p.moduleId?.toString(),
-        score: ((p.correctAnswers || 0) / (p.totalQuestions || 1) * 100).toFixed(1)
-      }));
-
-    const strongModules = completedModules
-      .filter((p: PerformanceData) => p.totalQuestions != null && p.correctAnswers != null && 
-        (p.correctAnswers / p.totalQuestions) >= 0.7)
-      .map((p: PerformanceData) => ({
-        moduleId: p.moduleId?.toString(),
-        score: ((p.correctAnswers || 0) / (p.totalQuestions || 1) * 100).toFixed(1)
-      }));
-
-    const nursingTopics: string[] = [
-      "Fundamentals of Nursing",
-      "Pharmacology",
-      "Medical-Surgical Nursing",
-      "Pediatric Nursing"
-    ];
-
-    // Transform data to learner-friendly format
-    const guide = {
+    // Generate response
+    const guide: StudyGuideResponse = {
       id: `sg-${Date.now()}`,
       createdAt: new Date().toISOString(),
-      topics: nursingTopics.map((domain: string, index: number) => ({
+      topics: [
+        "Fundamentals of Nursing",
+        "Pharmacology",
+        "Medical-Surgical Nursing",
+        "Pediatric Nursing"
+      ].map((domain, index) => ({
         id: domain.toLowerCase().replace(/\s+/g, '-'),
         name: domain,
         priority: index === 0 ? 'high' : 'medium',
         completed: false,
         estimatedTime: 30,
-        description: `Focus on mastering key concepts in ${domain} for better NCLEX preparation`,
+        description: `Focus on mastering key concepts in ${domain}`,
         learningTips: [
-          "Review core concepts first",
-          "Practice with sample questions",
-          "Create summary notes"
+          "Review core concepts",
+          "Practice with questions",
+          "Create summaries"
         ]
       })),
-      weakAreas: weakModules,
-      strengthAreas: strongModules,
-      recommendedResources: [
-        "Patient Care Management",
-        "Medication Administration",
-        "Health Assessment"
-      ].map((plan: string, i: number) => ({
-        id: `resource-${i}`,
-        type: 'article',
-        title: plan,
-        url: `/resources/${plan.toLowerCase().replace(/\s+/g, '-')}`,
-        difficulty: i === 0 ? 'beginner' : 'intermediate',
-        estimatedTime: '30 mins',
-        learningOutcome: `Master ${plan} concepts and applications`
-      })),
+      weakAreas: [],
+      strengthAreas: [],
+      recommendedResources: [],
       progress: averageScore,
       nextSteps: [
-        "Review weak areas first",
-        "Take practice tests in strong areas to maintain knowledge",
-        "Schedule regular review sessions"
+        "Review weak areas",
+        "Take practice tests",
+        "Schedule reviews"
       ]
     };
 
-    res.json(guide);
+    res.json({
+      success: true,
+      data: guide
+    });
   } catch (error) {
     console.error("Error fetching study guide:", error);
     res.status(500).json({
+      success: false,
       error: 'Failed to fetch study guide',
-      details: error instanceof Error ? error.message : 'Unknown error',
-      suggestion: 'Please try refreshing the page or contact support if the issue persists'
+      details: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });
 
-// Generate new study guide
-router.post("/generate", async (req, res) => {
+// Generate new study guide with validation
+router.post("/generate", validateRequest(studyGuideRequestSchema), async (req, res) => {
   try {
-    const userId = 1; // TODO: Replace with actual user ID from auth
-    const { focusAreas = [], timeAvailable } = req.body as { focusAreas: string[], timeAvailable?: number };
+    const { userId, focusAreas = [], timeAvailable } = req.validatedData as StudyGuideRequest;
 
     // Get user's performance data with proper ordering
     const performance = await db
       .select()
       .from(userProgress)
       .where(eq(userProgress.userId, userId))
-      .orderBy(userProgress.updatedAt, 'desc')
-      .limit(10);
+      .orderBy(userProgress.updatedAt);
 
-    // Analyze weak areas based on totalQuestions and correctAnswers
+    // Analyze weak areas based on completedQuestions and correctAnswers
     const weakAreas = performance
-      .filter((p: PerformanceData) => p.totalQuestions && p.correctAnswers && 
-        (p.correctAnswers / p.totalQuestions) < 0.7)
-      .map((p: PerformanceData) => ({
+      .filter(p => p.completedQuestions && p.correctAnswers && 
+        (p.correctAnswers / p.completedQuestions) < 0.7)
+      .map(p => ({
         moduleId: p.moduleId?.toString(),
-        score: Math.round((p.correctAnswers || 0) / (p.totalQuestions || 1) * 100),
+        score: Math.round((p.correctAnswers || 0) / (p.completedQuestions || 1) * 100),
         improvement: `Focus on core concepts`,
         suggestedApproach: timeAvailable ?
           `Review fundamentals and practice with ${Math.round(timeAvailable * 0.4)} minutes of targeted questions` :
@@ -145,24 +138,25 @@ router.post("/generate", async (req, res) => {
       "Pediatric Nursing"
     ];
 
-    const guide = {
+    const guide: StudyGuideResponse = {
       id: `sg-${Date.now()}`,
       createdAt: new Date().toISOString(),
-      topics: nursingTopics.map((domain: string, index: number) => ({
+      topics: nursingTopics.map((domain, index) => ({
         id: domain.toLowerCase().replace(/\s+/g, '-'),
         name: domain,
         priority: focusAreas.includes(domain) ? 'high' : 'medium',
         completed: false,
         estimatedTime: timeAvailable ? Math.floor(timeAvailable / 4) : 30,
-        learningObjectives: [
-          `Understand key concepts in ${domain}`,
-          "Apply knowledge in practice questions",
-          "Review and reinforce learning"
+        description: `Focus on mastering key concepts in ${domain} for better NCLEX preparation`,
+        learningTips: [
+          "Review core concepts first",
+          "Practice with sample questions",
+          "Create summary notes"
         ]
       })),
       weakAreas: weakAreas.length > 0 ? weakAreas : defaultWeakAreas,
       strengthAreas: [],
-      recommendedResources: focusAreas.map((plan: string, i: number) => ({
+      recommendedResources: focusAreas.map((plan, i) => ({
         id: `resource-${i}`,
         type: 'article',
         title: plan,
@@ -172,7 +166,7 @@ router.post("/generate", async (req, res) => {
         learningOutcome: `Master ${plan} concepts and applications`
       })),
       progress: 0,
-      studyTips: [
+      nextSteps: [
         "Break study sessions into 25-minute focused intervals",
         "Review material regularly to reinforce learning",
         "Practice active recall through self-testing"

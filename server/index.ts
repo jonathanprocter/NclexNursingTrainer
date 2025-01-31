@@ -1,10 +1,11 @@
 import express from 'express';
 import cors from 'cors';
-import { registerRoutes } from './routes.js';
+import router from './routes.js';
 
 const app = express();
-const PORT = 4003;
+const port = process.env.PORT || 4003;
 
+// Configure CORS to allow Replit domains
 app.use(cors({
     origin: [
         'http://localhost:3000',
@@ -24,24 +25,20 @@ process.on('unhandledRejection', (reason, promise) => {
 
 process.on('uncaughtException', (error) => {
     console.error('Uncaught Exception:', error);
-    // Don't exit the process in production
-    if (process.env.NODE_ENV === 'development') {
-        process.exit(1);
-    }
+    process.exit(1);
 });
 
-// Base route for quick health check
 app.get('/', (req, res) => {
     res.json({ message: 'Server is running' });
 });
 
-// Register all routes
-registerRoutes(app);
+// Use API routes
+app.use('/api', router);
 
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(port, '0.0.0.0', () => {
     console.log('=================================');
     console.log('Server started successfully');
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`Server is running on port ${port}`);
     console.log('Frontend URL: http://0.0.0.0:3000');
     console.log('Access URL: http://0.0.0.0:4003');
     console.log('=================================');
