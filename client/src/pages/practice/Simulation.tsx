@@ -10,7 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { generateSimulationScenario, getSimulationFeedback } from "@/lib/ai-services";
 import { useMutation } from "@tanstack/react-query";
 import type { SimulationScenario, SimulationFeedback } from "@/lib/ai-services";
-import { Bot, Activity, Stethoscope } from "lucide-react";
+import { Bot, Activity, Stethoscope, Pill, FileText, Syringe, AlertTriangle, Heart, Users } from "lucide-react";
 
 type UserAction = {
   action: string;
@@ -88,6 +88,27 @@ export default function Simulation() {
     );
   };
 
+  const generateBasicSkillsQuestions = () => {
+    // Placeholder for question generation logic
+    return [
+      "What are the key components of a comprehensive patient assessment?",
+      "Describe the procedure for measuring vital signs.",
+      "Explain the steps involved in medication administration.",
+      "How to accurately document patient information?"
+    ];
+  };
+
+  const generateAdvancedSkillsQuestions = () => {
+    // Placeholder for question generation logic
+    return [
+      "Describe a complex procedure and potential complications.",
+      "Outline the steps for managing a specific emergency intervention.",
+      "How to monitor critically ill patients?",
+      "What are effective team leadership strategies in healthcare?"
+    ];
+  };
+
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto px-4 py-8">
       <div className="text-center mb-8">
@@ -151,9 +172,15 @@ export default function Simulation() {
                 attempting complex scenarios.
               </p>
               <div className="grid gap-4 md:grid-cols-2">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-medium">Basic Skills</h3>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Bot className="h-4 w-4" />
+                    AI Help
+                  </Button>
+                </div>
                 <Card className="hover:shadow-lg transition-shadow">
                   <CardContent className="p-4">
-                    <h3 className="font-medium mb-2">Basic Skills</h3>
                     <div className="space-y-2">
                       {[
                         { name: 'Patient Assessment', icon: <Stethoscope className="h-4 w-4" /> },
@@ -174,9 +201,15 @@ export default function Simulation() {
                     </div>
                   </CardContent>
                 </Card>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-medium">Advanced Skills</h3>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Bot className="h-4 w-4" />
+                    AI Help
+                  </Button>
+                </div>
                 <Card className="hover:shadow-lg transition-shadow">
                   <CardContent className="p-4">
-                    <h3 className="font-medium mb-2">Advanced Skills</h3>
                     <div className="space-y-2">
                       {[
                         { name: 'Complex Procedures', icon: <Syringe className="h-4 w-4" /> },
