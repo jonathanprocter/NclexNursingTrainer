@@ -2,10 +2,10 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { WebSocket, WebSocketServer } from 'ws';
 import { db } from "./db/index.js";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import studyGuideRouter from './routes/study-guide.js';
 import OpenAI from "openai";
-import { studyBuddyChats, modules, questions, quizAttempts, userProgress } from "./db/schema.js";
+import { studyBuddyChats, modules, questions, quizAttempts, userProgress, type QuizAttempt } from "./db/schema.js";
 
 if (!process.env.OPENAI_API_KEY) {
   throw new Error("OPENAI_API_KEY must be set in environment variables");
@@ -108,12 +108,11 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Modules routes with proper error handling
-  app.get("/api/modules", async (req, res) => {
+  app.get("/api/modules", async (req: Request, res: Response) => {
     try {
-      // Use db.select() instead of query to be more explicit
-      const allModules = await db.select().from(modules).orderBy(modules.orderIndex);
+      const allModules = await db.select().from(modules);
 
-      if (!allModules) {
+      if (!allModules || allModules.length === 0) {
         return res.status(404).json({ message: "No modules found" });
       }
 
@@ -122,13 +121,13 @@ export function registerRoutes(app: Express): Server {
       console.error("Error fetching modules:", error);
       res.status(500).json({ 
         message: "Failed to fetch modules",
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        details: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
       });
     }
   });
 
   // Study buddy chat endpoints
-  app.post("/api/study-buddy/start", async (req, res) => {
+  app.post("/api/study-buddy/start", async (req: Request, res: Response) => {
     try {
       const { studentId, tone, topic } = req.body;
 
@@ -175,7 +174,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/study-buddy/chat", async (req, res) => {
+  app.post("/api/study-buddy/chat", async (req: Request, res: Response) => {
     try {
       const { studentId, sessionId, message, context } = req.body;
 
@@ -229,7 +228,7 @@ export function registerRoutes(app: Express): Server {
 
 
   // Clinical Judgment AI endpoint
-  app.post("/api/chat/clinical-judgment", async (req, res) => {
+  app.post("/api/chat/clinical-judgment", async (req: Request, res: Response) => {
     const { topic, context, question, type } = req.body;
 
     try {
@@ -268,7 +267,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Pathophysiology AI help endpoint
-  app.post("/api/ai-help", async (req, res) => {
+  app.post("/api/ai-help", async (req: Request, res: Response) => {
     const { topic, context, question } = req.body;
 
     try {
@@ -305,7 +304,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // AI Help endpoint with enhanced safety measures context
-  app.post("/api/chat/risk-reduction", async (req, res) => {
+  app.post("/api/chat/risk-reduction", async (req: Request, res: Response) => {
     const { topic, question } = req.body;
 
     try {
@@ -350,7 +349,7 @@ export function registerRoutes(app: Express): Server {
 
   // Questions routes
   // Drug calculation generation endpoint
-  app.post("/api/generate-calculation", async (req, res) => {
+  app.post("/api/generate-calculation", async (req: Request, res: Response) => {
     try {
       const { difficulty } = req.body;
 
@@ -381,7 +380,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.get("/api/questions/:moduleId", async (req, res) => {
+  app.get("/api/questions/:moduleId", async (req: Request, res: Response) => {
     try {
       const moduleQuestions = await db.query.questions.findMany({
         where: eq(questions.moduleId, parseInt(req.params.moduleId)),
@@ -393,44 +392,39 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Quiz attempts routes with AI analysis
-  app.post("/api/quiz-attempts", async (req, res) => {
+  app.post("/api/quiz-attempts", async (req: Request, res: Response) => {
     try {
-      const { userId, moduleId, type, answers } = req.body;
+      const { userId, moduleId, answers } = req.body;
 
-      // Analyze performance using AI
-      const aiAnalysis = await analyzePerformance(answers);
+      // Calculate score
+      const score = answers.filter((a: any) => a.correct).length / answers.length * 100;
 
-      const newAttempt = await db.insert(quizAttempts).values({
+      const [newAttempt] = await db.insert(quizAttempts).values({
         userId,
         moduleId,
-        type,
+        score,
         answers,
-        score: answers.filter((a: any) => a.correct).length / answers.length * 100,
-        totalQuestions: answers.length,
-        startedAt: new Date(),
-        aiAnalysis,
-        strengthAreas: aiAnalysis?.strengths || [],
-        weaknessAreas: aiAnalysis?.weaknesses || []
+        startedAt: new Date()
       }).returning();
 
-      // Update user progress with AI insights
+      // Update user progress
       await db.update(userProgress)
         .set({
           completedQuestions: userProgress.completedQuestions + answers.length,
           correctAnswers: userProgress.correctAnswers + answers.filter((a: any) => a.correct).length,
-          lastAttempt: new Date(),
-          performanceMetrics: aiAnalysis
+          lastAttempt: new Date()
         })
         .where(eq(userProgress.userId, userId));
 
-      res.json(newAttempt[0]);
+      res.json(newAttempt);
     } catch (error) {
+      console.error("Error saving quiz attempt:", error);
       res.status(500).json({ message: "Failed to save quiz attempt" });
     }
   });
 
   // User progress routes with AI recommendations
-  app.get("/api/progress/:userId", async (req, res) => {
+  app.get("/api/progress/:userId", async (req: Request, res: Response) => {
     try {
       const progress = await db.query.userProgress.findMany({
         where: eq(userProgress.userId, parseInt(req.params.userId)),
@@ -459,7 +453,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Analytics routes with improved error handling
-  app.get("/api/analytics/user/:userId", async (req, res) => {
+  app.get("/api/analytics/user/:userId", async (req: Request, res: Response) => {
     try {
       console.log(`Fetching analytics for user ${req.params.userId}`);
 
@@ -530,7 +524,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Quiz question generation endpoint
-  app.post("/api/generate-questions", async (req, res) => {
+  app.post("/api/generate-questions", async (req: Request, res: Response) => {
     try {
       const { topic, previousQuestionIds, userPerformance } = req.body;
       const MIN_QUESTIONS = 20;
@@ -593,7 +587,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Add exam question endpoint
-  app.post("/api/exam/:type/question", async (req, res) => {
+  app.post("/api/exam/:type/question", async (req: Request, res: Response) => {
     try {
       const { type } = req.params;
       const { previousAnswer } = req.body;
@@ -612,7 +606,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Update the prevention questions endpoint
-  app.post("/api/exam/prevention/questions", async (req, res) => {
+  app.post("/api/exam/prevention/questions", async (req: Request, res: Response) => {
     try {
       console.log('Received request for more prevention questions');
       const { previousQuestions } = req.body;
@@ -687,7 +681,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Patient Scenarios Routes
-  app.post("/api/scenarios/generate", async (req, res) => {
+  app.post("/api/scenarios/generate", async (req: Request, res: Response) => {
     const { difficulty, previousScenarios } = req.body;
 
     try {
@@ -753,7 +747,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/scenarios/evaluate", async (req, res) => {
+  app.post("/api/scenarios/evaluate", async (req: Request, res: Response) => {
     const { scenarioId, actions, assessments } = req.body;
 
     try {
@@ -812,7 +806,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/scenarios/hint", async (req, res) => {
+  app.post("/api/scenarios/hint", async (req: Request, res: Response) => {
     const { scenarioId, currentState } = req.body;
 
     try {
@@ -942,7 +936,7 @@ async function getStudyRecommendations(performanceData: {
 // Fix the generateNewQuestions function
 async function generateNewQuestions(userId: number, examType: string) {
   try {
-    const availableQuestions = Object.values(practiceQuestions).flat();
+    const availableQuestions = Object.values(practiceQuestions).).flat();
 
     if (availableQuestions.length === 0) {
       throw new Error("No questions available");
@@ -974,16 +968,24 @@ function formatQuestion(question: any) {
   };
 }
 
+// Consolidated function for generating backup questions
 function generateBackupQuestions() {
-  return [{
-    id: 'backup_1',
-    question: 'What is the capital of France?',
-    options: [{id: 'a', text: 'Berlin'}, {id: 'b', text: 'Paris'}, {id: 'c', text: 'Rome'}, {id: 'd', text: 'Madrid'}],
-    correctAnswer: 'b',
-    explanation: 'Paris is the capital of France.',
-    category: 'Geography',
-    difficulty: 'Easy'
-  }]
+  return [
+    {
+      id: `backup_${Date.now()}_1`,
+      text: "What is the first step in the nursing process?",
+      options: [
+        { id: "a", text: "Assessment" },
+        { id: "b", text: "Planning" },
+        { id: "c", text: "Implementation" },
+        { id: "d", text: "Evaluation" }
+      ],
+      correctAnswer: "a",
+      explanation: "Assessment is always the first step in the nursing process.",
+      category: "Nursing Process",
+      difficulty: "Easy"
+    }
+  ];
 }
 
 const practiceQuestions = {
@@ -1002,19 +1004,9 @@ const practiceQuestions = {
       category: "Patient Care",
       difficulty: "Medium"
     }
-  ],
-  basic: [
-    {
-      id: 'basic_1',
-      question: 'What is the first step in the nursing process?',
-      options: [
-        { id: 'a', text: 'Assessment' },
-        { id: 'b', text: 'Planning' },
-        { id: 'c', text: 'Implementation' },
-        { id: 'd', text: 'Evaluation' }
-      ],
-      correctAnswer: 'a',
-      explanation: 'Assessment is the first step in the nursing process...'
-    }
   ]
 };
+
+// Export the practiceQuestions for use in other parts of the application
+export { practiceQuestions };
+}

@@ -19,8 +19,12 @@ export const questionHistory = pgTable('question_history', {
 
 export const modules = pgTable('modules', {
     id: serial('id').primaryKey(),
-    name: text('name').notNull(),
+    title: text('title').notNull(),
     description: text('description'),
+    type: text('type'),
+    orderIndex: integer('order_index'),
+    createdAt: timestamp('created_at').defaultNow(),
+    aiGeneratedContent: text('ai_generated_content'),
 });
 
 export const questions = pgTable('questions', {
