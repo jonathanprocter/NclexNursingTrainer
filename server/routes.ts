@@ -730,8 +730,7 @@ export function registerRoutes(app: Express): Server {
             Actions Taken: ${JSON.stringify(actions)}
             Assessments Performed: ${JSON.stringify(assessments)}`
           }
-        ],
-        response_format: { type: "json_object" }
+        ]
       });
 
       const evaluationContent = completion.choices[0]?.message?.content;
