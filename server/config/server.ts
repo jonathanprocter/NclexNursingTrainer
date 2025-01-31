@@ -9,7 +9,11 @@ export class Server {
 
   constructor() {
     this.setupMiddleware();
-    this.setupRoutes();
+  }
+
+  async initialize() {
+    await this.setupRoutes();
+    return this;
   }
 
   private setupMiddleware(): void {
@@ -28,12 +32,13 @@ export class Server {
     });
   }
 
-  private setupRoutes(): void {
+  private async setupRoutes(): Promise<void> {
     // Health check endpoint
     this.app.use('/health', healthCheck);
 
     // Add your routes here
-    this.app.use('/api', require('../routes').default);
+    const { default: routes } = await import('../routes');
+    this.app.use('/api', routes);
 
     // Error handling should be last
     this.app.use(errorHandler);

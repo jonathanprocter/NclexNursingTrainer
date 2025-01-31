@@ -2,7 +2,7 @@ import { Server } from './config/server';
 
 async function bootstrap() {
   try {
-    const server = new Server();
+    const server = await new Server().initialize();
     await server.start();
   } catch (error) {
     console.error('Failed to start application:', error);
