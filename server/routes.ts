@@ -181,11 +181,11 @@ export function registerRoutes(app: Express): Server {
         messages: [
           {
             role: "system",
-            content: "You are an expert pathophysiology educator helping nursing students understand complex disease processes and body systems. Provide detailed explanations with clinical correlations."
+            content: "You are an expert pharmacology educator helping nursing students understand medication classes, mechanisms of action, pharmacokinetics, and clinical applications of drugs. Provide detailed explanations focused on drug therapy and medication safety."
           },
           {
             role: "user",
-            content: question || `Explain ${topic} in pathophysiology${context ? `. Context: ${context}` : ''}`
+            content: question || `Explain ${topic} in pharmacology${context ? `. Context: ${context}` : ''}`
           }
         ],
         temperature: 0.7,
