@@ -170,7 +170,7 @@ export default function NavBar() {
                 <NavigationMenuItem>
                   <NavigationMenuTrigger>Dashboards</NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                    <ul className="grid w-[400px] max-h-[80vh] overflow-y-auto gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] scrollbar-thin scrollbar-thumb-accent">
                       {dashboardItems.map((item) => (
                         <ListItem
                           key={item.title}
@@ -188,7 +188,7 @@ export default function NavBar() {
                 <NavigationMenuItem>
                   <NavigationMenuTrigger>Learning Modules</NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                    <ul className="grid w-[400px] max-h-[80vh] overflow-y-auto gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] scrollbar-thin scrollbar-thumb-accent">
                       {learningModules.map((item) => (
                         <ListItem
                           key={item.title}
@@ -206,7 +206,7 @@ export default function NavBar() {
                 <NavigationMenuItem>
                   <NavigationMenuTrigger>Practice & Simulation</NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                    <ul className="grid w-[400px] max-h-[80vh] overflow-y-auto gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] scrollbar-thin scrollbar-thumb-accent">
                       {practiceItems.map((item) => (
                         <ListItem
                           key={item.title}
@@ -224,7 +224,7 @@ export default function NavBar() {
                 <NavigationMenuItem>
                   <NavigationMenuTrigger>Study Tools</NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                    <ul className="grid w-[400px] max-h-[80vh] overflow-y-auto gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] scrollbar-thin scrollbar-thumb-accent">
                       {studyTools.map((item) => (
                         <ListItem
                           key={item.title}
@@ -259,7 +259,7 @@ export default function NavBar() {
                 </SheetHeader>
                 <nav className="flex flex-col gap-4 mt-6">
                   <div className="px-4 py-2">
-                    
+
                     {dashboardItems.map((item) => (
                       <MobileNavItem
                         key={item.title}
@@ -275,7 +275,7 @@ export default function NavBar() {
                   </div>
 
                   <div className="px-4 py-2">
-                    
+
                     {learningModules.map((item) => (
                       <MobileNavItem
                         key={item.title}
@@ -291,7 +291,7 @@ export default function NavBar() {
                   </div>
 
                   <div className="px-4 py-2">
-                    
+
                     {practiceItems.map((item) => (
                       <MobileNavItem
                         key={item.title}
@@ -307,7 +307,7 @@ export default function NavBar() {
                   </div>
 
                   <div className="px-4 py-2">
-                    
+
                     {studyTools.map((item) => (
                       <MobileNavItem
                         key={item.title}
