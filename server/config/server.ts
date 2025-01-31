@@ -34,13 +34,18 @@ export class Server {
 
   private async setupRoutes(): Promise<void> {
     // Health check endpoint
+    const { healthCheck } = await import('../routes/health');
     this.app.use('/health', healthCheck);
 
     // Add your routes here
     const { default: routes } = await import('../routes');
+    if (!routes) {
+      throw new Error('Routes not properly exported');
+    }
     this.app.use('/api', routes);
 
     // Error handling should be last
+    const { errorHandler } = await import('../middleware/errorHandler');
     this.app.use(errorHandler);
   }
 
