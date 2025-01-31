@@ -100,16 +100,23 @@ export async function generateSimulationScenario(
       throw new Error(error || 'Failed to generate scenario');
     }
 
-    const data = await response.json();
-
-    if (!data || typeof data !== 'object') {
-      throw new Error('Invalid scenario data received');
+    const text = await response.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (parseError) {
+      console.error('Failed to parse scenario response:', text);
+      throw new Error('Invalid scenario format received');
     }
 
-    return data;
+    if (!data || typeof data !== 'object' || !data.initial_state) {
+      throw new Error('Invalid scenario structure received');
+    }
+
+    return data as SimulationScenario;
   } catch (error) {
     console.error('Error generating scenario:', error);
-    throw new Error('Failed to generate simulation scenario');
+    throw error instanceof Error ? error : new Error('Failed to generate simulation scenario');
   }
 }
 

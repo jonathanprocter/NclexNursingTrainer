@@ -635,43 +635,40 @@ export function registerRoutes(app: Express): Server {
           {
             role: "system",
             content: `You are an expert nursing educator creating detailed patient scenarios for NCLEX preparation.
-            Generate realistic, complex scenarios that test clinical judgment and decision-making skills.
-            Include comprehensive vital signs, detailed symptoms, relevant medical history, medications, and current presentation.
-            Focus on common NCLEX topics and real-world nursing situations.
-            Return your response as a JSON object with the following format:
+            Generate a properly formatted JSON scenario that matches this structure exactly:
             {
-              "id": "unique_string",
-              "title": "scenario title",
-              "description": "detailed patient presentation including chief complaint and relevant history",
-              "vitalSigns": {
-                "Temperature": "string",
-                "HeartRate": "string",
-                "RespiratoryRate": "string",
-                "BloodPressure": "string",
-                "O2Saturation": "string",
-                "Pain": "string"
+              "id": "string",
+              "title": "string",
+              "description": "string",
+              "difficulty": "beginner|intermediate|advanced",
+              "initial_state": {
+                "patient_condition": "string",
+                "vital_signs": {
+                  "blood_pressure": "string",
+                  "heart_rate": "number",
+                  "respiratory_rate": "number",
+                  "temperature": "number",
+                  "oxygen_saturation": "number"
+                },
+                "symptoms": ["string"],
+                "medical_history": "string"
               },
-              "medicalHistory": ["detailed past medical conditions"],
-              "currentMedications": ["list of current medications with dosages"],
-              "allergies": ["list of allergies"],
-              "currentSymptoms": ["detailed current symptoms"],
-              "labResults": {"test": "result with normal ranges"},
-              "requiredAssessments": ["specific assessment tasks"],
-              "expectedInterventions": ["detailed nursing interventions"],
-              "rationales": {
-                "assessmentRationales": {"assessment": "why this is important"},
-                "interventionRationales": {"intervention": "why this is appropriate"}
-              },
-              "criticalThinkingPoints": ["key points to consider"],
-              "nursingSensitivities": ["cultural or special considerations"],
-              "difficulty": "Easy|Medium|Hard"
+              "expected_actions": [
+                {
+                  "priority": "number",
+                  "action": "string",
+                  "rationale": "string"
+                }
+              ],
+              "duration_minutes": "number"
             }`
           },
           {
             role: "user",
-            content: `Generate a ${difficulty || 'Medium'} difficulty nursing scenario with comprehensive details and return it as a JSON object. Previous scenario IDs to avoid: ${previousScenarios?.join(', ') || 'none'}`
+            content: `Generate a ${difficulty || 'Medium'} difficulty nursing scenario that exactly matches the required JSON structure.`
           }
-        ]
+        ],
+        temperature: 0.7
       });
 
       const scenarioContent = completion.choices[0]?.message?.content;
@@ -688,7 +685,7 @@ export function registerRoutes(app: Express): Server {
           .trim();
 
         const scenario = JSON.parse(cleanContent);
-        
+
         if (!scenario || typeof scenario !== 'object') {
           throw new Error("Invalid scenario format");
         }
@@ -707,7 +704,7 @@ export function registerRoutes(app: Express): Server {
           },
           expected_actions: scenario.expected_actions || []
         };
-        
+
         res.json(validatedScenario);
       } catch (parseError) {
         console.error("Error parsing scenario:", parseError);
@@ -978,4 +975,5 @@ function formatQuestion(question: any) {
     options: question.options,
     correctAnswer: question.correctAnswer
   };
+}
 }
