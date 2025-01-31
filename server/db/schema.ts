@@ -1,3 +1,4 @@
+
 import { pgTable, text, serial, integer, boolean, timestamp, json, foreignKey, index, uuid, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { sql } from "drizzle-orm";
@@ -116,7 +117,6 @@ export type NewUserProgress = typeof userProgress.$inferInsert;
 
 export type QuestionHistory = typeof questionHistory.$inferSelect;
 export type NewQuestionHistory = typeof questionHistory.$inferInsert;
-
 
 // Zod validation schemas
 export const insertUserSchema = createInsertSchema(users);
