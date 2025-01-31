@@ -21,8 +21,10 @@ export class Server {
     this.app.use(express.urlencoded({ extended: true }));
 
     // Add CORS handling for Replit environment
+    // Configure CORS
     this.app.use((req, res, next) => {
-      res.header('Access-Control-Allow-Origin', '*');
+      res.header('Access-Control-Allow-Origin', 'http://0.0.0.0:3003');
+      res.header('Access-Control-Allow-Credentials', 'true');
       res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
       res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
       if (req.method === 'OPTIONS') {

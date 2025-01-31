@@ -6,6 +6,11 @@ export const api = axios.create({
   withCredentials: true,
   timeout: 10000,
   headers: {
+    'Content-Type': 'application/json',
+  },
+  validateStatus: (status) => {
+    return status < 500;
+  },
     'Content-Type': 'application/json'
   }
 });
