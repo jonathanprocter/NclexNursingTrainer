@@ -16,13 +16,13 @@ import {
   Menu,
 } from "lucide-react";
 import { 
-  Sheet, 
-  SheetContent, 
-  SheetTrigger,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription 
-} from "../ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger
+} from "../ui/dialog";
 import { useState, useEffect } from "react";
 
 const navItems = [
@@ -103,19 +103,19 @@ export default function NavBar() {
           </div>
 
           <div className="md:hidden">
-            <Sheet open={isOpen} onOpenChange={setIsOpen}>
-              <SheetTrigger asChild>
+            <Dialog open={isOpen} onOpenChange={setIsOpen}>
+              <DialogTrigger asChild>
                 <Button variant="ghost">
                   <Menu className="h-6 w-6" />
                 </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-                <SheetHeader>
-                  <SheetTitle>Navigation Menu</SheetTitle>
-                  <SheetDescription>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Navigation Menu</DialogTitle>
+                  <DialogDescription>
                     Access all NCLEX preparation resources
-                  </SheetDescription>
-                </SheetHeader>
+                  </DialogDescription>
+                </DialogHeader>
                 <nav className="flex flex-col gap-4 mt-6">
                   {navItems.map((item) => (
                     <MobileNavItem
@@ -130,8 +130,8 @@ export default function NavBar() {
                     </MobileNavItem>
                   ))}
                 </nav>
-              </SheetContent>
-            </Sheet>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       </div>
