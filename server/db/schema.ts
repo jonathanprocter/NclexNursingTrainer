@@ -36,14 +36,8 @@ export const quizAttempts = pgTable('quiz_attempts', {
   userId: integer('user_id').references(() => users.id),
   moduleId: integer('module_id').references(() => modules.id),
   score: integer('score'),
-  answers: json('answers').$type<Array<{ 
-    questionId: string, 
-    selectedAnswer: string, 
-    correct: boolean,
-    timeSpent: number 
-  }>>(),
+  answers: json('answers').$type<Array<{ questionId: string, selectedAnswer: string, correct: boolean }>>(),
   startedAt: timestamp('started_at').defaultNow(),
-  completedAt: timestamp('completed_at'),
 });
 
 export const userProgress = pgTable('user_progress', {
@@ -54,7 +48,6 @@ export const userProgress = pgTable('user_progress', {
   correctAnswers: integer('correct_answers').default(0),
   lastAttempt: timestamp('last_attempt'),
   updatedAt: timestamp('updated_at').defaultNow(),
-  confidenceScore: integer('confidence_score').default(0),
 });
 
 // Export types for better type safety

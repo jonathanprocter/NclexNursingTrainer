@@ -19,18 +19,31 @@ export * from './schema.js';
 // Helper function to perform database health check
 export async function checkDatabaseHealth() {
   try {
+    // Simple query to verify database connection
     const result = await db.query.modules.findFirst();
     return {
       status: 'healthy',
       database: 'connected',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      details: 'Database connection successful'
     };
   } catch (error) {
     return {
       status: 'unhealthy',
       database: 'disconnected',
       timestamp: new Date().toISOString(),
-      error: error instanceof Error ? error.message : 'Internal Server Error'
+      error: error instanceof Error ? error.message : 'Unknown database error',
+      details: 'Failed to connect to database'
     };
   }
+}
+
+// Add a type-safe query builder helper
+export function createQueryBuilder() {
+  return {
+    modules: db.query.modules,
+    questions: db.query.questions,
+    quizAttempts: db.query.quizAttempts,
+    userProgress: db.query.userProgress,
+  };
 }

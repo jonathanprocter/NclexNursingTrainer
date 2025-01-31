@@ -1,6 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { db } from "./db/index.js";
-import { modules } from "./db/schema.js";
+import { eq } from "drizzle-orm";
+import { modules, questions, quizAttempts, userProgress } from "./db/schema.js";
 import studyGuideRouter from './routes/study-guide.js';
 import OpenAI from "openai";
 import { 
@@ -30,7 +31,7 @@ export function registerRoutes(app: Express) {
     res.json({ message: 'Server is running' });
   });
 
-  // Health check route - before other routes to ensure it's accessible
+  // Health check route
   app.get('/api/health', (req: Request, res: Response) => {
     res.json({ status: 'ok' });
   });
@@ -55,6 +56,101 @@ export function registerRoutes(app: Express) {
     }
   });
 
+
+  // User progress routes with proper type safety
+  app.get("/api/progress/:userId", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const progress = await db.select().from(userProgress)
+        .where(eq(userProgress.userId, userId));
+
+      // Safely map performance data with null checks
+      const performanceData = progress.map(p => ({
+        topic: p.moduleId?.toString() || "Unknown",
+        score: p.correctAnswers && p.completedQuestions ? 
+          (p.correctAnswers / p.completedQuestions) * 100 : 0,
+        timeSpent: p.lastAttempt && p.updatedAt ? 
+          (new Date(p.lastAttempt).getTime() - new Date(p.updatedAt).getTime()) / 1000 : 0
+      }));
+
+      const recommendations = await getStudyRecommendations(performanceData);
+
+      res.json({
+        progress,
+        recommendations,
+      });
+    } catch (error) {
+      console.error("Error fetching user progress:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch user progress",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Analytics routes with improved type safety
+  app.get("/api/analytics/user/:userId", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({
+          message: "Invalid user ID provided",
+          success: false
+        });
+      }
+
+      const attempts = await db.select().from(quizAttempts)
+        .where(eq(quizAttempts.userId, userId));
+
+      const progress = await db.select().from(userProgress)
+        .where(eq(userProgress.userId, userId));
+
+      if (!attempts.length && !progress.length) {
+        return res.status(404).json({
+          message: "No analytics data found for user",
+          success: false
+        });
+      }
+
+      // Analyze overall performance
+      const overallAnalysis = await analyzePerformance(
+        attempts?.flatMap(attempt => attempt.answers || []) || []
+      );
+
+      console.log('Successfully generated analytics response');
+
+      // Format the response data with defaults
+      const analyticsResponse = {
+        success: true,
+        data: {
+          attempts: attempts || [],
+          progress: progress || [],
+          analysis: overallAnalysis || {
+            strengths: [],
+            weaknesses: [],
+            confidence: 0,
+            recommendedTopics: []
+          },
+          summary: {
+            totalAttempts: attempts?.length || 0,
+            averageScore: attempts?.reduce((acc, curr) => acc + (curr.score || 0), 0) / (attempts?.length || 1) || 0,
+            strengths: overallAnalysis?.strengths || [],
+            weaknesses: overallAnalysis?.weaknesses || [],
+            confidence: overallAnalysis?.confidence || 0
+          },
+        }
+      };
+
+      res.json(analyticsResponse);
+    } catch (error) {
+      console.error("Error in analytics endpoint:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch analytics",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
 
   // Study buddy chat endpoints
   app.post("/api/study-buddy/start", async (req: Request, res: Response) => {
@@ -334,22 +430,18 @@ export function registerRoutes(app: Express) {
     }
   });
 
+
   // User progress routes with AI recommendations
   app.get("/api/progress/:userId", async (req: Request, res: Response) => {
     try {
-      const progress = await db.query.userProgress.findMany({
-        where: eq(userProgress.userId, parseInt(req.params.userId)),
-        with: {
-          module: true,
-        },
-      });
+      const userId = parseInt(req.params.userId);
+      const progress = await db.select().from(userProgress).where(eq(userProgress.userId, userId));
 
-      // Get AI study recommendations
+      // Safely map performance data with null checks
       const performanceData = progress.map(p => ({
-        topic: p.module?.title || "",
-        score: (p.correctAnswers / p.completedQuestions) * 100 || 0,
-        timeSpent: p.lastAttempt ?
-          (new Date(p.lastAttempt).getTime() - new Date(p.updatedAt).getTime()) / 1000 : 0
+        topic: p.moduleId?.toString() || "Unknown",
+        score: p.correctAnswers && p.completedQuestions ? (p.correctAnswers / p.completedQuestions) * 100 : 0,
+        timeSpent: p.lastAttempt && p.updatedAt ? (new Date(p.lastAttempt).getTime() - new Date(p.updatedAt).getTime()) / 1000 : 0
       }));
 
       const recommendations = await getStudyRecommendations(performanceData);
@@ -359,7 +451,11 @@ export function registerRoutes(app: Express) {
         recommendations,
       });
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch user progress" });
+      console.error("Error fetching user progress:", error);
+      res.status(500).json({
+        message: "Failed to fetch user progress",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 
@@ -368,14 +464,13 @@ export function registerRoutes(app: Express) {
     try {
       console.log(`Fetching analytics for user ${req.params.userId}`);
 
-      if (!req.params.userId || isNaN(parseInt(req.params.userId))) {
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
         return res.status(400).json({
           message: "Invalid user ID provided",
           success: false
         });
       }
-
-      const userId = parseInt(req.params.userId);
 
       const attempts = await db.query.quizAttempts.findMany({
         where: eq(quizAttempts.userId, userId),
@@ -386,7 +481,7 @@ export function registerRoutes(app: Express) {
         where: eq(userProgress.userId, userId),
       });
 
-      if (!attempts && !progress) {
+      if (!attempts.length && !progress.length) {
         console.log('No data found for user');
         return res.status(404).json({
           message: "No analytics data found for user",
@@ -763,7 +858,7 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  // Error handling middleware - must be last
+  // Error handling middleware
   app.use((err: Error & { status?: number }, req: Request, res: Response, next: NextFunction) => {
     console.error('Error:', err);
     res.status(err.status || 500).json({
@@ -779,7 +874,11 @@ export function registerRoutes(app: Express) {
 export type { PracticeQuestion, QuestionOption, PerformanceData };
 
 // Helper function with proper typing
-async function getStudyRecommendations(performanceData: PerformanceData[]): Promise<any[]> {
+async function getStudyRecommendations(performanceData: Array<{
+  topic: string;
+  score: number;
+  timeSpent: number;
+}>): Promise<string[]> {
   return [];
 }
 
@@ -813,7 +912,7 @@ function generateBackupQuestions(): PracticeQuestion[] {
 
 async function generateNewQuestions(userId: number, examType: string): Promise<PracticeQuestion> {
   try {
-    const backupQuestion = generateBackupQuestions()[0];
+const backupQuestion = generateBackupQuestions()[0];
     return backupQuestion;
   } catch (error) {
     console.error("Error generating questions:", error);
