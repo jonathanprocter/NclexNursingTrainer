@@ -234,7 +234,6 @@ export function registerRoutes(app: Express): Server {
           }
         ],
         temperature: 0.7,
-        max_tokens: 1000,
       });
 
       const response = completion.choices[0]?.message?.content;
