@@ -1,11 +1,11 @@
 import { Link } from "wouter";
-import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Analytics from "@/components/dashboard/Analytics";
-import PracticeHistory from "@/components/dashboard/PracticeHistory";
-import ProgressDisplay from "@/components/dashboard/ProgressDisplay";
+import { Card } from "../ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+import Analytics from "../dashboard/Analytics";
+import PracticeHistory from "../dashboard/PracticeHistory";
+import ProgressDisplay from "../dashboard/ProgressDisplay";
 import { useQuery } from "@tanstack/react-query";
-import type { AnalyticsData } from "@/types/analytics";
+import type { AnalyticsData } from "../../types/analytics";
 
 interface DashboardLayoutProps {
   children?: React.ReactNode;

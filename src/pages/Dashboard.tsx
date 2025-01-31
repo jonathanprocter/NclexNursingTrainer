@@ -1,11 +1,11 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import Analytics from "@/components/dashboard/Analytics";
-import { Skeleton } from "@/components/ui/skeleton";
-import type { AnalyticsData } from "@/types/analytics";
+import Analytics from "../components/dashboard/Analytics";
+import { Skeleton } from "../components/ui/skeleton";
+import type { AnalyticsData } from "../types/analytics";
 import { memo } from "react";
-import ErrorBoundary from "@/components/ErrorBoundary";
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import ErrorBoundary from "../components/ErrorBoundary";
+import { DashboardLayout } from "../components/layout/DashboardLayout";
 
 const PerformanceOverview = memo(({ analytics }: { analytics: AnalyticsData }) => (
   <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10">
@@ -85,7 +85,7 @@ function DashboardContent() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto space-y-4 sm:space-y-6 p-4 md:p-6 lg:p-8">
+      <div className="space-y-4 sm:space-y-6">
         <PerformanceOverviewSkeleton />
         <div className="h-[400px] bg-muted/10 rounded-lg animate-pulse" />
       </div>
@@ -94,19 +94,11 @@ function DashboardContent() {
 
   if (isError && !analytics) {
     return (
-      <div className="container mx-auto p-4">
-        <div className="p-4 bg-destructive/10 rounded-md">
-          <h2 className="text-lg font-semibold mb-2">Error loading dashboard</h2>
-          <p className="text-sm text-destructive mb-4">
-            {error instanceof Error ? error.message : "An unknown error occurred"}
-          </p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
-          >
-            Retry
-          </button>
-        </div>
+      <div className="p-4 bg-destructive/10 rounded-md">
+        <h2 className="text-lg font-semibold mb-2">Something went wrong</h2>
+        <p className="text-sm text-destructive mb-4">
+          {error instanceof Error ? error.message : "An unknown error occurred"}
+        </p>
       </div>
     );
   }
@@ -114,7 +106,7 @@ function DashboardContent() {
   const displayData = analytics || mockAnalytics;
 
   return (
-    <div className="container mx-auto space-y-4 sm:space-y-6 p-4 md:p-6 lg:p-8">
+    <div className="space-y-4 sm:space-y-6">
       <PerformanceOverview analytics={displayData} />
       <Analytics analytics={displayData} />
     </div>
