@@ -859,33 +859,33 @@ export function registerRoutes(app: Express): Server {
         messages: [
           {
             role: "system",
-            content: `You are a nursing educator. Generate a simulation scenario with exactly this structure:
+            content: "You are a nursing educator. Generate a realistic simulation scenario."
+          },
+          {
+            role: "user",
+            content: `Generate a ${difficulty || 'medium'} difficulty nursing simulation scenario with this exact JSON structure:
 {
   "title": "string",
   "description": "string",
   "initial_state": {
     "patient_history": "string",
     "vital_signs": {
-      "blood_pressure": "string",
-      "heart_rate": number,
-      "respiratory_rate": number,
-      "temperature": number,
-      "oxygen_saturation": number
+      "blood_pressure": "120/80",
+      "heart_rate": 80,
+      "respiratory_rate": 16,
+      "temperature": 37,
+      "oxygen_saturation": 98
     },
     "symptoms": ["string"]
   },
   "expected_actions": [
     {
-      "priority": number,
+      "priority": 1,
       "action": "string",
       "rationale": "string"
     }
   ]
 }`
-          },
-          {
-            role: "user",
-            content: `Generate a ${difficulty || 'medium'} difficulty nursing simulation scenario.`
           }
         ],
         temperature: 0.7,
