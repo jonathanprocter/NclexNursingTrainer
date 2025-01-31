@@ -71,7 +71,7 @@ export default function Pharmacology() {
 
   const aiHelpMutation = useMutation({
     mutationFn: async ({ section, context }: { section: string; context?: string }) => {
-      const response = await fetch("/api/ai-help", {
+      const response = await fetch("/api/pharmacology-help", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ section, context }),

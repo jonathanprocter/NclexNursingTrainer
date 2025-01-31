@@ -1,11 +1,11 @@
 import type { AIAnalysisResult, SimulationFeedback, SimulationScenario } from './types';
 
-export async function getPathophysiologyHelp(
+export async function getPharmacologyHelp(
   section: string,
   context?: string
 ): Promise<{ content: string }> {
   try {
-    const response = await fetch('/api/ai/pathophysiology-help', {
+    const response = await fetch('/api/ai/pharmacology-help', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ section, context })

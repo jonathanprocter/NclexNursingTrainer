@@ -828,14 +828,14 @@ async function analyzePerformance(answers: any[]) {
   }
 }
 
-async function getPathophysiologyHelp(topic: string, context: string) {
+async function getPharmacologyHelp(topic: string, context: string) {
   try {
     const completion = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [
         {
           role: "system",
-          content: "You are an expert pathophysiology educator helping nursing students understand complex disease processes."
+          content: "You are an expert pharmacology educator helping nursing students understand medication classes, mechanisms of action, and clinical applications of drugs."
         },
         {
           role: "user",
