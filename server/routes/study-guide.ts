@@ -1,16 +1,16 @@
 import { Router } from 'express';
-import { db } from "../../db";
-import { eq, desc } from "drizzle-orm";
-import { userProgress } from "../../db/schema";
+import { db } from "../db/index.js";
+import { eq } from "drizzle-orm";
+import { userProgress } from "../db/schema.js";
 
 const router = Router();
 
 interface PerformanceData {
-  moduleId?: number | null;
-  totalQuestions?: number | null;
-  correctAnswers?: number | null;
-  updatedAt?: Date;
-  userId?: number;
+  moduleId: number | null;
+  totalQuestions: number | null;
+  correctAnswers: number | null;
+  updatedAt: Date;
+  userId: number;
 }
 
 // Get current study guide with enhanced error handling and learner feedback
@@ -27,19 +27,22 @@ router.get("/current", async (req, res) => {
     // Calculate performance metrics
     const completedModules = performance.filter((p: PerformanceData) => p.totalQuestions != null && p.totalQuestions > 0);
     const averageScore = completedModules.length > 0
-      ? completedModules.reduce((acc, curr) => acc + ((curr.correctAnswers || 0) / (curr.totalQuestions || 1) * 100), 0) / completedModules.length
+      ? completedModules.reduce((acc: number, curr: PerformanceData) => 
+          acc + ((curr.correctAnswers || 0) / (curr.totalQuestions || 1) * 100), 0) / completedModules.length
       : 0;
 
     // Generate adaptive recommendations based on performance
     const weakModules = completedModules
-      .filter((p: PerformanceData) => p.totalQuestions != null && p.correctAnswers != null && (p.correctAnswers / p.totalQuestions) < 0.7)
+      .filter((p: PerformanceData) => p.totalQuestions != null && p.correctAnswers != null && 
+        (p.correctAnswers / p.totalQuestions) < 0.7)
       .map((p: PerformanceData) => ({
         moduleId: p.moduleId?.toString(),
         score: ((p.correctAnswers || 0) / (p.totalQuestions || 1) * 100).toFixed(1)
       }));
 
     const strongModules = completedModules
-      .filter((p: PerformanceData) => p.totalQuestions != null && p.correctAnswers != null && (p.correctAnswers / p.totalQuestions) >= 0.7)
+      .filter((p: PerformanceData) => p.totalQuestions != null && p.correctAnswers != null && 
+        (p.correctAnswers / p.totalQuestions) >= 0.7)
       .map((p: PerformanceData) => ({
         moduleId: p.moduleId?.toString(),
         score: ((p.correctAnswers || 0) / (p.totalQuestions || 1) * 100).toFixed(1)
@@ -69,16 +72,8 @@ router.get("/current", async (req, res) => {
           "Create summary notes"
         ]
       })),
-      weakAreas: weakModules.map(module => ({
-        moduleId: module.moduleId,
-        score: module.score,
-        improvement: "Focus on understanding core concepts and practice more questions"
-      })),
-      strengthAreas: strongModules.map(module => ({
-        moduleId: module.moduleId,
-        score: module.score,
-        tip: "Keep practicing to maintain proficiency"
-      })),
+      weakAreas: weakModules,
+      strengthAreas: strongModules,
       recommendedResources: [
         "Patient Care Management",
         "Medication Administration",
@@ -127,8 +122,9 @@ router.post("/generate", async (req, res) => {
 
     // Analyze weak areas based on totalQuestions and correctAnswers
     const weakAreas = performance
-      .filter(p => p.totalQuestions && p.correctAnswers && (p.correctAnswers / p.totalQuestions) < 0.7)
-      .map(p => ({
+      .filter((p: PerformanceData) => p.totalQuestions && p.correctAnswers && 
+        (p.correctAnswers / p.totalQuestions) < 0.7)
+      .map((p: PerformanceData) => ({
         moduleId: p.moduleId?.toString(),
         score: Math.round((p.correctAnswers || 0) / (p.totalQuestions || 1) * 100),
         improvement: `Focus on core concepts`,

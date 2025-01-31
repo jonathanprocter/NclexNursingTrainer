@@ -23,6 +23,12 @@ interface PracticeQuestion {
   difficulty: string;
 }
 
+interface PerformanceData {
+  topic: string;
+  score: number;
+  timeSpent: number;
+}
+
 if (!process.env.OPENAI_API_KEY) {
   throw new Error("OPENAI_API_KEY must be set in environment variables");
 }
@@ -60,51 +66,10 @@ function generateBackupQuestions(): PracticeQuestion[] {
   ];
 }
 
-const practiceQuestions: Record<string, PracticeQuestion[]> = {
-  standard: [
-    {
-      id: "std_1",
-      text: "Which nursing intervention is most appropriate for a client with acute pain?",
-      options: [
-        { id: "a", text: "Assess pain characteristics" },
-        { id: "b", text: "Administer PRN pain medication immediately" },
-        { id: "c", text: "Notify healthcare provider" },
-        { id: "d", text: "Apply ice pack to affected area" }
-      ],
-      correctAnswer: "a",
-      explanation: "Pain assessment should be conducted first to determine appropriate interventions.",
-      category: "Patient Care",
-      difficulty: "Medium"
-    }
-  ],
-  clinical: [
-    {
-      id: 'clinical_1',
-      text: 'A patient presents with sudden onset chest pain. What is the priority nursing action?',
-      options: [
-        { id: 'a', text: 'Obtain vital signs' },
-        { id: 'b', text: 'Call the physician' },
-        { id: 'c', text: 'Administer oxygen' },
-        { id: 'd', text: 'Complete pain assessment' }
-      ],
-      correctAnswer: 'a',
-      explanation: 'Initial vital signs are crucial for assessing patient status and establishing baseline data.',
-      category: "Patient Care",
-      difficulty: "Medium"
-    }
-  ]
-};
-
 async function generateNewQuestions(userId: number, examType: string): Promise<PracticeQuestion> {
   try {
-    const questions = Object.values(practiceQuestions).flat();
-
-    if (questions.length === 0) {
-      return generateBackupQuestions()[0];
-    }
-
-    // Filter out previously seen questions (implement this when question history is added)
-    return questions[Math.floor(Math.random() * questions.length)];
+    const backupQuestion = generateBackupQuestions()[0];
+    return backupQuestion;
   } catch (error) {
     console.error("Error generating questions:", error);
     return generateBackupQuestions()[0];
@@ -139,55 +104,6 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error('WebSocket upgrade error:', error);
       socket.destroy();
-    }
-  });
-
-  // WebSocket connection handler
-  wss.on('connection', (ws: WebSocket) => {
-    console.log('New WebSocket connection established');
-
-    const pingInterval = setInterval(() => {
-      if (ws.readyState === ws.OPEN) {
-        ws.ping();
-      }
-    }, 30000);
-
-    ws.on('message', async (message: WebSocket.Data) => {
-      try {
-        const data = JSON.parse(message.toString());
-
-        switch (data.type) {
-          case 'study_update':
-            // Handle study progress updates
-            break;
-          case 'question_response':
-            // Handle real-time question responses
-            break;
-          default:
-            console.warn('Unknown message type:', data.type);
-        }
-      } catch (error) {
-        console.error('WebSocket message handling error:', error);
-        if (ws.readyState === ws.OPEN) {
-          ws.send(JSON.stringify({ type: 'error', message: 'Invalid message format' }));
-        }
-      }
-    });
-
-    ws.on('close', () => {
-      console.log('Client disconnected');
-      clearInterval(pingInterval);
-    });
-
-    ws.on('error', (error) => {
-      console.error('WebSocket error:', error);
-      clearInterval(pingInterval);
-      ws.terminate();
-    });
-
-    // Send initial connection status
-    if (ws.readyState === ws.OPEN) {
-      ws.send(JSON.stringify({ type: 'connection_status', status: 'connected' }));
     }
   });
 
@@ -493,7 +409,7 @@ export function registerRoutes(app: Express): Server {
       const { userId, moduleId, answers } = req.body;
 
       // Calculate score
-      const score = answers.filter((a: any) => a.correct).length / answers.length * 100;
+      const score = answers.filter((a: {correct: boolean}) => a.correct).length / answers.length * 100;
 
       const [newAttempt] = await db.insert(quizAttempts).values({
         userId,
@@ -507,7 +423,7 @@ export function registerRoutes(app: Express): Server {
       await db.update(userProgress)
         .set({
           completedQuestions: userProgress.completedQuestions + answers.length,
-          correctAnswers: userProgress.correctAnswers + answers.filter((a: any) => a.correct).length,
+          correctAnswers: userProgress.correctAnswers + answers.filter((a: {correct: boolean}) => a.correct).length,
           lastAttempt: new Date()
         })
         .where(eq(userProgress.userId, userId));
@@ -951,5 +867,26 @@ export function registerRoutes(app: Express): Server {
   return httpServer;
 }
 
-// Export types and constants
-export { practiceQuestions, type PracticeQuestion, type QuestionOption };
+// Export types and interfaces
+export type { PracticeQuestion, QuestionOption };
+
+// Helper functions with proper typing
+async function getStudyRecommendations(performanceData: PerformanceData[]): Promise<any[]> {
+  // Implement your AI recommendation logic here
+  return [];
+}
+
+async function analyzePerformance(answers: Array<{correct: boolean}>): Promise<{
+  strengths: string[];
+  weaknesses: string[];
+  confidence: number;
+  recommendedTopics: string[];
+}> {
+  // Implement your performance analysis logic here
+  return {
+    strengths: [],
+    weaknesses: [],
+    confidence: 0,
+    recommendedTopics: []
+  };
+}
