@@ -947,8 +947,7 @@ async function generateNewQuestions(userId: number, examType: string) {
     if (examType === 'cat') {
       const sortedQuestions = availableQuestions.sort((a, b) => {
         const difficultyMap = { Easy: 1, Medium: 2, Hard: 3 };
-        return difficultyMap[a.difficulty as keyof typeof difficultyMap] -
-               difficultyMap[b.difficulty as keyof typeof difficultyMap];
+        return difficultyMap[a.difficulty as keyof typeof difficultyMap] -               difficultyMap[b.difficulty as keyof typeof difficultyMap];
       });
 
       const mediumQuestions = sortedQuestions.filter(q => q.difficulty === 'Medium');
