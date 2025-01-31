@@ -23,29 +23,12 @@ const queryClient = new QueryClient({
   },
 });
 
-// Initialize MSW in development
-if (import.meta.env.DEV) {
-  console.log('Starting MSW initialization from App...');
-  import('./mocks/browser')
-    .then(({ worker }) => {
-      worker.start({
-        onUnhandledRequest: 'bypass',
-      }).then(() => {
-        console.log('MSW started successfully from App');
-      });
-    })
-    .catch((error) => {
-      console.error('Failed to start MSW from App:', error);
-    });
-}
-
 function App() {
   const [mounted, setMounted] = useState(false);
 
-  // Handle hydration mismatch
   useEffect(() => {
     setMounted(true);
-    console.log('App component mounted');
+    console.log('🔷 App component mounted');
   }, []);
 
   if (!mounted) {

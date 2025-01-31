@@ -9,7 +9,7 @@ import { ErrorBoundary } from "react-error-boundary";
 
 const PerformanceOverview = memo(({ analytics }: { analytics: AnalyticsData }) => {
   useEffect(() => {
-    console.log('PerformanceOverview mounted with analytics:', analytics);
+    console.log('🔷 PerformanceOverview mounted with analytics:', analytics);
   }, [analytics]);
 
   return (
@@ -39,35 +39,40 @@ const PerformanceOverview = memo(({ analytics }: { analytics: AnalyticsData }) =
 
 function DashboardContent() {
   useEffect(() => {
-    console.log('DashboardContent mounted');
+    console.log('🔷 DashboardContent mounted');
   }, []);
 
   const { data: analytics, isError, isLoading, error } = useQuery<AnalyticsData>({
     queryKey: ["analytics"],
     queryFn: async () => {
-      console.log('DashboardContent: Starting analytics fetch');
+      console.log('🔷 Starting analytics fetch');
       try {
-        const response = await fetch('/api/analytics');
+        const response = await fetch('/api/analytics', {
+          headers: {
+            'Accept': 'application/json',
+          },
+        });
+        console.log('🔷 Response status:', response.status);
         if (!response.ok) {
-          console.error('DashboardContent: API error:', response.status, response.statusText);
+          console.error('🔷 API error:', response.status, response.statusText);
           throw new Error(`Failed to fetch analytics: ${response.statusText}`);
         }
         const data = await response.json();
-        console.log('DashboardContent: Successfully received analytics data:', data);
+        console.log('🔷 Successfully received analytics data:', data);
         return data;
       } catch (err) {
-        console.error('DashboardContent: Error fetching analytics:', err);
+        console.error('🔷 Error fetching analytics:', err);
         throw err;
       }
     },
   });
 
   useEffect(() => {
-    console.log('DashboardContent: State updated:', { isLoading, isError, analytics, error });
+    console.log('🔷 DashboardContent state updated:', { isLoading, isError, analytics, error });
   }, [isLoading, isError, analytics, error]);
 
   if (isLoading) {
-    console.log('DashboardContent: Rendering loading state');
+    console.log('🔷 Rendering loading state');
     return (
       <div className="space-y-4">
         <Skeleton className="h-[200px] w-full" />
@@ -77,7 +82,7 @@ function DashboardContent() {
   }
 
   if (isError) {
-    console.error('DashboardContent: Rendering error state:', error);
+    console.error('🔷 Rendering error state:', error);
     return (
       <Card className="bg-destructive/10">
         <CardHeader>
@@ -93,11 +98,11 @@ function DashboardContent() {
   }
 
   if (!analytics) {
-    console.log('DashboardContent: No analytics data available');
+    console.log('🔷 No analytics data available');
     return null;
   }
 
-  console.log('DashboardContent: Rendering dashboard with analytics');
+  console.log('🔷 Rendering dashboard with analytics');
   return (
     <div className="space-y-4 sm:space-y-6">
       <PerformanceOverview analytics={analytics} />
@@ -108,13 +113,13 @@ function DashboardContent() {
 
 export default function Dashboard() {
   useEffect(() => {
-    console.log('Dashboard page mounted');
+    console.log('🔷 Dashboard page mounted');
   }, []);
 
   return (
     <ErrorBoundary
       FallbackComponent={({ error }) => {
-        console.error('Dashboard Error Boundary caught error:', error);
+        console.error('🔷 Dashboard Error Boundary caught error:', error);
         return (
           <div className="p-4 bg-destructive/10 rounded-md">
             <h2 className="text-lg font-semibold text-destructive mb-2">Something went wrong</h2>
