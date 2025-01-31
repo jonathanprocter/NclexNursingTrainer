@@ -84,30 +84,32 @@ export interface SimulationScenario {
 
 export async function generateSimulationScenario(
   difficulty: string,
-  focus_areas?: string[]
+  focusAreas?: string[]
 ): Promise<SimulationScenario> {
   try {
-    const response = await fetch('/api/ai/simulation-scenario', {
+    const response = await fetch('/api/scenarios/generate', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ difficulty, focus_areas })
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ difficulty, previousScenarios: [] })
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Server response:', errorText);
-      throw new Error(`Failed to generate simulation scenario: ${response.status}`);
+      const error = await response.text();
+      throw new Error(error || 'Failed to generate scenario');
     }
 
     const data = await response.json();
+
     if (!data || typeof data !== 'object') {
-      throw new Error('Invalid response format');
+      throw new Error('Invalid scenario data received');
     }
 
     return data;
   } catch (error) {
-    console.error('Error generating simulation scenario:', error);
-    throw error instanceof Error ? error : new Error('Failed to generate simulation scenario');
+    console.error('Error generating scenario:', error);
+    throw new Error('Failed to generate simulation scenario');
   }
 }
 

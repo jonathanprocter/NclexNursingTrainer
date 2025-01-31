@@ -680,15 +680,35 @@ export function registerRoutes(app: Express): Server {
       }
 
       try {
-        // Remove any markdown code blocks if present
-        const cleanContent = scenarioContent.replace(/```json\n?|\n?```/g, '').trim();
+        // Ensure we have a valid JSON string
+        const cleanContent = scenarioContent
+          .replace(/```json\n?|\n?```/g, '')
+          .replace(/\\n/g, '\n')
+          .replace(/\\/g, '')
+          .trim();
+
         const scenario = JSON.parse(cleanContent);
         
         if (!scenario || typeof scenario !== 'object') {
           throw new Error("Invalid scenario format");
         }
+
+        // Ensure all required fields are present
+        const validatedScenario = {
+          id: scenario.id || `scenario_${Date.now()}`,
+          title: scenario.title || "Clinical Scenario",
+          description: scenario.description || "",
+          initial_state: {
+            patient_history: scenario.initial_state?.patient_history || "",
+            chief_complaint: scenario.initial_state?.chief_complaint || "",
+            vital_signs: scenario.initial_state?.vital_signs || {},
+            lab_values: scenario.initial_state?.lab_values || {},
+            current_interventions: scenario.initial_state?.current_interventions || []
+          },
+          expected_actions: scenario.expected_actions || []
+        };
         
-        res.json(scenario);
+        res.json(validatedScenario);
       } catch (parseError) {
         console.error("Error parsing scenario:", parseError);
         // Return a fallback scenario
