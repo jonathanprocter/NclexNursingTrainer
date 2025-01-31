@@ -1,18 +1,26 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, Send, MicOff } from "lucide-react";
-import { ToneSelector } from "@/components/ToneSelector";
-import type { StudyBuddyTone } from "@/components/ToneSelector";
+import { Loader2, Send, Mic, MicOff } from "lucide-react";
+import { ToneSelector } from "./ToneSelector";
+import type { StudyBuddyTone } from "./ToneSelector";
 import { useToast } from "@/hooks/use-toast";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
+}
+
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionError extends Event {
+  error: string;
+  message?: string;
 }
 
 export function StudyBuddyChat() {
@@ -23,6 +31,7 @@ export function StudyBuddyChat() {
   const [isListening, setIsListening] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   // Mock student ID for now - in a real app this would come from auth context
   const studentId = 1;
@@ -96,6 +105,39 @@ export function StudyBuddyChat() {
     }
   });
 
+  useEffect(() => {
+    if (window.webkitSpeechRecognition) {
+      const SpeechRecognition = window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
+        const transcript = Array.from(event.results)
+          .map(result => result[0].transcript)
+          .join('');
+        setInput(transcript);
+      };
+
+      recognition.onerror = (event: SpeechRecognitionError) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+        toast({
+          title: "Error",
+          description: `Speech recognition error: ${event.message || event.error}`,
+          variant: "destructive",
+        });
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+    }
+  }, []);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
@@ -111,6 +153,40 @@ export function StudyBuddyChat() {
     sendMessage.mutate(input);
   };
 
+  const toggleVoiceInput = async () => {
+    if (!recognitionRef.current) {
+      toast({
+        title: "Not Supported",
+        description: "Speech recognition is not supported in your browser. Please use Chrome for this feature.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      if (!isListening) {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        recognitionRef.current.start();
+        setIsListening(true);
+        toast({
+          title: "Listening",
+          description: "Speak now...",
+        });
+      } else {
+        recognitionRef.current.stop();
+        setIsListening(false);
+      }
+    } catch (error) {
+      console.error("Microphone access error:", error);
+      toast({
+        title: "Error",
+        description: "Unable to access microphone. Please check your permissions.",
+        variant: "destructive",
+      });
+      setIsListening(false);
+    }
+  };
+
   // Start session on component mount
   useEffect(() => {
     if (!sessionId) {
@@ -124,34 +200,6 @@ export function StudyBuddyChat() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
-
-  const handleVoiceInput = async () => {
-    if (!("webkitSpeechRecognition" in window)) {
-      toast({
-        title: "Not Supported",
-        description: "Speech recognition is not supported in your browser. Please use Chrome for this feature.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      setIsListening(true);
-      // Voice input feature will be implemented here
-      toast({
-        title: "Coming Soon",
-        description: "Voice input feature is coming soon!",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to start voice recognition. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsListening(false);
-    }
-  };
 
   return (
     <div className="flex flex-col h-full">
@@ -212,18 +260,16 @@ export function StudyBuddyChat() {
           <Button
             type="button"
             variant="outline"
-            disabled={false}
-            onClick={handleVoiceInput}
-            title="Voice input coming soon"
-            className="relative"
+            onClick={toggleVoiceInput}
+            className={`relative ${isListening ? 'bg-primary text-primary-foreground' : ''}`}
           >
             {isListening ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Mic className="h-4 w-4 animate-pulse" />
             ) : (
-              <MicOff className="h-4 w-4 text-muted-foreground" />
+              <MicOff className="h-4 w-4" />
             )}
             <span className="sr-only">
-              {isListening ? "Listening..." : "Voice input (coming soon)"}
+              {isListening ? "Stop recording" : "Start recording"}
             </span>
           </Button>
         </div>

@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { Check, MessageSquare } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Button } from "../components/ui/button";
+import { Card } from "../components/ui/card";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
+} from "../components/ui/popover";
+import { cn } from "../lib/utils";
 
 export type StudyBuddyTone = 
   | "professional" 
@@ -54,22 +54,29 @@ export function ToneSelector({ selectedTone, onToneChange }: ToneSelectorProps) 
         <Button
           variant="outline"
           size="sm"
-          className="gap-2"
+          role="combobox"
+          aria-expanded={false}
+          className="gap-2 w-[180px] justify-start"
+          aria-label="Select chat tone"
         >
           <MessageSquare className="h-4 w-4" />
-          {toneOptions.find(t => t.value === selectedTone)?.label || "Select Tone"}
+          <span className="truncate">
+            {toneOptions.find(t => t.value === selectedTone)?.label || "Select Tone"}
+          </span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-64 p-2">
+      <PopoverContent className="w-[280px] p-2" align="start">
         <div className="space-y-1">
           {toneOptions.map((tone) => (
             <button
               key={tone.value}
               onClick={() => onToneChange(tone.value)}
               className={cn(
-                "w-full flex items-start p-2 text-left rounded-lg hover:bg-accent group",
-                selectedTone === tone.value ? "bg-accent" : ""
+                "w-full flex items-start p-2 text-left rounded-lg hover:bg-accent transition-colors",
+                selectedTone === tone.value ? "bg-accent" : "bg-background"
               )}
+              role="option"
+              aria-selected={selectedTone === tone.value}
             >
               <div className="flex-1">
                 <div className="flex items-center gap-2">

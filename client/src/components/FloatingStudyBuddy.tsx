@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import * as React from "react";
 
 export function FloatingStudyBuddy() {
   const [isOpen, setIsOpen] = useState(false);
