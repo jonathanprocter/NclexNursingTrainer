@@ -165,7 +165,11 @@ export default function Pharmacology() {
                         Build a strong foundation in pharmacological principles through structured learning objectives and comprehensive understanding of drug mechanisms.
                       </p>
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("knowledge_objectives")}>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleAIHelp("knowledge_development", "Explain core pharmacological concepts including drug classifications, mechanisms of action, and safety protocols")}
+                    >
                       <Bot className="h-4 w-4 mr-2" />
                       AI Help
                     </Button>
@@ -210,7 +214,11 @@ export default function Pharmacology() {
                         Develop practical skills essential for safe and effective medication administration through hands-on practice and scenario-based learning.
                       </p>
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("skills_objectives")}>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleAIHelp("skills_application", "Explain practical medication administration skills, calculations, and clinical competencies")}
+                    >
                       <Bot className="h-4 w-4 mr-2" />
                       AI Help
                     </Button>
@@ -255,7 +263,11 @@ export default function Pharmacology() {
                         Develop advanced clinical judgment and situation awareness needed for complex medication management scenarios.
                       </p>
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("awareness_objectives")}>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleAIHelp("clinical_awareness", "Explain advanced clinical judgment, safety protocols, and risk management in medication administration")}
+                    >
                       <Bot className="h-4 w-4 mr-2" />
                       AI Help
                     </Button>
