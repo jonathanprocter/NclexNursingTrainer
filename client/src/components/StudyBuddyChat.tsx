@@ -7,6 +7,7 @@ import { Loader2, Send, Mic, MicOff } from "lucide-react";
 import { ToneSelector } from "./ToneSelector";
 import type { StudyBuddyTone } from "./ToneSelector";
 import { useToast } from "@/hooks/use-toast";
+import ReactMarkdown from "react-markdown";
 
 interface StudyBuddyChatProps {
   isListening?: boolean;
@@ -69,21 +70,18 @@ export const StudyBuddyChat = forwardRef<StudyBuddyChatHandle, StudyBuddyChatPro
       }
     });
 
-    // Start session on component mount
     useEffect(() => {
       if (!sessionId) {
         startSession.mutate();
       }
     }, []);
 
-    // Auto scroll to bottom when new messages arrive
     useEffect(() => {
       if (scrollRef.current) {
         scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
       }
     }, [messages]);
 
-    // Handle voice input state changes
     useEffect(() => {
       if (isListening) {
         inputRef.current?.blur();
@@ -191,8 +189,10 @@ export const StudyBuddyChat = forwardRef<StudyBuddyChatHandle, StudyBuddyChatPro
                       : "bg-muted"
                   }`}
                 >
-                  <p className="text-sm">{message.content}</p>
-                  <span className="text-xs opacity-50">
+                  <div className="prose prose-sm dark:prose-invert">
+                    <ReactMarkdown>{message.content}</ReactMarkdown>
+                  </div>
+                  <span className="text-xs opacity-50 block mt-1">
                     {new Date(message.timestamp).toLocaleTimeString()}
                   </span>
                 </div>

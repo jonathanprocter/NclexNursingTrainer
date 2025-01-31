@@ -5,13 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 
-declare global {
-  interface Window {
-    SpeechRecognition: typeof SpeechRecognition;
-    webkitSpeechRecognition: typeof SpeechRecognition;
-  }
-}
-
 export default function AICompanion() {
   const { toast } = useToast();
   const [microphoneEnabled, setMicrophoneEnabled] = useState(false);
@@ -66,10 +59,9 @@ export default function AICompanion() {
         recognition.interimResults = true;
         recognition.lang = 'en-US';
 
-        recognition.onresult = (event) => {
+        recognition.onresult = (event: SpeechRecognitionEvent) => {
           const transcript = Array.from(event.results)
-            .map(result => result[0])
-            .map(result => result.transcript)
+            .map(result => result[0].transcript)
             .join('');
           setTranscript(transcript);
           if (event.results[0].isFinal) {
@@ -77,7 +69,7 @@ export default function AICompanion() {
           }
         };
 
-        recognition.onerror = (event) => {
+        recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
           console.error('Speech recognition error:', event.error);
           setMicrophoneEnabled(false);
           toast({
@@ -154,8 +146,15 @@ export default function AICompanion() {
                 </p>
 
                 <div className="flex justify-center gap-4 py-8">
-                  <Button size="lg" className="w-16 h-16 rounded-full" onClick={handleMicClick}>
-                    {microphoneEnabled ? <StopCircle className="h-8 w-8" /> : <Mic className="h-8 w-8" />}
+                  <Button 
+                    size="lg" 
+                    className="w-16 h-16 rounded-full"
+                    onClick={handleMicClick}
+                  >
+                    {microphoneEnabled ? 
+                      <StopCircle className="h-8 w-8" /> : 
+                      <Mic className="h-8 w-8" />
+                    }
                   </Button>
                 </div>
 
@@ -171,7 +170,7 @@ export default function AICompanion() {
                       {aiResponse && (
                         <div className="mt-4">
                           <p className="font-medium">AI Response:</p>
-                          <p className="text-sm">{aiResponse}</p>
+                          <p className="text-sm whitespace-pre-wrap">{aiResponse}</p>
                         </div>
                       )}
                     </div>

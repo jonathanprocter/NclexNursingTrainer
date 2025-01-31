@@ -117,9 +117,8 @@ export function FloatingStudyBuddy() {
 
     try {
       if (!isListening) {
-        // Request microphone permission
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        stream.getTracks().forEach(track => track.stop()); // Release the stream immediately
+        stream.getTracks().forEach(track => track.stop());
 
         if (recognitionRef.current) {
           recognitionRef.current.start();
@@ -186,6 +185,7 @@ export function FloatingStudyBuddy() {
                     title="Close chat"
                   >
                     <X className="h-4 w-4" />
+                    <span className="sr-only">Close chat</span>
                   </Button>
                 </div>
               </div>
