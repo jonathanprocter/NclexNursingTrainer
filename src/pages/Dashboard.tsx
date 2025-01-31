@@ -54,9 +54,10 @@ function Dashboard() {
     queryFn: async () => {
       try {
         const response = await fetch('http://0.0.0.0:3006/api/analytics', {
-          credentials: 'include',
+          method: 'GET',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
           }
         });
 
@@ -64,15 +65,16 @@ function Dashboard() {
           throw new Error(`API error: ${response.status}`);
         }
 
-        const data = await response.json();
-        return data.data;
+        const responseData = await response.json();
+        return responseData.data;
       } catch (error) {
         console.error('Error fetching analytics:', error);
         throw error;
       }
     },
-    retry: 2,
+    retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+    staleTime: 30000
   });
 
   if (isLoading) {

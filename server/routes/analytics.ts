@@ -2,7 +2,7 @@
 import express from 'express';
 const router = express.Router();
 
-router.get('/', async (req, res, next) => {
+router.get('/', async (_req, res) => {
   try {
     const analyticsData = {
       data: {
@@ -17,9 +17,10 @@ router.get('/', async (req, res, next) => {
       }
     };
     
-    res.json(analyticsData);
+    res.status(200).json(analyticsData);
   } catch (error) {
-    next(error);
+    console.error('Analytics Error:', error);
+    res.status(500).json({ error: 'Failed to fetch analytics data' });
   }
 });
 
