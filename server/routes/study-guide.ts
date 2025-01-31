@@ -15,7 +15,7 @@ const router = Router();
 const validateRequest = <T>(schema: z.ZodSchema<T>) => (
   async (req: any, res: any, next: any) => {
     try {
-      req.validatedData = await schema.parseAsync(req.body);
+      req.body = await schema.parseAsync(req.body);
       next();
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -32,9 +32,9 @@ const validateRequest = <T>(schema: z.ZodSchema<T>) => (
 );
 
 // Get current study guide
-router.get("/current", async (req, res) => {
+router.get("/current/:userId", async (req, res) => {
   try {
-    const userId = req.query.userId as string;
+    const { userId } = req.params;
     if (!userId) {
       return res.status(400).json({
         success: false,
@@ -42,8 +42,8 @@ router.get("/current", async (req, res) => {
       });
     }
 
-    const performance = await db
-      .select()
+    // Get user's performance data
+    const performance = await db.select()
       .from(userProgress)
       .where(eq(userProgress.userId, userId));
 
@@ -51,10 +51,10 @@ router.get("/current", async (req, res) => {
     const completedModules = performance.filter(p => p.completedQuestions && parseInt(p.completedQuestions) > 0);
     const averageScore = completedModules.length > 0
       ? completedModules.reduce((acc, curr) => 
-          acc + ((parseInt(curr.correctAnswers || '0') / parseInt(curr.completedQuestions || '1')) * 100), 0) / completedModules.length
+          acc + (parseInt(curr.correctAnswers || '0') / parseInt(curr.completedQuestions || '1') * 100), 0) / completedModules.length
       : 0;
 
-    // Generate response
+    // Generate study guide
     const guide: StudyGuideResponse = {
       id: `sg-${Date.now()}`,
       createdAt: new Date().toISOString(),
@@ -104,57 +104,44 @@ router.get("/current", async (req, res) => {
 // Generate new study guide with validation
 router.post("/generate", validateRequest(studyGuideRequestSchema), async (req, res) => {
   try {
-    const { userId, focusAreas = [], timeAvailable } = req.validatedData as StudyGuideRequest;
+    const { userId, focusAreas = [], timeAvailable } = req.body as StudyGuideRequest;
 
-    // Get user's performance data with proper ordering
-    const performance = await db
-      .select()
+    // Get user's performance data
+    const performance = await db.select()
       .from(userProgress)
-      .where(eq(userProgress.userId, userId))
-      .orderBy(userProgress.updatedAt);
+      .where(eq(userProgress.userId, userId));
 
-    // Analyze weak areas based on completedQuestions and correctAnswers
+    // Generate weak areas analysis
     const weakAreas = performance
       .filter(p => p.completedQuestions && p.correctAnswers && 
-        (p.correctAnswers / p.completedQuestions) < 0.7)
+        (parseInt(p.correctAnswers) / parseInt(p.completedQuestions)) < 0.7)
       .map(p => ({
-        moduleId: p.moduleId?.toString(),
-        score: Math.round((p.correctAnswers || 0) / (p.completedQuestions || 1) * 100),
-        improvement: `Focus on core concepts`,
-        suggestedApproach: timeAvailable ?
-          `Review fundamentals and practice with ${Math.round(timeAvailable * 0.4)} minutes of targeted questions` :
-          'Practice with targeted questions'
+        moduleId: p.moduleId,
+        score: Math.round((parseInt(p.correctAnswers || '0') / parseInt(p.completedQuestions || '1')) * 100).toString()
       }));
-
-    const defaultWeakAreas = [
-      { topic: "Fundamentals of Nursing", score: "60", improvement: "Review basic nursing concepts", suggestedApproach: "Spend 20 minutes reviewing fundamental concepts." },
-      { topic: "Pharmacology", score: "55", improvement: "Focus on medication calculations and side effects", suggestedApproach: "Practice medication calculations and review common side effects of medications." }
-    ];
-
-    const nursingTopics = [
-      "Fundamentals of Nursing",
-      "Pharmacology",
-      "Medical-Surgical Nursing",
-      "Pediatric Nursing"
-    ];
 
     const guide: StudyGuideResponse = {
       id: `sg-${Date.now()}`,
       createdAt: new Date().toISOString(),
-      topics: nursingTopics.map((domain, index) => ({
+      topics: [
+        "Fundamentals of Nursing",
+        "Pharmacology",
+        "Medical-Surgical Nursing",
+        "Pediatric Nursing"
+      ].map((domain) => ({
         id: domain.toLowerCase().replace(/\s+/g, '-'),
         name: domain,
         priority: focusAreas.includes(domain) ? 'high' : 'medium',
         completed: false,
         estimatedTime: timeAvailable ? Math.floor(timeAvailable / 4) : 30,
-        description: `Focus on mastering key concepts in ${domain} for better NCLEX preparation`,
+        description: `Focus on mastering key concepts in ${domain}`,
         learningTips: [
-          "Review core concepts first",
-          "Practice with sample questions",
-          "Create summary notes"
+          "Review core concepts",
+          "Practice with questions",
+          "Create summaries"
         ]
       })),
-      weakAreas: weakAreas.length > 0 ? weakAreas : defaultWeakAreas,
+      weakAreas,
       strengthAreas: [],
       recommendedResources: focusAreas.map((plan, i) => ({
         id: `resource-${i}`,
@@ -173,13 +160,16 @@ router.post("/generate", validateRequest(studyGuideRequestSchema), async (req, r
       ]
     };
 
-    res.json(guide);
+    res.json({
+      success: true,
+      data: guide
+    });
   } catch (error) {
     console.error("Error generating study guide:", error);
     res.status(500).json({
+      success: false,
       error: 'Failed to generate study guide',
-      details: error instanceof Error ? error.message : 'Unknown error',
-      suggestion: 'Please try again or adjust your study preferences'
+      details: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });

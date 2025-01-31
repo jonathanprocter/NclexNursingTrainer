@@ -1,6 +1,5 @@
 import { pgTable, text, uuid, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import { sql } from "drizzle-orm";
 
 // Users table
 export const users = pgTable('users', {
@@ -65,7 +64,7 @@ export const userProgress = pgTable('user_progress', {
   updatedAt: timestamp('updated_at').defaultNow()
 });
 
-// Export schema types
+// Type exports
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Module = typeof modules.$inferSelect;
@@ -79,7 +78,7 @@ export type NewAnalytics = typeof analytics.$inferInsert;
 export type UserProgress = typeof userProgress.$inferSelect;
 export type NewUserProgress = typeof userProgress.$inferInsert;
 
-// Create Zod schemas
+// Zod schemas
 export const insertUserSchema = createInsertSchema(users);
 export const selectUserSchema = createSelectSchema(users);
 export const insertModuleSchema = createInsertSchema(modules);

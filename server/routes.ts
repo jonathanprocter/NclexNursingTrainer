@@ -1,31 +1,49 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { db } from "./db/index.js";
 import { eq } from "drizzle-orm";
-import { modules, questions, quizAttempts, userProgress } from "./db/schema.js";
+import { modules, questions, quizAttempts, userProgress, analytics } from "./db/schema.js";
 import studyGuideRouter from './routes/study-guide.js';
 import OpenAI from "openai";
-import { 
-  type PracticeQuestion,
-  type QuestionOption,
-  type PerformanceData,
-  quizSubmissionSchema,
-  userIdParamSchema
-} from "./types.js";
 import { Router } from 'express';
+import { z } from 'zod';
 
 const router = Router();
+
+// Validation schemas
+const userIdParamSchema = z.object({
+  userId: z.string().regex(/^\d+$/).transform(Number)
+});
+
+const quizSubmissionSchema = z.object({
+  userId: z.number().int().positive(),
+  moduleId: z.number().int().positive(),
+  answers: z.array(z.object({
+    questionId: z.string(),
+    selectedAnswer: z.string(),
+    correct: z.boolean()
+  }))
+});
 
 // Modules routes
 router.get("/modules", async (req, res) => {
   try {
     const allModules = await db.select().from(modules);
     if (!allModules || allModules.length === 0) {
-      return res.status(404).json({ message: "No modules found" });
+      return res.status(404).json({ 
+        success: false,
+        message: "No modules found" 
+      });
     }
-    res.json(allModules);
+    res.json({ 
+      success: true,
+      data: allModules 
+    });
   } catch (error) {
     console.error("Error fetching modules:", error);
-    res.status(500).json({ message: "Failed to fetch modules" });
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to fetch modules" 
+    });
   }
 });
 
@@ -33,11 +51,18 @@ router.get("/modules", async (req, res) => {
 router.get("/questions/:moduleId", async (req, res) => {
   try {
     const moduleQuestions = await db.query.questions.findMany({
-      where: eq(questions.moduleId, parseInt(req.params.moduleId)),
+      where: eq(questions.moduleId, req.params.moduleId),
     });
-    res.json(moduleQuestions);
+    res.json({ 
+      success: true,
+      data: moduleQuestions 
+    });
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch questions" });
+    console.error("Error fetching questions:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to fetch questions" 
+    });
   }
 });
 
@@ -47,48 +72,67 @@ router.post("/quiz-attempts", async (req, res) => {
     const { userId, moduleId, answers } = req.body;
 
     // Calculate score
-    const score = answers.filter(a => a.correct).length / answers.length * 100;
+    const score = answers.filter((a: any) => a.correct).length / answers.length * 100;
 
     const [newAttempt] = await db.insert(quizAttempts).values({
       userId,
       moduleId,
-      score,
+      score: score.toString(),
       answers,
       startedAt: new Date()
     }).returning();
 
     // Update user progress
-    await db.update(userProgress)
-      .set({
-        completedQuestions: userProgress.completedQuestions + answers.length,
-        correctAnswers: userProgress.correctAnswers + answers.filter(a => a.correct).length,
-        lastAttempt: new Date()
-      })
-      .where(eq(userProgress.userId, userId));
+    const userProgressRecord = await db.query.userProgress.findFirst({
+      where: eq(userProgress.userId, userId)
+    });
 
-    res.json(newAttempt);
+    if (userProgressRecord) {
+      const completedQuestions = parseInt(userProgressRecord.completedQuestions || '0') + answers.length;
+      const correctAnswers = parseInt(userProgressRecord.correctAnswers || '0') + answers.filter((a: any) => a.correct).length;
+
+      await db.update(userProgress)
+        .set({
+          completedQuestions: completedQuestions.toString(),
+          correctAnswers: correctAnswers.toString(),
+          lastAttempt: new Date()
+        })
+        .where(eq(userProgress.userId, userId));
+    }
+
+    res.json({ 
+      success: true,
+      data: newAttempt 
+    });
   } catch (error) {
     console.error("Error saving quiz attempt:", error);
-    res.status(500).json({ message: "Failed to save quiz attempt" });
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to save quiz attempt" 
+    });
   }
 });
 
 // User progress routes
 router.get("/progress/:userId", async (req, res) => {
   try {
-    const userId = parseInt(req.params.userId);
     const progress = await db.select().from(userProgress)
-      .where(eq(userProgress.userId, userId));
+      .where(eq(userProgress.userId, req.params.userId));
 
-    res.json(progress);
+    res.json({ 
+      success: true,
+      data: progress 
+    });
   } catch (error) {
     console.error("Error fetching user progress:", error);
-    res.status(500).json({ message: "Failed to fetch user progress" });
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to fetch user progress" 
+    });
   }
 });
 
 export default router;
-
 
 if (!process.env.OPENAI_API_KEY) {
   throw new Error("OPENAI_API_KEY must be set in environment variables");
@@ -857,4 +901,10 @@ interface PracticeQuestion {
 interface QuestionOption {
   id: string;
   text: string;
+}
+
+interface PerformanceData {
+  topic: string;
+  score: number;
+  timeSpent: number;
 }

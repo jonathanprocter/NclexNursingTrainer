@@ -1,9 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import router from './routes.js';
+import { checkDatabaseHealth } from './db/index.js';
 
 const app = express();
-const port = process.env.PORT || 4003;
+const port = parseInt(process.env.PORT || '4003', 10);
 
 // Configure CORS to allow Replit domains
 app.use(cors({
@@ -28,6 +29,12 @@ process.on('uncaughtException', (error) => {
     process.exit(1);
 });
 
+// Health check endpoint
+app.get('/health', async (req, res) => {
+    const health = await checkDatabaseHealth();
+    res.json(health);
+});
+
 app.get('/', (req, res) => {
     res.json({ message: 'Server is running' });
 });
@@ -40,7 +47,7 @@ app.listen(port, '0.0.0.0', () => {
     console.log('Server started successfully');
     console.log(`Server is running on port ${port}`);
     console.log('Frontend URL: http://0.0.0.0:3000');
-    console.log('Access URL: http://0.0.0.0:4003');
+    console.log('Backend URL: http://0.0.0.0:4003');
     console.log('=================================');
 });
 

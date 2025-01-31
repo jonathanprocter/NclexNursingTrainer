@@ -19,7 +19,6 @@ export * from './schema.js';
 // Helper function to perform database health check
 export async function checkDatabaseHealth() {
   try {
-    // Simple query to verify database connection
     const result = await db.query.modules.findFirst();
     return {
       status: 'healthy',
