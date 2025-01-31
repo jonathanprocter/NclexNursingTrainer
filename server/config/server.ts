@@ -1,7 +1,7 @@
-import express from 'express';
-import { PortManager } from '../utils/portManager';
-import { errorHandler } from '../middleware/errorHandler';
-import { healthCheck } from '../routes/health';
+import express from "express";
+import { PortManager } from "../utils/portManager";
+import { errorHandler } from "../middleware/errorHandler";
+import { healthCheck } from "../routes/health";
 
 export class Server {
   private app = express();
@@ -19,13 +19,19 @@ export class Server {
   private setupMiddleware(): void {
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
-    
+
     // Add CORS handling for Replit environment
     this.app.use((req, res, next) => {
-      res.header('Access-Control-Allow-Origin', '*');
-      res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-      res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-      if (req.method === 'OPTIONS') {
+      res.header("Access-Control-Allow-Origin", "*");
+      res.header(
+        "Access-Control-Allow-Methods",
+        "GET, POST, PUT, DELETE, OPTIONS",
+      );
+      res.header(
+        "Access-Control-Allow-Headers",
+        "Origin, X-Requested-With, Content-Type, Accept, Authorization",
+      );
+      if (req.method === "OPTIONS") {
         return res.status(200).end();
       }
       next();
@@ -34,18 +40,18 @@ export class Server {
 
   private async setupRoutes(): Promise<void> {
     // Health check endpoint
-    const { healthCheck } = await import('../routes/health');
-    this.app.use('/health', healthCheck);
+    const { healthCheck } = await import("../routes/health");
+    this.app.use("/health", healthCheck);
 
     // Add your routes here
-    const { default: routes } = await import('../routes');
-    if (!routes) {
-      throw new Error('Routes not properly exported');
+    const { default: routes } = await import("../routes");
+    if (!routes || typeof routes.use !== "function") {
+      throw new Error("Routes not properly exported");
     }
-    this.app.use('/api', routes);
+    this.app.use("/api", routes);
 
     // Error handling should be last
-    const { errorHandler } = await import('../middleware/errorHandler');
+    const { errorHandler } = await import("../middleware/errorHandler");
     this.app.use(errorHandler);
   }
 
@@ -53,26 +59,25 @@ export class Server {
     try {
       // Try to get locked port first
       const lockedPort = await PortManager.getLockedPort();
-      this.port = lockedPort || await PortManager.findAvailablePort();
-
+      this.port = lockedPort || (await PortManager.findAvailablePort());
       const server = this.app.listen(this.port, () => {
         console.log(`Server running on port ${this.port}`);
       });
 
       // Handle graceful shutdown
-      process.on('SIGTERM', () => this.shutdown(server));
-      process.on('SIGINT', () => this.shutdown(server));
+      process.on("SIGTERM", () => this.shutdown(server));
+      process.on("SIGINT", () => this.shutdown(server));
     } catch (error) {
-      console.error('Failed to start server:', error);
+      console.error("Failed to start server:", error);
       process.exit(1);
     }
   }
 
   private async shutdown(server: any): Promise<void> {
-    console.log('Shutting down server...');
+    console.log("Shutting down server...");
     await PortManager.releasePort();
     server.close(() => {
-      console.log('Server shut down');
+      console.log("Server shut down");
       process.exit(0);
     });
   }

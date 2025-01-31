@@ -1,4 +1,4 @@
-import * as React from "react"
+import React from "react"
 
 export const MOBILE_BREAKPOINT = 640; // Updated to match Tailwind's sm breakpoint
 export const TABLET_BREAKPOINT = 768; // Added tablet breakpoint (md)
