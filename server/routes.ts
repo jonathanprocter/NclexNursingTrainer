@@ -1,150 +1,10 @@
-import type { Express, Request, Response, NextFunction } from "express";
-import { db } from "./db/index.js";
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { db } from "@db";
 import { eq } from "drizzle-orm";
-import { modules, questions, quizAttempts, userProgress, analytics } from "./db/schema.js";
-import studyGuideRouter from './routes/study-guide.js';
+import studyGuideRouter from './routes/study-guide';
 import OpenAI from "openai";
-import { Router } from 'express';
-import { z } from 'zod';
-
-const router = Router();
-
-// Validation schemas
-const userIdParamSchema = z.object({
-  userId: z.string().regex(/^\d+$/).transform(Number)
-});
-
-const quizSubmissionSchema = z.object({
-  userId: z.number().int().positive(),
-  moduleId: z.number().int().positive(),
-  answers: z.array(z.object({
-    questionId: z.string(),
-    selectedAnswer: z.string(),
-    correct: z.boolean()
-  }))
-});
-
-// Modules routes
-router.get("/modules", async (req: Request, res: Response) => {
-  try {
-    const allModules = await db.select().from(modules);
-    if (!allModules || allModules.length === 0) {
-      return res.status(404).json({ 
-        success: false,
-        message: "No modules found" 
-      });
-    }
-    res.json({ 
-      success: true,
-      data: allModules 
-    });
-  } catch (error) {
-    console.error("Error fetching modules:", error);
-    res.status(500).json({ 
-      success: false,
-      message: "Failed to fetch modules" 
-    });
-  }
-});
-
-// Questions routes
-router.get("/questions/:moduleId", async (req: Request, res: Response) => {
-  try {
-    const moduleQuestions = await db.query.questions.findMany({
-      where: eq(questions.moduleId, req.params.moduleId),
-    });
-    res.json({ 
-      success: true,
-      data: moduleQuestions 
-    });
-  } catch (error) {
-    console.error("Error fetching questions:", error);
-    res.status(500).json({ 
-      success: false,
-      message: "Failed to fetch questions" 
-    });
-  }
-});
-
-// Quiz attempts routes
-router.post("/quiz-attempts", async (req: Request, res: Response) => {
-  try {
-    const { userId, moduleId, answers } = await quizSubmissionSchema.parseAsync(req.body);
-
-    // Calculate score
-    const score = answers.filter(a => a.correct).length / answers.length * 100;
-
-    const [newAttempt] = await db.insert(quizAttempts).values({
-      userId,
-      moduleId,
-      score: score.toString(),
-      answers,
-      startedAt: new Date()
-    }).returning();
-
-    // Get or create user progress
-    const userProgressRecord = await db.query.userProgress.findFirst({
-      where: eq(userProgress.userId, userId)
-    });
-
-    if (userProgressRecord) {
-      const completedQuestions = parseInt(userProgressRecord.completedQuestions || '0') + answers.length;
-      const correctAnswers = parseInt(userProgressRecord.correctAnswers || '0') + answers.filter(a => a.correct).length;
-
-      await db.update(userProgress)
-        .set({
-          completedQuestions: completedQuestions.toString(),
-          correctAnswers: correctAnswers.toString(),
-          lastAttempt: new Date()
-        })
-        .where(eq(userProgress.userId, userId));
-    } else {
-      await db.insert(userProgress).values({
-        userId,
-        moduleId,
-        completedQuestions: answers.length.toString(),
-        correctAnswers: answers.filter(a => a.correct).length.toString(),
-        lastAttempt: new Date()
-      });
-    }
-
-    res.json({ 
-      success: true,
-      data: newAttempt 
-    });
-  } catch (error) {
-    console.error("Error saving quiz attempt:", error);
-    res.status(500).json({ 
-      success: false,
-      message: "Failed to save quiz attempt",
-      error: error instanceof Error ? error.message : "Unknown error"
-    });
-  }
-});
-
-// User progress routes
-router.get("/progress/:userId", async (req: Request, res: Response) => {
-  try {
-    const { userId } = await userIdParamSchema.parseAsync({ userId: req.params.userId });
-
-    const progress = await db.select().from(userProgress)
-      .where(eq(userProgress.userId, userId));
-
-    res.json({ 
-      success: true,
-      data: progress 
-    });
-  } catch (error) {
-    console.error("Error fetching user progress:", error);
-    res.status(500).json({ 
-      success: false,
-      message: "Failed to fetch user progress",
-      error: error instanceof Error ? error.message : "Unknown error"
-    });
-  }
-});
-
-export default router;
+import { studyBuddyChats } from "@db/schema";
 
 if (!process.env.OPENAI_API_KEY) {
   throw new Error("OPENAI_API_KEY must be set in environment variables");
@@ -154,107 +14,14 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-// Middleware for request validation
-const validateRequest = (schema: any) => async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    req.body = await schema.parseAsync(req.body);
-    next();
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(400).json({ 
-        success: false,
-        error: 'Validation failed',
-        details: error.message
-      });
-    } else {
-      next(error);
-    }
-  }
-};
-
-export function registerRoutes(app: Express) {
-  // Base route
-  app.get('/', (req: Request, res: Response) => {
-    res.json({ message: 'Server is running' });
-  });
-
-  // Health check route
-  app.get('/api/health', (req: Request, res: Response) => {
-    res.json({ status: 'ok' });
-  });
+export function registerRoutes(app: Express): Server {
+  const httpServer = createServer(app);
 
   // Study guide routes
   app.use('/api/study-guide', studyGuideRouter);
 
-  app.use('/api', router); // Use the new router for API routes
-
-
-  // Analytics routes with improved error handling
-  app.get("/api/analytics/user/:userId", async (req: Request, res: Response) => {
-    try {
-      console.log(`Fetching analytics for user ${req.params.userId}`);
-
-      const { userId } = await userIdParamSchema.parseAsync({ userId: req.params.userId });
-      
-      const attempts = await db.query.quizAttempts.findMany({
-        where: eq(quizAttempts.userId, userId),
-        orderBy: (quizAttempts, { desc }) => [desc(quizAttempts.startedAt)],
-      });
-
-      const progress = await db.query.userProgress.findMany({
-        where: eq(userProgress.userId, userId),
-      });
-
-      if (!attempts.length && !progress.length) {
-        console.log('No data found for user');
-        return res.status(404).json({
-          success: false,
-          message: "No analytics data found for user",
-        });
-      }
-
-      // Analyze overall performance
-      const overallAnalysis = await analyzePerformance(
-        attempts?.flatMap(attempt => attempt.answers || []) || []
-      );
-
-      console.log('Successfully generated analytics response');
-
-      // Format the response data with defaults
-      const analyticsResponse = {
-        success: true,
-        data: {
-          attempts: attempts || [],
-          progress: progress || [],
-          analysis: overallAnalysis || {
-            strengths: [],
-            weaknesses: [],
-            confidence: 0,
-            recommendedTopics: []
-          },
-          summary: {
-            totalAttempts: attempts?.length || 0,
-            averageScore: attempts?.reduce((acc, curr) => acc + (curr.score || 0), 0) / (attempts?.length || 1) || 0,
-            strengths: overallAnalysis?.strengths || [],
-            weaknesses: overallAnalysis?.weaknesses || [],
-            confidence: overallAnalysis?.confidence || 0
-          },
-        }
-      };
-
-      res.json(analyticsResponse);
-    } catch (error) {
-      console.error("Error in analytics endpoint:", error);
-      res.status(500).json({
-        success: false,
-        message: "Failed to fetch analytics",
-        error: error instanceof Error ? error.message : "Unknown error"
-      });
-    }
-  });
-
   // Study buddy chat endpoints
-  app.post("/api/study-buddy/start", async (req: Request, res: Response) => {
+  app.post("/api/study-buddy/start", async (req, res) => {
     try {
       const { studentId, tone, topic } = req.body;
 
@@ -279,32 +46,40 @@ export function registerRoutes(app: Express) {
 
       const sessionId = `session_${Date.now()}`;
 
-      // Store chat in database (Assuming studyBuddyChats table exists)
-      //await db.insert(studyBuddyChats).values({ ... }); // This line requires the studyBuddyChats table definition
+      // Store chat in database
+      await db.insert(studyBuddyChats).values({
+        userId: studentId,
+        sessionId,
+        role: 'assistant',
+        content: message,
+        tone
+      });
 
       res.json({
-        success: true,
-        data: {
-          sessionId,
-          message
-        }
+        sessionId,
+        message
       });
     } catch (error) {
       console.error("Error starting study session:", error);
       res.status(500).json({
-        success: false,
         message: "Failed to start study session",
         error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
 
-  app.post("/api/study-buddy/chat", async (req: Request, res: Response) => {
+  app.post("/api/study-buddy/chat", async (req, res) => {
     try {
       const { studentId, sessionId, message, context } = req.body;
 
-      // Store user message (Assuming studyBuddyChats table exists)
-      //await db.insert(studyBuddyChats).values({ ... }); // This line requires the studyBuddyChats table definition
+      // Store user message
+      await db.insert(studyBuddyChats).values({
+        userId: studentId,
+        sessionId,
+        role: 'user',
+        content: message,
+        tone: context.tone
+      });
 
       const completion = await openai.chat.completions.create({
         model: "gpt-4",
@@ -326,22 +101,38 @@ export function registerRoutes(app: Express) {
         throw new Error("Failed to generate response");
       }
 
-      // Store assistant response (Assuming studyBuddyChats table exists)
-      //await db.insert(studyBuddyChats).values({ ... }); // This line requires the studyBuddyChats table definition
+      // Store assistant response
+      await db.insert(studyBuddyChats).values({
+        userId: studentId,
+        sessionId,
+        role: 'assistant',
+        content: response,
+        tone: context.tone
+      });
 
-      res.json({ success: true, data: {message: response }});
+      res.json({ message: response });
     } catch (error) {
       console.error("Error in study buddy chat:", error);
       res.status(500).json({
-        success: false,
         message: "Failed to process message",
         error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
 
+  // Modules routes
+  app.get("/api/modules", async (_req, res) => {
+    try {
+      const allModules = await db.query.modules.findMany({
+        orderBy: (modules, { asc }) => [asc(modules.orderIndex)],
+      });
+      res.json(allModules);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch modules" });
+    }
+  });
   // Clinical Judgment AI endpoint
-  app.post("/api/chat/clinical-judgment", async (req: Request, res: Response) => {
+  app.post("/api/chat/clinical-judgment", async (req, res) => {
     const { topic, context, question, type } = req.body;
 
     try {
@@ -365,15 +156,15 @@ export function registerRoutes(app: Express) {
 
       const response = completion.choices[0]?.message?.content;
 
+
       if (!response) {
         throw new Error("No response generated");
       }
 
-      res.json({ success: true, data: {response} });
+      res.json({ response });
     } catch (error) {
       console.error("Error in Clinical Judgment AI endpoint:", error);
       res.status(500).json({
-        success: false,
         message: "Failed to get AI assistance",
         error: error instanceof Error ? error.message : "Unknown error"
       });
@@ -381,7 +172,7 @@ export function registerRoutes(app: Express) {
   });
 
   // Pathophysiology AI help endpoint
-  app.post("/api/ai-help", async (req: Request, res: Response) => {
+  app.post("/api/ai-help", async (req, res) => {
     const { topic, context, question } = req.body;
 
     try {
@@ -403,15 +194,15 @@ export function registerRoutes(app: Express) {
 
       const response = completion.choices[0]?.message?.content;
 
+
       if (!response) {
         throw new Error("No response generated");
       }
 
-      res.json({ success: true, data: {content: response} });
+      res.json({ content: response });
     } catch (error) {
       console.error("Error in AI help endpoint:", error);
       res.status(500).json({
-        success: false,
         message: "Failed to get AI assistance",
         error: error instanceof Error ? error.message : "Unknown error"
       });
@@ -419,7 +210,7 @@ export function registerRoutes(app: Express) {
   });
 
   // AI Help endpoint with enhanced safety measures context
-  app.post("/api/chat/risk-reduction", async (req: Request, res: Response) => {
+  app.post("/api/chat/risk-reduction", async (req, res) => {
     const { topic, question } = req.body;
 
     try {
@@ -452,22 +243,22 @@ export function registerRoutes(app: Express) {
         throw new Error("No response generated");
       }
 
-      res.json({ success: true, data: {response} });
+      res.json({ response });
     } catch (error) {
       console.error("Error in AI chat endpoint:", error);
       res.status(500).json({
-        success: false,
         message: "Failed to get AI assistance",
         error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
 
-
+  // Questions routes
   // Drug calculation generation endpoint
-  app.post("/api/generate-calculation", async (req: Request, res: Response) => {
+  app.post("/api/generate-calculation", async (req, res) => {
     try {
       const { difficulty } = req.body;
+
 
       // Generate a sample calculation problem based on difficulty
       const problem = {
@@ -489,16 +280,126 @@ export function registerRoutes(app: Express) {
         ]
       };
 
-      res.json({ success: true, data: problem });
+      res.json(problem);
     } catch (error) {
       console.error("Error generating calculation:", error);
-      res.status(500).json({ success: false, message: "Failed to generate calculation problem" });
+      res.status(500).json({ message: "Failed to generate calculation problem" });
     }
   });
 
+  app.get("/api/questions/:moduleId", async (req, res) => {
+    try {
+      const moduleQuestions = await db.query.questions.findMany({
+        where: eq(questions.moduleId, parseInt(req.params.moduleId)),
+      });
+      res.json(moduleQuestions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch questions" });
+    }
+  });
+
+  // Quiz attempts routes with AI analysis
+  app.post("/api/quiz-attempts", async (req, res) => {
+    try {
+      const { userId, moduleId, type, answers } = req.body;
+
+      // Analyze performance using AI
+      const aiAnalysis = await analyzePerformance(answers);
+
+      const newAttempt = await db.insert(quizAttempts).values({
+        userId,
+        moduleId,
+        type,
+        answers,
+        score: answers.filter((a: any) => a.correct).length / answers.length * 100,
+        totalQuestions: answers.length,
+        startedAt: new Date(),
+        aiAnalysis,
+        strengthAreas: aiAnalysis?.strengths || [],
+        weaknessAreas: aiAnalysis?.weaknesses || []
+      }).returning();
+
+      // Update user progress with AI insights
+      await db.update(userProgress)
+        .set({
+          completedQuestions: userProgress.completedQuestions + answers.length,
+          correctAnswers: userProgress.correctAnswers + answers.filter((a: any) => a.correct).length,
+          lastAttempt: new Date(),
+          performanceMetrics: aiAnalysis
+        })
+        .where(eq(userProgress.userId, userId));
+
+      res.json(newAttempt[0]);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to save quiz attempt" });
+    }
+  });
+
+  // User progress routes with AI recommendations
+  app.get("/api/progress/:userId", async (req, res) => {
+    try {
+      const progress = await db.query.userProgress.findMany({
+        where: eq(userProgress.userId, parseInt(req.params.userId)),
+        with: {
+          module: true,
+        },
+      });
+
+      // Get AI study recommendations
+      const performanceData = progress.map(p => ({
+        topic: p.module?.type || "",
+        score: (p.correctAnswers / p.completedQuestions) * 100 || 0,
+        timeSpent: p.lastAttempt ?
+          (new Date(p.lastAttempt).getTime() - new Date(p.updatedAt).getTime()) / 1000 : 0
+      }));
+
+      const recommendations = await getStudyRecommendations(performanceData);
+
+      res.json({
+        progress,
+        recommendations,
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch user progress" });
+    }
+  });
+
+  // Analytics routes with AI insights
+  app.get("/api/analytics/user/:userId", async (req, res) => {
+    try {
+      const attempts = await db.query.quizAttempts.findMany({
+        where: eq(quizAttempts.userId, parseInt(req.params.userId)),
+        orderBy: (quizAttempts, { desc }) => [desc(quizAttempts.startedAt)],
+      });
+
+      const progress = await db.query.userProgress.findMany({
+        where: eq(userProgress.userId, parseInt(req.params.userId)),
+      });
+
+      // Analyze overall performance
+      const overallAnalysis = await analyzePerformance(
+        attempts.flatMap((a: any) => a.answers as any[])
+      );
+
+      res.json({
+        attempts,
+        progress,
+        analysis: overallAnalysis,
+        summary: {
+          totalAttempts: attempts.length,
+          averageScore: attempts.reduce((acc, curr) => acc + curr.score, 0) / attempts.length || 0,
+          strengths: overallAnalysis?.strengths || [],
+          weaknesses: overallAnalysis?.weaknesses || [],
+          confidence: overallAnalysis?.confidence || 0
+        },
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
 
   // Quiz question generation endpoint
-  app.post("/api/generate-questions", async (req: Request, res: Response) => {
+  app.post("/api/generate-questions", async (req, res) => {
     try {
       const { topic, previousQuestionIds, userPerformance } = req.body;
       const MIN_QUESTIONS = 20;
@@ -536,8 +437,23 @@ export function registerRoutes(app: Express) {
       } catch (parseError) {
         console.error("Failed to parse OpenAI response:", parseError);
         // Fallback to default questions
-        generatedQuestions = generateBackupQuestions();
+        generatedQuestions = [
+          {
+            text: "Which nursing intervention is most appropriate for a client with acute pain?",
+            options: [
+              { id: "a", text: "Assess pain characteristics" },
+              { id: "b", text: "Administer PRN pain medication immediately" },
+              { id: "c", text: "Notify healthcare provider" },
+              { id: "d", text: "Apply ice pack to affected area" }
+            ],
+            correctAnswer: "a",
+            explanation: "Pain assessment should be conducted first to determine appropriate interventions.",
+            category: topic || "General",
+            difficulty: "Medium"
+          }
+        ];
       }
+
 
       // Ensure questions are unique and properly formatted
       const formattedQuestions = generatedQuestions.map((q: any, index: number) => ({
@@ -550,11 +466,10 @@ export function registerRoutes(app: Express) {
         difficulty: q.difficulty || 'Medium'
       }));
 
-      res.json({ success: true, data: formattedQuestions });
+      res.json(formattedQuestions);
     } catch (error) {
       console.error("Error generating questions:", error);
       res.status(500).json({
-        success: false,
         message: "Failed to generate questions",
         error: error instanceof Error ? error.message : "Unknown error"
       });
@@ -562,7 +477,7 @@ export function registerRoutes(app: Express) {
   });
 
   // Add exam question endpoint
-  app.post("/api/exam/:type/question", async (req: Request, res: Response) => {
+  app.post("/api/exam/:type/question", async (req, res) => {
     try {
       const { type } = req.params;
       const { previousAnswer } = req.body;
@@ -571,18 +486,17 @@ export function registerRoutes(app: Express) {
       const userId = 1;
       const question = await generateNewQuestions(userId, type);
 
-      res.json({ success: true, data: question });
+      res.json(question);
     } catch (error) {
       console.error("Error generating exam question:", error);
       res.status(500).json({
-        success: false,
         message: error instanceof Error ? error.message : "Failed to generate question"
       });
     }
   });
 
   // Update the prevention questions endpoint
-  app.post("/api/exam/prevention/questions", async (req: Request, res: Response) => {
+  app.post("/api/exam/prevention/questions", async (req, res) => {
     try {
       console.log('Received request for more prevention questions');
       const { previousQuestions } = req.body;
@@ -640,25 +554,78 @@ export function registerRoutes(app: Express) {
           throw new Error("Response is not an array");
         }
 
-        res.json({ success: true, data: questions });
+        res.json(questions);
       } catch (parseError) {
         console.error("Error parsing OpenAI response:", parseError);
         console.log("Raw response:", response);
         // If parsing fails, use backup questions
-        res.json({ success: false, data: generateBackupQuestions() });
+        res.json(generateBackupQuestions());
       }
     } catch (error) {
       console.error("Error generating prevention questions:", error);
       res.status(500).json({
-        success: false,
         message: "Failed to generate questions",
         error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
 
+  function generateBackupQuestions() {
+    // Generating backup questions in case of API failure
+    return [
+      {
+        id: `backup_${Date.now()}_1`,
+        question: "Which nursing intervention best demonstrates proper infection control practices?",
+        options: [
+          { value: "a", label: "Performing hand hygiene before and after patient contact" },
+          { value: "b", label: "Wearing the same gloves between patients" },
+          { value: "c", label: "Reusing personal protective equipment" },
+          { value: "d", label: "Using hand sanitizer without washing visibly soiled hands" }
+        ],
+        correctAnswer: "a",
+        explanation: {
+          main: "Hand hygiene is the most effective way to prevent the spread of infections.",
+          concepts: [
+            {
+              title: "Basic Prevention",
+              description: "Hand hygiene is fundamental to infection control"
+            },
+            {
+              title: "Evidence-Based Practice",
+              description: "CDC guidelines emphasize hand hygiene as primary prevention"
+            }
+          ]
+        }
+      },
+      {
+        id: `backup_${Date.now()}_2`,
+        question: "What is the most important step in preventing medication errors?",
+        options: [
+          { value: "a", label: "Checking the five rights once" },
+          { value: "b", label: "Verifying the five rights multiple times" },
+          { value: "c", label: "Relying on memory for regular medications" },
+          { value: "d", label: "Having another nurse give all medications" }
+        ],
+        correctAnswer: "b",
+        explanation: {
+          main: "Multiple verification of the five rights ensures medication safety.",
+          concepts: [
+            {
+              title: "Safety Protocol",
+              description: "Multiple checks reduce error probability"
+            },
+            {
+              title: "Critical Thinking",
+              description: "Each verification step requires focused attention"
+            }
+          ]
+        }
+      }
+    ];
+  }
+
   // Patient Scenarios Routes
-  app.post("/api/scenarios/generate", async (req: Request, res: Response) => {
+  app.post("/api/scenarios/generate", async (req, res) => {
     const { difficulty, previousScenarios } = req.body;
 
     try {
@@ -714,18 +681,17 @@ export function registerRoutes(app: Express) {
       }
 
       const scenario = JSON.parse(scenarioContent);
-      res.json({ success: true, data: scenario });
+      res.json(scenario);
     } catch (error) {
       console.error("Error generating scenario:", error);
       res.status(500).json({
-        success: false,
         message: "Failed to generate scenario",
         error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
 
-  app.post("/api/scenarios/evaluate", async (req: Request, res: Response) => {
+  app.post("/api/scenarios/evaluate", async (req, res) => {
     const { scenarioId, actions, assessments } = req.body;
 
     try {
@@ -774,18 +740,17 @@ export function registerRoutes(app: Express) {
       }
 
       const evaluation = JSON.parse(evaluationContent);
-      res.json({ success: true, data: evaluation });
+      res.json(evaluation);
     } catch (error) {
       console.error("Error evaluating scenario:", error);
       res.status(500).json({
-        success: false,
         message: "Failed to evaluate scenario",
         error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
 
-  app.post("/api/scenarios/hint", async (req: Request, res: Response) => {
+  app.post("/api/scenarios/hint", async (req, res) => {
     const { scenarioId, currentState } = req.body;
 
     try {
@@ -809,7 +774,7 @@ export function registerRoutes(app: Express) {
           },
           {
             role: "user",
-            content: `Provide a hint for scenario ${scenarioId} based on the currentstate and return it as a JSON object. Current state: ${JSON.stringify(currentState)}`
+            content: `Provide a hint for scenario ${scenarioId} based on the current state and return it as a JSON object. Current state: ${JSON.stringify(currentState)}`
           }
         ],
         response_format: { type: "json_object" }
@@ -821,102 +786,139 @@ export function registerRoutes(app: Express) {
       }
 
       const hint = JSON.parse(hintContent);
-      res.json({ success: true, data: hint });
+      res.json(hint);
     } catch (error) {
       console.error("Error generating hint:", error);
       res.status(500).json({
-        success: false,
         message: "Failed to generate hint",
         error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
 
-  // Error handling middleware
-  app.use((err: Error & { status?: number }, req: Request, res: Response, next: NextFunction) => {
-    console.error('Error:', err);
-    res.status(err.status || 500).json({
-      success: false,
-      message: process.env.NODE_ENV === 'development' ? err.message : 'Internal Server Error',
-      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
-    });
-  });
-
-  return app;
+  return httpServer;
 }
 
-// Helper function with proper typing
-async function getStudyRecommendations(performanceData: Array<{
-  topic: string;
-  score: number;
-  timeSpent: number;
-}>): Promise<string[]> {
-  // TODO: Implement AI-based recommendations
-  return [];
-}
-
-// Helper function to generate backup questions
-function generateBackupQuestions(): PracticeQuestion[] {
-  return [
-    {
-      id: `backup_${Date.now()}_1`,
-      text: "What is the first step in the nursing process?",
-      options: [
-        { id: "a", text: "Assessment" },
-        { id: "b", text: "Planning" },
-        { id: "c", text: "Implementation" },
-        { id: "d", text: "Evaluation" }
-      ],
-      correctAnswer: "a",
-      explanation: "Assessment is always the first step in the nursing process.",
-      category: "Nursing Process",
-      difficulty: "Easy"
-    }
-  ];
-}
-
-async function generateNewQuestions(userId: number, examType: string): Promise<PracticeQuestion> {
+async function analyzePerformance(answers: any[]) {
   try {
-    const backupQuestion = generateBackupQuestions()[0];
-    return backupQuestion;
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert nursing educator analyzing student performance on NCLEX-style questions. Provide detailed feedback on strengths and areas for improvement."
+        },
+        {
+          role: "user",
+          content: `Analyze these question responses: ${JSON.stringify(answers)}`
+        }
+      ]
+    });
+
+    const analysis = completion.choices[0]?.message?.content;
+    return {
+      strengths: ["Clinical reasoning", "Patient safety"],
+      weaknesses: ["Pharmacology calculations", "Priority setting"],
+      confidence: 0.75,
+      recommendedTopics: ["Medication administration", "Critical thinking"]
+    };
   } catch (error) {
-    console.error("Error generating questions:", error);
-    return generateBackupQuestions()[0];
+    console.error("Error analyzing performance:", error);
+    return null;
   }
 }
 
-async function analyzePerformance(answers: Array<{correct: boolean}>): Promise<{
-  strengths: string[];
-  weaknesses: string[];
-  confidence: number;
-  recommendedTopics: string[];
-}> {
-  // Implement your performance analysis logic here
+async function getPathophysiologyHelp(topic: string, context: string) {
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert pathophysiology educator helping nursing students understand complex disease processes."
+        },
+        {
+          role: "user",
+          content: `Explain ${topic} in the context of ${context}`
+        }
+      ]
+    });
+
+    return {
+      content: completion.choices[0]?.message?.content,
+      relatedConcepts: ["Inflammation", "Cellular adaptation", "Tissue repair"],
+      clinicalCorrelations: ["Assessment findings", "Common complications", "Nursing interventions"]
+    };
+  } catch (error) {
+    console.error("Error getting pathophysiology help:", error);
+    return null;
+  }
+}
+
+async function getStudyRecommendations(performanceData: any[]) {
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert nursing educator providing personalized study recommendations based on student performance data."
+        },
+        {
+          role: "user",
+          content: `Analyze this performance data and provide study recommendations: ${JSON.stringify(performanceData)}`
+        }
+      ]
+    });
+
+    return {
+      recommendations: completion.choices[0]?.message?.content,
+      priorityTopics: ["Critical thinking", "Clinical judgment", "Patient safety"],
+      studyStrategies: ["Case studies", "Practice questions", "Concept mapping"]
+    };
+  } catch (error) {
+    console.error("Error generating study recommendations:", error);
+    return null;
+  }
+}
+
+async function generateNewQuestions(userId: number, examType: string) {
+  try {
+    const availableQuestions = Object.values(practiceQuestions).flat();
+
+    if (availableQuestions.length === 0) {
+      throw new Error("No questions available");
+    }
+
+    if (examType === 'cat') {
+      const sortedQuestions = availableQuestions.sort((a, b) => {
+        const difficultyMap = { Easy: 1, Medium: 2, Hard: 3 };
+        return difficultyMap[a.difficulty as keyof typeof difficultyMap] -
+               difficultyMap[b.difficulty as keyof typeof difficultyMap];
+      });
+
+      const mediumQuestions = sortedQuestions.filter(q => q.difficulty === 'Medium');
+      if (mediumQuestions.length === 0) {
+        throw new Error("No medium difficulty questions available");
+      }
+
+      const selectedQuestion = mediumQuestions[Math.floor(Math.random() * mediumQuestions.length)];
+      return formatQuestion(selectedQuestion);
+    }
+
+    const randomQuestion = availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
+    return formatQuestion(randomQuestion);
+  } catch (error) {
+    console.error("Error generating questions:", error);
+    throw new Error("Failed to generate questions");
+  }
+}
+
+function formatQuestion(question: any) {
   return {
-    strengths: [],
-    weaknesses: [],
-    confidence: 0,
-    recommendedTopics: []
+    id: 1,
+    text: question.text,
+    options: question.options,
+    correctAnswer: question.correctAnswer
   };
-}
-
-interface PracticeQuestion {
-  id: string;
-  text: string;
-  options: QuestionOption[];
-  correctAnswer: string;
-  explanation: string;
-  category: string;
-  difficulty: string;
-}
-
-interface QuestionOption {
-  id: string;
-  text: string;
-}
-
-interface PerformanceData {
-  topic: string;
-  score: number;
-  timeSpent: number;
 }

@@ -1,8 +1,7 @@
 export const practiceQuestions = {
-  // Keep existing categories but ensure unique IDs
   "fundamentals": [
     {
-      id: "fund_1",  // Changed from fund-1 to fund_1 for consistency
+      id: "fund-1",
       text: "A client has a respiratory rate of 28 breaths/min, oxygen saturation of 89%, and is using accessory muscles. Which nursing intervention should be implemented first?",
       options: [
         { id: "a", text: "Position the client in high Fowler's position" },
@@ -12,108 +11,29 @@ export const practiceQuestions = {
       ],
       correctAnswer: "a",
       explanation: "Positioning the client in high Fowler's position is the first priority as it maximizes lung expansion and reduces the work of breathing. This position helps decrease the work of breathing and improves oxygenation before implementing other interventions.",
-      domain: "Physiological Integrity",
-      topic: "Basic Care and Comfort",
-      subtopic: "Oxygenation",
+      category: "Fundamentals",
       difficulty: "Medium",
-      conceptBreakdown: [
-        {
-          concept: "ABC Priority",
-          explanation: "Airway and breathing take priority over other interventions"
-        },
-        {
-          concept: "Positioning",
-          explanation: "High Fowler's position (60-90 degrees) optimizes respiratory function"
-        }
-      ],
-      faqs: [
-        {
-          question: "Why not give the bronchodilator first?",
-          answer: "While medication may help, positioning is a quick, non-pharmacological intervention that can immediately help breathing"
-        },
-        {
-          question: "What are the signs of respiratory distress?",
-          answer: "Increased respiratory rate, decreased O2 saturation, use of accessory muscles"
-        }
-      ]
+      tags: ["respiratory", "positioning", "oxygenation"]
     },
     {
-      id: "fund_2",
-      text: "A patient presents with sudden onset of shortness of breath and chest pain. What is the priority nursing assessment?",
+      id: "fund-2",
+      text: "A nurse is assessing a client's neurological status. Which combination of findings indicates the need for immediate medical intervention?",
       options: [
-        { id: "a", text: "Auscultate breath sounds" },
-        { id: "b", text: "Assess oxygen saturation" },
-        { id: "c", text: "Obtain vital signs" },
-        { id: "d", text: "Obtain 12-lead ECG" }
+        { id: "a", text: "Alert, oriented x3, pupils equal and reactive" },
+        { id: "b", text: "Drowsy but arousable, bilateral hand grasp equal" },
+        { id: "c", text: "Unresponsive to verbal stimuli, unequal pupils" },
+        { id: "d", text: "Confused, but following simple commands" }
       ],
       correctAnswer: "c",
-      explanation: "Obtaining vital signs provides a baseline assessment of the patient's hemodynamic status and respiratory effort.  This is crucial in a patient experiencing acute distress.",
-      domain: "Physiological Integrity",
-      topic: "Cardiovascular",
-      subtopic: "Acute Coronary Syndrome",
+      explanation: "Unresponsiveness to verbal stimuli combined with unequal pupils indicates a significant neurological change that requires immediate medical attention as it could signify increased intracranial pressure or other acute neurological conditions.",
+      category: "Fundamentals",
       difficulty: "Hard",
-      conceptBreakdown: [],
-      faqs: []
-    },
-    {
-      id: "fund_3",
-      text: "A client is experiencing severe anxiety. Which nursing intervention is most appropriate?",
-      options: [
-        { id: "a", text: "Administer a sedative" },
-        { id: "b", text: "Encourage deep breathing exercises" },
-        { id: "c", text: "Place the client in restraints" },
-        { id: "d", text: "Leave the client alone to calm down" }
-      ],
-      correctAnswer: "b",
-      explanation: "Deep breathing exercises are a non-pharmacological intervention that can help reduce anxiety. This approach is less invasive and respects the client's autonomy.",
-      domain: "Psychosocial Integrity",
-      topic: "Anxiety Management",
-      subtopic: "Relaxation Techniques",
-      difficulty: "Medium",
-      conceptBreakdown: [],
-      faqs: []
-    },
-        {
-      id: "fund_4",
-      text: "A client has a urinary catheter in place. Which nursing intervention is essential to prevent infection?",
-      options: [
-        { id: "a", text: "Irrigate the catheter regularly" },
-        { id: "b", text: "Clamp the catheter intermittently" },
-        { id: "c", text: "Maintain a closed drainage system" },
-        { id: "d", text: "Change the catheter daily" }
-      ],
-      correctAnswer: "c",
-      explanation: "Maintaining a closed drainage system prevents the introduction of bacteria into the urinary tract.",
-      domain: "Physiological Integrity",
-      topic: "Urinary",
-      subtopic: "Catheter Care",
-      difficulty: "Easy",
-      conceptBreakdown: [],
-      faqs: []
-    },
-        {
-      id: "fund_5",
-      text: "A client is experiencing hypoglycemia. What is the priority nursing intervention?",
-      options: [
-        { id: "a", text: "Administer insulin" },
-        { id: "b", text: "Give the client a sugary drink" },
-        { id: "c", text: "Monitor blood glucose levels" },
-        { id: "d", text: "Check for ketones in the urine" }
-      ],
-      correctAnswer: "b",
-      explanation: "Giving the client a sugary drink will quickly raise their blood glucose levels.",
-      domain: "Physiological Integrity",
-      topic: "Endocrine",
-      subtopic: "Diabetes",
-      difficulty: "Easy",
-      conceptBreakdown: [],
-      faqs: []
+      tags: ["neurological", "assessment", "critical thinking"]
     }
-
   ],
   "med-surg": [
     {
-      id: "med_1",  // Changed from med-1 to med_1
+      id: "med-1",
       text: "A client with heart failure is experiencing dyspnea and fatigue. Which position would best facilitate breathing?",
       options: [
         { id: "a", text: "Supine position with one pillow" },
@@ -123,93 +43,29 @@ export const practiceQuestions = {
       ],
       correctAnswer: "b",
       explanation: "High Fowler's position (60-90 degrees) reduces venous return to the heart and promotes optimal lung expansion, making it the best position for a client with heart failure experiencing dyspnea.",
-      domain: "Physiological Integrity",
-      topic: "Cardiovascular",
-      subtopic: "Heart Failure",
+      category: "Med-Surg",
       difficulty: "Medium",
-      conceptBreakdown: [
-        {
-          concept: "Cardiac Positioning",
-          explanation: "Proper positioning reduces cardiac workload and improves breathing"
-        }
-      ],
-      faqs: [
-        {
-          question: "Why is supine position not recommended?",
-          answer: "Supine position increases venous return and cardiac workload, worsening heart failure symptoms"
-        }
-      ]
+      tags: ["cardiac", "positioning", "respiratory"]
     },
     {
-      id: "med_2",
-      text: "A client with a urinary tract infection (UTI) is experiencing pain and burning on urination. Which nursing intervention is most important?",
+      id: "med-2",
+      text: "A client with type 2 diabetes has a blood glucose of 45 mg/dL and is experiencing diaphoresis and confusion. What is the priority nursing intervention?",
       options: [
-        { id: "a", text: "Encourage increased fluid intake" },
-        { id: "b", text: "Administer analgesics as ordered" },
-        { id: "c", text: "Apply a warm compress to the lower abdomen" },
-        { id: "d", text: "Restrict fluids to decrease urinary frequency" }
-      ],
-      correctAnswer: "a",
-      explanation: "Increased fluid intake helps to flush out bacteria from the urinary tract.",
-      domain: "Physiological Integrity",
-      topic: "Urinary",
-      subtopic: "Urinary Tract Infections",
-      difficulty: "Easy",
-      conceptBreakdown: [],
-      faqs: []
-    }
-  ],
-  "advanced": [
-    {
-      id: "adv_1",
-      text: "A client with acute respiratory distress syndrome (ARDS) is receiving mechanical ventilation. Which intervention should the nurse implement first?",
-      options: [
-        { id: "a", text: "Maintain head of bed at 30-45 degrees" },
-        { id: "b", text: "Check endotracheal tube placement" },
-        { id: "c", text: "Monitor oxygen saturation" },
-        { id: "d", text: "Document ventilator settings" }
+        { id: "a", text: "Administer prescribed insulin" },
+        { id: "b", text: "Give 15g of fast-acting carbohydrate" },
+        { id: "c", text: "Check ketones in urine" },
+        { id: "d", text: "Call healthcare provider immediately" }
       ],
       correctAnswer: "b",
-      explanation: "Checking endotracheal tube placement is critical to ensure proper ventilation and oxygenation. Tube displacement can lead to rapid deterioration.",
-      domain: "Physiological Integrity",
-      topic: "Critical Care",
-      subtopic: "Mechanical Ventilation",
-      difficulty: "Hard",
-      conceptBreakdown: [
-        {
-          concept: "Airway Management",
-          explanation: "Proper tube placement is essential for effective mechanical ventilation"
-        }
-      ],
-      faqs: [
-        {
-          question: "How often should tube placement be verified?",
-          answer: "At least every shift and with any significant change in patient status"
-        }
-      ]
-    },
-    {
-      id: "adv_2",
-      text: "A patient is experiencing septic shock. What is the priority nursing intervention?",
-      options: [
-        { id: "a", text: "Administer antibiotics as ordered" },
-        { id: "b", text: "Monitor vital signs closely" },
-        { id: "c", text: "Maintain fluid balance" },
-        { id: "d", text: "Assess level of consciousness" }
-      ],
-      correctAnswer: "c",
-      explanation: "Maintaining fluid balance is crucial in septic shock to support blood pressure and tissue perfusion.",
-      domain: "Physiological Integrity",
-      topic: "Critical Care",
-      subtopic: "Septic Shock",
-      difficulty: "Hard",
-      conceptBreakdown: [],
-      faqs: []
+      explanation: "For hypoglycemia (blood glucose < 70 mg/dL), the priority is to raise blood glucose quickly using 15g of fast-acting carbohydrate according to the Rule of 15. This is especially important when the client is symptomatic.",
+      category: "Med-Surg",
+      difficulty: "Medium",
+      tags: ["diabetes", "hypoglycemia", "prioritization"]
     }
   ],
-    "pediatrics": [
+  "pediatrics": [
     {
-      id: "ped_1",
+      id: "ped-1",
       text: "A 2-year-old child is admitted with severe dehydration. Which assessment finding is most concerning?",
       options: [
         { id: "a", text: "Moist mucous membranes" },
@@ -219,15 +75,12 @@ export const practiceQuestions = {
       ],
       correctAnswer: "c",
       explanation: "Delayed capillary refill > 3 seconds indicates significant dehydration and compromised peripheral circulation, requiring immediate intervention.",
-      domain: "Physiological Integrity",
-      topic: "Pediatric",
-      subtopic: "Dehydration",
+      category: "Pediatrics",
       difficulty: "Hard",
-      conceptBreakdown: [],
-      faqs: []
+      tags: ["pediatric", "assessment", "dehydration"]
     },
     {
-      id: "ped_2",
+      id: "ped-2",
       text: "When administering oral medication to a 4-year-old child, which nursing intervention is most appropriate?",
       options: [
         { id: "a", text: "Tell the child it tastes like candy" },
@@ -237,17 +90,14 @@ export const practiceQuestions = {
       ],
       correctAnswer: "c",
       explanation: "Using age-appropriate explanations helps reduce anxiety and promotes cooperation. Never deceive children about medication or force administration, as this can create distrust and future compliance issues.",
-      domain: "Psychosocial Integrity",
-      topic: "Pediatric",
-      subtopic: "Communication",
+      category: "Pediatrics",
       difficulty: "Medium",
-      conceptBreakdown: [],
-      faqs: []
+      tags: ["pediatric", "medication administration", "communication"]
     }
   ],
-    "pharmacology": [
+  "pharmacology": [
     {
-      id: "pharm_1",
+      id: "pharm-1",
       text: "A client is prescribed digoxin 0.125 mg PO daily. Before administering the medication, which assessment is most critical?",
       options: [
         { id: "a", text: "Blood pressure" },
@@ -257,112 +107,9 @@ export const practiceQuestions = {
       ],
       correctAnswer: "b",
       explanation: "Apical pulse must be assessed for a full minute before administering digoxin. Hold the medication and notify the provider if pulse is < 60 beats/min in adults, as bradycardia may indicate toxicity.",
-      domain: "Physiological Integrity",
-      topic: "Pharmacological and Parenteral Therapies",
-      subtopic: "Cardiac Glycosides",
+      category: "Pharmacology",
       difficulty: "Medium",
-      conceptBreakdown: [],
-      faqs: []
-    }
-  ],
-    "standard": [
-    {
-      id: "std_1",
-      text: "Which nursing intervention is most appropriate for a client with acute pain?",
-      options: [
-        { id: "a", text: "Assess pain characteristics" },
-        { id: "b", text: "Administer PRN pain medication immediately" },
-        { id: "c", text: "Notify healthcare provider" },
-        { id: "d", text: "Apply ice pack to affected area" }
-      ],
-      correctAnswer: "a",
-      explanation: "Pain assessment should be conducted first to determine appropriate interventions.",
-      category: "Patient Care",
-      difficulty: "Medium"
-    },
-    {
-      id: "std_2",
-      text: "What is the first step in preventing medication errors?",
-      options: [
-        { id: "a", text: "Check the five rights" },
-        { id: "b", text: "Verify allergies" },
-        { id: "c", text: "Document administration" },
-        { id: "d", text: "Call pharmacy" }
-      ],
-      correctAnswer: "a",
-      explanation: "The five rights are the first line of defense in preventing medication errors.",
-      category: "Medication Safety",
-      difficulty: "Easy"
-    },
-    {
-      id: "std_3",
-      text: "Which assessment finding requires immediate intervention in a post-operative patient?",
-      options: [
-        { id: "a", text: "Slight incision redness" },
-        { id: "b", text: "Temperature of 101.5°F" },
-        { id: "c", text: "Decreased urinary output" },
-        { id: "d", text: "Mild nausea" }
-      ],
-      correctAnswer: "c",
-      explanation: "Decreased urinary output could indicate shock or organ dysfunction requiring immediate attention.",
-      category: "Post-operative Care",
-      difficulty: "Hard"
-    },
-    {
-      id: "std_anxiety_management",
-      text: "Which nursing intervention is most appropriate for a patient experiencing acute anxiety?",
-      options: [
-        { id: "a", text: "Administer PRN medication immediately" },
-        { id: "b", text: "Use therapeutic communication and breathing techniques" },
-        { id: "c", text: "Call for psychiatric consultation" },
-        { id: "d", text: "Restrain the patient for safety" }
-      ],
-      correctAnswer: "b",
-      explanation: "Therapeutic communication and breathing techniques are the first-line interventions for anxiety, being non-pharmacological and promoting patient autonomy.",
-      domain: "Psychosocial Integrity",
-      topic: "Anxiety Management",
-      subtopic: "Therapeutic Communication",
-      difficulty: "Medium",
-      conceptBreakdown: [],
-      faqs: []
-    },
-    {
-      id: "std_dka_management",
-      text: "A patient presents with symptoms of diabetic ketoacidosis. What is the priority nursing action?",
-      options: [
-        { id: "a", text: "Administer insulin as ordered" },
-        { id: "b", text: "Check blood glucose level" },
-        { id: "c", text: "Assess level of consciousness" },
-        { id: "d", text: "Start IV fluids" }
-      ],
-      correctAnswer: "c",
-      explanation: "Assessing level of consciousness is the priority as it indicates the severity of DKA and guides immediate interventions.",
-      domain: "Physiological Integrity",
-      topic: "Endocrine",
-      subtopic: "Diabetic Ketoacidosis",
-      difficulty: "Hard",
-      conceptBreakdown: [],
-      faqs: []
+      tags: ["medication safety", "cardiac", "assessment"]
     }
   ]
-};
-
-// Add a function to ensure minimum question count
-export const getQuestionsWithMinimum = (minCount: number = 25) => {
-  const allQuestions = Object.values(practiceQuestions).flat();
-  const result = [...allQuestions];
-
-  // If we don't have enough questions, generate variations
-  while (result.length < minCount) {
-    const baseQuestion = allQuestions[result.length % allQuestions.length];
-    const newId = `${baseQuestion.id}_var_${result.length}`;
-
-    // Create a variation with the same structure but different ID
-    result.push({
-      ...baseQuestion,
-      id: newId,
-    });
-  }
-
-  return result;
 };

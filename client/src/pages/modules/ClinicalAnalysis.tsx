@@ -1,0 +1,1147 @@
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { Bot, RefreshCw, CheckCircle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useForm } from "react-hook-form";
+import { Badge } from "@/components/ui/badge";
+import cn from 'classnames';
+
+// Types for practice exercises
+interface ExerciseType {
+  type: 'pattern' | 'hypothesis' | 'decision' | 'documentation';
+  title: string;
+  description: string;
+  content: string;
+  options?: string[];
+}
+
+type AnswerOption = {
+  text: string;
+  correct: boolean;
+  explanation: string;
+  topics: string[];
+};
+
+interface CaseQuestion {
+  type: 'assessment' | 'analysis' | 'synthesis' | 'evaluation' | 'creation';
+  question: string;
+  options: AnswerOption[];
+  keyTopics: string[];
+}
+
+interface CaseStudy {
+  id: string;
+  title: string;
+  description: string;
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  type: string;
+  prerequisites: string[];
+  content: string;
+  questions: CaseQuestion[];
+  nextCaseHints?: string[];
+}
+
+
+interface PracticeExercise {
+  id: string;
+  type: ExerciseType;
+  title: string;
+  description: string;
+  content: string;
+  options?: string[];
+}
+
+interface DecisionNode {
+  id: string;
+  content: string;
+  options: {
+    text: string;
+    nextId: string;
+    feedback?: string;
+  }[];
+}
+
+interface ReasoningModel {
+  title: string;
+  description: string;
+  steps: {
+    title: string;
+    description: string;
+    example: string;
+  }[];
+}
+
+interface FormValues {
+  patientAssessment: string;
+  clinicalHypothesis: string;
+  interventionPlan: string;
+  expectedOutcomes: string;
+  response: string;
+}
+
+const exerciseTypes: string[] = ['pattern', 'hypothesis', 'decision', 'documentation'];
+
+export default function ClinicalAnalysis() {
+  const { toast } = useToast();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [aiContent, setAiContent] = useState("");
+  const [currentSection, setCurrentSection] = useState("");
+  const [selectedExerciseType, setSelectedExerciseType] = useState<string>("pattern");
+  const [currentExercise, setCurrentExercise] = useState<ExerciseType | null>(null);
+  const [isLoading, setIsLoading] = useState(false); // Added loading state
+
+  // Form for clinical documentation
+  const form = useForm<FormValues>({
+    defaultValues: {
+      patientAssessment: "",
+      clinicalHypothesis: "",
+      interventionPlan: "",
+      expectedOutcomes: "",
+      response: "", // Added for free-form responses
+    },
+  });
+
+  // Mutation for AI assistance
+  const aiHelpMutation = useMutation({
+    mutationFn: async ({ section, context }: { section: string; context?: string }) => {
+      const response = await fetch("/api/ai-help", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ section, context }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to get AI help");
+      }
+
+      return response.json();
+    },
+  });
+
+  // Mutation for practice exercises
+  const generateExerciseMutation = useMutation({
+    mutationFn: async (type: string) => {
+      const response = await fetch("/api/generate-exercise", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate exercise");
+      }
+
+      return response.json();
+    },
+  });
+
+  // Add helper function to format section titles
+  const formatSectionTitle = (title: string) => {
+    return title.split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  // Handle AI help request
+  const handleAIHelp = async (section: string, context?: string) => {
+    setIsDialogOpen(true);
+    setCurrentSection(section);
+    try {
+      const result = await aiHelpMutation.mutateAsync({ section, context });
+      const formattedContent = result.content
+        .replace(/\*\*/g, '')
+        .replace(/\n\d+\./g, '\n')
+        .replace(/^-\s/gm, '')
+        .split('\n\n')
+        .map(para => para.trim())
+        .filter(para => para.length > 0)
+        .join('\n\n');
+      setAiContent(formattedContent);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to get AI assistance. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Generate practice exercise
+  const handleGenerateExercise = async (type: string) => {
+    setSelectedExerciseType(type);
+    setIsLoading(true);
+    try {
+      const result = await generateExerciseMutation.mutateAsync(type);
+      setCurrentExercise(result);
+      toast({
+        title: "New Exercise Generated",
+        description: "Ready to practice " + type + " skills!",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to generate exercise. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle exercise submission
+  const handleExerciseSubmit = async (data: FormValues) => {
+    try {
+      // Submit exercise response to backend
+      const response = await fetch("/api/submit-exercise", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          exerciseId: currentExercise?.id,
+          type: selectedExerciseType,
+          response: data,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to submit exercise");
+      }
+
+      toast({
+        title: "Success",
+        description: "Exercise submitted successfully!",
+      });
+
+      // Generate new exercise of the same type
+      handleGenerateExercise(selectedExerciseType);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to submit exercise. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+const CaseStudiesSection = () => {
+  const [currentCase, setCurrentCase] = useState<CaseStudy | null>(null);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [userAnswers, setUserAnswers] = useState<Record<string, number>>({});
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [performance, setPerformance] = useState<{
+    correctCount: number;
+    totalAttempted: number;
+    strengths: string[];
+    weaknesses: string[];
+  }>({
+    correctCount: 0,
+    totalAttempted: 0,
+    strengths: [],
+    weaknesses: []
+  });
+
+  const { data: completedCases = [] } = useQuery<string[]>({
+    queryKey: ['/api/user/completed-cases'],
+  });
+
+  const { data: casesData = [] } = useQuery<CaseStudy[]>({
+    queryKey: ['/api/pre-integrated-cases'],
+  });
+
+  // Reset all state
+  const resetCaseState = () => {
+    setCurrentCase(null);
+    setUserAnswers({});
+    setShowFeedback(false);
+    setCurrentQuestionIndex(0);
+    setPerformance({
+      correctCount: 0,
+      totalAttempted: 0,
+      strengths: [],
+      weaknesses: []
+    });
+  };
+
+  // This is the only place where we start a new case
+  const startNewCase = async (caseId: string) => {
+    try {
+      const response = await fetch("/api/generate-case", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ caseId }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to load case study");
+      }
+
+      const caseData = await response.json();
+      resetCaseState(); // Only reset when explicitly starting a new case
+      setCurrentCase(caseData);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load case study. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAnswerSelect = (questionIndex: number, optionIndex: number) => {
+    if (!currentCase) return;
+
+    const selectedOption = currentCase.questions[questionIndex]?.options[optionIndex];
+    if (!selectedOption) return;
+
+    // Record the answer and show feedback
+    setUserAnswers(prev => ({ ...prev, [questionIndex]: optionIndex }));
+    setShowFeedback(true);
+
+    // Update performance metrics
+    setPerformance(prev => {
+      const newStrengths = selectedOption.correct
+        ? [...new Set([...prev.strengths, ...selectedOption.topics])]
+        : prev.strengths;
+      const newWeaknesses = !selectedOption.correct
+        ? [...new Set([...prev.weaknesses, ...selectedOption.topics])]
+        : prev.weaknesses;
+
+      return {
+        correctCount: prev.correctCount + (selectedOption.correct ? 1 : 0),
+        totalAttempted: prev.totalAttempted + 1,
+        strengths: newStrengths,
+        weaknesses: newWeaknesses
+      };
+    });
+
+    // Show detailed feedback with suggestions
+    const feedbackTitle = selectedOption.correct ? "Correct! 🎉" : "Review Needed";
+    const feedbackDescription = selectedOption.correct
+      ? selectedOption.explanation
+      : `${selectedOption.explanation}\n\nKey topics to review: ${selectedOption.topics.join(", ")}`;
+
+    toast({
+      title: feedbackTitle,
+      description: feedbackDescription,
+      duration: 15000, // 15 seconds
+    });
+
+    // If incorrect, show additional resources toast after a delay
+    if (!selectedOption.correct) {
+      setTimeout(() => {
+        toast({
+          title: "Learning Resources",
+          description: "Click 'AI Help' for targeted assistance with: " + selectedOption.topics.join(", "),
+          duration: 15000,
+        });
+      }, 1000);
+    }
+  };
+
+  const handleNextQuestion = () => {
+    if (!currentCase) return;
+
+    // Simply move to next question without resetting anything
+    if (currentQuestionIndex < currentCase.questions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+      setShowFeedback(false);
+    } else {
+      // Show completion summary
+      const successRate = (performance.correctCount / performance.totalAttempted) * 100;
+
+      toast({
+        title: "Case Study Completed! 🎉",
+        description: `You got ${performance.correctCount} out of ${performance.totalAttempted} questions correct (${successRate.toFixed(1)}%).`,
+        duration: 15000,
+      });
+
+      if (performance.weaknesses.length > 0) {
+        setTimeout(() => {
+          toast({
+            title: "Areas to Review",
+            description: "Consider reviewing: " + performance.weaknesses.slice(0, 3).join(", "),
+            duration: 15000,
+          });
+        }, 1000);
+      }
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Interactive Case Studies</CardTitle>
+          <p className="text-muted-foreground mt-2">
+            Apply clinical reasoning skills through progressive case studies.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            {/* Cases List */}
+            {!currentCase && (
+              <div className="grid gap-4 md:grid-cols-3">
+                {casesData.map((caseStudy, index) => (
+                  <Card key={caseStudy.id} className={cn(
+                    "relative",
+                    !completedCases.includes(caseStudy.id) && index > 0 &&
+                    !completedCases.includes(casesData[index - 1]?.id) &&
+                    "opacity-50"
+                  )}>
+                    <CardHeader>
+                      <CardTitle className="text-lg">{caseStudy.title}</CardTitle>
+                      <p className="text-sm text-muted-foreground">{caseStudy.description}</p>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Badge variant={caseStudy.difficulty === 'beginner' ? 'default' :
+                            caseStudy.difficulty === 'intermediate' ? 'secondary' : 'destructive'}>
+                            {caseStudy.difficulty}
+                          </Badge>
+                          {completedCases.includes(caseStudy.id) && (
+                            <Badge variant="outline" className="gap-1">
+                              <CheckCircle className="h-3 w-3" />
+                              Completed
+                            </Badge>
+                          )}
+                        </div>
+
+                        {!completedCases.includes(caseStudy.id) &&
+                          (index === 0 || completedCases.includes(casesData[index - 1]?.id)) && (
+                            <Button
+                              className="w-full mt-4"
+                              onClick={() => startNewCase(caseStudy.id)}
+                            >
+                              Start Case
+                            </Button>
+                          )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {/* Current Case Display */}
+            {currentCase && (
+              <Card>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle>{currentCase.title}</CardTitle>
+                      <p className="text-sm text-muted-foreground mt-2">{currentCase.description}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium">Question {currentQuestionIndex + 1} of {currentCase.questions.length}</p>
+                      <Progress
+                        value={(currentQuestionIndex + 1) / currentCase.questions.length * 100}
+                        className="w-[200px] mt-2"
+                      />
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    {/* Case Content */}
+                    <div className="prose prose-sm max-w-none">
+                      <div dangerouslySetInnerHTML={{ __html: currentCase.content }} />
+                    </div>
+
+                    {/* Current Question */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold">
+                        {currentCase.questions[currentQuestionIndex].question}
+                      </h3>
+                      <div className="grid gap-3">
+                        {currentCase.questions[currentQuestionIndex].options.map((option, oIndex) => (
+                          <div key={oIndex} className="space-y-2">
+                            <Button
+                              variant={userAnswers[currentQuestionIndex] === oIndex ?
+                                (option.correct ? "default" : "destructive") :
+                                "outline"
+                              }
+                              className="w-full justify-start text-left h-auto p-4"
+                              onClick={() => handleAnswerSelect(currentQuestionIndex, oIndex)}
+                              disabled={showFeedback}
+                            >
+                              {option.text}
+                            </Button>
+
+                            {showFeedback && userAnswers[currentQuestionIndex] === oIndex && (
+                              <div className="bg-muted/30 p-4 rounded-md space-y-2">
+                                <p className="font-medium">Explanation:</p>
+                                <p className="text-sm text-muted-foreground">{option.explanation}</p>
+                                <div className="mt-2">
+                                  <p className="font-medium text-sm">Related Topics:</p>
+                                  <div className="flex flex-wrap gap-2 mt-1">
+                                    {option.topics.map((topic, tIndex) => (
+                                      <Badge key={tIndex} variant="outline">{topic}</Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Navigation Buttons */}
+                      <div className="flex justify-between mt-6">
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            if (confirm("Are you sure you want to exit? Your progress will be lost.")) {
+                              resetCaseState();
+                            }
+                          }}
+                        >
+                          Exit Case
+                        </Button>
+                        {showFeedback && (
+                          <Button onClick={handleNextQuestion}>
+                            {currentQuestionIndex < currentCase.questions.length - 1
+                              ? "Next Question"
+                              : "Complete Case"}
+                          </Button>
+                        )}
+                      </div>
+
+                      {/* Performance Summary (shown after last question) */}
+                      {showFeedback && currentQuestionIndex === currentCase.questions.length - 1 && (
+                        <div className="mt-6 p-4 bg-muted/30 rounded-lg">
+                          <h4 className="font-semibold mb-2">Case Study Summary</h4>
+                          <div className="space-y-2">
+                            <p>Score: {performance.correctCount} / {performance.totalAttempted}</p>
+                            {performance.strengths.length > 0 && (
+                              <div>
+                                <p className="font-medium">Strengths:</p>
+                                <div className="flex flex-wrap gap-2 mt-1">
+                                  {performance.strengths.map((topic, index) => (
+                                    <Badge key={index} variant="default">{topic}</Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {performance.weaknesses.length > 0 && (
+                              <div>
+                                <p className="font-medium">Areas for Review:</p>
+                                <div className="flex flex-wrap gap-2 mt-1">
+                                  {performance.weaknesses.map((topic, index) => (
+                                    <Badge key={index} variant="secondary">{topic}</Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+const ClinicalReasoningSection = () => {
+  const [currentNodeId, setCurrentNodeId] = useState<string>("root");
+  const [selectedModel, setSelectedModel] = useState<string | null>(null);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedback, setFeedback] = useState("");
+
+  const decisionTree: Record<string, DecisionNode> = {
+    root: {
+      id: "root",
+      content: "A 65-year-old patient presents with sudden onset chest pain, shortness of breath, and anxiety.",
+      options: [
+        {
+          text: "Assess vital signs and perform focused cardiac examination",
+          nextId: "vitals",
+          feedback: "Good choice! Initial assessment of vital signs is crucial for risk stratification."
+        },
+        {
+          text: "Immediately order cardiac enzymes and chest X-ray",
+          nextId: "tests",
+          feedback: "While tests are important, initial clinical assessment should come first."
+        },
+        {
+          text: "Start oxygen therapy and call for cardiac consult",
+          nextId: "treatment",
+          feedback: "Treatment may be needed, but assessment should precede interventions."
+        }
+      ]
+    },
+    vitals: {
+      id: "vitals",
+      content: "Vital signs show: BP 160/95, HR 102, RR 24, SpO2 94% on RA. Patient appears diaphoretic.",
+      options: [
+        {
+          text: "Consider Acute Coronary Syndrome - obtain ECG",
+          nextId: "ecg",
+          feedback: "Excellent! These vital signs with presenting symptoms warrant immediate ECG."
+        },
+        {
+          text: "Start anti-anxiety medication for panic attack",
+          nextId: "anxiety",
+          feedback: "Be cautious about attributing symptoms to anxiety without ruling out cardiac causes."
+        }
+      ]
+    },
+    // Add more nodes as needed
+    ecg: {
+      id: "ecg",
+      content: "ECG shows ST-segment elevation in leads II, III, and aVF.",
+      options: [
+        { text: "Proceed with immediate intervention (e.g., PCI)", nextId: "intervention", feedback: "Correct!  ST-elevation MI requires urgent reperfusion therapy." },
+        { text: "Observe and repeat ECG in 30 minutes", nextId: "observe", feedback: "Incorrect.  ST-segment elevation indicates an ongoing MI." }
+      ]
+    },
+    intervention: {
+      id: "intervention",
+      content: "Intervention completed successfully.",
+      options: []
+    },
+    observe: {
+      id: "observe",
+      content: "The patient's condition worsened.  This highlights the importance of timely intervention.",
+      options: []
+    },
+    tests: {
+      id: "tests",
+      content: "Cardiac enzymes and chest x-ray results pending.",
+      options: []
+    },
+    treatment: {
+      id: "treatment",
+      content: "Oxygen therapy initiated.  Cardiac consult en route.",
+      options: []
+    },
+    anxiety: {
+      id: "anxiety",
+      content: "Anti-anxiety medication administered.  Cardiac evaluation still pending.",
+      options: []
+    }
+  };
+
+  const reasoningModels: ReasoningModel[] = [
+    {
+      title: "Hypothesis-Driven Reasoning",
+      description: "Generate and test clinical hypotheses based on patient data",
+      steps: [
+        {
+          title: "Data Collection",
+          description: "Gather relevant clinical information systematically",
+          example: "Patient: Symptoms, vital signs, risk factors, and clinical findings"
+        },
+        {
+          title: "Hypothesis Generation",
+          description: "Form initial hypotheses based on presenting data",
+          example: "Clinical Picture: Given chest pain and SOB, consider ACS, PE, or anxiety"
+        },
+        {
+          title: "Hypothesis Testing",
+          description: "Gather additional data to confirm or reject hypotheses",
+          example: "Diagnostics: ECG changes, cardiac enzymes, D-dimer results"
+        }
+      ]
+    },
+    {
+      title: "Pattern Recognition",
+      description: "Identify and interpret recurring clinical patterns",
+      steps: [
+        {
+          title: "Symptom Clustering",
+          description: "Group related symptoms to identify potential underlying conditions",
+          example: "Clinical Pattern: Chest pain + SOB + diaphoresis → Consider ACS"
+        },
+        {
+          title: "Vital Sign Patterns",
+          description: "Recognize significant changes in vital signs",
+          example: "Vital Trends: ↑HR + ↑BP may indicate cardiovascular stress"
+        },
+        {
+          title: "Laboratory Data Patterns",
+          description: "Interpret abnormal laboratory values in clinical context",
+          example: "Lab Correlation: Elevated troponin confirms myocardial injury"
+        }
+      ]
+    }
+  ];
+
+  const handleOptionSelect = (option: { text: string; nextId: string; feedback?: string }) => {
+    setFeedback(option.feedback || "");
+    setShowFeedback(true);
+    setCurrentNodeId(option.nextId);
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Clinical Reasoning Frameworks</CardTitle>
+        <p className="text-muted-foreground mt-2">
+          Learn and apply systematic approaches to clinical reasoning and decision-making.
+        </p>
+      </CardHeader>
+      <CardContent>
+        <Tabs defaultValue="decision_tree" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="decision_tree">Interactive Decision Tree</TabsTrigger>
+            <TabsTrigger value="reasoning_models">Reasoning Models</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="decision_tree">
+            <div className="space-y-6">
+              <div className="bg-muted/50 p-6 rounded-lg">
+                <h3 className="text-lg font-semibold mb-4">Clinical Scenario</h3>
+                <div className="prose prose-sm max-w-none mb-6">
+                  <p>{decisionTree[currentNodeId].content}</p>
+                </div>
+
+                <div className="space-y-4">
+                  {decisionTree[currentNodeId].options.map((option, index) => (
+                    <Button
+                      key={index}
+                      variant="outline"
+                      className="w-full justify-start text-left h-auto p-4"
+                      onClick={() => handleOptionSelect(option)}
+                    >
+                      {option.text}
+                    </Button>
+                  ))}
+                </div>
+
+                {showFeedback && feedback && (
+                  <div className="mt-4 p-4 bg-muted rounded-md">
+                    <p className="text-sm">{feedback}</p>
+                  </div>
+                )}
+
+                <div className="mt-4 flex justify-between">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setCurrentNodeId("root");
+                      setShowFeedback(false);
+                    }}
+                  >
+                    Restart Scenario
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleAIHelp("decision_tree", decisionTree[currentNodeId].content)}
+                  >
+                    <Bot className="h-4 w-4 mr-2" />
+                    AI Help
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="reasoning_models">
+            <div className="space-y-6">
+              {reasoningModels.map((model, index) => (
+                <div key={index} className="bg-muted/50 p-6 rounded-lg">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-lg font-semibold">{model.title}</h3>
+                      <p className="text-muted-foreground mt-1">{model.description}</p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleAIHelp("reasoning_model", model.title)}
+                    >
+                      <Bot className="h-4 w-4 mr-2" />
+                      AI Help
+                    </Button>
+                  </div>
+
+                  <div className="space-y-4">
+                    {model.steps.map((step, stepIndex) => (
+                      <div key={stepIndex} className="bg-background/50 p-4 rounded-md">
+                        <h4 className="font-semibold text-base">{step.title}</h4>
+                        <p className="text-sm text-muted-foreground mt-1">{step.description}</p>
+                        <div className="mt-2 bg-muted p-3 rounded-md">
+                          <p className="text-sm"><span className="font-medium">Example:</span> {step.example}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+    </Card>
+  );
+};
+
+const PracticeSection = () => {
+  const [selectedExerciseType, setSelectedExerciseType] = useState<string>('');
+  const [currentExercise, setCurrentExercise] = useState<ExerciseType | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const form = useForm<FormValues>({
+    defaultValues: {
+      response: "",
+    },
+  });
+
+  const generateExerciseMutation = useMutation({
+    mutationFn: async (type: string) => {
+      const response = await fetch("/api/generate-exercise", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate exercise");
+      }
+
+      return response.json();
+    },
+  });
+
+  const handleGenerateExercise = async (type: string) => {
+    setSelectedExerciseType(type);
+    setIsLoading(true);
+    try {
+      const result = await generateExerciseMutation.mutateAsync(type);
+      setCurrentExercise(result);
+      toast({
+        title: "New Exercise Generated",
+        description: "Ready to practice " + type + " skills!",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to generate exercise. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Practice Exercises</CardTitle>
+        <p className="text-muted-foreground mt-2">
+          Apply your clinical reasoning skills through interactive exercises.
+        </p>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-6">
+          {/* Exercise Type Selection */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {exerciseTypes.map((type) => (
+              <Button
+                key={type}
+                variant={selectedExerciseType === type ? "default" : "outline"}
+                onClick={() => handleGenerateExercise(type)}
+                className="w-full"
+                disabled={isLoading}
+              >
+                {type.charAt(0).toUpperCase() + type.slice(1)}
+                {isLoading && selectedExerciseType === type ? (
+                  <RefreshCw className="ml-2 h-4 w-4 animate-spin" />
+                ) : selectedExerciseType === type ? (
+                  <RefreshCw className="ml-2 h-4 w-4" />
+                ) : null}
+              </Button>
+            ))}
+          </div>
+
+          {/* Current Exercise Display */}
+          {currentExercise && (
+            <div className="bg-muted/50 p-6 rounded-lg">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold">{currentExercise.title}</h3>
+                  <p className="text-muted-foreground mt-1">{currentExercise.description}</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleAIHelp(currentExercise.type)}
+                  disabled={isLoading}
+                >
+                  <Bot className="h-4 w-4 mr-2" />
+                  AI Help
+                </Button>
+              </div>
+
+              <div className="prose prose-sm max-w-none mb-6">
+                <p>{currentExercise.content}</p>
+              </div>
+
+              {currentExercise.options ? (
+                // Multiple choice exercise
+                <div className="space-y-4">
+                  <RadioGroup
+                    onValueChange={(value) => {
+                      form.setValue("response", value);
+                      form.handleSubmit(handleExerciseSubmit)();
+                    }}
+                  >
+                    {currentExercise.options.map((option, index) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        <RadioGroupItem value={index.toString()} id={`option-${index}`} />
+                        <label
+                          htmlFor={`option-${index}`}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          {option}
+                        </label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                </div>
+              ) : (
+                // Free-form exercise
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(handleExerciseSubmit)} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="response"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Your Response</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Enter your detailed response..."
+                              className="min-h-[200px]"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button type="submit" disabled={isLoading}>
+                      Submit Response
+                    </Button>
+                  </form>
+                </Form>
+              )}
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+
+  return (
+    <div className="space-y-6">
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold mb-2">Clinical Analysis</h1>
+        <p className="text-muted-foreground max-w-2xl mx-auto">
+          Master the art of clinical reasoning through systematic analysis of patient data, pattern recognition, and hypothesis formation
+        </p>
+      </div>
+
+      <Tabs defaultValue="overview" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="case-studies">Case Studies</TabsTrigger>
+          <TabsTrigger value="clinical-reasoning">Clinical Reasoning</TabsTrigger>
+          <TabsTrigger value="practice">Practice</TabsTrigger>
+        </TabsList>
+
+        {/* Overview Tab Content - Keeping the existing content */}
+        <TabsContent value="overview">
+          <Card>
+            <CardHeader>
+              <CardTitle>Learning Path Overview</CardTitle>
+              <p className="text-muted-foreground mt-2">
+                Develop advanced clinical reasoning skills through structured learning modules that progress from basic pattern recognition to complex case analysis.
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div className="bg-muted/50 p-6 rounded-lg">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-lg font-semibold">Pattern Recognition</h3>
+                      <p className="text-muted-foreground mt-1 mb-4">
+                        Learn to identify and interpret clinical patterns through systematic analysis of patient data.
+                      </p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("pattern_recognition")}>
+                      <Bot className="h-4 w-4 mr-2" />
+                      AI Help
+                    </Button>
+                  </div>
+                  <div className="space-y-4">
+                    <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                      <li>Vital Sign Patterns
+                        <p className="ml-6 mt-1">
+                          Identify significant changes and trends in vital signs that indicate clinical deterioration or improvement.
+                        </p>
+                      </li>
+                      <li>Laboratory Data Analysis
+                        <p className="ml-6 mt-1">
+                          Interpret laboratory results in context with clinical presentation and patient history.
+                        </p>
+                      </li>
+                      <li>Symptom Clustering
+                        <p className="ml-6 mt-1">
+                          Group related symptoms to identify potential underlying conditions and syndromes.
+                        </p>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="bg-muted/50 p-6 rounded-lg">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-lg font-semibold">Clinical Reasoning</h3>
+                      <p className="text-muted-foreground mt-1 mb-4">
+                        Develop structured approaches to clinical problem-solving and decision-making.
+                      </p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("clinical_reasoning")}>
+                      <Bot className="h-4 w-4 mr-2" />
+                      AI Help
+                    </Button>
+                  </div>
+                  <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                    <li>Hypothesis Generation
+                      <p className="ml-6 mt-1">
+                        Formulate and test clinical hypotheses based on available data and evidence.
+                      </p>
+                    </li>
+                    <li>Differential Diagnosis
+                      <p className="ml-6 mt-1">
+                        Develop and refine differential diagnoses through systematic evaluation of clinical evidence.
+                      </p>
+                    </li>
+                    <li>Clinical Decision Making
+                      <p className="ml-6 mt-1">
+                        Apply evidence-based decision-making frameworks to complex clinical scenarios.
+                      </p>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="bg-muted/50 p-6 rounded-lg">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-lg font-semibold">Advanced Analysis</h3>
+                      <p className="text-muted-foreground mt-1 mb-4">
+                        Master complex clinical analysis through integration of multiple data sources.
+                      </p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => handleAIHelp("advanced_analysis")}>
+                      <Bot className="h-4 w-4 mr-2" />
+                      AI Help
+                    </Button>
+                  </div>
+                  <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                    <li>Multisystem Assessment
+                      <p className="ml-6 mt-1">
+                        Evaluate complex interactions between multiple body systems and their clinical implications.
+                      </p>
+                    </li>
+                    <li>Risk Stratification
+                      <p className="ml-6 mt-1">
+                        Apply risk assessment tools and clinical judgment to prioritize patient care needs.
+                      </p>
+                    </li>
+                    <li>Outcome Prediction
+                      <p className="ml-6 mt-1">
+                        Use clinical data and evidence-based tools to predict and improve patient outcomes.
+                      </p>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Case Studies Tab */}
+        <TabsContent value="case-studies">
+          <CaseStudiesSection />
+        </TabsContent>
+
+        {/* Clinical Reasoning Tab */}
+        <TabsContent value="clinical-reasoning">
+          <ClinicalReasoningSection />
+        </TabsContent>
+
+        {/* Practice Tab */}
+        <TabsContent value="practice">
+          <PracticeSection />
+        </TabsContent>
+      </Tabs>
+
+      {/* AI Help Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold mb-2">
+              {currentSection}
+            </DialogTitle>
+            <DialogDescription className="text-base text-muted-foreground">
+              AI-powered learning assistance
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="mt-6">
+            <div className="prose prose-sm max-w-none space-y-6">
+              {aiContent.split('\n\n').map((paragraph, index) => (
+                <div key={index} className="space-y-2">
+                  {paragraph.startsWith('Title:') ? (
+                    <h3 className="text-lg font-semibold">{paragraph.replace('Title:', '').trim()}</h3>
+                  ) : paragraph.includes(':') ? (
+                    <div>
+                      <strong>{paragraph.split(':')[0]}:</strong>
+                      {paragraph.split(':').slice(1).join(':')}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground">{paragraph}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
