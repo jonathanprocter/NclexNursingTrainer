@@ -20,7 +20,8 @@ export default function MockExams() {
 
   const beginExam = () => {
     setShowReadyDialog(false);
-    setLocation(`/practice/exam/${examType}`);
+    const examPath = examType === 'cat' ? '/practice/exam/cat' : '/practice/exam/standard';
+    setLocation(examPath);
   };
 
   return (

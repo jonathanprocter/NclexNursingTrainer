@@ -23,6 +23,39 @@ export default function Exam() {
   const [questionNumber, setQuestionNumber] = useState(1);
   const [timeRemaining, setTimeRemaining] = useState(type === 'cat' ? 18000 : 10800); // 5 hours for CAT, 3 for standard
   const [isPaused, setIsPaused] = useState(false);
+  const [examEnded, setExamEnded] = useState(false);
+  const [examScore, setExamScore] = useState(0);
+
+  useEffect(() => {
+    if (type === 'cat' && questionNumber >= 75) {
+      // CAT exam logic - can end between 75-145 questions based on performance
+      const performanceThreshold = 0.75; // 75% correct
+      if (examScore / questionNumber >= performanceThreshold || questionNumber >= 145) {
+        setExamEnded(true);
+      }
+    } else if (type === 'standard' && questionNumber > 100) {
+      // Standard exam ends after exactly 100 questions
+      setExamEnded(true);
+    }
+  }, [questionNumber, examScore, type]);
+
+  const fetchNextQuestion = async () => {
+    try {
+      const response = await fetch(`/api/exam/${type}/question`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          examType: type,
+          questionNumber,
+          previousPerformance: examScore / questionNumber
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch question');
+      }
 
   useEffect(() => {
     const timer = setInterval(() => {
