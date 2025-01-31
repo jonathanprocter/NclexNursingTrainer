@@ -1,11 +1,11 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
-import { WebSocketServer } from 'ws';
-import { db } from "../server/db";
+import { WebSocket, WebSocketServer } from 'ws';
+import { db } from "./db/index.js";
 import { eq } from "drizzle-orm";
-import studyGuideRouter from './routes/study-guide';
+import studyGuideRouter from './routes/study-guide.js';
 import OpenAI from "openai";
-import { studyBuddyChats, modules, questions, quizAttempts, userProgress } from "./db/schema";
+import { studyBuddyChats, modules, questions, quizAttempts, userProgress } from "./db/schema.js";
 
 if (!process.env.OPENAI_API_KEY) {
   throw new Error("OPENAI_API_KEY must be set in environment variables");
@@ -18,42 +18,48 @@ const openai = new OpenAI({
 export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
 
-  // WebSocket configuration
+  // Initialize WebSocket with proper error handling
   const wss = new WebSocketServer({ 
     noServer: true,
-    perMessageDeflate: {
-      zlibDeflateOptions: {
-        chunkSize: 1024,
-        memLevel: 7,
-        level: 3
-      },
-      zlibInflateOptions: {
-        chunkSize: 10 * 1024
-      }
-    }
+    clientTracking: true,
+    perMessageDeflate: false // Disable compression to prevent memory issues
   });
 
-  // Handle WebSocket connections
+  // Handle WebSocket upgrade with proper error handling
   httpServer.on('upgrade', (request, socket, head) => {
-    // Skip vite HMR requests
     if (request.headers['sec-websocket-protocol'] === 'vite-hmr') {
       return;
     }
 
-    wss.handleUpgrade(request, socket, head, (ws) => {
-      wss.emit('connection', ws, request);
+    socket.on('error', (err) => {
+      console.error('Socket error:', err);
+      socket.destroy();
     });
+
+    try {
+      wss.handleUpgrade(request, socket, head, (ws: WebSocket) => {
+        wss.emit('connection', ws, request);
+      });
+    } catch (error) {
+      console.error('WebSocket upgrade error:', error);
+      socket.destroy();
+    }
   });
 
-  // WebSocket connection handler
-  wss.on('connection', (ws) => {
+  // WebSocket connection handler with proper cleanup
+  wss.on('connection', (ws: WebSocket) => {
     console.log('New WebSocket connection established');
 
-    ws.on('message', async (message) => {
+    const pingInterval = setInterval(() => {
+      if (ws.readyState === ws.OPEN) {
+        ws.ping();
+      }
+    }, 30000);
+
+    ws.on('message', async (message: WebSocket.Data) => {
       try {
         const data = JSON.parse(message.toString());
 
-        // Handle different message types
         switch (data.type) {
           case 'study_update':
             // Handle study progress updates
@@ -66,25 +72,36 @@ export function registerRoutes(app: Express): Server {
         }
       } catch (error) {
         console.error('WebSocket message handling error:', error);
+        if (ws.readyState === ws.OPEN) {
+          ws.send(JSON.stringify({ type: 'error', message: 'Invalid message format' }));
+        }
       }
     });
 
     ws.on('close', () => {
       console.log('Client disconnected');
+      clearInterval(pingInterval);
     });
 
-    // Send initial connection success message
-    ws.send(JSON.stringify({ type: 'connection_status', status: 'connected' }));
+    ws.on('error', (error) => {
+      console.error('WebSocket error:', error);
+      clearInterval(pingInterval);
+      ws.terminate();
+    });
+
+    // Send initial connection status
+    if (ws.readyState === ws.OPEN) {
+      ws.send(JSON.stringify({ type: 'connection_status', status: 'connected' }));
+    }
   });
 
   // Study guide routes
   app.use('/api/study-guide', studyGuideRouter);
 
   // Error handling middleware
-  app.use((err: Error, req: any, res: any, next: any) => {
+  app.use((err: Error & { status?: number }, req: Request, res: Response, next: NextFunction) => {
     console.error('Error:', err);
-    // Send appropriate error response
-    res.status(err["status"] || 500).json({
+    res.status(err.status || 500).json({
       message: process.env.NODE_ENV === 'development' ? err.message : 'Internal Server Error',
       ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
     });
