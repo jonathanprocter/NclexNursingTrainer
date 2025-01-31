@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import Analytics from "../components/dashboard/Analytics";
 import { Skeleton } from "../components/ui/skeleton";
 import type { AnalyticsData } from "../types/analytics";
-import { memo } from "react";
+import { memo, useEffect } from "react";
 import ErrorBoundary from "../components/ErrorBoundary";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 
@@ -67,21 +67,18 @@ function DashboardContent() {
   const { data: analytics, isError, isLoading, error } = useQuery<AnalyticsData>({
     queryKey: ["analytics"],
     queryFn: async () => {
-      try {
-        const response = await fetch('/api/analytics');
-        if (!response.ok) {
-          throw new Error(`API error: ${response.status}`);
-        }
-        return response.json();
-      } catch (error) {
-        console.error('Error fetching analytics:', error);
-        return mockAnalytics; // Fallback to mock data if API fails
-      }
+      // For now, return mock data
+      return mockAnalytics;
     },
-    retry: 1,
-    retryDelay: 1000,
     staleTime: 30000
   });
+
+  useEffect(() => {
+    // Force a re-render to ensure styles are applied
+    document.body.style.display = 'none';
+    document.body.offsetHeight;
+    document.body.style.display = '';
+  }, []);
 
   if (isLoading) {
     return (
@@ -106,15 +103,12 @@ function DashboardContent() {
   const displayData = analytics || mockAnalytics;
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-6 bg-background">
       <PerformanceOverview analytics={displayData} />
       <Analytics analytics={displayData} />
     </div>
   );
 }
-
-PerformanceOverview.displayName = "PerformanceOverview";
-PerformanceOverviewSkeleton.displayName = "PerformanceOverviewSkeleton";
 
 export default function DashboardPage() {
   return (
@@ -125,3 +119,6 @@ export default function DashboardPage() {
     </DashboardLayout>
   );
 }
+
+PerformanceOverview.displayName = "PerformanceOverview";
+PerformanceOverviewSkeleton.displayName = "PerformanceOverviewSkeleton";

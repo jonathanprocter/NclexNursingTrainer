@@ -1,47 +1,28 @@
 import { Link } from "wouter";
 import {
   NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
   NavigationMenuList,
-  NavigationMenuTrigger,
+  NavigationMenuItem,
 } from "../ui/navigation-menu";
-import { cn } from "../../lib/utils";
 import { Button } from "../ui/button";
-import {
-  LineChart,
-  BookOpen,
-  Brain,
-  Menu,
-} from "lucide-react";
-import { 
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogTrigger
-} from "../ui/dialog";
+import { Menu } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "../ui/dialog";
 import { useState, useEffect } from "react";
 
 const navItems = [
   {
     title: "Dashboard",
     href: "/dashboard",
-    icon: LineChart,
     description: "View your study progress and analytics",
   },
   {
     title: "Study Guide",
     href: "/study-guide",
-    icon: BookOpen,
     description: "Access comprehensive study materials",
   },
   {
     title: "Practice",
     href: "/practice",
-    icon: Brain,
     description: "Take practice tests and quizzes",
   },
 ];
@@ -58,24 +39,23 @@ export default function NavBar() {
 
   const MobileNavItem = ({ href, children, onClick }: { href: string; children: React.ReactNode; onClick?: () => void }) => (
     <Link href={href}>
-      <div
-        className={cn(
-          "block px-4 py-2 text-sm hover:bg-accent rounded-md cursor-pointer",
-          currentPath === href && "bg-accent text-accent-foreground"
-        )}
+      <a
+        className={`block px-4 py-2 text-sm hover:bg-accent rounded-md cursor-pointer ${
+          currentPath === href ? 'bg-accent text-accent-foreground' : 'text-foreground'
+        }`}
         onClick={onClick}
       >
         {children}
-      </div>
+      </a>
     </Link>
   );
 
   return (
-    <nav className="border-b bg-white sticky top-0 z-50">
+    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <Link href="/">
-            <h1 className="text-xl font-bold text-primary cursor-pointer">NCLEX Prep</h1>
+            <a className="text-xl font-bold text-primary">NCLEX Prep</a>
           </Link>
 
           <div className="hidden md:block">
@@ -84,17 +64,15 @@ export default function NavBar() {
                 {navItems.map((item) => (
                   <NavigationMenuItem key={item.href}>
                     <Link href={item.href}>
-                      <div
-                        className={cn(
-                          "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground cursor-pointer",
-                          currentPath.startsWith(item.href) && "bg-accent text-accent-foreground"
-                        )}
+                      <a
+                        className={`block px-4 py-2 text-sm rounded-md cursor-pointer ${
+                          currentPath === item.href
+                            ? 'bg-accent text-accent-foreground'
+                            : 'text-foreground hover:bg-accent hover:text-accent-foreground'
+                        }`}
                       >
-                        <div className="flex items-center gap-2 text-sm font-medium leading-none">
-                          <item.icon className="h-4 w-4" />
-                          {item.title}
-                        </div>
-                      </div>
+                        {item.title}
+                      </a>
                     </Link>
                   </NavigationMenuItem>
                 ))}
@@ -105,28 +83,25 @@ export default function NavBar() {
           <div className="md:hidden">
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
               <DialogTrigger asChild>
-                <Button variant="ghost">
+                <Button variant="ghost" size="icon" className="text-foreground">
                   <Menu className="h-6 w-6" />
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Navigation Menu</DialogTitle>
+                  <DialogTitle>Navigation</DialogTitle>
                   <DialogDescription>
                     Access all NCLEX preparation resources
                   </DialogDescription>
                 </DialogHeader>
-                <nav className="flex flex-col gap-4 mt-6">
+                <nav className="mt-6">
                   {navItems.map((item) => (
                     <MobileNavItem
                       key={item.href}
                       href={item.href}
                       onClick={() => setIsOpen(false)}
                     >
-                      <div className="flex items-center gap-2">
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                      </div>
+                      {item.title}
                     </MobileNavItem>
                   ))}
                 </nav>
