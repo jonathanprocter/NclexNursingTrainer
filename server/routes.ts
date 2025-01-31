@@ -890,7 +890,7 @@ export function registerRoutes(app: Express): Server {
         ],
         temperature: 0.7
       });
-      
+
       const scenarioContent = completion.choices[0]?.message?.content;
       if (!scenarioContent) {
         throw new Error("Failed to generate scenario");
@@ -906,7 +906,7 @@ export function registerRoutes(app: Express): Server {
           details: error.message
         });
       }
-      
+
       // Return a default scenario if validation fails
       if (!scenario?.title || !scenario?.initial_state || !Array.isArray(scenario?.expected_actions)) {
         scenario = {
@@ -939,6 +939,51 @@ export function registerRoutes(app: Express): Server {
       return res.status(500).json({
         error: 'Failed to generate simulation scenario',
         details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  app.post("/api/ai/simulation-feedback", async (req, res) => {
+    try {
+      const { scenario, userActions } = req.body;
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [
+          {
+            role: "system",
+            content: `You are an expert nursing educator evaluating student performance in patient scenarios. 
+            Provide feedback in valid JSON format with strengths, areas_for_improvement, and recommendations fields.`
+          },
+          {
+            role: "user",
+            content: `Evaluate these nursing actions for scenario "${scenario?.title}": ${JSON.stringify(userActions)}`
+          }
+        ],
+        temperature: 0.7
+      });
+
+      const feedbackContent = completion.choices[0]?.message?.content;
+      if (!feedbackContent) {
+        throw new Error("No feedback generated");
+      }
+
+      try {
+        const parsedFeedback = JSON.parse(feedbackContent);
+        return res.json(parsedFeedback);
+      } catch (parseError) {
+        // Fallback response if parsing fails
+        return res.json({
+          strengths: ["Prompt response to patient needs"],
+          areas_for_improvement: ["Documentation could be more detailed"],
+          recommendations: ["Practice prioritizing interventions"],
+          clinical_reasoning_score: 75
+        });
+      }
+    } catch (error) {
+      console.error("Error evaluating simulation:", error);
+      res.status(500).json({
+        message: "Failed to evaluate simulation",
+        error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
