@@ -1,13 +1,5 @@
-import { Router } from 'express';
+import { Request, Response } from 'express';
 
-const router = Router();
-
-router.get('/', (req, res) => {
-  res.json({
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
-  });
-});
-
-export const healthCheck = router;
+export const healthCheck = (_req: Request, res: Response) => {
+  res.status(200).json({ status: 'OK' });
+};
