@@ -672,8 +672,7 @@ export function registerRoutes(app: Express): Server {
             role: "user",
             content: `Generate a ${difficulty || 'Medium'} difficulty nursing scenario with comprehensive details and return it as a JSON object. Previous scenario IDs to avoid: ${previousScenarios?.join(', ') || 'none'}`
           }
-        ],
-        response_format: { type: "json_object" }
+        ]
       });
 
       const scenarioContent = completion.choices[0]?.message?.content;
