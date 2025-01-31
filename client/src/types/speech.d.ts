@@ -1,6 +1,8 @@
-interface Window {
-  webkitSpeechRecognition: any;
-  SpeechRecognition: any;
+declare global {
+  interface Window {
+    webkitSpeechRecognition: new () => SpeechRecognition;
+    SpeechRecognition: new () => SpeechRecognition;
+  }
 }
 
 interface SpeechRecognitionErrorEvent extends Event {
@@ -48,7 +50,10 @@ declare class SpeechRecognition extends EventTarget {
   onspeechend: ((this: SpeechRecognition, ev: Event) => any) | null;
   onspeechstart: ((this: SpeechRecognition, ev: Event) => any) | null;
   onstart: ((this: SpeechRecognition, ev: Event) => any) | null;
+
   abort(): void;
   start(): void;
   stop(): void;
 }
+
+export {};
