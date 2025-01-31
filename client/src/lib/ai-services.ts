@@ -96,22 +96,15 @@ export async function generateSimulationScenario(
       })
     });
 
-    const text = await response.text();
-    
     if (!response.ok) {
-      throw new Error(`Server error: ${response.status} - ${text}`);
+      const errorText = await response.text();
+      throw new Error(`Server error: ${response.status} - ${errorText}`);
     }
 
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch (e) {
-      console.error('Failed to parse server response:', text);
-      throw new Error('Invalid JSON response from server');
-    }
+    const data = await response.json();
 
     // Validate required fields
-    if (!data?.title || !data?.initial_state?.vital_signs || !Array.isArray(data?.expected_actions)) {
+    if (!data?.title || !data?.initial_state || !Array.isArray(data?.expected_actions)) {
       throw new Error('Invalid scenario format - missing required fields');
     }
 
