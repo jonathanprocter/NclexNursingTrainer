@@ -1,11 +1,11 @@
-import { Route, Switch } from 'wouter';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Route, Switch } from 'wouter';
 import { ErrorBoundary } from 'react-error-boundary';
 import Dashboard from './pages/Dashboard';
-import { Toaster } from './components/ui/toaster';
-import NavBar from './components/layout/NavBar';
-import { Card } from './components/ui/card';
-import { useState } from 'react';
+import { Toaster } from '@/components/ui/toaster';
+import { Card } from '@/components/ui/card';
+import { useEffect, useState } from 'react';
+import NavBar from '@/components/layout/NavBar';
 
 // Initialize Query Client
 const queryClient = new QueryClient({
@@ -41,13 +41,19 @@ function ErrorFallback({ error }: { error: Error }) {
   );
 }
 
+// Initialize MSW in development
+if (process.env.NODE_ENV === 'development') {
+  const { worker } = require('./mocks/browser');
+  worker.start();
+}
+
 function App() {
   const [mounted, setMounted] = useState(false);
 
   // Handle hydration mismatch
-  useState(() => {
+  useEffect(() => {
     setMounted(true);
-  });
+  }, []);
 
   if (!mounted) {
     return null;
@@ -62,8 +68,6 @@ function App() {
             <Switch>
               <Route path="/" component={Dashboard} />
               <Route path="/dashboard" component={Dashboard} />
-              <Route path="/dashboard/analytics" component={Dashboard} />
-              <Route path="/dashboard/performance" component={Dashboard} />
               <Route>
                 <div className="flex items-center justify-center min-h-[calc(100vh-12rem)]">
                   <Card className="p-6 max-w-sm">
