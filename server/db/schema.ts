@@ -63,16 +63,28 @@ export const studyBuddyChats = pgTable('study_buddy_chats', {
     createdAt: timestamp('created_at').defaultNow(),
 });
 
-
+// Type exports for tables
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type QuestionHistory = typeof questionHistory.$inferSelect;
 export type NewQuestionHistory = typeof questionHistory.$inferInsert;
 export type Module = typeof modules.$inferSelect;
 export type NewModule = typeof modules.$inferInsert;
+export type Question = typeof questions.$inferSelect;
+export type NewQuestion = typeof questions.$inferInsert;
+export type QuizAttempt = typeof quizAttempts.$inferSelect;
+export type NewQuizAttempt = typeof quizAttempts.$inferInsert;
+export type UserProgress = typeof userProgress.$inferSelect;
+export type NewUserProgress = typeof userProgress.$inferInsert;
+export type StudyBuddyChat = typeof studyBuddyChats.$inferSelect;
+export type NewStudyBuddyChat = typeof studyBuddyChats.$inferInsert;
 
 // Zod validation schemas
 export const insertUserSchema = createInsertSchema(users);
 export const selectUserSchema = createSelectSchema(users);
 export const insertModuleSchema = createInsertSchema(modules);
 export const selectModuleSchema = createSelectSchema(modules);
+export const insertQuestionSchema = createInsertSchema(questions);
+export const selectQuestionSchema = createSelectSchema(questions);
+export const insertQuizAttemptSchema = createInsertSchema(quizAttempts);
+export const selectQuizAttemptSchema = createSelectSchema(quizAttempts);
