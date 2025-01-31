@@ -975,4 +975,3 @@ function formatQuestion(question: any) {
     correctAnswer: question.correctAnswer
   };
 }
-}
