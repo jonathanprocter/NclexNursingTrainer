@@ -92,32 +92,27 @@ export async function generateSimulationScenario(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         difficulty, 
-        focus_areas: focus_areas || [],
-        previousScenarios: []
+        focus_areas: focus_areas || []
       })
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Server error:', errorText);
-      throw new Error(`Server error: ${response.status}`);
+      const error = await response.json().catch(() => ({ error: `HTTP error: ${response.status}` }));
+      throw new Error(error.error || error.details || `Server error: ${response.status}`);
     }
 
-    const data = await response.json();
-    
-    if (!data || typeof data !== 'object') {
-      throw new Error('Invalid response format');
+    const data = await response.json().catch(() => {
+      throw new Error('Invalid JSON response from server');
+    });
+
+    if (!data || typeof data !== 'object' || !data.initial_state) {
+      throw new Error('Invalid scenario format received from server');
     }
 
-    if (!data.initial_state || !data.expected_actions) {
-      console.error('Invalid scenario data:', data);
-      throw new Error('Missing required scenario data');
-    }
-
-    return data as SimulationScenario;
+    return data;
   } catch (error) {
     console.error('Error generating simulation scenario:', error);
-    throw new Error('Failed to generate simulation scenario: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    throw error instanceof Error ? error : new Error('Unknown error occurred');
   }
 }
 

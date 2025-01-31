@@ -859,24 +859,28 @@ export function registerRoutes(app: Express): Server {
         messages: [
           {
             role: "system",
-            content: "You are a nursing educator generating a simulation scenario.  Provide a detailed scenario with patient information, relevant symptoms, and possible actions, formatted as JSON."
+            content: "You are a nursing educator. Generate a simulation scenario in valid JSON format with this exact structure: { title: string, description: string, initial_state: { patient_history: string, vital_signs: object, symptoms: string[] }, expected_actions: { priority: number, action: string }[] }"
           },
           {
             role: "user",
             content: `Generate a ${difficulty || 'medium'} difficulty simulation scenario.`
           }
-        ]
+        ],
+        response_format: { type: "json_object" }
       });
+      
       const scenarioContent = completion.choices[0]?.message?.content;
       if (!scenarioContent) {
         throw new Error("Failed to generate scenario");
       }
-      let scenario;
-      try {
-        scenario = JSON.parse(scenarioContent);
-      } catch (e) {
-        throw new Error(`Failed to parse scenario JSON: ${e}`);
+
+      const scenario = JSON.parse(scenarioContent);
+      
+      // Validate required fields
+      if (!scenario.title || !scenario.initial_state || !scenario.expected_actions) {
+        throw new Error("Invalid scenario format - missing required fields");
       }
+
       return res.json(scenario);
     } catch (error) {
       console.error('Error generating scenario:', error);
