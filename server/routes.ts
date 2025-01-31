@@ -4,6 +4,7 @@ import { db } from "@db";
 import { eq } from "drizzle-orm";
 import studyGuideRouter from './routes/study-guide';
 import OpenAI from "openai";
+import { practiceQuestions } from './data/practice-questions';
 import { studyBuddyChats } from "@db/schema";
 
 if (!process.env.OPENAI_API_KEY) {
