@@ -87,7 +87,7 @@ export async function generateSimulationScenario(
   focus_areas?: string[]
 ): Promise<SimulationScenario> {
   try {
-    const response = await fetch('/api/scenarios/generate', {
+    const response = await fetch('/api/ai/simulation-scenario', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
@@ -98,20 +98,20 @@ export async function generateSimulationScenario(
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorText = await response.text();
+      console.error('Server response:', errorText);
+      throw new Error(`Server error: ${response.status}`);
     }
 
-    const text = await response.text();
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch (parseError) {
-      console.error('Failed to parse scenario response:', text);
-      throw new Error('Invalid scenario format received');
+    const data = await response.json();
+    
+    if (!data || typeof data !== 'object') {
+      throw new Error('Invalid response format');
     }
 
-    if (!data || typeof data !== 'object' || !data.initial_state) {
-      throw new Error('Invalid scenario structure received');
+    if (!data.initial_state || !data.expected_actions) {
+      console.error('Invalid scenario data:', data);
+      throw new Error('Missing required scenario data');
     }
 
     return data as SimulationScenario;
