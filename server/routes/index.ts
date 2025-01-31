@@ -14,7 +14,7 @@ router.get('/health', healthCheck);
 // Register all routes
 router.use('/analytics', analyticsRouter);
 router.use('/questions', questionsRouter);
-router.use('/practice', practiceRouter); 
+router.use('/practice', practiceRouter);
 router.use('/simulations', simulationsRouter);
 
 // Error handling middleware
@@ -25,5 +25,5 @@ router.use((err: Error, _req: express.Request, res: express.Response, _next: exp
   });
 });
 
-export { router };
+module.exports = router;
 export default router;
