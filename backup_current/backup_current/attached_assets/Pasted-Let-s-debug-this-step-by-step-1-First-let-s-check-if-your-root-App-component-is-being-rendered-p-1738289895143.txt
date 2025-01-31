@@ -1,0 +1,131 @@
+Let's debug this step by step:
+
+1. First, let's check if your root App component is being rendered properly. Create or update your `src/App.tsx`:
+
+```typescript
+import React from 'react';
+
+function App() {
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      <h1 className="text-2xl font-bold p-4">Hello World</h1>
+    </div>
+  );
+}
+
+export default App;
+```
+
+2. Make sure your `src/main.tsx` is set up correctly:
+
+```typescript
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import './index.css';
+import { QueryProvider } from '@/providers/query-provider';
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <QueryProvider>
+      <App />
+    </QueryProvider>
+  </React.StrictMode>
+);
+```
+
+3. Update your `index.html` in the root directory:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Your App</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+```
+
+4. Let's also check the browser console for any errors. You can do this by:
+   - Opening your Replit app URL
+   - Right-clicking > Inspect
+   - Going to the Console tab
+   - Looking for any red error messages
+
+Could you share any console errors you're seeing? This will help us pinpoint the exact issue.
+
+5. Also, let's add some basic error boundaries to catch any rendering issues:
+
+```typescript
+// src/components/ErrorBoundary.tsx
+import React, { Component, ErrorInfo, ReactNode } from 'react';
+
+interface Props {
+  children?: ReactNode;
+}
+
+interface State {
+  hasError: boolean;
+}
+
+class ErrorBoundary extends Component<Props, State> {
+  public state: State = {
+    hasError: false
+  };
+
+  public static getDerivedStateFromError(_: Error): State {
+    return { hasError: true };
+  }
+
+  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('Uncaught error:', error, errorInfo);
+  }
+
+  public render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-4">
+          <h1 className="text-xl font-bold text-red-500">Sorry.. there was an error</h1>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+export default ErrorBoundary;
+```
+
+Update your `main.tsx` to use the ErrorBoundary:
+
+```typescript
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import './index.css';
+import { QueryProvider } from '@/providers/query-provider';
+import ErrorBoundary from './components/ErrorBoundary';
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <ErrorBoundary>
+      <QueryProvider>
+        <App />
+      </QueryProvider>
+    </ErrorBoundary>
+  </React.StrictMode>
+);
+```
+
+This setup will help catch and display any rendering errors. Could you try these updates and let me know:
+1. If you see any console errors
+2. If the basic "Hello World" text appears
+3. If you see any error boundary messages
+
+This will help us narrow down where the issue might be occurring.

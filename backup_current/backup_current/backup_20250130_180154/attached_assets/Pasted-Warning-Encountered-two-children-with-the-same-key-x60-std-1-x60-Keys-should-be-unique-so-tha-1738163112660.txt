@@ -1,0 +1,45 @@
+Warning: Encountered two children with the same key, &#x60;std_1&#x60;. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at div
+    at https://28283d82-bfbd-491e-8711-8e29be387da7-00-29i5ngdyjh860.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-CPFL7ZFD.js?v=dfdf74f8:41:13
+    at https://28283d82-bfbd-491e-8711-8e29be387da7-00-29i5ngdyjh860.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-scroll-area.js?v=dfdf74f8:114:13
+    at div
+    at https://28283d82-bfbd-491e-8711-8e29be387da7-00-29i5ngdyjh860.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-CPFL7ZFD.js?v=dfdf74f8:41:13
+    at Provider (https://28283d82-bfbd-491e-8711-8e29be387da7-00-29i5ngdyjh860.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-HAPM6UR4.js?v=dfdf74f8:41:15)
+    at https://28283d82-bfbd-491e-8711-8e29be387da7-00-29i5ngdyjh860.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-scroll-area.js?v=dfdf74f8:52:7
+    at _c (https://28283d82-bfbd-491e-8711-8e29be387da7-00-29i5ngdyjh860.spock.replit.dev/src/components/ui/scroll-area.tsx:21:11)
+    at div
+    at div
+    at Questions (https://28283d82-bfbd-491e-8711-8e29be387da7-00-29i5ngdyjh860.spock.replit.dev/src/pages/Questions.tsx:27:55)
+    at Route (https://28283d82-bfbd-491e-8711-8e29be387da7-00-29i5ngdyjh860.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=dfdf74f8:323:16)
+    at Switch (https://28283d82-bfbd-491e-8711-8e29be387da7-00-29i5ngdyjh860.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=dfdf74f8:379:17)
+    at main
+    at div
+    at Router
+    at QueryClientProvider (https://28283d82-bfbd-491e-8711-8e29be387da7-00-29i5ngdyjh860.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=dfdf74f8:2805:3)
+    at App
+at div
+at div
+at div
+at https://28283d82-bfbd-491e-8711-8e29be387da7-00-29i5ngdyjh860.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-CPFL7ZFD.js?v=dfdf74f8:41:13
+at https://28283d82-bfbd-491e-8711-8e29be387da7-00-29i5ngdyjh860.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-scroll-area.js?v=dfdf74f8:114:13
+at div
+at https://28283d82-bfbd-491e-8711-8e29be387da7-00-29i5ngdyjh860.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-CPFL7ZFD.js?v=dfdf74f8:41:13
+at Provider (https://28283d82-bfbd-491e-8711-8e29be387da7-00-29i5ngdyjh860.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-HAPM6UR4.js?v=dfdf74f8:41:15)
+at https://28283d82-bfbd-491e-8711-8e29be387da7-00-29i5ngdyjh860.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-scroll-area.js?v=dfdf74f8:52:7
+at _c (https://28283d82-bfbd-491e-8711-8e29be387da7-00-29i5ngdyjh860.spock.replit.dev/src/components/ui/scroll-area.tsx:21:11)
+at div
+at div
+at Questions (https://28283d82-bfbd-491e-8711-8e29be387da7-00-29i5ngdyjh860.spock.replit.dev/src/pages/Questions.tsx:27:55)
+at Route (https://28283d82-bfbd-491e-8711-8e29be387da7-00-29i5ngdyjh860.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=dfdf74f8:323:16)
+at Switch (https://28283d82-bfbd-491e-8711-8e29be387da7-00-29i5ngdyjh860.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=dfdf74f8:379:17)
+at main
+at div
+at Router
+at QueryClientProvider (https://28283d82-bfbd-491e-8711-8e29be387da7-00-29i5ngdyjh860.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=dfdf74f8:2805:3)
+at App
+at t.value (https://28283d82-bfbd-491e-8711-8e29be387da7-00-29i5ngdyjh860.spock.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://28283d82-bfbd-491e-8711-8e29be387da7-00-29i5ngdyjh860.spock.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://28283d82-bfbd-491e-8711-8e29be387da7-00-29i5ngdyjh860.spock.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://28283d82-bfbd-491e-8711-8e29be387da7-00-29i5ngdyjh860.spock.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
