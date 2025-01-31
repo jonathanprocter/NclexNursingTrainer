@@ -52,7 +52,7 @@ function Dashboard() {
     queryKey: ["analytics"],
     queryFn: async () => {
       try {
-        const response = await fetch('http://0.0.0.0:4005/api/analytics', {
+        const response = await fetch('http://0.0.0.0:3006/api/analytics', {
           credentials: 'include',
           headers: {
             'Content-Type': 'application/json'
