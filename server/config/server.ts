@@ -23,7 +23,7 @@ export class Server {
     // Add CORS handling for Replit environment
     // Configure CORS
     this.app.use((req, res, next) => {
-      const allowedOrigins = ['http://0.0.0.0:3003', 'https://0.0.0.0:3003'];
+      const allowedOrigins = ['http://0.0.0.0:3001', 'https://0.0.0.0:3001']; //added https for good measure
       const origin = req.headers.origin;
       if (origin && allowedOrigins.includes(origin)) {
         res.header('Access-Control-Allow-Origin', origin);

@@ -4,6 +4,7 @@ import Analytics from "@/components/dashboard/Analytics";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { AnalyticsData } from "@/types/analytics";
 import { memo } from "react";
+import { ErrorBoundary } from "@/components/ErrorBoundary"; // Added import for ErrorBoundary
 
 const PerformanceOverview = memo(({ analytics }: { analytics: AnalyticsData }) => (
   <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10">
@@ -121,4 +122,6 @@ function Dashboard() {
 PerformanceOverview.displayName = "PerformanceOverview";
 PerformanceOverviewSkeleton.displayName = "PerformanceOverviewSkeleton";
 
-export default memo(Dashboard);
+export default memo(<ErrorBoundary> {/* Added closing tag for ErrorBoundary */}
+  <Dashboard />
+</ErrorBoundary>);
