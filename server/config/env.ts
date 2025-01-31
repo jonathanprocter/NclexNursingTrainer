@@ -1,17 +1,22 @@
-
-import { z } from 'zod';
 import dotenv from 'dotenv';
+import path from 'path';
 
-dotenv.config();
+// Load environment variables
+dotenv.config({ path: path.join(process.cwd(), '.env') });
 
-const envSchema = z.object({
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  PORT: z.string().transform(Number).default('4004'),
-  DATABASE_URL: z.string().optional(),
-  FRONTEND_URL: z.string().default('http://0.0.0.0:3000'),
-  BACKEND_URL: z.string().default('http://0.0.0.0:4004'),
-});
-
-const env = envSchema.parse(process.env);
-
-export default env;
+export const env = {
+  NODE_ENV: process.env.NODE_ENV || 'development',
+  PORT: parseInt(process.env.PORT || '0', 10),
+  DATABASE_URL: process.env.DATABASE_URL,
+  
+  // Add your other environment variables here
+  
+  validate() {
+    const requiredVars = ['DATABASE_URL'];
+    for (const v of requiredVars) {
+      if (!this[v]) {
+        throw new Error(`Missing required environment variable: ${v}`);
+      }
+    }
+  }
+};
