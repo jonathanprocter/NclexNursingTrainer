@@ -679,8 +679,47 @@ export function registerRoutes(app: Express): Server {
         throw new Error("Failed to generate scenario");
       }
 
-      const scenario = JSON.parse(scenarioContent);
-      res.json(scenario);
+      try {
+        // Remove any markdown code blocks if present
+        const cleanContent = scenarioContent.replace(/```json\n?|\n?```/g, '').trim();
+        const scenario = JSON.parse(cleanContent);
+        
+        if (!scenario || typeof scenario !== 'object') {
+          throw new Error("Invalid scenario format");
+        }
+        
+        res.json(scenario);
+      } catch (parseError) {
+        console.error("Error parsing scenario:", parseError);
+        // Return a fallback scenario
+        res.json({
+          id: `fallback_${Date.now()}`,
+          title: "Basic Patient Assessment",
+          description: "Perform initial assessment of a patient with respiratory distress",
+          difficulty: "intermediate",
+          objectives: ["Assess vital signs", "Identify key symptoms", "Prioritize interventions"],
+          initial_state: {
+            patient_condition: "Alert but anxious",
+            vital_signs: {
+              blood_pressure: "138/88",
+              heart_rate: 92,
+              respiratory_rate: 24,
+              temperature: 37.2,
+              oxygen_saturation: 94
+            },
+            symptoms: ["Shortness of breath", "Chest tightness"],
+            medical_history: "History of asthma"
+          },
+          expected_actions: [
+            {
+              priority: 1,
+              action: "Assess airway and breathing",
+              rationale: "Immediate assessment of respiratory status is critical"
+            }
+          ],
+          duration_minutes: 30
+        });
+      }
     } catch (error) {
       console.error("Error generating scenario:", error);
       res.status(500).json({
