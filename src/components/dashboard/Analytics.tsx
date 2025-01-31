@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { ErrorBoundary } from "react-error-boundary";
 import type { AnalyticsData } from "@/types/analytics";
-import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface PerformanceChartProps {
@@ -35,6 +34,11 @@ const PerformanceChart = memo(({ data }: PerformanceChartProps) => {
           <Tooltip 
             formatter={(value: number) => [`${value}%`, "Mastery"]}
             labelStyle={{ color: 'var(--foreground)' }}
+            contentStyle={{
+              backgroundColor: 'var(--background)',
+              border: '1px solid var(--border)',
+              borderRadius: '6px'
+            }}
           />
           <Line 
             type="monotone" 
@@ -50,49 +54,11 @@ const PerformanceChart = memo(({ data }: PerformanceChartProps) => {
   );
 });
 
-function AnalyticsSkeleton() {
-  return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Skeleton className="h-4 w-[250px]" />
-        <Skeleton className="h-4 w-[200px]" />
-      </div>
-      <Skeleton className="h-[400px] w-full" />
-    </div>
-  );
+interface AnalyticsProps {
+  analytics: AnalyticsData;
 }
 
-function Analytics() {
-  const { data: analytics, isLoading, error } = useQuery<AnalyticsData>({
-    queryKey: ['/api/analytics'],
-  });
-
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Performance Analytics</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <AnalyticsSkeleton />
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card className="bg-destructive/10">
-        <CardHeader>
-          <CardTitle className="text-destructive">Error Loading Analytics</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-destructive">Failed to load analytics data. Please try again later.</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
+function Analytics({ analytics }: AnalyticsProps) {
   if (!analytics?.performanceData?.length) {
     return (
       <Card>
