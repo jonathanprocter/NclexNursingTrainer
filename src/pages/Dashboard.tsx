@@ -87,9 +87,15 @@ function Dashboard() {
     return (
       <div className="p-4 bg-destructive/10 rounded-md m-4">
         <h2 className="text-lg font-semibold mb-2">Error loading dashboard</h2>
-        <p className="text-sm text-destructive">
+        <p className="text-sm text-destructive mb-4">
           {error instanceof Error ? error.message : "An unknown error occurred"}
         </p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
+        >
+          Retry
+        </button>
       </div>
     );
   }
