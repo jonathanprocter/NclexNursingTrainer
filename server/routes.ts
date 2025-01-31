@@ -181,11 +181,11 @@ export function registerRoutes(app: Express): Server {
         messages: [
           {
             role: "system",
-            content: "You are an expert pharmacology educator helping nursing students understand medication classes, mechanisms of action, pharmacokinetics, and clinical applications of drugs. Provide detailed explanations focused on drug therapy and medication safety."
+            content: "You are an expert pharmacy skills educator. Help nursing students understand medication administration techniques, clinical calculations, drug preparation, and safety protocols. Provide specific, practical guidance focused on pharmacy skills and competencies. Do not respond with generic messages about undefined terms - instead, provide an overview of key pharmacy skills if the query is unclear."
           },
           {
             role: "user",
-            content: question || `Explain ${topic} in pharmacology${context ? `. Context: ${context}` : ''}`
+            content: question || `Explain pharmacy skills for ${topic}${context ? `. Context: ${context}` : '. Include key competencies and safety considerations.'}`
           }
         ],
         temperature: 0.7,
