@@ -25,4 +25,4 @@ router.use((err: Error, _req: express.Request, res: express.Response, _next: exp
   });
 });
 
-module.exports = router;
+export = router;
