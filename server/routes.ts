@@ -23,27 +23,31 @@ export function registerRoutes(app: Express): Server {
 
   // Questions endpoint with AI generation
   app.get("/api/questions", async (req, res) => {
+    console.log('Received request for /api/questions with query:', req.query);
     try {
       const { topic, limit = 10, page = 1 } = req.query;
 
       // Use the existing practice questions or generate new ones
-      let questions = practiceQuestions;
+      let questionsList = practiceQuestions;
+      console.log('Total questions available:', questionsList.length);
 
       // Filter by topic if provided
       if (topic) {
-        questions = questions.filter(q => q.category === topic);
+        questionsList = questionsList.filter(q => q.category.toLowerCase() === topic.toString().toLowerCase());
+        console.log('Filtered questions by topic:', topic, 'Results:', questionsList.length);
       }
 
       // Apply pagination
       const startIndex = (Number(page) - 1) * Number(limit);
       const endIndex = startIndex + Number(limit);
-      const paginatedQuestions = questions.slice(startIndex, endIndex);
+      const paginatedQuestions = questionsList.slice(startIndex, endIndex);
 
+      console.log('Sending response with', paginatedQuestions.length, 'questions');
       res.json({
         questions: paginatedQuestions,
-        total: questions.length,
+        total: questionsList.length,
         page: Number(page),
-        totalPages: Math.ceil(questions.length / Number(limit))
+        totalPages: Math.ceil(questionsList.length / Number(limit))
       });
     } catch (error) {
       console.error("Error fetching questions:", error);
@@ -99,8 +103,8 @@ export function registerRoutes(app: Express): Server {
   // Question generation endpoint
   app.post("/api/generate-questions", async (req, res) => {
     try {
-      const { topic, complexity, previousQuestionIds, userPerformance } = req.body;
-      const MIN_QUESTIONS = 20;
+      const { topic, complexity, previousQuestionIds } = req.body;
+      const MIN_QUESTIONS = 5;
 
       const completion = await openai.chat.completions.create({
         model: "gpt-4",
@@ -110,21 +114,19 @@ export function registerRoutes(app: Express): Server {
             content: `Generate NCLEX-style questions focusing on ${complexity || 'knowledge'} level thinking.
               Each question should include:
               - Clear question text
-              - Multiple choice options
+              - Multiple choice options (A through D)
               - Correct answer with detailed rationale
               - Cognitive level classification
               - Conceptual breakdown (key concepts, related topics, clinical relevance)
               - Frequently asked questions about the topic
-              Return as a valid JSON array.`
+              Return in a valid JSON array format.`
           },
           {
             role: "user",
             content: `Generate ${MIN_QUESTIONS} unique nursing questions${topic ? ` for ${topic}` : ''} at the ${complexity || 'knowledge'} cognitive level.
-              Previous question IDs: ${previousQuestionIds?.join(', ') || 'none'}
-              User performance: ${JSON.stringify(userPerformance)}`
+              Previous question IDs to avoid: ${previousQuestionIds?.join(', ') || 'none'}`
           }
-        ],
-        temperature: 0.7,
+        ]
       });
 
       let generatedQuestions;
@@ -141,63 +143,23 @@ export function registerRoutes(app: Express): Server {
         }
       } catch (parseError) {
         console.error("Failed to parse OpenAI response:", parseError);
-        // Return a fallback question
-        generatedQuestions = [{
-          id: `gen_${Date.now()}_0`,
-          text: "Which nursing intervention is most appropriate for a client with acute pain?",
-          options: [
-            { id: "a", text: "Assess pain characteristics" },
-            { id: "b", text: "Administer PRN pain medication immediately" },
-            { id: "c", text: "Notify healthcare provider" },
-            { id: "d", text: "Apply ice pack to affected area" }
-          ],
-          correctAnswer: "a",
-          explanation: "Pain assessment should be conducted first to determine appropriate interventions.",
-          rationale: "Assessment is the first step in the nursing process. Before implementing any intervention, the nurse must gather data about the pain's characteristics (location, intensity, quality, etc.) to ensure appropriate and effective pain management.",
-          category: topic || "General",
-          difficulty: "medium",
-          cognitiveLevel: complexity || "knowledge",
-          conceptualBreakdown: {
-            key_concepts: [
-              "Pain assessment",
-              "Nursing process",
-              "Clinical decision making"
-            ],
-            related_topics: [
-              "Pain management",
-              "Patient assessment",
-              "Documentation"
-            ],
-            clinical_relevance: "Proper pain assessment is crucial for effective pain management and patient outcomes."
-          },
-          faqs: [
-            {
-              question: "Why is assessment prioritized over medication administration?",
-              answer: "Assessment provides crucial information about the pain's characteristics, helping determine the most appropriate intervention and ensuring safe, effective pain management."
-            },
-            {
-              question: "What are the key components of pain assessment?",
-              answer: "Key components include location, intensity, quality, onset, duration, aggravating/alleviating factors, and impact on daily activities."
-            }
-          ]
-        }];
+        throw new Error("Failed to parse generated questions");
       }
 
-      // Ensure questions are properly formatted and enhance with cognitive complexity
+      // Format the generated questions
       const formattedQuestions = generatedQuestions.map((q: any, index: number) => ({
         id: q.id || `gen_${Date.now()}_${index}`,
         text: q.text,
-        options: q.options,
+        options: q.options || [],
         correctAnswer: q.correctAnswer,
         explanation: q.explanation,
-        rationale: q.rationale || "Not provided",
         category: topic || 'General',
-        difficulty: q.difficulty || 'medium',
-        cognitiveLevel: complexity || 'knowledge',
-        conceptualBreakdown: q.conceptualBreakdown || {
-          key_concepts: [],
-          related_topics: [],
-          clinical_relevance: ""
+        difficulty: q.difficulty || complexity || 'medium',
+        tags: q.tags || [],
+        conceptualBreakdown: {
+          key_concepts: q.key_concepts || [],
+          related_topics: q.related_topics || [],
+          clinical_relevance: q.clinical_relevance || ''
         },
         faqs: q.faqs || []
       }));

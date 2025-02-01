@@ -19,6 +19,7 @@ if (process.env.NODE_ENV === 'development') {
   }));
 }
 
+// Logging middleware
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -49,6 +50,15 @@ app.use((req, res, next) => {
   next();
 });
 
+// Enable preflight requests for all routes
+app.options('*', cors());
+
+// API route logging for debugging
+app.use('/api', (req, res, next) => {
+  console.log(`API Request: ${req.method} ${req.path}`);
+  next();
+});
+
 // Error handling
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   console.error('Error:', err);
@@ -70,7 +80,7 @@ const tryPort = async (port: number): Promise<number> => {
     } else {
       serveStatic(app);
     }
-    
+
     await new Promise((resolve, reject) => {
       server.once('error', (err: any) => {
         if (err.code === 'EADDRINUSE') {
@@ -80,7 +90,7 @@ const tryPort = async (port: number): Promise<number> => {
           reject(err);
         }
       });
-      
+
       server.listen(port, HOST, () => {
         log(`Server running on http://${HOST}:${port}`);
         resolve(port);
@@ -97,6 +107,7 @@ const tryPort = async (port: number): Promise<number> => {
 (async () => {
   try {
     const port = await tryPort(parseInt(process.env.PORT || '5000', 10));
+    console.log(`Server is running with /api/questions endpoint enabled`);
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);

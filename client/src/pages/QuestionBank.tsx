@@ -26,6 +26,15 @@ interface Question {
   category: string;
   difficulty: string;
   tags: string[];
+  conceptualBreakdown?: {
+    key_concepts: string[];
+    related_topics: string[];
+    clinical_relevance: string;
+  };
+  faqs?: {
+    question: string;
+    answer: string;
+  }[];
 }
 
 export default function QuestionBank() {
@@ -37,8 +46,21 @@ export default function QuestionBank() {
   const [correctAnswers, setCorrectAnswers] = useState(0);
 
   // Fetch questions from the API
-  const { data: questions = [], isLoading } = useQuery<Question[]>({
+  const { data: questions = [], isLoading, refetch } = useQuery<Question[]>({
     queryKey: ['/api/questions', selectedCategory],
+    queryFn: async () => {
+      console.log('Fetching questions for category:', selectedCategory);
+      const params = new URLSearchParams();
+      if (selectedCategory) params.append('topic', selectedCategory);
+      const response = await fetch(`/api/questions?${params.toString()}`);
+      if (!response.ok) {
+        console.error('Failed to fetch questions:', response.status, response.statusText);
+        throw new Error('Failed to fetch questions');
+      }
+      const data = await response.json();
+      console.log('Received questions:', data);
+      return data.questions;
+    }
   });
 
   useEffect(() => {
@@ -57,6 +79,24 @@ export default function QuestionBank() {
 
     if (optionId === currentQuestion.correctAnswer) {
       setCorrectAnswers(prev => prev + 1);
+    }
+  };
+
+  const handleGenerateMore = async () => {
+    const response = await fetch('/api/generate-questions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        topic: selectedCategory,
+        complexity: 'medium',
+        previousQuestionIds: questions.map(q => q.id),
+      }),
+    });
+
+    if (response.ok) {
+      refetch(); // Refresh the questions list
     }
   };
 
@@ -174,17 +214,64 @@ export default function QuestionBank() {
                 </div>
 
                 {showExplanation && (
-                  <div className="mt-6 p-4 bg-muted rounded-lg">
-                    <h4 className="font-semibold mb-2">Explanation</h4>
-                    <p className="text-muted-foreground">{currentQuestion.explanation}</p>
-                  </div>
+                  <>
+                    <div className="mt-6 p-4 bg-muted rounded-lg">
+                      <h4 className="font-semibold mb-2">Explanation</h4>
+                      <p className="text-muted-foreground">{currentQuestion.explanation}</p>
+                    </div>
+
+                    {currentQuestion.conceptualBreakdown && (
+                      <div className="mt-6 p-4 bg-muted rounded-lg">
+                        <h4 className="font-semibold mb-2">Conceptual Breakdown</h4>
+                        <div className="space-y-4">
+                          <div>
+                            <h5 className="font-medium">Key Concepts</h5>
+                            <ul className="list-disc pl-5 mt-2">
+                              {currentQuestion.conceptualBreakdown.key_concepts.map((concept, index) => (
+                                <li key={index}>{concept}</li>
+                              ))}
+                            </ul>
+                          </div>
+                          <div>
+                            <h5 className="font-medium">Related Topics</h5>
+                            <ul className="list-disc pl-5 mt-2">
+                              {currentQuestion.conceptualBreakdown.related_topics.map((topic, index) => (
+                                <li key={index}>{topic}</li>
+                              ))}
+                            </ul>
+                          </div>
+                          <div>
+                            <h5 className="font-medium">Clinical Relevance</h5>
+                            <p className="mt-2">{currentQuestion.conceptualBreakdown.clinical_relevance}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {currentQuestion.faqs && currentQuestion.faqs.length > 0 && (
+                      <div className="mt-6 p-4 bg-muted rounded-lg">
+                        <h4 className="font-semibold mb-2">Frequently Asked Questions</h4>
+                        <div className="space-y-4">
+                          {currentQuestion.faqs.map((faq, index) => (
+                            <div key={index}>
+                              <h5 className="font-medium">{faq.question}</h5>
+                              <p className="mt-2 text-muted-foreground">{faq.answer}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
 
-                {showExplanation && (
-                  <div className="flex justify-end mt-4">
+                <div className="flex justify-between mt-4">
+                  {showExplanation && (
                     <Button onClick={handleNextQuestion}>Next Question</Button>
-                  </div>
-                )}
+                  )}
+                  <Button onClick={handleGenerateMore} variant="outline">
+                    Generate More Questions
+                  </Button>
+                </div>
 
                 {questionsAnswered > 0 && (
                   <div className="mt-6">
