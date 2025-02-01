@@ -174,7 +174,7 @@ export function registerRoutes(app: Express): Server {
 
   // Pathophysiology AI help endpoint
   app.post("/api/ai-help", async (req, res) => {
-    const { topic, context, question } = req.body;
+    const { context } = req.body;
 
     try {
       const completion = await openai.chat.completions.create({
@@ -182,11 +182,16 @@ export function registerRoutes(app: Express): Server {
         messages: [
           {
             role: "system",
-            content: "You are an expert pharmacy skills educator. Help nursing students understand medication administration techniques, clinical calculations, drug preparation, and safety protocols. Provide specific, practical guidance focused on pharmacy skills and competencies. Do not respond with generic messages about undefined terms - instead, provide an overview of key pharmacy skills if the query is unclear."
+            content: `You are an expert nursing educator. Provide detailed explanations of nursing concepts,
+          focusing on clinical reasoning and practical application. Include:
+          - Key principles and rationale
+          - Clinical examples and scenarios
+          - Common misconceptions
+          - Evidence-based practice guidelines`
           },
           {
             role: "user",
-            content: question || `Explain pharmacy skills for ${topic}${context ? `. Context: ${context}` : '. Include key competencies and safety considerations.'}`
+            content: context
           }
         ],
         temperature: 0.7,
@@ -200,7 +205,7 @@ export function registerRoutes(app: Express): Server {
         throw new Error("No response generated");
       }
 
-      res.json({ content: response });
+      res.json({ response });
     } catch (error) {
       console.error("Error in AI help endpoint:", error);
       res.status(500).json({
@@ -401,22 +406,30 @@ export function registerRoutes(app: Express): Server {
   // Quiz question generation endpoint
   app.post("/api/generate-questions", async (req, res) => {
     try {
-      const { topic, previousQuestionIds, userPerformance } = req.body;
+      const { topic, complexity, previousQuestionIds, userPerformance } = req.body;
       const MIN_QUESTIONS = 20;
 
-      // Generate unique questions based on user performance
+      // Generate unique questions based on user performance and cognitive complexity
       const completion = await openai.chat.completions.create({
         model: "gpt-4",
         messages: [
           {
             role: "system",
-            content: "Generate NCLEX-style questions in valid JSON array format. Focus on areas where the user needs improvement."
+            content: `Generate NCLEX-style questions focusing on ${complexity || 'knowledge'} level thinking.
+          Each question should include:
+          - Clear question text
+          - Multiple choice options
+          - Correct answer with detailed rationale
+          - Cognitive level classification
+          - Conceptual breakdown (key concepts, related topics, clinical relevance)
+          - Frequently asked questions about the topic
+          Return as a valid JSON array.`
           },
           {
             role: "user",
-            content: `Generate ${MIN_QUESTIONS} unique nursing questions${topic ? ` for ${topic}` : ''} in a JSON array. Each question should have: text, options (array of {id, text}), correctAnswer, explanation, category, and difficulty fields.
-            Previous question IDs: ${previousQuestionIds?.join(', ') || 'none'}
-            User performance: ${JSON.stringify(userPerformance)}`
+            content: `Generate ${MIN_QUESTIONS} unique nursing questions${topic ? ` for ${topic}` : ''} at the ${complexity || 'knowledge'} cognitive level.
+          Previous question IDs: ${previousQuestionIds?.join(', ') || 'none'}
+          User performance: ${JSON.stringify(userPerformance)}`
           }
         ],
         temperature: 0.7,
@@ -436,34 +449,65 @@ export function registerRoutes(app: Express): Server {
         }
       } catch (parseError) {
         console.error("Failed to parse OpenAI response:", parseError);
-        // Fallback to default questions
-        generatedQuestions = [
-          {
-            text: "Which nursing intervention is most appropriate for a client with acute pain?",
-            options: [
-              { id: "a", text: "Assess pain characteristics" },
-              { id: "b", text: "Administer PRN pain medication immediately" },
-              { id: "c", text: "Notify healthcare provider" },
-              { id: "d", text: "Apply ice pack to affected area" }
+        // Return a well-structured fallback question
+        generatedQuestions = [{
+          id: `gen_${Date.now()}_0`,
+          text: "Which nursing intervention is most appropriate for a client with acute pain?",
+          options: [
+            { id: "a", text: "Assess pain characteristics" },
+            { id: "b", text: "Administer PRN pain medication immediately" },
+            { id: "c", text: "Notify healthcare provider" },
+            { id: "d", text: "Apply ice pack to affected area" }
+          ],
+          correctAnswer: "a",
+          explanation: "Pain assessment should be conducted first to determine appropriate interventions.",
+          rationale: "Assessment is the first step in the nursing process. Before implementing any intervention, the nurse must gather data about the pain's characteristics (location, intensity, quality, etc.) to ensure appropriate and effective pain management.",
+          category: topic || "General",
+          difficulty: "medium",
+          cognitiveLevel: complexity || "knowledge",
+          conceptualBreakdown: {
+            key_concepts: [
+              "Pain assessment",
+              "Nursing process",
+              "Clinical decision making"
             ],
-            correctAnswer: "a",
-            explanation: "Pain assessment should be conducted first to determine appropriate interventions.",
-            category: topic || "General",
-            difficulty: "Medium"
-          }
-        ];
+            related_topics: [
+              "Pain management",
+              "Patient assessment",
+              "Documentation"
+            ],
+            clinical_relevance: "Proper pain assessment is crucial for effective pain management and patient outcomes."
+          },
+          faqs: [
+            {
+              question: "Why is assessment prioritized over medication administration?",
+              answer: "Assessment provides crucial information about the pain's characteristics, helping determine the most appropriate intervention and ensuring safe, effective pain management."
+            },
+            {
+              question: "What are the key components of pain assessment?",
+              answer: "Key components include location, intensity, quality, onset, duration, aggravating/alleviating factors, and impact on daily activities."
+            }
+          ]
+        }];
       }
 
-
-      // Ensure questions are unique and properly formatted
+      // Ensure questions are properly formatted and enhance with cognitive complexity
       const formattedQuestions = generatedQuestions.map((q: any, index: number) => ({
-        id: `gen_${Date.now()}_${index}`,
-        text: q.question,
+        id: q.id || `gen_${Date.now()}_${index}`,
+        text: q.text,
         options: q.options,
         correctAnswer: q.correctAnswer,
         explanation: q.explanation,
+        rationale: q.rationale || "Not provided",
         category: topic || 'General',
-        difficulty: q.difficulty || 'Medium'
+        difficulty: q.difficulty || 'medium',
+        cognitiveLevel: complexity || 'knowledge',
+        conceptualBreakdown: q.conceptualBreakdown || {
+          key_concepts: [],
+          related_topics: [],
+          clinical_relevance: ""
+        },
+        faqs: q.faqs || []
       }));
 
       res.json(formattedQuestions);
@@ -870,7 +914,7 @@ export function registerRoutes(app: Express): Server {
   "initial_state": {
     "patient_history": "string",
     "vital_signs": {
-      "blood_pressure": "120/80",
+      "blood_pressure":"120/80",
       "heart_rate": 80,
       "respiratory_rate": 16,
       "temperature": 37,

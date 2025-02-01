@@ -1,5 +1,83 @@
 import type { AIAnalysisResult } from './types';
 
+export interface EnhancedQuestion {
+  id: number;
+  text: string;
+  options: { id: string; text: string }[];
+  correctAnswer: string;
+  explanation: string;
+  rationale: string;
+  category?: string;
+  difficulty?: 'beginner' | 'intermediate' | 'advanced';
+  cognitiveLevel: string;
+  conceptualBreakdown: {
+    key_concepts: string[];
+    related_topics: string[];
+    clinical_relevance: string;
+  };
+  faqs: { question: string; answer: string }[];
+}
+
+export interface GenerateQuestionsParams {
+  topic?: string;
+  complexity?: string;
+  previousQuestionIds?: string[];
+  userPerformance?: {
+    correctByTopic: { [key: string]: number };
+    totalByTopic: { [key: string]: number };
+  };
+}
+
+export async function generateQuestions(params: GenerateQuestionsParams): Promise<EnhancedQuestion[]> {
+  try {
+    const response = await fetch('/api/generate-questions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to generate questions');
+    }
+
+    const questions = await response.json();
+    if (!Array.isArray(questions) || questions.length === 0) {
+      throw new Error('No questions received');
+    }
+
+    return questions;
+  } catch (error) {
+    console.error('Question generation error:', error);
+    throw error instanceof Error ? error : new Error('Failed to generate questions');
+  }
+}
+
+export interface AIHelpParams {
+  context: string;
+  topic?: string;
+  cognitiveLevel?: string;
+}
+
+export async function getAIHelp(params: AIHelpParams): Promise<{ response: string }> {
+  try {
+    const response = await fetch('/api/ai-help', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params)
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to get AI assistance');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error getting AI help:', error);
+    throw error instanceof Error ? error : new Error('Failed to get AI assistance');
+  }
+}
+
 export async function getPharmacologyHelp(
   section: string,
   context?: string
