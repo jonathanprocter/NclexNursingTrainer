@@ -39,13 +39,6 @@ export default function QuestionBank() {
   // Fetch questions from the API
   const { data: questions = [], isLoading } = useQuery<Question[]>({
     queryKey: ['/api/questions', selectedCategory],
-    queryFn: async () => {
-      const response = await fetch(`/api/questions${selectedCategory ? `?category=${selectedCategory}` : ''}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch questions');
-      }
-      return response.json();
-    }
   });
 
   useEffect(() => {

@@ -33,20 +33,21 @@ export const modules = pgTable("modules", {
 export const questions = pgTable("questions", {
   id: serial("id").primaryKey(),
   moduleId: integer("module_id").references(() => modules.id),
-  question: text("question").notNull(),
-  options: json("options").notNull(),
+  text: text("text").notNull(),
+  type: text("type").notNull(), // 'mcq', 'cat', 'standard'
+  options: json("options").notNull(), // Array of answer options
   correctAnswer: text("correct_answer").notNull(),
   explanation: text("explanation"),
-  category: text("category").notNull(),
-  difficulty: integer("difficulty").notNull(), // Assuming difficulty is an integer
-  isActive: boolean("is_active").default(true),
+  difficulty: integer("difficulty").notNull(), // 1-5 scale
+  aiGenerated: boolean("ai_generated").default(false),
+  topicTags: json("topic_tags"), // Array of related topics for AI analysis
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export const questionHistory = pgTable("question_history", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id),
-  questionId: integer("question_id").references(() => questions.id),
+  questionId: text("question_id").notNull(), // Store the original question ID (e.g., "pattern-1")
   type: text("type").notNull(), // pattern, hypothesis, decision, etc.
   usedAt: timestamp("used_at").notNull().defaultNow(),
 });

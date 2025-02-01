@@ -17,13 +17,6 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 
-declare global {
-  interface Window {
-    SpeechRecognition: typeof SpeechRecognition;
-    webkitSpeechRecognition: typeof SpeechRecognition;
-  }
-}
-
 export default function Pathophysiology() {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
