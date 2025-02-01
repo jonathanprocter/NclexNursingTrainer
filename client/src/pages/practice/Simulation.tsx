@@ -118,23 +118,29 @@ export default function Simulation() {
   };
 
   const handleAction = (action: Action | string) => {
-    console.log('Handling action:', action);
+    try {
+      console.log('Action clicked:', action);
 
-    if (!action) {
-      console.error('Invalid action received');
-      return;
-    }
+      if (!action) {
+        console.error('Invalid action received');
+        return;
+      }
 
-    const actionText = typeof action === 'string' ? action : action.action;
-    const newAction: UserAction = {
-      action: actionText,
-      timestamp: new Date().toISOString()
-    };
+      const actionText = typeof action === 'string' ? action : action.action;
+      console.log('Processing action:', actionText);
 
-    setUserActions(prev => [...prev, newAction]);
+      const newAction: UserAction = {
+        action: actionText,
+        timestamp: new Date().toISOString()
+      };
 
-    if (typeof action === 'object') {
-      if (action.feedback) {
+      setUserActions(prev => {
+        console.log('Previous actions:', prev);
+        console.log('Adding new action:', newAction);
+        return [...prev, newAction];
+      });
+
+      if (typeof action === 'object' && action.feedback) {
         toast({
           title: "Action Feedback",
           description: action.feedback,
@@ -143,7 +149,7 @@ export default function Simulation() {
         newAction.response = action.feedback;
       }
 
-      if (action.next_state && activeScenario) {
+      if (typeof action === 'object' && action.next_state && activeScenario) {
         console.log('Updating scenario state with:', action.next_state);
         setActiveScenario(prev => {
           if (!prev) return prev;
@@ -156,15 +162,35 @@ export default function Simulation() {
           };
         });
       }
+
+      console.log('Action processed successfully');
+    } catch (error) {
+      console.error('Error processing action:', error);
+      toast({
+        title: "Error",
+        description: "Failed to process action",
+        variant: "destructive",
+      });
     }
   };
 
   const renderVitalSign = (key: string, value: string | number | undefined) => {
     if (value === undefined || value === null) return null;
+
+    // Format the vital sign value based on the key
+    let displayValue = value;
+    if (key.toLowerCase().includes('temperature')) {
+      displayValue = `${value}°F`;
+    } else if (key.toLowerCase().includes('pressure')) {
+      displayValue = `${value} mmHg`;
+    } else if (key.toLowerCase().includes('saturation') || key.toLowerCase().includes('spo2')) {
+      displayValue = `${value}%`;
+    }
+
     return (
       <div key={key} className="bg-muted p-2 rounded">
-        <p className="text-sm font-medium">{key.replace('_', ' ').toUpperCase()}</p>
-        <p className="text-lg">{String(value)}</p>
+        <p className="text-sm font-medium">{key.replace(/_/g, ' ').toUpperCase()}</p>
+        <p className="text-lg">{String(displayValue)}</p>
       </div>
     );
   };
@@ -501,8 +527,13 @@ export default function Simulation() {
                         <Button
                           key={index}
                           variant="outline"
-                          className="justify-start text-left"
-                          onClick={() => handleAction(action)}
+                          className="justify-start text-left w-full p-4 hover:bg-muted/80 active:scale-[0.98] transition-all"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log('Action button clicked:', action);
+                            handleAction(action);
+                          }}
                           disabled={getFeedbackMutation.isPending}
                         >
                           {typeof action === 'string' ? action : action.action}
