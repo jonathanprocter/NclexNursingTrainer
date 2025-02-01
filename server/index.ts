@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { registerRoutes } from "./routes";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
@@ -24,9 +24,21 @@ const server = registerRoutes(app);
 
 // Run migrations
 async function main() {
-  await migrate(db, {
-    migrationsFolder: "drizzle",
-  });
+  // Check if database URL is available
+  if (!process.env.DATABASE_URL) {
+    throw new Error('DATABASE_URL environment variable is required');
+  }
+
+  console.log('Running database migrations...');
+  try {
+    await migrate(db, {
+      migrationsFolder: "drizzle",
+    });
+    console.log('Database migrations completed successfully');
+  } catch (err) {
+    console.error('Failed to run migrations:', err);
+    throw err;
+  }
 
   const port = process.env.PORT || 5001;
   server.listen(port, "0.0.0.0", () => {
