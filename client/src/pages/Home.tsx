@@ -9,9 +9,29 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Clock } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { useQuery } from "@tanstack/react-query";
 
 interface StudyTimeFormData {
   duration: string;
+}
+
+interface Question {
+  id: string;
+  text: string;
+  options: Array<{ id: string; text: string; }>;
+  correctAnswer: string;
+  category: string;
+  difficulty: string;
+}
+
+interface QuestionsResponse {
+  questions: Question[];
+  pagination: {
+    total: number;
+    limit: number;
+    offset: number;
+    hasMore: boolean;
+  };
 }
 
 export default function Home() {
@@ -22,39 +42,103 @@ export default function Home() {
     },
   });
 
+  const { data: questionsData, isLoading: isLoadingQuestions, error: questionsError } = useQuery<QuestionsResponse>({
+    queryKey: ['/api/questions'],
+    queryFn: async () => {
+      console.log('Fetching questions...');
+      const response = await fetch('/api/questions?limit=3');
+      if (!response.ok) {
+        throw new Error('Failed to fetch questions');
+      }
+      const data = await response.json();
+      console.log('Questions data:', data);
+      return data;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2,
+  });
+
   const onSubmit = (data: StudyTimeFormData) => {
-    // In a real application, this would make an API call to generate the plan
+    const duration = parseInt(data.duration);
+    if (isNaN(duration) || duration <= 0) {
+      toast.error("Please enter a valid study duration");
+      return;
+    }
+
     const mockStudyPlan = `
-      📚 ${data.duration} Minute Personalized Study Plan for Bianca:
+      📚 ${data.duration} Minute Personalized Study Plan:
 
       1. Quick Review (5 mins)
-      - Review your previous quiz results in Pharmacology
+      - Review your previous quiz results
       - Check areas needing improvement
 
-      2. Focused Learning (${Math.floor(parseInt(data.duration) * 0.4)} mins)
-      - Practice Drug Calculations module
-      - Focus on dosage conversions (your current weak area)
+      2. Focused Learning (${Math.floor(duration * 0.4)} mins)
+      - Practice key concepts
+      - Focus on weak areas
 
-      3. Active Practice (${Math.floor(parseInt(data.duration) * 0.4)} mins)
-      - Complete 2 practice scenarios in Clinical Judgment
-      - Focus on patient assessment and care planning
+      3. Active Practice (${Math.floor(duration * 0.4)} mins)
+      - Complete practice scenarios
+      - Focus on clinical judgment
 
-      4. Quick Assessment (${Math.floor(parseInt(data.duration) * 0.2)} mins)
-      - Take a mini-quiz on today's topics
+      4. Quick Assessment (${Math.floor(duration * 0.2)} mins)
+      - Take a mini-quiz
       - Review incorrect answers
 
       💡 Pro Tips:
       - Take short breaks between sections
       - Use the AI companion for instant clarification
-      - Record any challenging concepts for future review
+      - Record challenging concepts for review
 
-      Keep going, Bianca! You're making great progress! 🌟
+      Keep going! You're making great progress! 🌟
     `;
     setStudyPlan(mockStudyPlan);
+    toast.success("Study plan generated!");
   };
 
-  const showToast = () => {
-    toast.success("Welcome to NCLEX Prep!");
+  const renderQuestionsSection = () => {
+    if (isLoadingQuestions) {
+      return (
+        <div className="space-y-2">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="animate-pulse">
+              <div className="h-4 bg-muted rounded w-3/4"></div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    if (questionsError) {
+      console.error('Questions error:', questionsError);
+      return (
+        <p className="text-muted-foreground">
+          Unable to load questions. Please try again later.
+        </p>
+      );
+    }
+
+    if (!questionsData?.questions?.length) {
+      return (
+        <p className="text-muted-foreground">
+          No questions available at the moment.
+        </p>
+      );
+    }
+
+    return (
+      <>
+        <p className="text-muted-foreground">
+          Recent questions from your study path:
+        </p>
+        <ul className="space-y-2">
+          {questionsData.questions.map((question) => (
+            <li key={question.id} className="text-sm">
+              • {question.text.substring(0, 100)}...
+            </li>
+          ))}
+        </ul>
+      </>
+    );
   };
 
   return (
@@ -62,15 +146,14 @@ export default function Home() {
       <section className="text-center py-8 sm:py-12">
         <div className="mb-6">
           <h1 className="text-3xl sm:text-4xl font-bold mb-2">
-            Welcome Back, Bianca! 👋
+            Welcome to NCLEX Prep! 👋
           </h1>
           <p className="text-xl sm:text-2xl text-primary mb-4">
             Ready to ace your NCLEX? Let's do this! 💪
           </p>
           <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base">
             Your personalized study guide for the National Council Licensure Examination. 
-            Track your progress, practice with questions, and master key nursing concepts. 
-            You've got this! ⭐
+            Track your progress, practice with questions, and master key nursing concepts.
           </p>
         </div>
       </section>
@@ -95,13 +178,12 @@ export default function Home() {
             <CardTitle>Practice Questions 📝</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="mb-4 text-muted-foreground">
-              Test your knowledge with our extensive question bank covering all NCLEX topics.
-              Keep pushing forward! 🎯
-            </p>
-            <Link href="/questions">
-              <Button className="w-full">Start Practice ✨</Button>
-            </Link>
+            <div className="space-y-4">
+              {renderQuestionsSection()}
+              <Link href="/questions">
+                <Button className="w-full mt-4">Start Practice ✨</Button>
+              </Link>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -130,8 +212,8 @@ export default function Home() {
                             placeholder="30" 
                             {...field} 
                             className="w-full"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
+                            min="1"
+                            max="480"
                           />
                         </FormControl>
                       </FormItem>

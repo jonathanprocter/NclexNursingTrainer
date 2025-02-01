@@ -3,11 +3,38 @@ import Analytics from "@/components/dashboard/Analytics";
 import PerformanceMetrics from "@/components/dashboard/PerformanceMetrics";
 import InstructorDashboard from "@/components/dashboard/InstructorDashboard";
 import { useQuery } from "@tanstack/react-query";
+import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Dashboard() {
-  const { data: analytics } = useQuery({
+  const { data: analytics, isLoading, error } = useQuery({
     queryKey: ["/api/analytics/user/1"], // Replace with actual user ID
+    queryFn: async () => {
+      const response = await fetch("/api/analytics/user/1");
+      if (!response.ok) {
+        throw new Error("Failed to fetch analytics");
+      }
+      return response.json();
+    },
+    retry: 2
   });
+
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
+
+  if (error) {
+    return (
+      <Card className="p-6">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-red-600 mb-2">Error Loading Dashboard</h2>
+          <p className="text-muted-foreground">
+            Unable to load dashboard data. Please try again later.
+          </p>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -37,6 +64,21 @@ export default function Dashboard() {
           <InstructorDashboard />
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <Skeleton className="h-8 w-48 mx-auto" />
+        <Skeleton className="h-4 w-96 mx-auto" />
+      </div>
+      <div className="space-y-2">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-96 w-full" />
+      </div>
     </div>
   );
 }

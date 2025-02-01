@@ -267,22 +267,41 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Questions routes
-  app.get("/api/questions", async (_req, res) => {
+  app.get("/api/questions", async (req, res) => {
     try {
-      // First check if questions table exists
-      const allQuestions = await db.query.questions.findMany({
-        orderBy: (questions, { asc }) => [asc(questions.createdAt)],
-      });
+      const limit = parseInt(req.query.limit as string) || 10;
+      const offset = parseInt(req.query.offset as string) || 0;
+      const category = req.query.category as string;
 
-      // If no questions exist, return empty array with 200 status
-      if (!allQuestions || allQuestions.length === 0) {
-        console.log("No questions found in database");
-        return res.json([]);
+      console.log("Fetching questions with params:", { limit, offset, category });
+
+      // Fetch questions directly from database
+      let query = db.select().from(questions);
+
+      if (category) {
+        query = query.where(eq(questions.type, category));
       }
 
+      const allQuestions = await query;
+      console.log("Found questions:", allQuestions.length);
+
+      if (!allQuestions || allQuestions.length === 0) {
+        return res.json({
+          questions: [],
+          pagination: {
+            total: 0,
+            limit,
+            offset,
+            hasMore: false
+          }
+        });
+      }
+
+      // Apply pagination
+      const paginatedQuestions = allQuestions.slice(offset, offset + limit);
+
       // Format questions for frontend
-      const formattedQuestions = allQuestions.map(q => ({
+      const formattedQuestions = paginatedQuestions.map(q => ({
         id: q.id.toString(),
         text: q.text,
         options: q.options as { id: string; text: string }[],
@@ -293,18 +312,34 @@ export function registerRoutes(app: Express): Server {
         tags: q.topicTags as string[] || []
       }));
 
-      console.log(`Found ${formattedQuestions.length} questions`);
-      res.json(formattedQuestions);
+      console.log("Returning formatted questions:", formattedQuestions.length);
+
+      res.json({
+        questions: formattedQuestions,
+        pagination: {
+          total: allQuestions.length,
+          limit,
+          offset,
+          hasMore: offset + limit < allQuestions.length
+        }
+      });
     } catch (error) {
       console.error("Error fetching questions:", error);
-      res.status(500).json({ 
+      res.status(500).json({
         message: "Failed to fetch questions",
-        error: error instanceof Error ? error.message : "Unknown error"
+        error: error instanceof Error ? error.message : "Unknown error",
+        questions: [],
+        pagination: {
+          total: 0,
+          limit: 10,
+          offset: 0,
+          hasMore: false
+        }
       });
     }
   });
-
-    app.get("/api/questions/:moduleId", async (req, res) => {
+  
+  app.get("/api/questions/:moduleId", async (req, res) => {
     try {
       const moduleQuestions = await db.query.questions.findMany({
         where: eq(questions.moduleId, parseInt(req.params.moduleId)),
@@ -892,7 +927,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   app.post("/api/scenarios/hint", async (req, res) => {
-    const { scenarioId, currentState } = req.body;
+    const{ scenarioId, currentState } = req.body;
 
     try {
       const completion = await openai.chat.completions.create({

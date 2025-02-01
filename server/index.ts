@@ -19,12 +19,13 @@ app.use(cors({
   credentials: true
 }));
 
-// Request logging middleware
+// Enhanced request logging middleware
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
+  // Capture JSON responses for logging
   const originalResJson = res.json;
   res.json = function (bodyJson, ...args) {
     capturedJsonResponse = bodyJson;
@@ -36,10 +37,8 @@ app.use((req, res, next) => {
     if (path.startsWith("/api")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
+        const responsePreview = JSON.stringify(capturedJsonResponse).slice(0, 150);
+        logLine += ` :: ${responsePreview}${responsePreview.length > 149 ? '…' : ''}`;
       }
       log(logLine);
     }
@@ -48,7 +47,9 @@ app.use((req, res, next) => {
   next();
 });
 
+// Configuration for running server
 const HOST = process.env.HOST || '0.0.0.0';
+const DEFAULT_PORT = 5000;
 
 const tryPort = async (port: number): Promise<number> => {
   try {
@@ -62,7 +63,7 @@ const tryPort = async (port: number): Promise<number> => {
       serveStatic(app);
     }
 
-    // Error handling middleware - should be last
+    // Enhanced error handling middleware
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       console.error('Error:', err);
       const status = err.status || err.statusCode || 500;
@@ -74,7 +75,12 @@ const tryPort = async (port: number): Promise<number> => {
       });
     });
 
-    await new Promise((resolve, reject) => {
+    // Fallback route handler
+    app.use((_req: Request, res: Response) => {
+      res.status(404).json({ message: "Not Found" });
+    });
+
+    return new Promise((resolve, reject) => {
       server.once('error', (err: any) => {
         if (err.code === 'EADDRINUSE') {
           server.close();
@@ -89,17 +95,17 @@ const tryPort = async (port: number): Promise<number> => {
         resolve(port);
       });
     });
-    return port;
   } catch (error) {
-    if (port > 5010) throw error;
+    if (port > DEFAULT_PORT + 10) throw error;
     return tryPort(port + 1);
   }
 };
 
-// Start server
+// Start server with enhanced error handling
 (async () => {
   try {
-    await tryPort(parseInt(process.env.PORT || '5000', 10));
+    const startPort = parseInt(process.env.PORT || DEFAULT_PORT.toString(), 10);
+    await tryPort(startPort);
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);
