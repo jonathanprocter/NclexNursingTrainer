@@ -15,8 +15,17 @@ export function registerRoutes(app: Express): Server {
   // Questions endpoint
   app.get('/api/questions', async (req, res) => {
     try {
-      const allQuestions = await db.select().from(questions);
-      res.json({ questions: allQuestions });
+      const questionList = await db.select().from(questions);
+      const formattedQuestions = questionList.map(q => ({
+        id: q.id.toString(),
+        text: q.question,
+        options: q.options,
+        correctAnswer: q.correctAnswer,
+        explanation: q.explanation || '',
+        category: q.category,
+        difficulty: q.difficulty === 1 ? 'Easy' : q.difficulty === 2 ? 'Medium' : 'Hard'
+      }));
+      res.json(formattedQuestions);
     } catch (error) {
       console.error('Error fetching questions:', error);
       res.status(500).json({ error: 'Failed to fetch questions' });

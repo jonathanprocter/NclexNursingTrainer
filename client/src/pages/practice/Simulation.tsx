@@ -26,8 +26,16 @@ export default function Simulation() {
 
   const startSimulationMutation = useMutation({
     mutationFn: async ({ difficulty, focusAreas }: { difficulty: string; focusAreas?: string[] }) => {
-      const scenario = await generateSimulationScenario(difficulty, focusAreas);
-      return scenario;
+      try {
+        const response = await fetch('/api/questions');
+        if (!response.ok) throw new Error('Failed to fetch questions');
+        const questions = await response.json();
+        const scenario = await generateSimulationScenario(difficulty, focusAreas, questions);
+        return scenario;
+      } catch (error) {
+        console.error('Error starting simulation:', error);
+        throw error;
+      }
     },
     onSuccess: (scenario) => {
       setActiveScenario(scenario);
