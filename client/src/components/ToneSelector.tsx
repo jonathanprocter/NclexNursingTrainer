@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Check, MessageSquare } from "lucide-react";
 import { Button } from "../components/ui/button";
-import { Card } from "../components/ui/card";
 import {
   Popover,
   PopoverContent,
@@ -9,10 +8,10 @@ import {
 } from "../components/ui/popover";
 import { cn } from "../lib/utils";
 
-export type StudyBuddyTone = 
-  | "professional" 
-  | "friendly" 
-  | "socratic" 
+export type StudyBuddyTone =
+  | "professional"
+  | "friendly"
+  | "socratic"
   | "encouraging";
 
 interface ToneSelectorProps {
@@ -28,26 +27,29 @@ const toneOptions: Array<{
   {
     value: "professional",
     label: "Professional",
-    description: "Clear and concise explanations with clinical focus"
+    description: "Clear and concise explanations with clinical focus",
   },
   {
     value: "friendly",
     label: "Friendly",
-    description: "Casual and supportive learning environment"
+    description: "Casual and supportive learning environment",
   },
   {
     value: "socratic",
     label: "Socratic",
-    description: "Guided discovery through thoughtful questions"
+    description: "Guided discovery through thoughtful questions",
   },
   {
     value: "encouraging",
     label: "Encouraging",
-    description: "Extra motivation and positive reinforcement"
-  }
+    description: "Extra motivation and positive reinforcement",
+  },
 ];
 
-export function ToneSelector({ selectedTone, onToneChange }: ToneSelectorProps) {
+export function ToneSelector({
+  selectedTone,
+  onToneChange,
+}: ToneSelectorProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -61,7 +63,8 @@ export function ToneSelector({ selectedTone, onToneChange }: ToneSelectorProps) 
         >
           <MessageSquare className="h-4 w-4" />
           <span className="truncate">
-            {toneOptions.find(t => t.value === selectedTone)?.label || "Select Tone"}
+            {toneOptions.find((t) => t.value === selectedTone)?.label ||
+              "Select Tone"}
           </span>
         </Button>
       </PopoverTrigger>
@@ -73,7 +76,7 @@ export function ToneSelector({ selectedTone, onToneChange }: ToneSelectorProps) 
               onClick={() => onToneChange(tone.value)}
               className={cn(
                 "w-full flex items-start p-2 text-left rounded-lg hover:bg-accent transition-colors",
-                selectedTone === tone.value ? "bg-accent" : "bg-background"
+                selectedTone === tone.value ? "bg-accent" : "bg-background",
               )}
               role="option"
               aria-selected={selectedTone === tone.value}
@@ -81,9 +84,7 @@ export function ToneSelector({ selectedTone, onToneChange }: ToneSelectorProps) 
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <span className="font-medium">{tone.label}</span>
-                  {selectedTone === tone.value && (
-                    <Check className="h-4 w-4" />
-                  )}
+                  {selectedTone === tone.value && <Check className="h-4 w-4" />}
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {tone.description}

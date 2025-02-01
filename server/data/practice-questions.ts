@@ -1,17 +1,6 @@
-import { Question } from '../../client/src/types/questions';
+// server/data/practice-questions.ts
 
-// Question categories
-export const questionCategories = {
-  fundamentals: "Fundamentals",
-  medSurg: "Med-Surg",
-  pediatrics: "Pediatrics",
-  pharmacology: "Pharmacology"
-} as const;
-
-type QuestionCategory = typeof questionCategories[keyof typeof questionCategories];
-
-// Question data by category
-const questionsByCategory: Record<string, Question[]> = {
+export const practiceQuestions = Object.entries({
   fundamentals: [
     {
       id: "fund-1",
@@ -24,7 +13,7 @@ const questionsByCategory: Record<string, Question[]> = {
       ],
       correctAnswer: "a",
       explanation: "Positioning the client in high Fowler's position is the first priority as it maximizes lung expansion and reduces the work of breathing. This position helps decrease the work of breathing and improves oxygenation before implementing other interventions.",
-      category: questionCategories.fundamentals,
+      category: "Fundamentals",
       difficulty: "Medium",
       tags: ["respiratory", "positioning", "oxygenation"],
       conceptualBreakdown: {
@@ -46,9 +35,24 @@ const questionsByCategory: Record<string, Question[]> = {
           answer: "Positioning is a non-invasive intervention that can be implemented immediately without waiting for orders or medication preparation, potentially improving the patient's condition quickly."
         }
       ]
+    },
+    {
+      id: "fund-2",
+      text: "A nurse is assessing a client's neurological status. Which combination of findings indicates the need for immediate medical intervention?",
+      options: [
+        { id: "a", text: "Alert, oriented x3, pupils equal and reactive" },
+        { id: "b", text: "Drowsy but arousable, bilateral hand grasp equal" },
+        { id: "c", text: "Unresponsive to verbal stimuli, unequal pupils" },
+        { id: "d", text: "Confused, but following simple commands" }
+      ],
+      correctAnswer: "c",
+      explanation: "Unresponsiveness to verbal stimuli combined with unequal pupils indicates a significant neurological change that requires immediate medical attention as it could signify increased intracranial pressure or other acute neurological conditions.",
+      category: "Fundamentals",
+      difficulty: "Hard",
+      tags: ["neurological", "assessment", "critical thinking"]
     }
   ],
-  medSurg: [
+  "med-surg": [
     {
       id: "med-1",
       text: "A client with heart failure is experiencing dyspnea and fatigue. Which position would best facilitate breathing?",
@@ -60,7 +64,7 @@ const questionsByCategory: Record<string, Question[]> = {
       ],
       correctAnswer: "b",
       explanation: "High Fowler's position (60-90 degrees) reduces venous return to the heart and promotes optimal lung expansion, making it the best position for a client with heart failure experiencing dyspnea.",
-      category: questionCategories.medSurg,
+      category: "Med-Surg",
       difficulty: "Medium",
       tags: ["cardiac", "positioning", "respiratory"],
       conceptualBreakdown: {
@@ -78,21 +82,15 @@ const questionsByCategory: Record<string, Question[]> = {
       }
     }
   ]
-};
-
-// Transform the questions data into a flat array
-export const practiceQuestions: Question[] = Object.entries(questionsByCategory)
-  .flatMap(([_, questions]) => questions);
-
-// Utility functions
-export const getQuestionsByCategory = (category: QuestionCategory): Question[] => {
-  return questionsByCategory[category.toLowerCase()] || [];
-};
-
-export const getAllCategories = (): QuestionCategory[] => {
-  return Object.values(questionCategories);
-};
-
-export const getQuestionById = (id: string): Question | undefined => {
-  return practiceQuestions.find(q => q.id === id);
-};
+}).reduce((acc, [category, questions]) => {
+  const normalizedQuestions = questions.map((q) => ({
+    ...q,
+    category:
+      category === "med-surg"
+        ? "Med-Surg"
+        : category === "fundamentals"
+        ? "Fundamentals"
+        : category
+  }));
+  return acc.concat(normalizedQuestions);
+}, []);
