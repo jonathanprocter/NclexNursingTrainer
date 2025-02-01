@@ -4,6 +4,7 @@ import { db } from "@db";
 import { eq } from "drizzle-orm";
 import studyGuideRouter from './routes/study-guide';
 import OpenAI from "openai";
+import { questions } from "@db/schema";
 import { studyBuddyChats } from "@db/schema";
 
 export function registerRoutes(app: Express): Server {

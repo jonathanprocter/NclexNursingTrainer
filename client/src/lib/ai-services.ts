@@ -167,7 +167,11 @@ export async function generateAdaptiveQuestions(params: QuestionGenerationParams
       throw new Error('Failed to generate questions');
     }
 
-    return await response.json();
+    const data = await response.json();
+    if (!data.questions) {
+      throw new Error('Invalid response format: missing questions');
+    }
+    return data;
   } catch (error) {
     console.error('Error generating questions:', error);
     throw new Error('Failed to generate questions');

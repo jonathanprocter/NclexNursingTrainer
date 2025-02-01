@@ -6,6 +6,15 @@ import { db } from "@db";
 
 const app = express();
 
+// Error handling middleware
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  console.error(err.stack);
+  res.status(500).json({ 
+    error: 'Something went wrong!',
+    message: err.message 
+  });
+});
+
 // Middleware
 app.use(cors());
 app.use(express.json());
