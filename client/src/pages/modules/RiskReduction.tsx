@@ -265,7 +265,32 @@ export default function RiskReduction() {
     },
     onSuccess: (newQuestions) => {
       if (isMounted.current) {
-        setPreventionQuestions(prev => [...prev, ...newQuestions]);
+        if (Array.isArray(newQuestions)) {
+  setPreventionQuestions(prev => [...prev, ...newQuestions]);
+} else {
+  console.error('Received invalid questions format:', newQuestions);
+  // Set default questions if response is invalid
+  setPreventionQuestions([{
+    id: "default_1",
+    question: "Which nursing intervention best demonstrates proper infection control?",
+    options: [
+      { value: "a", label: "Performing hand hygiene before and after patient contact" },
+      { value: "b", label: "Wearing the same gloves between patients" },
+      { value: "c", label: "Reusing personal protective equipment" },
+      { value: "d", label: "Using hand sanitizer without washing visibly soiled hands" }
+    ],
+    correctAnswer: "a",
+    explanation: {
+      main: "Hand hygiene is the most effective way to prevent infection spread.",
+      concepts: [
+        {
+          title: "Basic Prevention",
+          description: "Hand hygiene is fundamental to infection control"
+        }
+      ]
+    }
+  }]);
+}
         toast({
           title: "New questions added!",
           description: `Added ${newQuestions.length} new questions to your practice set.`,
