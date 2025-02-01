@@ -17,12 +17,10 @@ export function FloatingStudyBuddy() {
 
   // Check browser support on mount
   useEffect(() => {
-    const supported = !!(
-      window.webkitSpeechRecognition || window.SpeechRecognition
-    );
-    setIsBrowserSupported(supported);
+    const isSupported = !!(window.webkitSpeechRecognition || window.SpeechRecognition);
+    setIsBrowserSupported(isSupported);
 
-    if (!supported) {
+    if (!isSupported) {
       toast({
         title: "Browser Not Supported",
         description: "Voice recognition requires Chrome or Edge browser.",
@@ -35,18 +33,18 @@ export function FloatingStudyBuddy() {
   useEffect(() => {
     if (!isBrowserSupported) return;
 
-    // @ts-ignore - using non-standard SpeechRecognition types
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
+    // @ts-ignore - SpeechRecognition types
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      console.error("Speech recognition not supported");
+      console.error('Speech recognition not supported');
       return;
     }
-
+    
     const recognition = new SpeechRecognition();
+
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = "en-US";
+    recognition.lang = 'en-US';
 
     recognition.onstart = () => {
       setIsListening(true);
@@ -65,11 +63,12 @@ export function FloatingStudyBuddy() {
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       try {
         const transcript = Array.from(event.results)
-          .map((result) => result[0].transcript)
-          .join(" ");
+          .map(result => result[0].transcript)
+          .join(' ');
+
         setTranscriptBuffer(transcript);
 
-        // When a final transcript is available, pass it to the chat component
+        // If this is a final result, trigger the chat input
         if (event.results[event.results.length - 1].isFinal) {
           chatComponentRef.current?.handleVoiceInput(transcript);
           setTranscriptBuffer("");
@@ -85,24 +84,20 @@ export function FloatingStudyBuddy() {
     };
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-      console.error("Speech recognition error:", event.error);
+      console.error('Speech recognition error:', event.error);
       setIsListening(false);
       setTranscriptBuffer("");
 
       const errorMessages: Record<string, string> = {
-        "not-allowed":
-          "Microphone access denied. Please check your browser permissions.",
-        network:
-          "Network error occurred. Please check your internet connection.",
-        "no-speech": "No speech detected. Please try speaking again.",
-        aborted: "Voice input was aborted.",
+        'not-allowed': "Microphone access denied. Please check your browser permissions.",
+        'network': "Network error occurred. Please check your internet connection.",
+        'no-speech': "No speech detected. Please try speaking again.",
+        'aborted': "Voice input was aborted.",
       };
 
       toast({
         title: "Error",
-        description:
-          errorMessages[event.error] ||
-          `Speech recognition error: ${event.message || event.error}`,
+        description: errorMessages[event.error] || `Speech recognition error: ${event.message || event.error}`,
         variant: "destructive",
       });
     };
@@ -110,7 +105,9 @@ export function FloatingStudyBuddy() {
     recognitionRef.current = recognition;
 
     return () => {
-      recognitionRef.current?.abort();
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
+      }
     };
   }, [isBrowserSupported, toast]);
 
@@ -118,8 +115,7 @@ export function FloatingStudyBuddy() {
     if (!isBrowserSupported) {
       toast({
         title: "Not Supported",
-        description:
-          "Speech recognition is not supported in your browser. Please use Chrome or Edge.",
+        description: "Speech recognition is not supported in your browser. Please use Chrome or Edge.",
         variant: "destructive",
       });
       return;
@@ -127,14 +123,16 @@ export function FloatingStudyBuddy() {
 
     try {
       if (!isListening) {
-        // Request microphone access before starting voice recognition.
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-        });
-        stream.getTracks().forEach((track) => track.stop());
-        recognitionRef.current?.start();
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach(track => track.stop());
+
+        if (recognitionRef.current) {
+          recognitionRef.current.start();
+        }
       } else {
-        recognitionRef.current?.stop();
+        if (recognitionRef.current) {
+          recognitionRef.current.stop();
+        }
       }
     } catch (error) {
       console.error("Microphone access error:", error);
@@ -161,9 +159,7 @@ export function FloatingStudyBuddy() {
             <div className="bg-card border rounded-lg shadow-lg w-[400px] h-[600px] flex flex-col">
               <div className="p-4 border-b flex justify-between items-center">
                 <h2 className="font-semibold flex items-center gap-2">
-                  <span className="text-xl" role="img" aria-label="bee">
-                    🐝
-                  </span>
+                  <span className="text-xl" role="img" aria-label="bee">🐝</span>
                   Bee Wise
                 </h2>
                 <div className="flex items-center gap-2">
@@ -172,7 +168,10 @@ export function FloatingStudyBuddy() {
                       variant="ghost"
                       size="icon"
                       onClick={toggleVoiceInput}
-                      className={cn("relative", isListening && "text-primary")}
+                      className={cn(
+                        "relative",
+                        isListening && "text-primary"
+                      )}
                       title={isListening ? "Stop recording" : "Start recording"}
                     >
                       {isListening ? (
@@ -197,7 +196,7 @@ export function FloatingStudyBuddy() {
                 </div>
               </div>
               <div className="flex-1 overflow-hidden">
-                <StudyBuddyChat
+                <StudyBuddyChat 
                   ref={chatComponentRef}
                   isListening={isListening}
                   onVoiceInputToggle={toggleVoiceInput}
@@ -219,16 +218,17 @@ export function FloatingStudyBuddy() {
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
           "rounded-full w-12 h-12 shadow-lg transition-colors duration-200",
-          isOpen
-            ? "bg-yellow-500/10 hover:bg-yellow-500/20"
-            : "bg-yellow-500 hover:bg-yellow-600",
+          isOpen ? "bg-yellow-500/10 hover:bg-yellow-500/20" : "bg-yellow-500 hover:bg-yellow-600"
         )}
         variant={isOpen ? "ghost" : "default"}
         title={isOpen ? "Hide Bee Wise" : "Show Bee Wise"}
       >
-        <span
-          className={cn("text-xl", isOpen ? "text-yellow-600" : "text-white")}
-          role="img"
+        <span 
+          className={cn(
+            "text-xl",
+            isOpen ? "text-yellow-600" : "text-white"
+          )} 
+          role="img" 
           aria-label="bee"
         >
           🐝

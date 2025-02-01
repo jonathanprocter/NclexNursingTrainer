@@ -1,5 +1,5 @@
 import express from "express";
-import { practiceQuestions } from "../data/practice-questions";
+import { practiceQuestions } from '../data/practice-questions';
 
 const router = express.Router();
 
@@ -12,7 +12,7 @@ router.get("/", async (req, res) => {
 
     // Filter by topic if provided
     if (topic) {
-      questionsList = questionsList.filter(q =>
+      questionsList = questionsList.filter(q => 
         q.category.toLowerCase() === topic.toString().toLowerCase()
       );
     }
@@ -41,11 +41,11 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     const question = practiceQuestions.find(q => q.id === req.params.id);
-
+    
     if (!question) {
       return res.status(404).json({ message: "Question not found" });
     }
-
+    
     res.json(question);
   } catch (error) {
     console.error("Error fetching question:", error);
