@@ -3,7 +3,6 @@ import express, { type Request, Response, NextFunction } from "express";
 import cors from 'cors';
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import type { Server } from "http";
 
 const app = express();
 
@@ -59,6 +58,9 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
+// Register routes
+const server = registerRoutes(app);
+
 // Error handling
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   console.error('Error:', err);
@@ -71,45 +73,33 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   });
 });
 
-const HOST = process.env.HOST || '0.0.0.0';
-const tryPort = async (port: number): Promise<number> => {
-  try {
-    const server = registerRoutes(app);
-    if (process.env.NODE_ENV === "development") {
-      await setupVite(app, server);
-    } else {
-      serveStatic(app);
-    }
+const PORT = process.env.PORT || 5000;
+const HOST = '0.0.0.0';
 
-    await new Promise((resolve, reject) => {
-      server.once('error', (err: any) => {
-        if (err.code === 'EADDRINUSE') {
-          server.close();
-          resolve(tryPort(port + 1));
-        } else {
-          reject(err);
-        }
-      });
-
-      server.listen(port, HOST, () => {
-        log(`Server running on http://${HOST}:${port}`);
-        resolve(port);
-      });
+if (process.env.NODE_ENV === "development") {
+  setupVite(app, server).then(() => {
+    server.listen(PORT, HOST, () => {
+      console.log(`Server running on http://${HOST}:${PORT}`);
+      console.log('API endpoints:');
+      console.log('- GET /api/questions');
+      console.log('- GET /api/questions/:id');
     });
-    return port;
-  } catch (error) {
-    if (port > 5010) throw error;
-    return tryPort(port + 1);
-  }
-};
+  });
+} else {
+  serveStatic(app);
+  server.listen(PORT, HOST, () => {
+    console.log(`Server running on http://${HOST}:${PORT}`);
+    console.log('API endpoints:');
+    console.log('- GET /api/questions');
+    console.log('- GET /api/questions/:id');
+  });
+}
 
-// Start server
-(async () => {
-  try {
-    const port = await tryPort(parseInt(process.env.PORT || '5000', 10));
-    console.log(`Server is running with /api/questions endpoint enabled`);
-  } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
-  }
-})();
+// Handle graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM signal received: closing server');
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
+});

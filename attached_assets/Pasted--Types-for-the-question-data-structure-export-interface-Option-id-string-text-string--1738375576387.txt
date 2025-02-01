@@ -1,7 +1,35 @@
-import { Question } from '../../client/src/types/questions';
+// Types for the question data structure
+export interface Option {
+  id: string;
+  text: string;
+}
+
+export interface ConceptualBreakdown {
+  key_concepts: string[];
+  related_topics: string[];
+  clinical_relevance: string;
+}
+
+export interface FAQ {
+  question: string;
+  answer: string;
+}
+
+export interface Question {
+  id: string;
+  text: string;
+  options: Option[];
+  correctAnswer: string;
+  explanation: string;
+  category: string;
+  difficulty: string;
+  tags: string[];
+  conceptualBreakdown?: ConceptualBreakdown;
+  faqs?: FAQ[];
+}
 
 // Question categories
-export const questionCategories = {
+const questionCategories = {
   fundamentals: "Fundamentals",
   medSurg: "Med-Surg",
   pediatrics: "Pediatrics",
@@ -46,7 +74,8 @@ const questionsByCategory: Record<string, Question[]> = {
           answer: "Positioning is a non-invasive intervention that can be implemented immediately without waiting for orders or medication preparation, potentially improving the patient's condition quickly."
         }
       ]
-    }
+    },
+    // Additional fundamentals questions...
   ],
   medSurg: [
     {
@@ -76,7 +105,8 @@ const questionsByCategory: Record<string, Question[]> = {
         ],
         clinical_relevance: "Proper positioning in heart failure helps reduce workload on the heart and improves respiratory function by optimizing lung expansion."
       }
-    }
+    },
+    // Additional med-surg questions...
   ]
 };
 

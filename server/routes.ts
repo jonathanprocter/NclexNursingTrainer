@@ -3,8 +3,8 @@ import { createServer, type Server } from "http";
 import { db } from "@db";
 import { eq } from "drizzle-orm";
 import studyGuideRouter from './routes/study-guide';
+import questionRouter from './routes/questions';  // Import the question router
 import OpenAI from "openai";
-import { practiceQuestions } from './data/practice-questions';
 import { studyBuddyChats, quizAttempts, userProgress, questions } from "@db/schema";
 
 if (!process.env.OPENAI_API_KEY) {
@@ -18,163 +18,11 @@ const openai = new OpenAI({
 export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
 
-  // Study guide routes
+  // Register API routes
+  app.use('/api/questions', questionRouter);  // Use the dedicated question router
   app.use('/api/study-guide', studyGuideRouter);
 
-  // Questions endpoint with AI generation
-  app.get("/api/questions", async (req, res) => {
-    console.log('Received request for /api/questions with query:', req.query);
-    try {
-      const { topic, limit = 10, page = 1 } = req.query;
-
-      // Use the existing practice questions or generate new ones
-      let questionsList = practiceQuestions;
-      console.log('Total questions available:', questionsList.length);
-
-      // Filter by topic if provided
-      if (topic) {
-        questionsList = questionsList.filter(q => q.category.toLowerCase() === topic.toString().toLowerCase());
-        console.log('Filtered questions by topic:', topic, 'Results:', questionsList.length);
-      }
-
-      // Apply pagination
-      const startIndex = (Number(page) - 1) * Number(limit);
-      const endIndex = startIndex + Number(limit);
-      const paginatedQuestions = questionsList.slice(startIndex, endIndex);
-
-      console.log('Sending response with', paginatedQuestions.length, 'questions');
-      res.json({
-        questions: paginatedQuestions,
-        total: questionsList.length,
-        page: Number(page),
-        totalPages: Math.ceil(questionsList.length / Number(limit))
-      });
-    } catch (error) {
-      console.error("Error fetching questions:", error);
-      res.status(500).json({
-        message: "Failed to fetch questions",
-        error: error instanceof Error ? error.message : "Unknown error"
-      });
-    }
-  });
-
-  // AI Help endpoint
-  app.post("/api/ai-help", async (req, res) => {
-    const { context } = req.body;
-
-    try {
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4",
-        messages: [
-          {
-            role: "system",
-            content: `You are an expert nursing educator. Provide detailed explanations of nursing concepts,
-          focusing on clinical reasoning and practical application. Include:
-          - Key principles and rationale
-          - Clinical examples and scenarios
-          - Common misconceptions
-          - Evidence-based practice guidelines`
-          },
-          {
-            role: "user",
-            content: context
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 1000
-      });
-
-      const response = completion.choices[0]?.message?.content;
-
-      if (!response) {
-        throw new Error("No response generated");
-      }
-
-      res.json({ response });
-    } catch (error) {
-      console.error("Error in AI help endpoint:", error);
-      res.status(500).json({
-        message: "Failed to get AI assistance",
-        error: error instanceof Error ? error.message : "Unknown error"
-      });
-    }
-  });
-
-  // Question generation endpoint
-  app.post("/api/generate-questions", async (req, res) => {
-    try {
-      const { topic, complexity, previousQuestionIds } = req.body;
-      const MIN_QUESTIONS = 5;
-
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4",
-        messages: [
-          {
-            role: "system",
-            content: `Generate NCLEX-style questions focusing on ${complexity || 'knowledge'} level thinking.
-              Each question should include:
-              - Clear question text
-              - Multiple choice options (A through D)
-              - Correct answer with detailed rationale
-              - Cognitive level classification
-              - Conceptual breakdown (key concepts, related topics, clinical relevance)
-              - Frequently asked questions about the topic
-              Return in a valid JSON array format.`
-          },
-          {
-            role: "user",
-            content: `Generate ${MIN_QUESTIONS} unique nursing questions${topic ? ` for ${topic}` : ''} at the ${complexity || 'knowledge'} cognitive level.
-              Previous question IDs to avoid: ${previousQuestionIds?.join(', ') || 'none'}`
-          }
-        ]
-      });
-
-      let generatedQuestions;
-      try {
-        const content = completion.choices[0]?.message?.content;
-        if (!content) throw new Error("No content received from OpenAI");
-
-        // Try to extract JSON if wrapped in markdown code blocks
-        const jsonContent = content.replace(/```json\n?|\n?```/g, '').trim();
-        generatedQuestions = JSON.parse(jsonContent);
-
-        if (!Array.isArray(generatedQuestions)) {
-          throw new Error("Generated content is not an array");
-        }
-      } catch (parseError) {
-        console.error("Failed to parse OpenAI response:", parseError);
-        throw new Error("Failed to parse generated questions");
-      }
-
-      // Format the generated questions
-      const formattedQuestions = generatedQuestions.map((q: any, index: number) => ({
-        id: q.id || `gen_${Date.now()}_${index}`,
-        text: q.text,
-        options: q.options || [],
-        correctAnswer: q.correctAnswer,
-        explanation: q.explanation,
-        category: topic || 'General',
-        difficulty: q.difficulty || complexity || 'medium',
-        tags: q.tags || [],
-        conceptualBreakdown: {
-          key_concepts: q.key_concepts || [],
-          related_topics: q.related_topics || [],
-          clinical_relevance: q.clinical_relevance || ''
-        },
-        faqs: q.faqs || []
-      }));
-
-      res.json(formattedQuestions);
-    } catch (error) {
-      console.error("Error generating questions:", error);
-      res.status(500).json({
-        message: "Failed to generate questions",
-        error: error instanceof Error ? error.message : "Unknown error"
-      });
-    }
-  });
-
-    // Study buddy chat endpoints
+  // Study buddy chat endpoints
   app.post("/api/study-buddy/start", async (req, res) => {
     try {
       const { studentId, tone, topic } = req.body;
@@ -274,7 +122,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Modules routes
+    // Modules routes
   app.get("/api/modules", async (_req, res) => {
     try {
       const allModules = await db.query.modules.findMany({
@@ -368,7 +216,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Questions routes
+
   // Drug calculation generation endpoint
   app.post("/api/generate-calculation", async (req, res) => {
     try {
@@ -512,6 +360,7 @@ export function registerRoutes(app: Express): Server {
       res.status(500).json({ message: "Failed to fetch analytics" });
     }
   });
+
 
   return httpServer;
 }
