@@ -75,8 +75,17 @@ const HOST = process.env.HOST || '0.0.0.0';
       serveStatic(app);
     }
 
+    server.on('error', (e: any) => {
+      if (e.code === 'EADDRINUSE') {
+        console.log('Port in use, retrying on port', PORT + 1);
+        server.listen(PORT + 1, HOST);
+      }
+    });
+
     server.listen(PORT, HOST, () => {
-      log(`Server running on http://${HOST}:${PORT}`);
+      const address = server.address();
+      const actualPort = typeof address === 'object' && address ? address.port : PORT;
+      log(`Server running on http://${HOST}:${actualPort}`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);
