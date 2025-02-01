@@ -36,17 +36,62 @@ export default function QuestionBank() {
   const [questionsAnswered, setQuestionsAnswered] = useState(0);
   const [correctAnswers, setCorrectAnswers] = useState(0);
 
-  // Fetch questions from the API
-  const { data: questions = [], isLoading } = useQuery<Question[]>({
+  // Fetch questions from the API with error handling
+  const { data: questions = [], isLoading, error } = useQuery<Question[]>({
     queryKey: ['/api/questions', selectedCategory],
+    retry: 3,
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    onError: (error) => {
+      console.error("Error fetching questions:", error);
+    }
   });
 
   useEffect(() => {
-    if (questions.length > 0 && !currentQuestion) {
+    if (questions && questions.length > 0 && !currentQuestion) {
       const randomIndex = Math.floor(Math.random() * questions.length);
       setCurrentQuestion(questions[randomIndex]);
     }
   }, [questions, currentQuestion]);
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold mb-2">Loading Questions...</h2>
+          <p className="text-muted-foreground">Please wait while we prepare your practice session.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold mb-2 text-red-600">Error Loading Questions</h2>
+          <p className="text-muted-foreground">Please try refreshing the page.</p>
+          <p className="text-sm text-gray-500 mt-2">{error instanceof Error ? error.message : 'Unknown error occurred'}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Empty state
+  if (!questions || questions.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold mb-2">No Questions Available</h2>
+          <p className="text-muted-foreground">
+            There are currently no questions in the selected category.
+            Please try selecting a different category or check back later.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const handleAnswerSelect = (optionId: string) => {
     if (!currentQuestion || showExplanation) return;
@@ -77,17 +122,6 @@ export default function QuestionBank() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold mb-2">Loading Questions...</h2>
-          <p className="text-muted-foreground">Please wait while we prepare your practice session.</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -98,36 +132,19 @@ export default function QuestionBank() {
           </p>
         </div>
 
-        <Card className="mb-6">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-xl">Practice Session</CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                Questions Answered: {questionsAnswered}
-              </p>
-            </div>
-            <div className="w-32">
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
-                  <SelectItem value="fundamentals">Fundamentals</SelectItem>
-                  <SelectItem value="med-surg">Med-Surg</SelectItem>
-                  <SelectItem value="pediatrics">Pediatrics</SelectItem>
-                  <SelectItem value="pharmacology">Pharmacology</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardHeader>
-        </Card>
-
         {currentQuestion && (
           <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-xl">Question {questionsAnswered + 1}</CardTitle>
+              {questionsAnswered > 0 && (
+                <div className="text-sm text-muted-foreground">
+                  Score: {Math.round((correctAnswers / questionsAnswered) * 100)}%
+                </div>
+              )}
+            </CardHeader>
             <CardContent className="pt-6">
               <div className="space-y-6">
-                <div className="flex flex-wrap gap-2 mb-4">
+                <div className="flex flex-wrap gap-2">
                   <Badge variant="outline">{currentQuestion.category}</Badge>
                   <Badge 
                     variant={
@@ -138,11 +155,6 @@ export default function QuestionBank() {
                   >
                     {currentQuestion.difficulty}
                   </Badge>
-                  {currentQuestion.tags.map((tag, index) => (
-                    <Badge key={index} variant="outline" className="bg-muted">
-                      {tag}
-                    </Badge>
-                  ))}
                 </div>
 
                 <h3 className="text-lg font-medium leading-6">
@@ -188,10 +200,6 @@ export default function QuestionBank() {
 
                 {questionsAnswered > 0 && (
                   <div className="mt-6">
-                    <div className="flex justify-between text-sm mb-2">
-                      <span>Progress</span>
-                      <span>{Math.round((correctAnswers / questionsAnswered) * 100)}% Correct</span>
-                    </div>
                     <Progress value={(correctAnswers / questionsAnswered) * 100} className="h-2" />
                   </div>
                 )}

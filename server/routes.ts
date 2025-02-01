@@ -268,15 +268,39 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Questions routes
-    app.get("/api/questions", async (_req, res) => {
+  app.get("/api/questions", async (_req, res) => {
     try {
+      // First check if questions table exists
       const allQuestions = await db.query.questions.findMany({
         orderBy: (questions, { asc }) => [asc(questions.createdAt)],
       });
-      res.json(allQuestions);
+
+      // If no questions exist, return empty array with 200 status
+      if (!allQuestions || allQuestions.length === 0) {
+        console.log("No questions found in database");
+        return res.json([]);
+      }
+
+      // Format questions for frontend
+      const formattedQuestions = allQuestions.map(q => ({
+        id: q.id.toString(),
+        text: q.text,
+        options: q.options as { id: string; text: string }[],
+        correctAnswer: q.correctAnswer,
+        explanation: q.explanation || '',
+        category: q.type || 'General',
+        difficulty: q.difficulty === 1 ? 'Easy' : q.difficulty === 2 ? 'Medium' : 'Hard',
+        tags: q.topicTags as string[] || []
+      }));
+
+      console.log(`Found ${formattedQuestions.length} questions`);
+      res.json(formattedQuestions);
     } catch (error) {
       console.error("Error fetching questions:", error);
-      res.status(500).json({ message: "Failed to fetch questions" });
+      res.status(500).json({ 
+        message: "Failed to fetch questions",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 
@@ -888,8 +912,7 @@ export function registerRoutes(app: Express): Server {
               "patientSafetyConsiderations": ["safety aspects to consider"],
               "prioritizationGuidance": "tips for prioritizing actions"
             }`
-          },
-          {
+          },          {
             role: "user",
             content: `Provide a hint for scenario ${scenarioId} based on the current state and return it as a JSON object. Current state: ${JSON.stringify(currentState)}`
           }
@@ -898,8 +921,7 @@ export function registerRoutes(app: Express): Server {
       });
 
       const hintContent = completion.choices[0]?.message?.content;
-      if (!hintContent) {
-        throw new Error("Failed to generate hint");
+      if (!hintContent) {        throw new Error("Failed to generate hint");
       }
 
       const hint = JSON.parse(hintContent);
