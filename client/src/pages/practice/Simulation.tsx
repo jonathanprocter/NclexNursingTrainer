@@ -377,11 +377,11 @@ export default function Simulation() {
                             </div>
                           )}
 
-                          {activeScenario.initial_state.lab_values && (
+                          {activeScenario?.initial_state?.lab_values && Object.keys(activeScenario.initial_state.lab_values).length > 0 && (
                             <div>
                               <h4 className="text-sm font-medium">Lab Values</h4>
                               <div className="grid grid-cols-2 gap-2 mt-2">
-                                {Object.entries(activeScenario.initial_state.lab_values).map(([key, value]) => 
+                                {Object.entries(activeScenario.initial_state.lab_values || {}).map(([key, value]) => 
                                   renderVitalSign(key, value)
                                 )}
                               </div>
