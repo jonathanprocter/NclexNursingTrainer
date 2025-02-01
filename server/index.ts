@@ -61,42 +61,23 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   });
 });
 
+const PORT = parseInt(process.env.PORT || '5000', 10);
 const HOST = process.env.HOST || '0.0.0.0';
-const tryPort = async (port: number): Promise<number> => {
+
+// Start server
+(async () => {
   try {
     const server = registerRoutes(app);
+
     if (process.env.NODE_ENV === "development") {
       await setupVite(app, server);
     } else {
       serveStatic(app);
     }
-    
-    await new Promise((resolve, reject) => {
-      server.once('error', (err: any) => {
-        if (err.code === 'EADDRINUSE') {
-          server.close();
-          resolve(tryPort(port + 1));
-        } else {
-          reject(err);
-        }
-      });
-      
-      server.listen(port, HOST, () => {
-        log(`Server running on http://${HOST}:${port}`);
-        resolve(port);
-      });
-    });
-    return port;
-  } catch (error) {
-    if (port > 5010) throw error;
-    return tryPort(port + 1);
-  }
-};
 
-// Start server
-(async () => {
-  try {
-    const port = await tryPort(parseInt(process.env.PORT || '5000', 10));
+    server.listen(PORT, HOST, () => {
+      log(`Server running on http://${HOST}:${PORT}`);
+    });
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);

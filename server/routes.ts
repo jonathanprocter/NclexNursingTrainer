@@ -234,6 +234,7 @@ export function registerRoutes(app: Express): Server {
           }
         ],
         temperature: 0.7,
+        max_tokens: 1000,
       });
 
       const response = completion.choices[0]?.message?.content;
@@ -635,40 +636,44 @@ export function registerRoutes(app: Express): Server {
           {
             role: "system",
             content: `You are an expert nursing educator creating detailed patient scenarios for NCLEX preparation.
-            Generate a properly formatted JSON scenario that matches this structure exactly:
+            Generate realistic, complex scenarios that test clinical judgment and decision-making skills.
+            Include comprehensive vital signs, detailed symptoms, relevant medical history, medications, and current presentation.
+            Focus on common NCLEX topics and real-world nursing situations.
+            Return your response as a JSON object with the following format:
             {
-              "id": "string",
-              "title": "string",
-              "description": "string",
-              "difficulty": "beginner|intermediate|advanced",
-              "initial_state": {
-                "patient_condition": "string",
-                "vital_signs": {
-                  "blood_pressure": "string",
-                  "heart_rate": "number",
-                  "respiratory_rate": "number",
-                  "temperature": "number",
-                  "oxygen_saturation": "number"
-                },
-                "symptoms": ["string"],
-                "medical_history": "string"
+              "id": "unique_string",
+              "title": "scenario title",
+              "description": "detailed patient presentation including chief complaint and relevant history",
+              "vitalSigns": {
+                "Temperature": "string",
+                "HeartRate": "string",
+                "RespiratoryRate": "string",
+                "BloodPressure": "string",
+                "O2Saturation": "string",
+                "Pain": "string"
               },
-              "expected_actions": [
-                {
-                  "priority": "number",
-                  "action": "string",
-                  "rationale": "string"
-                }
-              ],
-              "duration_minutes": "number"
+              "medicalHistory": ["detailed past medical conditions"],
+              "currentMedications": ["list of current medications with dosages"],
+              "allergies": ["list of allergies"],
+              "currentSymptoms": ["detailed current symptoms"],
+              "labResults": {"test": "result with normal ranges"},
+              "requiredAssessments": ["specific assessment tasks"],
+              "expectedInterventions": ["detailed nursing interventions"],
+              "rationales": {
+                "assessmentRationales": {"assessment": "why this is important"},
+                "interventionRationales": {"intervention": "why this is appropriate"}
+              },
+              "criticalThinkingPoints": ["key points to consider"],
+              "nursingSensitivities": ["cultural or special considerations"],
+              "difficulty": "Easy|Medium|Hard"
             }`
           },
           {
             role: "user",
-            content: `Generate a ${difficulty || 'Medium'} difficulty nursing scenario that exactly matches the required JSON structure.`
+            content: `Generate a ${difficulty || 'Medium'} difficulty nursing scenario with comprehensive details and return it as a JSON object. Previous scenario IDs to avoid: ${previousScenarios?.join(', ') || 'none'}`
           }
         ],
-        temperature: 0.7
+        response_format: { type: "json_object" }
       });
 
       const scenarioContent = completion.choices[0]?.message?.content;
@@ -676,68 +681,8 @@ export function registerRoutes(app: Express): Server {
         throw new Error("Failed to generate scenario");
       }
 
-      try {
-        let cleanContent = scenarioContent;
-        if (scenarioContent.includes('```json')) {
-          cleanContent = scenarioContent
-            .split('```json')[1]
-            .split('```')[0]
-            .trim();
-        }
-
-        const scenario = JSON.parse(cleanContent);
-
-        if (!scenario || typeof scenario !== 'object') {
-          throw new Error("Invalid scenario format");
-        }
-
-        // Ensure all required fields are present
-        const validatedScenario = {
-          id: scenario.id || `scenario_${Date.now()}`,
-          title: scenario.title || "Clinical Scenario",
-          description: scenario.description || "",
-          initial_state: {
-            patient_history: scenario.initial_state?.patient_history || "",
-            chief_complaint: scenario.initial_state?.chief_complaint || "",
-            vital_signs: scenario.initial_state?.vital_signs || {},
-            lab_values: scenario.initial_state?.lab_values || {},
-            current_interventions: scenario.initial_state?.current_interventions || []
-          },
-          expected_actions: scenario.expected_actions || []
-        };
-
-        res.json(validatedScenario);
-      } catch (parseError) {
-        console.error("Error parsing scenario:", parseError);
-        // Return a fallback scenario
-        res.json({
-          id: `fallback_${Date.now()}`,
-          title: "Basic Patient Assessment",
-          description: "Perform initial assessment of a patient with respiratory distress",
-          difficulty: "intermediate",
-          objectives: ["Assess vital signs", "Identify key symptoms", "Prioritize interventions"],
-          initial_state: {
-            patient_condition: "Alert but anxious",
-            vital_signs: {
-              blood_pressure: "138/88",
-              heart_rate: 92,
-              respiratory_rate: 24,
-              temperature: 37.2,
-              oxygen_saturation: 94
-            },
-            symptoms: ["Shortness of breath", "Chest tightness"],
-            medical_history: "History of asthma"
-          },
-          expected_actions: [
-            {
-              priority: 1,
-              action: "Assess airway and breathing",
-              rationale: "Immediate assessment of respiratory status is critical"
-            }
-          ],
-          duration_minutes: 30
-        });
-      }
+      const scenario = JSON.parse(scenarioContent);
+      res.json(scenario);
     } catch (error) {
       console.error("Error generating scenario:", error);
       res.status(500).json({
@@ -786,7 +731,8 @@ export function registerRoutes(app: Express): Server {
             Actions Taken: ${JSON.stringify(actions)}
             Assessments Performed: ${JSON.stringify(assessments)}`
           }
-        ]
+        ],
+        response_format: { type: "json_object" }
       });
 
       const evaluationContent = completion.choices[0]?.message?.content;
@@ -851,265 +797,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/ai/simulation-scenario", async (req, res) => {
-    try {
-      const { difficulty } = req.body;
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4",
-        messages: [
-          {
-            role: "system",
-            content: "You are a nursing educator. Generate a realistic simulation scenario. Return response in valid JSON format only."
-          },
-          {
-            role: "user",
-            content: `Generate a ${difficulty || 'medium'} difficulty nursing simulation scenario with this exact JSON structure:
-{
-  "title": "string",
-  "description": "string",
-  "initial_state": {
-    "patient_history": "string",
-    "vital_signs": {
-      "blood_pressure": "120/80",
-      "heart_rate": 80,
-      "respiratory_rate": 16,
-      "temperature": 37,
-      "oxygen_saturation": 98
-    },
-    "symptoms": ["string"]
-  },
-  "expected_actions": [
-    {
-      "priority": 1,
-      "action": "string",
-      "rationale": "string"
-    }
-  ]
-}`
-          }
-        ],
-        temperature: 0.7
-      });
-
-      const scenarioContent = completion.choices[0]?.message?.content;
-      if (!scenarioContent) {
-        throw new Error("Failed to generate scenario");
-      }
-
-      let scenario;
-      try {
-        scenario = JSON.parse(scenarioContent);
-      } catch (error) {
-        console.error("Failed to parse scenario:", error);
-        return res.status(500).json({
-          error: "Failed to generate valid scenario",
-          details: error.message
-        });
-      }
-
-      // Return a default scenario if validation fails
-      if (!scenario?.title || !scenario?.initial_state || !Array.isArray(scenario?.expected_actions)) {
-        scenario = {
-          title: "Basic Patient Assessment",
-          description: "Assess a patient presenting with respiratory symptoms",
-          initial_state: {
-            patient_history: "No significant medical history",
-            vital_signs: {
-              blood_pressure: "120/80",
-              heart_rate: 80,
-              respiratory_rate: 16,
-              temperature: 37,
-              oxygen_saturation: 98
-            },
-            symptoms: ["Mild cough", "Normal breathing"]
-          },
-          expected_actions: [
-            {
-              priority: 1,
-              action: "Check vital signs",
-              rationale: "Establish baseline patient status"
-            }
-          ]
-        };
-      }
-
-      return res.json(scenario);
-    } catch (error) {
-      console.error('Error generating scenario:', error);
-      return res.status(500).json({
-        error: 'Failed to generate simulation scenario',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      });
-    }
-  });
-
-  app.post("/api/ai/simulation-feedback", async (req, res) => {
-    try {
-      const { scenario, userActions } = req.body;
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4",
-        messages: [
-          {
-            role: "system",
-            content: `You are an expert nursing educator evaluating student performance in patient scenarios. 
-            Provide feedback in valid JSON format with strengths, areas_for_improvement, and recommendations fields.`
-          },
-          {
-            role: "user",
-            content: `Evaluate these nursing actions for scenario "${scenario?.title}": ${JSON.stringify(userActions)}`
-          }
-        ],
-        temperature: 0.7
-      });
-
-      const feedbackContent = completion.choices[0]?.message?.content;
-      if (!feedbackContent) {
-        throw new Error("No feedback generated");
-      }
-
-      try {
-        const parsedFeedback = JSON.parse(feedbackContent);
-        return res.json(parsedFeedback);
-      } catch (parseError) {
-        // Fallback response if parsing fails
-        return res.json({
-          strengths: ["Prompt response to patient needs"],
-          areas_for_improvement: ["Documentation could be more detailed"],
-          recommendations: ["Practice prioritizing interventions"],
-          clinical_reasoning_score: 75
-        });
-      }
-    } catch (error) {
-      console.error("Error evaluating simulation:", error);
-      res.status(500).json({
-        message: "Failed to evaluate simulation",
-        error: error instanceof Error ? error.message : "Unknown error"
-      });
-    }
-  });
-
-  async function analyzePerformance(answers: any[]) {
-    try {
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4",
-        messages: [
-          {
-            role: "system",
-            content: "You are an expert nursing educator analyzing student performance on NCLEX-style questions. Provide detailed feedback on strengths and areas for improvement."
-          },
-          {
-            role: "user",
-            content: `Analyze these question responses: ${JSON.stringify(answers)}`
-          }
-        ]
-      });
-
-      const analysis = completion.choices[0]?.message?.content;
-      return {
-        strengths: ["Clinical reasoning", "Patient safety"],
-        weaknesses: ["Pharmacology calculations", "Priority setting"],
-        confidence: 0.75,
-        recommendedTopics: ["Medication administration", "Critical thinking"]
-      };
-    } catch (error) {
-      console.error("Error analyzing performance:", error);
-      return null;
-    }
-  }
-
-  async function getPharmacologyHelp(topic: string, context: string) {
-    try {
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4",
-        messages: [
-          {
-            role: "system",
-            content: "You are an expert pharmacology educator helping nursing students understand medication classes, mechanisms of action, and clinical applications of drugs."
-          },
-          {
-            role: "user",
-            content: `Explain ${topic} in the context of ${context}`
-          }
-        ]
-      });
-
-      return {
-        content: completion.choices[0]?.message?.content,
-        relatedConcepts: ["Inflammation", "Cellular adaptation", "Tissue repair"],
-        clinicalCorrelations: ["Assessment findings", "Common complications", "Nursing interventions"]
-      };
-    } catch (error) {
-      console.error("Error getting pathophysiology help:", error);
-      return null;
-    }
-  }
-
-  async function getStudyRecommendations(performanceData: any[]) {
-    try {
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4",
-        messages: [
-          {
-            role: "system",
-            content: "You are an expert nursing educator providing personalized study recommendations based on student performance data."
-          },
-          {
-            role: "user",
-            content: `Analyze this performance data and provide study recommendations: ${JSON.stringify(performanceData)}`
-          }
-        ]
-      });
-
-      return {
-        recommendations: completion.choices[0]?.message?.content,
-        priorityTopics: ["Critical thinking", "Clinical judgment", "Patient safety"],
-        studyStrategies: ["Case studies", "Practice questions", "Concept mapping"]
-      };
-    } catch (error) {
-      console.error("Error generating study recommendations:", error);
-      return null;
-    }
-  }
-
-  async function generateNewQuestions(userId: number, examType: string) {
-    try {
-      const availableQuestions = Object.values(practiceQuestions).flat();
-
-      if (availableQuestions.length === 0) {
-        throw new Error("No questions available");
-      }
-
-      if (examType === 'cat') {
-        const sortedQuestions = availableQuestions.sort((a, b) => {
-          const difficultyMap = { Easy: 1, Medium: 2, Hard: 3 };
-          return difficultyMap[a.difficulty as keyof typeof difficultyMap] -               difficultyMap[b.difficulty as keyof typeof difficultyMap];
-        });
-
-        const mediumQuestions = sortedQuestions.filter(q => q.difficulty === 'Medium');
-        if (mediumQuestions.length === 0) {
-          throw new Error("No medium difficulty questions available");
-        }
-
-        const selectedQuestion = mediumQuestions[Math.floor(Math.random() * mediumQuestions.length)];
-        return formatQuestion(selectedQuestion);
-      }
-
-      const randomQuestion = availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
-      return formatQuestion(randomQuestion);
-    } catch (error) {
-      console.error("Error generating questions:", error);
-      throw new Error("Failed to generate questions");
-    }
-  }
-
-  function formatQuestion(question: any) {
-    return {
-      id: 1,
-      text: question.text,
-      options: question.options,
-      correctAnswer: question.correctAnswer
-    };
-  }
   return httpServer;
 }
 
@@ -1207,7 +894,8 @@ async function generateNewQuestions(userId: number, examType: string) {
     if (examType === 'cat') {
       const sortedQuestions = availableQuestions.sort((a, b) => {
         const difficultyMap = { Easy: 1, Medium: 2, Hard: 3 };
-        return difficultyMap[a.difficulty as keyof typeof difficultyMap] -               difficultyMap[b.difficulty as keyof typeof difficultyMap];
+        return difficultyMap[a.difficulty as keyof typeof difficultyMap] -
+               difficultyMap[b.difficulty as keyof typeof difficultyMap];
       });
 
       const mediumQuestions = sortedQuestions.filter(q => q.difficulty === 'Medium');
