@@ -1,3 +1,29 @@
+#!/bin/bash
+set -e
+
+echo "Starting complete restoration process..."
+
+# 1. First, let's back up any existing files just in case
+if [ -f server/routes.ts ]; then
+  cp server/routes.ts server/routes.ts.backup
+  echo "Created backup of routes.ts"
+fi
+
+# 2. Clean up all added files
+echo "Removing all added files..."
+
+# Remove question-related files
+rm -f server/data/practice-questions.ts
+rm -f server/attached_assets/question-routes.ts
+rm -f server/routes/questions.ts
+
+# Remove empty directories
+rm -rf server/data 2>/dev/null || true
+rm -rf server/attached_assets 2>/dev/null || true
+
+# 3. Restore original routes.ts
+echo "Restoring original routes.ts configuration..."
+cat << 'EOF' > server/routes.ts
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { db } from "@db";
@@ -73,3 +99,12 @@ export function registerRoutes(app: Express): Server {
 
   return httpServer;
 }
+EOF
+
+# 4. Modify server/index.ts if it exists to remove any question route references
+if [ -f server/index.ts ]; then
+  sed -i '/question/d' server/index.ts
+  echo "Cleaned up server/index.ts"
+fi
+
+echo "Restoration complete. Please restart your server."
