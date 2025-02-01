@@ -6,7 +6,6 @@ import { questions, quizAttempts, userProgress } from "@db/schema";
 import studyGuideRouter from './routes/study-guide';
 import OpenAI from "openai";
 import { practiceQuestions } from './data/practice-questions';
-import { studyBuddyChats } from "@db/schema";
 
 if (!process.env.OPENAI_API_KEY) {
   throw new Error("OPENAI_API_KEY must be set in environment variables");
@@ -15,6 +14,9 @@ if (!process.env.OPENAI_API_KEY) {
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
+
+// In-memory storage for active chat sessions
+const activeChatSessions = new Map();
 
 export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
@@ -48,13 +50,15 @@ export function registerRoutes(app: Express): Server {
 
       const sessionId = `session_${Date.now()}`;
 
-      // Store chat in database
-      await db.insert(studyBuddyChats).values({
-        userId: studentId,
-        sessionId,
-        role: 'assistant',
-        content: message,
-        tone
+      // Store session in memory
+      activeChatSessions.set(sessionId, {
+        studentId,
+        tone,
+        messages: [{
+          role: 'assistant',
+          content: message,
+          timestamp: new Date()
+        }]
       });
 
       res.json({
@@ -74,13 +78,16 @@ export function registerRoutes(app: Express): Server {
     try {
       const { studentId, sessionId, message, context } = req.body;
 
-      // Store user message
-      await db.insert(studyBuddyChats).values({
-        userId: studentId,
-        sessionId,
+      const session = activeChatSessions.get(sessionId);
+      if (!session) {
+        throw new Error("Session not found");
+      }
+
+      // Add user message to session history
+      session.messages.push({
         role: 'user',
         content: message,
-        tone: context.tone
+        timestamp: new Date()
       });
 
       const completion = await openai.chat.completions.create({
@@ -103,14 +110,15 @@ export function registerRoutes(app: Express): Server {
         throw new Error("Failed to generate response");
       }
 
-      // Store assistant response
-      await db.insert(studyBuddyChats).values({
-        userId: studentId,
-        sessionId,
+      // Add assistant response to session history
+      session.messages.push({
         role: 'assistant',
         content: response,
-        tone: context.tone
+        timestamp: new Date()
       });
+
+      // Update session in memory
+      activeChatSessions.set(sessionId, session);
 
       res.json({ message: response });
     } catch (error) {
