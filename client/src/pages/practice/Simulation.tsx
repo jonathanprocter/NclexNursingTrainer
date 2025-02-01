@@ -12,9 +12,39 @@ import { useMutation } from "@tanstack/react-query";
 import type { SimulationScenario, SimulationFeedback } from "@/lib/ai-services";
 import { Bot, Activity, Stethoscope, Pill, FileText, Syringe, AlertTriangle, Heart, Users } from "lucide-react";
 
+interface SimulationState {
+  patient_history?: string;
+  chief_complaint?: string;
+  airway_assessment?: string;
+  vital_signs?: {
+    respiratory_rate?: number;
+    spo2?: number;
+    work_of_breathing?: string;
+    blood_pressure?: string;
+    heart_rate?: number;
+    mean_arterial_pressure?: number;
+    capillary_refill?: string;
+    gcs?: string;
+    pupils?: string;
+    blood_glucose?: number;
+    cvp?: number;
+    etco2?: number;
+    art_line?: string;
+  };
+  lab_values?: Record<string, string | number>;
+  current_interventions?: string[];
+}
+
+interface Action {
+  action: string;
+  feedback?: string;
+  next_state?: Partial<SimulationState>;
+}
+
 type UserAction = {
   action: string;
   timestamp: string;
+  response?: string;
 };
 
 export default function Simulation() {
@@ -26,18 +56,31 @@ export default function Simulation() {
 
   const startSimulationMutation = useMutation({
     mutationFn: async ({ difficulty, focusAreas }: { difficulty: string; focusAreas?: string[] }) => {
+      console.log('Starting simulation with:', { difficulty, focusAreas });
       const scenario = await generateSimulationScenario(difficulty, focusAreas);
+      console.log('Generated scenario:', scenario);
       return scenario;
     },
     onSuccess: (scenario) => {
+      console.log('Successfully generated scenario:', scenario);
+      if (!scenario.expected_actions || scenario.expected_actions.length === 0) {
+        toast({
+          title: "Error",
+          description: "No actions available for this scenario",
+          variant: "destructive",
+        });
+        return;
+      }
       setActiveScenario(scenario);
       setIsSimulationActive(true);
+      setUserActions([]);
       toast({
         title: "Simulation Started",
         description: "Your simulation scenario has been generated. Good luck!",
       });
     },
     onError: (error) => {
+      console.error('Simulation generation error:', error);
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to start simulation",
@@ -49,12 +92,15 @@ export default function Simulation() {
   const getFeedbackMutation = useMutation<SimulationFeedback, Error>({
     mutationFn: async () => {
       if (!activeScenario) throw new Error("No active scenario");
+      console.log('Getting feedback for actions:', userActions);
       return getSimulationFeedback(activeScenario, userActions);
     },
-    onSuccess: () => {
+    onSuccess: (feedback) => {
+      console.log('Received feedback:', feedback);
       setShowFeedback(true);
     },
     onError: (error) => {
+      console.error('Feedback error:', error);
       toast({
         title: "Error",
         description: error.message,
@@ -64,18 +110,53 @@ export default function Simulation() {
   });
 
   const handleStartSimulation = (difficulty: string) => {
-    startSimulationMutation.mutate({ 
+    console.log('Starting simulation with difficulty:', difficulty);
+    startSimulationMutation.mutate({
       difficulty,
       focusAreas: ["patient assessment", "critical thinking", "clinical decision making"]
     });
   };
 
-  const handleAction = (action: string | { action: string }) => {
-    if (!action) return;
-    setUserActions(prev => [...prev, {
-      action: typeof action === 'string' ? action : action.action,
+  const handleAction = (action: Action | string) => {
+    console.log('Handling action:', action);
+
+    if (!action) {
+      console.error('Invalid action received');
+      return;
+    }
+
+    const actionText = typeof action === 'string' ? action : action.action;
+    const newAction: UserAction = {
+      action: actionText,
       timestamp: new Date().toISOString()
-    }]);
+    };
+
+    setUserActions(prev => [...prev, newAction]);
+
+    if (typeof action === 'object') {
+      if (action.feedback) {
+        toast({
+          title: "Action Feedback",
+          description: action.feedback,
+          duration: 3000,
+        });
+        newAction.response = action.feedback;
+      }
+
+      if (action.next_state && activeScenario) {
+        console.log('Updating scenario state with:', action.next_state);
+        setActiveScenario(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            initial_state: {
+              ...prev.initial_state,
+              ...action.next_state,
+            },
+          };
+        });
+      }
+    }
   };
 
   const renderVitalSign = (key: string, value: string | number | undefined) => {
@@ -89,7 +170,6 @@ export default function Simulation() {
   };
 
   const generateBasicSkillsQuestions = () => {
-    // Placeholder for question generation logic
     return [
       "What are the key components of a comprehensive patient assessment?",
       "Describe the procedure for measuring vital signs.",
@@ -99,13 +179,20 @@ export default function Simulation() {
   };
 
   const generateAdvancedSkillsQuestions = () => {
-    // Placeholder for question generation logic
     return [
       "Describe a complex procedure and potential complications.",
       "Outline the steps for managing a specific emergency intervention.",
       "How to monitor critically ill patients?",
       "What are effective team leadership strategies in healthcare?"
     ];
+  };
+
+
+  const handleStartSkillPractice = (skillType: string, skillName: string) => {
+      toast({
+          title: "Skill Practice Started",
+          description: `Starting ${skillType} skill practice for ${skillName}.`,
+      });
   };
 
 
@@ -280,13 +367,10 @@ export default function Simulation() {
       </Tabs>
 
       <Dialog open={isSimulationActive} onOpenChange={(open) => {
-        if (!open) {
-          const shouldClose = window.confirm("Are you sure you want to end the simulation?");
-          if (shouldClose) {
-            setIsSimulationActive(false);
-            setActiveScenario(null);
-            setUserActions([]);
-          }
+        if (!open && window.confirm("Are you sure you want to end the simulation?")) {
+          setIsSimulationActive(false);
+          setActiveScenario(null);
+          setUserActions([]);
         }
       }}>
         <DialogContent className="max-w-4xl">
@@ -406,40 +490,47 @@ export default function Simulation() {
                   </CardContent>
                 </Card>
               )}
-
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">Available Actions</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-2">
-                    {activeScenario?.expected_actions?.map((action, index) => (
-                      <Button
-                        key={index}
-                        variant="outline"
-                        className="justify-start"
-                        onClick={() => handleAction(action)}
-                      >
-                        {action.action}
-                      </Button>
-                    ))}
+                    {Array.isArray(activeScenario?.expected_actions) ? (
+                      activeScenario.expected_actions.map((action, index) => (
+                        <Button
+                          key={index}
+                          variant="outline"
+                          className="justify-start text-left"
+                          onClick={() => handleAction(action)}
+                          disabled={getFeedbackMutation.isPending}
+                        >
+                          {typeof action === 'string' ? action : action.action}
+                        </Button>
+                      ))
+                    ) : (
+                      <p className="text-muted-foreground">No actions available at this time.</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
 
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center mt-4">
                 <Button
                   variant="destructive"
                   onClick={() => {
-                    setIsSimulationActive(false);
-                    setActiveScenario(null);
+                    if (window.confirm("Are you sure you want to end the simulation?")) {
+                      setIsSimulationActive(false);
+                      setActiveScenario(null);
+                      setUserActions([]);
+                    }
                   }}
                 >
                   End Simulation
                 </Button>
                 <Button
                   onClick={() => getFeedbackMutation.mutate()}
-                  disabled={getFeedbackMutation.isPending}
+                  disabled={getFeedbackMutation.isPending || userActions.length === 0}
                 >
                   Get Feedback
                 </Button>

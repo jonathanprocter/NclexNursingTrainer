@@ -1,4 +1,4 @@
-import type { AIAnalysisResult, SimulationFeedback, SimulationScenario } from './types';
+import type { AIAnalysisResult } from './types';
 
 export async function getPharmacologyHelp(
   section: string,
@@ -63,22 +63,34 @@ export interface SimulationScenario {
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   objectives: string[];
   initial_state: {
-    patient_condition: string;
-    vital_signs: {
-      blood_pressure: string;
-      heart_rate: number;
-      respiratory_rate: number;
-      temperature: number;
-      oxygen_saturation: number;
+    patient_history: string;
+    chief_complaint: string;
+    airway_assessment?: string;
+    vital_signs?: {
+      blood_pressure?: string;
+      heart_rate?: number;
+      respiratory_rate?: number;
+      temperature?: number;
+      oxygen_saturation?: number;
+      spo2?: number;
+      work_of_breathing?: string;
+      mean_arterial_pressure?: number;
+      capillary_refill?: string;
+      gcs?: string;
+      pupils?: string;
+      blood_glucose?: number;
+      cvp?: number;
+      etco2?: number;
+      art_line?: string;
     };
-    symptoms: string[];
-    medical_history: string;
+    lab_values?: Record<string, string | number>;
+    current_interventions?: string[];
   };
-  expected_actions: {
-    priority: number;
+  expected_actions: Array<{
     action: string;
-    rationale: string;
-  }[];
+    feedback?: string;
+    next_state?: Partial<SimulationScenario['initial_state']>;
+  }>;
   duration_minutes: number;
 }
 
@@ -104,6 +116,7 @@ export async function generateSimulationScenario(
     try {
       const data = await response.json();
       if (!data?.title || !data?.initial_state || !Array.isArray(data?.expected_actions)) {
+         console.error('Invalid scenario data:', data);
         throw new Error('Invalid scenario format - missing required fields');
       }
       return data;
@@ -122,7 +135,7 @@ export async function getSimulationFeedback(
   userActions: {
     action: string;
     timestamp: string;
-    outcome?: string;
+    response?: string;
   }[]
 ): Promise<SimulationFeedback> {
   try {
