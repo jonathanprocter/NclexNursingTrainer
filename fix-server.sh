@@ -1,3 +1,44 @@
+#!/bin/bash
+
+# Restore the original server/index.ts
+cat << 'EOF' > server/index.ts
+import express from "express";
+import cors from "cors";
+import { registerRoutes } from "./routes";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { db } from "@db";
+
+const app = express();
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Register routes
+const server = registerRoutes(app);
+
+// Run migrations
+async function main() {
+  await migrate(db, {
+    migrationsFolder: "./drizzle",
+  });
+
+  const port = process.env.PORT || 5001;
+  server.listen(port, "0.0.0.0", () => {
+    console.log(`Server running on http://0.0.0.0:${port}`);
+  });
+}
+
+main().catch((err) => {
+  console.error("Failed to start server:", err);
+  process.exit(1);
+});
+EOF
+
+# Your vite.config.ts appears correct, no changes needed there
+
+# Now let's also ensure routes.ts is clean
+cat << 'EOF' > server/routes.ts
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { db } from "@db";
@@ -73,3 +114,14 @@ export function registerRoutes(app: Express): Server {
 
   return httpServer;
 }
+EOF
+
+# Remove any leftover question-related files
+rm -rf server/attached_assets 2>/dev/null || true
+rm -rf server/data 2>/dev/null || true
+rm -f server/routes/questions.ts 2>/dev/null || true
+
+echo "Files have been restored. Please:"
+echo "1. Stop your server"
+echo "2. Run: npm install"
+echo "3. Start your server again with: npm run dev"
