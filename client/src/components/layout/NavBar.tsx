@@ -245,37 +245,44 @@ export default function NavBar() {
                   <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-                <SheetHeader>
-                  <SheetTitle>Navigation Menu</SheetTitle>
-                  <SheetDescription>
-                    Access all NCLEX preparation resources
-                  </SheetDescription>
-                </SheetHeader>
-                <nav className="flex flex-col gap-4 mt-6 overflow-y-auto max-h-[calc(100vh-200px)]">
-                  {[
-                    { title: "Dashboards", items: dashboardItems },
-                    { title: "Learning Modules", items: learningModules },
-                    { title: "Practice & Simulation", items: practiceItems },
-                    { title: "Study Tools", items: studyTools }
-                  ].map(({ title, items }) => (
-                    <div key={title} className="px-4 py-2">
-                      <h3 className="mb-2 text-sm font-semibold">{title}</h3>
-                      {items.map((item) => (
-                        <MobileNavItem
-                          key={item.title}
-                          href={item.href}
-                          onClick={() => setIsOpen(false)}
-                        >
-                          <div className="flex items-center gap-2">
-                            <item.icon className="h-4 w-4" />
-                            <span>{item.title}</span>
-                          </div>
-                        </MobileNavItem>
-                      ))}
-                    </div>
-                  ))}
-                </nav>
+              <SheetContent 
+                side="right" 
+                className="w-[300px] sm:w-[400px] overflow-y-auto max-h-[100dvh]"
+              >
+                <div className="h-full flex flex-col">
+                  <SheetHeader>
+                    <SheetTitle>Navigation Menu</SheetTitle>
+                    <SheetDescription>
+                      Access all NCLEX preparation resources
+                    </SheetDescription>
+                  </SheetHeader>
+                  <nav className="flex-1 flex flex-col gap-4 mt-6 pb-20 overflow-y-auto px-1">
+                    {[
+                      { title: "Dashboards", items: dashboardItems },
+                      { title: "Learning Modules", items: learningModules },
+                      { title: "Practice & Simulation", items: practiceItems },
+                      { title: "Study Tools", items: studyTools }
+                    ].map(({ title, items }) => (
+                      <div key={title} className="px-4 py-2">
+                        <h3 className="mb-2 text-sm font-semibold">{title}</h3>
+                        <div className="space-y-1">
+                          {items.map((item) => (
+                            <MobileNavItem
+                              key={item.title}
+                              href={item.href}
+                              onClick={() => setIsOpen(false)}
+                            >
+                              <div className="flex items-center gap-2">
+                                <item.icon className="h-4 w-4" />
+                                <span>{item.title}</span>
+                              </div>
+                            </MobileNavItem>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </nav>
+                </div>
               </SheetContent>
             </Sheet>
           </div>
