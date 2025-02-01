@@ -9,29 +9,9 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Clock } from "lucide-react";
 import { toast } from "react-hot-toast";
-import { useQuery } from "@tanstack/react-query";
 
 interface StudyTimeFormData {
   duration: string;
-}
-
-interface Question {
-  id: string;
-  text: string;
-  options: Array<{ id: string; text: string; }>;
-  correctAnswer: string;
-  category: string;
-  difficulty: string;
-}
-
-interface QuestionsResponse {
-  questions: Question[];
-  pagination: {
-    total: number;
-    limit: number;
-    offset: number;
-    hasMore: boolean;
-  };
 }
 
 export default function Home() {
@@ -40,22 +20,6 @@ export default function Home() {
     defaultValues: {
       duration: "",
     },
-  });
-
-  const { data: questionsData, isLoading: isLoadingQuestions, error: questionsError } = useQuery<QuestionsResponse>({
-    queryKey: ['/api/questions'],
-    queryFn: async () => {
-      console.log('Fetching questions...');
-      const response = await fetch('/api/questions?limit=3');
-      if (!response.ok) {
-        throw new Error('Failed to fetch questions');
-      }
-      const data = await response.json();
-      console.log('Questions data:', data);
-      return data;
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 2,
   });
 
   const onSubmit = (data: StudyTimeFormData) => {
@@ -95,52 +59,6 @@ export default function Home() {
     toast.success("Study plan generated!");
   };
 
-  const renderQuestionsSection = () => {
-    if (isLoadingQuestions) {
-      return (
-        <div className="space-y-2">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="animate-pulse">
-              <div className="h-4 bg-muted rounded w-3/4"></div>
-            </div>
-          ))}
-        </div>
-      );
-    }
-
-    if (questionsError) {
-      console.error('Questions error:', questionsError);
-      return (
-        <p className="text-muted-foreground">
-          Unable to load questions. Please try again later.
-        </p>
-      );
-    }
-
-    if (!questionsData?.questions?.length) {
-      return (
-        <p className="text-muted-foreground">
-          No questions available at the moment.
-        </p>
-      );
-    }
-
-    return (
-      <>
-        <p className="text-muted-foreground">
-          Recent questions from your study path:
-        </p>
-        <ul className="space-y-2">
-          {questionsData.questions.map((question) => (
-            <li key={question.id} className="text-sm">
-              • {question.text.substring(0, 100)}...
-            </li>
-          ))}
-        </ul>
-      </>
-    );
-  };
-
   return (
     <div className="space-y-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       <section className="text-center py-8 sm:py-12">
@@ -175,13 +93,18 @@ export default function Home() {
 
         <Card className="h-full">
           <CardHeader>
-            <CardTitle>Practice Questions 📝</CardTitle>
+            <CardTitle>Quick Navigation 🚀</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {renderQuestionsSection()}
-              <Link href="/questions">
-                <Button className="w-full mt-4">Start Practice ✨</Button>
+              <Link href="/practice/mock-exams">
+                <Button className="w-full">Practice Exams 📝</Button>
+              </Link>
+              <Link href="/modules">
+                <Button className="w-full">Learning Modules 📚</Button>
+              </Link>
+              <Link href="/tools/ai-companion">
+                <Button className="w-full">AI Study Buddy 🤖</Button>
               </Link>
             </div>
           </CardContent>
