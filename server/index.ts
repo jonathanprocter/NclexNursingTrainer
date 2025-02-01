@@ -16,7 +16,7 @@ const server = registerRoutes(app);
 // Run migrations
 async function main() {
   await migrate(db, {
-    migrationsFolder: "./drizzle",
+    migrationsFolder: "drizzle",
   });
 
   const port = process.env.PORT || 5001;
