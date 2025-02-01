@@ -12,18 +12,8 @@ interface QuestionCardProps {
     options: { id: string; text: string }[];
     correctAnswer: string;
     explanation: string;
-    rationale: string;
-    category?: string;
-    difficulty?: 'beginner' | 'intermediate' | 'advanced';
-    cognitiveLevel: string;
-    conceptualBreakdown: {
-      key_concepts: string[];
-      related_topics: string[];
-      clinical_relevance: string;
-    };
-    faqs: { question: string; answer: string }[];
   };
-  onNext: (questionId: number, selectedAnswer: string) => void;
+  onNext: (selectedAnswer: string) => void;
   userAnswer?: string;
   showAnswer?: boolean;
 }
@@ -35,11 +25,11 @@ export default function QuestionCard({ question, onNext, userAnswer, showAnswer 
   const handleSubmit = () => {
     if (!showExplanation) {
       setShowExplanation(true);
-      onNext(question.id, selectedAnswer);
+      onNext(selectedAnswer);
     } else {
       setSelectedAnswer("");
       setShowExplanation(false);
-      onNext(question.id, selectedAnswer);
+      onNext(selectedAnswer);
     }
   };
 
@@ -86,15 +76,9 @@ export default function QuestionCard({ question, onNext, userAnswer, showAnswer 
         </RadioGroup>
 
         {(showExplanation || showAnswer) && (
-          <div className="space-y-4">
-            <div className="p-4 bg-muted rounded-lg">
-              <h4 className="font-semibold mb-2">Explanation:</h4>
-              <p>{question.explanation}</p>
-            </div>
-            <div className="p-4 bg-muted rounded-lg">
-              <h4 className="font-semibold mb-2">Rationale for Best Answer:</h4>
-              <p>{question.rationale}</p>
-            </div>
+          <div className="mt-4 p-4 bg-muted rounded-lg">
+            <h4 className="font-semibold mb-2">Explanation:</h4>
+            <p>{question.explanation}</p>
           </div>
         )}
       </CardContent>

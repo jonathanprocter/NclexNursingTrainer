@@ -5,13 +5,11 @@ import { Progress } from "@/components/ui/progress";
 import QuestionCard from "@/components/nclex/QuestionCard";
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Book, Activity, BarChart3, HelpCircle, Loader2, Brain, RefreshCw, Info } from "lucide-react";
+import { Clock, Book, Activity, BarChart3, HelpCircle, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 interface Question {
   id: number;
@@ -19,22 +17,14 @@ interface Question {
   options: { id: string; text: string }[];
   correctAnswer: string;
   explanation: string;
-  rationale: string;
   category?: string;
-  difficulty?: 'beginner' | 'intermediate' | 'advanced';
-  cognitiveLevel: 'knowledge' | 'comprehension' | 'application' | 'analysis' | 'synthesis' | 'evaluation';
-  conceptualBreakdown: {
-    key_concepts: string[];
-    related_topics: string[];
-    clinical_relevance: string;
-  };
-  faqs: { question: string; answer: string }[];
+  difficulty?: string;
 }
 
 export default function Quizzes() {
   const { toast } = useToast();
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [timeRemaining, setTimeRemaining] = useState(1800);
+  const [timeRemaining, setTimeRemaining] = useState(1800); // 30 minutes in seconds
   const [showAIHelp, setShowAIHelp] = useState(false);
   const [aiResponse, setAiResponse] = useState("");
   const [score, setScore] = useState({ correct: 0, total: 0 });
@@ -44,9 +34,6 @@ export default function Quizzes() {
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [showConceptBreakdown, setShowConceptBreakdown] = useState(false);
-  const [showFAQs, setShowFAQs] = useState(false);
-  const [currentComplexityLevel, setCurrentComplexityLevel] = useState<string>('knowledge');
 
   // Format time as mm:ss
   const formatTime = (seconds: number) => {
@@ -64,7 +51,8 @@ export default function Quizzes() {
       return () => clearInterval(timer);
     }
   }, [quizComplete, isReviewMode, questions.length]);
-  
+
+  // Generate new questions mutation
   const [previousQuestionIds, setPreviousQuestionIds] = useState<string[]>([]);
   const [userPerformance, setUserPerformance] = useState<{
     correctByTopic: { [key: string]: number },
@@ -74,31 +62,29 @@ export default function Quizzes() {
     totalByTopic: {}
   });
 
-  // Enhanced generate questions mutation
   const generateQuestionsMutation = useMutation({
-    mutationFn: async ({ topic, complexity }: { topic?: string; complexity?: string }) => {
+    mutationFn: async (topic?: string) => {
       try {
         const response = await fetch('/api/generate-questions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             topic,
-            complexity,
-            previousQuestionIds: questions.map(q => q.id.toString()),
+            previousQuestionIds,
             userPerformance 
           }),
         });
-
+        
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.message || 'Failed to generate questions');
         }
-
+        
         const data = await response.json();
         if (!Array.isArray(data) || data.length === 0) {
           throw new Error('No questions received');
         }
-
+        
         return data;
       } catch (error) {
         console.error('Question generation error:', error);
@@ -118,94 +104,92 @@ export default function Quizzes() {
 
       toast({
         title: "New Questions Generated",
-        description: `Focus area: ${selectedTopic || "General"} | Complexity: ${currentComplexityLevel}`,
+        description: selectedTopic ? `Focus area: ${selectedTopic}` : "Get ready for a new set of questions!",
       });
     },
     onError: (error) => {
       console.error('Question generation error:', error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to generate questions",
+        description: error instanceof Error ? error.message : "Failed to generate questions. Using backup questions instead.",
         variant: "destructive",
       });
+      // Set a default question if API fails
+      setQuestions([{
+        id: Date.now(),
+        text: "Which nursing intervention is most appropriate for a client with acute pain?",
+        options: [
+          { id: "a", text: "Assess pain characteristics" },
+          { id: "b", text: "Administer PRN pain medication immediately" },
+          { id: "c", text: "Notify healthcare provider" },
+          { id: "d", text: "Apply ice pack to affected area" }
+        ],
+        correctAnswer: "a",
+        explanation: "Pain assessment should be conducted first to determine appropriate interventions.",
+        category: selectedTopic || "General",
+        difficulty: "Medium"
+      }]);
       setIsLoading(false);
     },
   });
 
-    const handleGenerateMore = async () => {
-    const complexityLevels = ['knowledge', 'comprehension', 'application', 'analysis', 'synthesis', 'evaluation'];
-    const currentIndex = complexityLevels.indexOf(currentComplexityLevel as string);
-    const nextLevel = complexityLevels[Math.min(currentIndex + 1, complexityLevels.length - 1)];
-
-    setCurrentComplexityLevel(nextLevel);
-    generateQuestionsMutation.mutate({ 
-      topic: selectedTopic || undefined,
-      complexity: nextLevel
-    });
+  const generateNewQuestions = (topic?: string) => {
+    setIsLoading(true);
+    setSelectedTopic(topic || null);
+    generateQuestionsMutation.mutate(topic);
   };
 
-  // AI Help mutation for conceptual understanding
-    const getAIHelpMutation = useMutation({
-    mutationFn: async (context: string) => {
-      const response = await fetch('/api/ai-help', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ context }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to get AI assistance');
-      }
-
-      return response.json();
-    },
-    onSuccess: (data) => {
-      setAiResponse(data.response);
-      setShowAIHelp(true);
-    },
-  });
-  
-
-  // Handle answer selection with enhanced feedback
   const handleAnswer = (questionId: number, selectedAnswer: string) => {
     if (isReviewMode) return;
 
     const currentQ = questions[currentQuestion];
     const correct = selectedAnswer === currentQ.correctAnswer;
-
+    
+    // Update user answers
     setUserAnswers(prev => ({...prev, [questionId]: selectedAnswer}));
-
+    
+    // Update score
     setScore(prev => ({
       ...prev,
       correct: prev.correct + (correct ? 1 : 0),
       total: prev.total + 1
     }));
 
-        // Track performance and show detailed feedback
-    toast({
-      title: correct ? "Correct! 🎉" : "Review Needed",
-      description: currentQ.rationale,
-      duration: 5000,
+    // Track question ID
+    setPreviousQuestionIds(prev => [...prev, currentQ.id]);
+
+    // Update performance metrics
+    setUserPerformance(prev => {
+      const topic = currentQ.category || 'General';
+      return {
+        correctByTopic: {
+          ...prev.correctByTopic,
+          [topic]: (prev.correctByTopic[topic] || 0) + (correct ? 1 : 0)
+        },
+        totalByTopic: {
+          ...prev.totalByTopic,
+          [topic]: (prev.totalByTopic[topic] || 0) + 1
+        }
+      };
     });
 
     if (currentQuestion === questions.length - 1) {
       setQuizComplete(true);
+      const percentage = Math.round((score.correct / questions.length) * 100);
+      toast({
+        title: "Quiz Complete!",
+        description: `You scored ${percentage}% (${score.correct}/${questions.length} correct)`,
+      });
     } else {
       setCurrentQuestion(prev => prev + 1);
     }
-  };
-
-  const generateNewQuestions = (topic?: string) => {
-    setIsLoading(true);
-    setSelectedTopic(topic || null);
-    generateQuestionsMutation.mutate({ topic });
   };
 
   const startTopicPractice = async (topic: string) => {
     try {
       setIsLoading(true);
       setSelectedTopic(topic);
-      await generateQuestionsMutation.mutateAsync({ topic });
+      await generateQuestionsMutation.mutateAsync(topic);
       
       // Switch to questions tab after questions are loaded
       const questionsTab = document.querySelector('[value="questions"]') as HTMLElement;
@@ -221,26 +205,31 @@ export default function Quizzes() {
       setIsLoading(false);
     }
   };
-  
-  // Enhanced AI help function
-  const handleAIHelp = async (context?: string) => {
-    const currentQ = questions[currentQuestion];
-    const helpContext = context || `
-      Question: ${currentQ.text}
-      Topic: ${currentQ.category}
-      Cognitive Level: ${currentQ.cognitiveLevel}
-      Key Concepts: ${currentQ.conceptualBreakdown.key_concepts.join(', ')}
-    `;
-
-    getAIHelpMutation.mutate(helpContext);
-  };
 
   const startReview = () => {
     setIsReviewMode(true);
     setCurrentQuestion(0);
     setQuizComplete(false);
   };
-  
+
+  const handleAIHelp = async () => {
+    setShowAIHelp(true);
+    setAiResponse("Loading AI explanation...");
+    // Simulate API call
+    setTimeout(() => {
+      setAiResponse(`Here's a detailed explanation of the concept:
+
+1. Key Points to Remember:
+${questions[currentQuestion]?.explanation || "Loading explanation..."}
+
+2. Clinical Reasoning:
+- Consider the patient's condition and vital signs
+- Follow standard protocols and guidelines
+- Always prioritize patient safety
+
+Would you like me to elaborate on any of these points?`);
+    }, 1500);
+  };
 
   // Load initial questions
   useEffect(() => {
@@ -288,71 +277,48 @@ export default function Quizzes() {
               ) : questions.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-lg font-medium mb-4">No questions available</p>
-                  <Button onClick={() => generateQuestionsMutation.mutate({})}>
-                    Generate Questions
-                  </Button>
+                  <Button onClick={() => generateNewQuestions()}>Generate Questions</Button>
                 </div>
               ) : !quizComplete ? (
                 <>
-                  {/* Question header with badges */}
                   <div className="flex justify-between items-center mb-4">
-                    <div className="flex gap-2 flex-wrap">
+                    <div>
                       <Badge variant="secondary">Question {currentQuestion + 1}</Badge>
-                      <Badge variant="outline">
+                      <Badge variant="outline" className="ml-2">
                         {questions[currentQuestion]?.category || "General"}
                       </Badge>
-                      <Badge variant="outline">
+                      <Badge variant="outline" className="ml-2">
                         {questions[currentQuestion]?.difficulty || "Medium"}
                       </Badge>
-                       <Badge variant="outline" className="capitalize">
-                        {questions[currentQuestion]?.cognitiveLevel}
-                      </Badge>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-4">
                       {!isReviewMode && (
                         <div className="flex items-center gap-2">
                           <Clock className="h-4 w-4" />
                           <span className="text-sm text-muted-foreground">
-                            {formatTime(timeRemaining)}
+                            Time: {formatTime(timeRemaining)}
                           </span>
                         </div>
                       )}
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setShowConceptBreakdown(true)}
+                        onClick={handleAIHelp}
+                        className="flex items-center gap-2"
                       >
-                        <Brain className="h-4 w-4 mr-2" />
-                        Concept
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowFAQs(true)}
-                      >
-                        <Info className="h-4 w-4 mr-2" />
-                        FAQs
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleAIHelp()}
-                      >
-                        <HelpCircle className="h-4 w-4 mr-2" />
+                        <HelpCircle className="h-4 w-4" />
                         AI Help
                       </Button>
                     </div>
                   </div>
 
-                  {/* Question Card */}
                   <QuestionCard
                     question={questions[currentQuestion]}
-                    onNext={handleAnswer}
+                    onNext={(answer) => handleAnswer(questions[currentQuestion].id, answer)}
                     userAnswer={isReviewMode ? userAnswers[questions[currentQuestion].id] : undefined}
                     showAnswer={isReviewMode}
                   />
 
-                  {/* Progress bar */}
                   <div className="mt-4">
                     <Progress 
                       value={(currentQuestion + 1) * (100 / questions.length)} 
@@ -365,7 +331,6 @@ export default function Quizzes() {
                   </div>
                 </>
               ) : (
-                // Quiz Complete Section
                 <div className="space-y-6">
                   <div className="text-center">
                     <h2 className="text-2xl font-bold mb-2">Quiz Complete! 🎉</h2>
@@ -376,14 +341,14 @@ export default function Quizzes() {
                   </div>
                   <div className="flex justify-center gap-4">
                     <Button 
-                      onClick={handleGenerateMore}
+                      onClick={() => generateNewQuestions()}
                       disabled={isLoading}
                       className="flex items-center gap-2"
                     >
-                      <RefreshCw className="h-4 w-4" />
-                      Generate More Complex Questions
+                      {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                      Generate New Questions
                     </Button>
-                    <Button variant="outline" onClick={() => setIsReviewMode(true)}>
+                    <Button variant="outline" onClick={startReview}>
                       Review Answers
                     </Button>
                   </div>
@@ -520,76 +485,6 @@ export default function Quizzes() {
         </TabsContent>
       </Tabs>
 
-        {/* Concept Breakdown Dialog */}
-      <Dialog open={showConceptBreakdown} onOpenChange={setShowConceptBreakdown}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Conceptual Breakdown</DialogTitle>
-          </DialogHeader>
-          <ScrollArea className="max-h-[600px]">
-            <div className="space-y-4">
-              <Accordion type="single" collapsible>
-                <AccordionItem value="key-concepts">
-                  <AccordionTrigger>Key Concepts</AccordionTrigger>
-                  <AccordionContent>
-                    <ul className="list-disc pl-6 space-y-2">
-                      {questions[currentQuestion]?.conceptualBreakdown.key_concepts.map((concept, index) => (
-                        <li key={index}>{concept}</li>
-                      ))}
-                    </ul>
-                  </AccordionContent>
-                </AccordionItem>
-                <AccordionItem value="related-topics">
-                  <AccordionTrigger>Related Topics</AccordionTrigger>
-                  <AccordionContent>
-                    <ul className="list-disc pl-6 space-y-2">
-                      {questions[currentQuestion]?.conceptualBreakdown.related_topics.map((topic, index) => (
-                        <li key={index}>{topic}</li>
-                      ))}
-                    </ul>
-                  </AccordionContent>
-                </AccordionItem>
-                <AccordionItem value="clinical-relevance">
-                  <AccordionTrigger>Clinical Relevance</AccordionTrigger>
-                  <AccordionContent>
-                    <p>{questions[currentQuestion]?.conceptualBreakdown.clinical_relevance}</p>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-              <Button 
-                className="w-full mt-4"
-                onClick={() => handleAIHelp("Explain these concepts in more detail")}
-              >
-                Get More Information
-              </Button>
-            </div>
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
-
-      {/* FAQs Dialog */}
-      <Dialog open={showFAQs} onOpenChange={setShowFAQs}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Frequently Asked Questions</DialogTitle>
-          </DialogHeader>
-          <ScrollArea className="max-h-[600px]">
-            <div className="space-y-4">
-              <Accordion type="single" collapsible>
-                {questions[currentQuestion]?.faqs.map((faq, index) => (
-                  <AccordionItem key={index} value={`faq-${index}`}>
-                    <AccordionTrigger>{faq.question}</AccordionTrigger>
-                    <AccordionContent>{faq.answer}</AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            </div>
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
-
-
-      {/* AI Help Dialog */}
       <Dialog open={showAIHelp} onOpenChange={setShowAIHelp}>
         <DialogContent>
           <DialogHeader>

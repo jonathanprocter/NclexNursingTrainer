@@ -4,7 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import NavBar from "@/components/layout/NavBar";
-import Dashboard from "@/pages/Dashboard";
+import Home from "@/pages/Home";
 import { FloatingStudyBuddy } from "@/components/FloatingStudyBuddy";
 
 // Dashboard Components
@@ -33,23 +33,36 @@ import StudyGuide from "@/pages/StudyGuide";
 import AICompanion from "@/pages/tools/AICompanion";
 import SpacedRepetition from "@/pages/tools/SpacedRepetition";
 
+// Define prop types for components
+interface RouteProps {
+  path?: string;
+}
+
+interface AnalyticsProps extends RouteProps {
+  data?: any; // Replace with proper analytics data type
+}
+
+interface PerformanceMetricsProps extends RouteProps {
+  data?: any; // Replace with proper metrics data type
+}
+
 function Router() {
   return (
     <div className="min-h-screen bg-background">
       <NavBar />
       <main className="container mx-auto px-4 py-8">
         <Switch>
-          {/* Dashboard as Home Route */}
-          <Route path="/" component={Dashboard} />
+          {/* Home Route */}
+          <Route path="/" component={Home} />
 
-          {/* Dashboard Sub-routes */}
-          <Route path="/analytics">
-            {() => <Analytics data={undefined} />}
+          {/* Dashboard Routes */}
+          <Route path="/dashboard/analytics">
+            {(params) => <Analytics data={undefined} {...params} />}
           </Route>
-          <Route path="/performance">
-            {() => <PerformanceMetrics data={undefined} />}
+          <Route path="/dashboard/performance">
+            {(params) => <PerformanceMetrics data={undefined} {...params} />}
           </Route>
-          <Route path="/instructor" component={InstructorDashboard} />
+          <Route path="/dashboard/instructor" component={InstructorDashboard} />
 
           {/* Learning Module Routes */}
           <Route path="/modules" component={Modules} />

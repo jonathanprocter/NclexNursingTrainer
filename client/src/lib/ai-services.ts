@@ -1,82 +1,4 @@
-import type { AIAnalysisResult } from './types';
-
-export interface EnhancedQuestion {
-  id: number;
-  text: string;
-  options: { id: string; text: string }[];
-  correctAnswer: string;
-  explanation: string;
-  rationale: string;
-  category?: string;
-  difficulty?: 'beginner' | 'intermediate' | 'advanced';
-  cognitiveLevel: string;
-  conceptualBreakdown: {
-    key_concepts: string[];
-    related_topics: string[];
-    clinical_relevance: string;
-  };
-  faqs: { question: string; answer: string }[];
-}
-
-export interface GenerateQuestionsParams {
-  topic?: string;
-  complexity?: string;
-  previousQuestionIds?: string[];
-  userPerformance?: {
-    correctByTopic: { [key: string]: number };
-    totalByTopic: { [key: string]: number };
-  };
-}
-
-export async function generateQuestions(params: GenerateQuestionsParams): Promise<EnhancedQuestion[]> {
-  try {
-    const response = await fetch('/api/generate-questions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(params)
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to generate questions');
-    }
-
-    const questions = await response.json();
-    if (!Array.isArray(questions) || questions.length === 0) {
-      throw new Error('No questions received');
-    }
-
-    return questions;
-  } catch (error) {
-    console.error('Question generation error:', error);
-    throw error instanceof Error ? error : new Error('Failed to generate questions');
-  }
-}
-
-export interface AIHelpParams {
-  context: string;
-  topic?: string;
-  cognitiveLevel?: string;
-}
-
-export async function getAIHelp(params: AIHelpParams): Promise<{ response: string }> {
-  try {
-    const response = await fetch('/api/ai-help', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(params)
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to get AI assistance');
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Error getting AI help:', error);
-    throw error instanceof Error ? error : new Error('Failed to get AI assistance');
-  }
-}
+import type { AIAnalysisResult, SimulationFeedback, SimulationScenario } from './types';
 
 export async function getPharmacologyHelp(
   section: string,
@@ -141,70 +63,60 @@ export interface SimulationScenario {
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   objectives: string[];
   initial_state: {
-    patient_history: string;
-    chief_complaint: string;
-    airway_assessment?: string;
-    vital_signs?: {
-      blood_pressure?: string;
-      heart_rate?: number;
-      respiratory_rate?: number;
-      temperature?: number;
-      oxygen_saturation?: number;
-      spo2?: number;
-      work_of_breathing?: string;
-      mean_arterial_pressure?: number;
-      capillary_refill?: string;
-      gcs?: string;
-      pupils?: string;
-      blood_glucose?: number;
-      cvp?: number;
-      etco2?: number;
-      art_line?: string;
+    patient_condition: string;
+    vital_signs: {
+      blood_pressure: string;
+      heart_rate: number;
+      respiratory_rate: number;
+      temperature: number;
+      oxygen_saturation: number;
     };
-    lab_values?: Record<string, string | number>;
-    current_interventions?: string[];
+    symptoms: string[];
+    medical_history: string;
   };
-  expected_actions: Array<{
+  expected_actions: {
+    priority: number;
     action: string;
-    feedback?: string;
-    next_state?: Partial<SimulationScenario['initial_state']>;
-  }>;
+    rationale: string;
+  }[];
   duration_minutes: number;
 }
 
 export async function generateSimulationScenario(
   difficulty: string,
-  focus_areas?: string[]
+  focusAreas?: string[]
 ): Promise<SimulationScenario> {
   try {
-    const response = await fetch('/api/ai/simulation-scenario', {
+    const response = await fetch('/api/scenarios/generate', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        difficulty, 
-        focus_areas: focus_areas || []
-      })
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ difficulty, previousScenarios: [] })
     });
 
     if (!response.ok) {
       const error = await response.text();
-      throw new Error(`Failed to generate simulation scenario: ${error}`);
+      throw new Error(error || 'Failed to generate scenario');
     }
 
+    const text = await response.text();
+    let data;
     try {
-      const data = await response.json();
-      if (!data?.title || !data?.initial_state || !Array.isArray(data?.expected_actions)) {
-         console.error('Invalid scenario data:', data);
-        throw new Error('Invalid scenario format - missing required fields');
-      }
-      return data;
-    } catch (error) {
-      console.error('Error parsing scenario:', error);
-      throw new Error('Failed to parse simulation scenario');
+      data = JSON.parse(text);
+    } catch (parseError) {
+      console.error('Failed to parse scenario response:', text);
+      throw new Error('Invalid scenario format received');
     }
+
+    if (!data || typeof data !== 'object' || !data.initial_state) {
+      throw new Error('Invalid scenario structure received');
+    }
+
+    return data as SimulationScenario;
   } catch (error) {
-    console.error('Error generating simulation scenario:', error);
-    throw error instanceof Error ? error : new Error('Unknown error occurred');
+    console.error('Error generating scenario:', error);
+    throw error instanceof Error ? error : new Error('Failed to generate simulation scenario');
   }
 }
 
@@ -213,7 +125,7 @@ export async function getSimulationFeedback(
   userActions: {
     action: string;
     timestamp: string;
-    response?: string;
+    outcome?: string;
   }[]
 ): Promise<SimulationFeedback> {
   try {
@@ -292,33 +204,4 @@ export interface AIAnalysisResult {
   weaknesses: string[];
   recommendedTopics: string[];
   confidence: number;
-}
-export async function startSkillPractice(
-  level: 'basic' | 'advanced',
-  skillName: string
-): Promise<{
-  scenario: string;
-  objectives: string[];
-  steps: Array<{
-    instruction: string;
-    feedback?: string;
-    completed?: boolean;
-  }>;
-}> {
-  try {
-    const response = await fetch('/api/ai/skill-practice', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ level, skillName })
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to start skill practice');
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Error starting skill practice:', error);
-    throw new Error('Failed to start skill practice');
-  }
 }

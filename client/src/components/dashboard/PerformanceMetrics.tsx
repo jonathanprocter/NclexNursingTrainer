@@ -10,35 +10,29 @@ export default function PerformanceMetrics({ data }: PerformanceMetricsProps) {
   const mockMetrics = [
     {
       category: "Critical Thinking",
-      score: data?.criticalThinking || 85,
+      score: 85,
       status: "Strong",
       details: ["Excellent problem solving", "Good clinical reasoning"],
     },
     {
       category: "Content Knowledge",
-      score: data?.contentKnowledge || 78,
+      score: 78,
       status: "Good",
       details: ["Strong in fundamentals", "Needs review in pharmacology"],
     },
     {
       category: "Test-Taking Strategy",
-      score: data?.testStrategy || 90,
+      score: 90,
       status: "Excellent",
       details: ["Effective time management", "Strong question analysis"],
     },
     {
       category: "Clinical Judgment",
-      score: data?.clinicalJudgment || 82,
+      score: 82,
       status: "Good",
       details: ["Good prioritization", "Solid assessment skills"],
     },
   ];
-
-  const getStatusVariant = (score: number) => {
-    if (score >= 85) return "default";
-    if (score >= 75) return "secondary";
-    return "destructive";
-  };
 
   return (
     <div className="space-y-6">
@@ -48,7 +42,7 @@ export default function PerformanceMetrics({ data }: PerformanceMetricsProps) {
             <CardTitle className="text-lg font-medium">
               {metric.category}
             </CardTitle>
-            <Badge variant={getStatusVariant(metric.score)}>
+            <Badge variant={metric.score >= 85 ? "default" : "secondary"}>
               {metric.status}
             </Badge>
           </CardHeader>

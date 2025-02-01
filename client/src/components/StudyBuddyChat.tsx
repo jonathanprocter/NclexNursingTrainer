@@ -135,7 +135,7 @@ export const StudyBuddyChat = forwardRef<StudyBuddyChatHandle, StudyBuddyChatPro
     });
 
     useImperativeHandle(ref, () => ({
-      handleVoiceInput: (transcript: string) => {
+      handleVoiceInput: async (transcript: string) => {
         if (!transcript.trim()) return;
 
         const userMessage = {
@@ -146,10 +146,14 @@ export const StudyBuddyChat = forwardRef<StudyBuddyChatHandle, StudyBuddyChatPro
 
         setMessages(prev => [...prev, userMessage]);
         sendMessage.mutate(transcript);
+        } catch (error) {
+          console.error('Microphone error:', error);
+          alert('Please enable microphone access to use voice input');
+        }
       }
     }));
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault();
       if (!input.trim()) return;
 
@@ -251,5 +255,3 @@ export const StudyBuddyChat = forwardRef<StudyBuddyChatHandle, StudyBuddyChatPro
 );
 
 StudyBuddyChat.displayName = "StudyBuddyChat";
-
-export default StudyBuddyChat;
