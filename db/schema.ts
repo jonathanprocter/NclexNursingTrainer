@@ -1,6 +1,7 @@
 import { pgTable, text, serial, integer, boolean, timestamp, json, foreignKey } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
+// Core user model
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").unique().notNull(),
@@ -9,17 +10,7 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-// Add study buddy chat history table
-export const studyBuddyChats = pgTable("study_buddy_chats", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id),
-  sessionId: text("session_id").notNull(),
-  role: text("role").notNull(), // 'user' or 'assistant'
-  content: text("content").notNull(),
-  tone: text("tone").notNull(), // professional, friendly, etc.
-  timestamp: timestamp("timestamp").notNull().defaultNow(),
-});
-
+// Learning content modules
 export const modules = pgTable("modules", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
@@ -30,6 +21,7 @@ export const modules = pgTable("modules", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// NCLEX-style questions with AI enrichment
 export const questions = pgTable("questions", {
   id: serial("id").primaryKey(),
   moduleId: integer("module_id").references(() => modules.id),
@@ -44,14 +36,23 @@ export const questions = pgTable("questions", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// User progress tracking
 export const questionHistory = pgTable("question_history", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id),
-  questionId: text("question_id").notNull(), // Store the original question ID (e.g., "pattern-1")
-  type: text("type").notNull(), // pattern, hypothesis, decision, etc.
-  usedAt: timestamp("used_at").notNull().defaultNow(),
+  questionId: integer("question_id").references(() => questions.id),
+  answer: text("answer").notNull(),
+  isCorrect: boolean("is_correct").notNull(),
+  timeSpent: integer("time_spent").notNull(), // Time spent in seconds
+  timestamp: timestamp("timestamp").notNull().defaultNow(),
+  // Spaced repetition fields
+  easeFactor: integer("ease_factor").default(250).notNull(),
+  interval: integer("interval").default(1).notNull(),
+  repetitions: integer("repetitions").default(0).notNull(),
+  nextReview: timestamp("next_review"),
 });
 
+// Quiz analytics
 export const quizAttempts = pgTable("quiz_attempts", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id),
@@ -67,6 +68,7 @@ export const quizAttempts = pgTable("quiz_attempts", {
   completedAt: timestamp("completed_at"),
 });
 
+// Overall learning progress
 export const userProgress = pgTable("user_progress", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id),
@@ -79,38 +81,30 @@ export const userProgress = pgTable("user_progress", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-// Create schemas for all tables
+// Type inference helpers
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
+export type Module = typeof modules.$inferSelect;
+export type NewModule = typeof modules.$inferInsert;
+export type Question = typeof questions.$inferSelect;
+export type NewQuestion = typeof questions.$inferInsert;
+export type QuestionHistory = typeof questionHistory.$inferSelect;
+export type NewQuestionHistory = typeof questionHistory.$inferInsert;
+export type QuizAttempt = typeof quizAttempts.$inferSelect;
+export type NewQuizAttempt = typeof quizAttempts.$inferInsert;
+export type UserProgress = typeof userProgress.$inferSelect;
+export type NewUserProgress = typeof userProgress.$inferInsert;
+
+// Zod validation schemas
 export const insertUserSchema = createInsertSchema(users);
 export const selectUserSchema = createSelectSchema(users);
 export const insertModuleSchema = createInsertSchema(modules);
 export const selectModuleSchema = createSelectSchema(modules);
 export const insertQuestionSchema = createInsertSchema(questions);
 export const selectQuestionSchema = createSelectSchema(questions);
+export const insertQuestionHistorySchema = createInsertSchema(questionHistory);
+export const selectQuestionHistorySchema = createSelectSchema(questionHistory);
 export const insertQuizAttemptSchema = createInsertSchema(quizAttempts);
 export const selectQuizAttemptSchema = createSelectSchema(quizAttempts);
 export const insertUserProgressSchema = createInsertSchema(userProgress);
 export const selectUserProgressSchema = createSelectSchema(userProgress);
-export const insertQuestionHistorySchema = createInsertSchema(questionHistory);
-export const selectQuestionHistorySchema = createSelectSchema(questionHistory);
-
-// Add schemas for study buddy chats
-export const insertStudyBuddyChatSchema = createInsertSchema(studyBuddyChats);
-export const selectStudyBuddyChatSchema = createSelectSchema(studyBuddyChats);
-
-// Export types for all tables
-export type InsertUser = typeof users.$inferInsert;
-export type SelectUser = typeof users.$inferSelect;
-export type InsertModule = typeof modules.$inferInsert;
-export type SelectModule = typeof modules.$inferSelect;
-export type InsertQuestion = typeof questions.$inferInsert;
-export type SelectQuestion = typeof questions.$inferSelect;
-export type InsertQuizAttempt = typeof quizAttempts.$inferInsert;
-export type SelectQuizAttempt = typeof quizAttempts.$inferSelect;
-export type InsertUserProgress = typeof userProgress.$inferInsert;
-export type SelectUserProgress = typeof userProgress.$inferSelect;
-export type InsertQuestionHistory = typeof questionHistory.$inferInsert;
-export type SelectQuestionHistory = typeof questionHistory.$inferSelect;
-
-// Add types for study buddy chats
-export type InsertStudyBuddyChat = typeof studyBuddyChats.$inferInsert;
-export type SelectStudyBuddyChat = typeof studyBuddyChats.$inferSelect;
