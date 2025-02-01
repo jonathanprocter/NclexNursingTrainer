@@ -29,7 +29,8 @@ export default function Simulation() {
       try {
         const response = await fetch('/api/questions');
         if (!response.ok) throw new Error('Failed to fetch questions');
-        const questions = await response.json();
+        const data = await response.json();
+        const questions = data.questions || [];
         const scenario = await generateSimulationScenario(difficulty, focusAreas, questions);
         return scenario;
       } catch (error) {

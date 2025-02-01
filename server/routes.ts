@@ -17,15 +17,15 @@ export function registerRoutes(app: Express): Server {
     try {
       const questionList = await db.select().from(questions);
       const formattedQuestions = questionList.map(q => ({
-        id: q.id.toString(),
-        text: q.question,
-        options: q.options,
-        correctAnswer: q.correctAnswer,
+        id: q.id,
+        text: q.text || '',
+        options: JSON.parse(q.options || '[]'),
+        correctAnswer: q.correctAnswer || '',
         explanation: q.explanation || '',
-        category: q.category,
-        difficulty: q.difficulty === 1 ? 'Easy' : q.difficulty === 2 ? 'Medium' : 'Hard'
+        category: q.category || 'General',
+        difficulty: q.difficulty || 'Medium'
       }));
-      res.json(formattedQuestions);
+      res.json({ questions: formattedQuestions });
     } catch (error) {
       console.error('Error fetching questions:', error);
       res.status(500).json({ error: 'Failed to fetch questions' });
