@@ -38,7 +38,14 @@ import {
 } from "@/components/ui/sheet";
 import { useState } from "react";
 
-const dashboardItems = [
+interface NavItem {
+  title: string;
+  href: string;
+  icon: any; // Replace with specific Lucide icon type if available
+  description: string;
+}
+
+const dashboardItems: NavItem[] = [
   {
     title: "Analytics Dashboard",
     href: "/dashboard/analytics",
@@ -59,7 +66,7 @@ const dashboardItems = [
   },
 ];
 
-const learningModules = [
+const learningModules: NavItem[] = [
   {
     title: "Pharmacology & Parenteral",
     href: "/modules/pharmacology",
@@ -98,7 +105,7 @@ const learningModules = [
   },
 ];
 
-const practiceItems = [
+const practiceItems: NavItem[] = [
   {
     title: "Practice Quizzes",
     href: "/practice/quizzes",
@@ -125,7 +132,7 @@ const practiceItems = [
   },
 ];
 
-const studyTools = [
+const studyTools: NavItem[] = [
   {
     title: "AI Voice Study Companion",
     href: "/tools/ai-companion",
@@ -140,11 +147,43 @@ const studyTools = [
   },
 ];
 
+interface MenuContentProps {
+  items: NavItem[];
+  className?: string;
+}
+
+interface MobileNavItemProps {
+  href: string;
+  children: React.ReactNode;
+  onClick?: () => void;
+}
+
 export default function NavBar() {
   const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
 
-  const MobileNavItem = ({ href, children, onClick }: { href: string; children: React.ReactNode; onClick?: () => void }) => (
+  const MenuContent = ({ items, className = "" }: MenuContentProps) => (
+    <ul className={cn(
+      "grid gap-3 p-4 w-[400px] md:w-[500px] md:grid-cols-2 lg:w-[600px]",
+      "max-h-[calc(100vh-200px)] overflow-y-auto",
+      "scrollbar scrollbar-w-2 scrollbar-track-transparent",
+      "scrollbar-thumb-primary scrollbar-thumb-rounded-lg",
+      className
+    )}>
+      {items.map((item: NavItem) => (
+        <ListItem
+          key={item.title}
+          title={item.title}
+          href={item.href}
+          icon={item.icon}
+        >
+          {item.description}
+        </ListItem>
+      ))}
+    </ul>
+  );
+
+  const MobileNavItem = ({ href, children, onClick }: MobileNavItemProps) => (
     <Link href={href}>
       <div
         className="block px-4 py-2 text-sm hover:bg-accent rounded-md cursor-pointer"
@@ -170,72 +209,28 @@ export default function NavBar() {
                 <NavigationMenuItem>
                   <NavigationMenuTrigger>Dashboards</NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                      {dashboardItems.map((item) => (
-                        <ListItem
-                          key={item.title}
-                          title={item.title}
-                          href={item.href}
-                          icon={item.icon}
-                        >
-                          {item.description}
-                        </ListItem>
-                      ))}
-                    </ul>
+                    <MenuContent items={dashboardItems} />
                   </NavigationMenuContent>
                 </NavigationMenuItem>
 
                 <NavigationMenuItem>
                   <NavigationMenuTrigger>Learning Modules</NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                      {learningModules.map((item) => (
-                        <ListItem
-                          key={item.title}
-                          title={item.title}
-                          href={item.href}
-                          icon={item.icon}
-                        >
-                          {item.description}
-                        </ListItem>
-                      ))}
-                    </ul>
+                    <MenuContent items={learningModules} />
                   </NavigationMenuContent>
                 </NavigationMenuItem>
 
                 <NavigationMenuItem>
                   <NavigationMenuTrigger>Practice & Simulation</NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                      {practiceItems.map((item) => (
-                        <ListItem
-                          key={item.title}
-                          title={item.title}
-                          href={item.href}
-                          icon={item.icon}
-                        >
-                          {item.description}
-                        </ListItem>
-                      ))}
-                    </ul>
+                    <MenuContent items={practiceItems} />
                   </NavigationMenuContent>
                 </NavigationMenuItem>
 
                 <NavigationMenuItem>
                   <NavigationMenuTrigger>Study Tools</NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                      {studyTools.map((item) => (
-                        <ListItem
-                          key={item.title}
-                          title={item.title}
-                          href={item.href}
-                          icon={item.icon}
-                        >
-                          {item.description}
-                        </ListItem>
-                      ))}
-                    </ul>
+                    <MenuContent items={studyTools} />
                   </NavigationMenuContent>
                 </NavigationMenuItem>
               </NavigationMenuList>
@@ -257,70 +252,29 @@ export default function NavBar() {
                     Access all NCLEX preparation resources
                   </SheetDescription>
                 </SheetHeader>
-                <nav className="flex flex-col gap-4 mt-6">
-                  <div className="px-4 py-2">
-                    
-                    {dashboardItems.map((item) => (
-                      <MobileNavItem
-                        key={item.title}
-                        href={item.href}
-                        onClick={() => setIsOpen(false)}
-                      >
-                        <div className="flex items-center gap-2">
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
-                        </div>
-                      </MobileNavItem>
-                    ))}
-                  </div>
-
-                  <div className="px-4 py-2">
-                    
-                    {learningModules.map((item) => (
-                      <MobileNavItem
-                        key={item.title}
-                        href={item.href}
-                        onClick={() => setIsOpen(false)}
-                      >
-                        <div className="flex items-center gap-2">
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
-                        </div>
-                      </MobileNavItem>
-                    ))}
-                  </div>
-
-                  <div className="px-4 py-2">
-                    
-                    {practiceItems.map((item) => (
-                      <MobileNavItem
-                        key={item.title}
-                        href={item.href}
-                        onClick={() => setIsOpen(false)}
-                      >
-                        <div className="flex items-center gap-2">
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
-                        </div>
-                      </MobileNavItem>
-                    ))}
-                  </div>
-
-                  <div className="px-4 py-2">
-                    
-                    {studyTools.map((item) => (
-                      <MobileNavItem
-                        key={item.title}
-                        href={item.href}
-                        onClick={() => setIsOpen(false)}
-                      >
-                        <div className="flex items-center gap-2">
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
-                        </div>
-                      </MobileNavItem>
-                    ))}
-                  </div>
+                <nav className="flex flex-col gap-4 mt-6 overflow-y-auto max-h-[calc(100vh-200px)]">
+                  {[
+                    { title: "Dashboards", items: dashboardItems },
+                    { title: "Learning Modules", items: learningModules },
+                    { title: "Practice & Simulation", items: practiceItems },
+                    { title: "Study Tools", items: studyTools }
+                  ].map(({ title, items }) => (
+                    <div key={title} className="px-4 py-2">
+                      <h3 className="mb-2 text-sm font-semibold">{title}</h3>
+                      {items.map((item) => (
+                        <MobileNavItem
+                          key={item.title}
+                          href={item.href}
+                          onClick={() => setIsOpen(false)}
+                        >
+                          <div className="flex items-center gap-2">
+                            <item.icon className="h-4 w-4" />
+                            <span>{item.title}</span>
+                          </div>
+                        </MobileNavItem>
+                      ))}
+                    </div>
+                  ))}
                 </nav>
               </SheetContent>
             </Sheet>
@@ -335,7 +289,7 @@ interface ListItemProps {
   title: string;
   href: string;
   children: React.ReactNode;
-  icon: any;
+  icon: any; // Replace with specific Lucide icon type if available
 }
 
 function ListItem({ title, href, children, icon: Icon }: ListItemProps) {
