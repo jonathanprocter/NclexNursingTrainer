@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { db } from "@db";
 import { eq } from "drizzle-orm";
+import { questions, quizAttempts, userProgress } from "@db/schema";
 import studyGuideRouter from './routes/study-guide';
 import OpenAI from "openai";
 import { practiceQuestions } from './data/practice-questions';
@@ -259,6 +260,30 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Questions routes
+    app.get("/api/questions", async (_req, res) => {
+    try {
+      const allQuestions = await db.query.questions.findMany({
+        orderBy: (questions, { asc }) => [asc(questions.createdAt)],
+      });
+      res.json(allQuestions);
+    } catch (error) {
+      console.error("Error fetching questions:", error);
+      res.status(500).json({ message: "Failed to fetch questions" });
+    }
+  });
+
+    app.get("/api/questions/:moduleId", async (req, res) => {
+    try {
+      const moduleQuestions = await db.query.questions.findMany({
+        where: eq(questions.moduleId, parseInt(req.params.moduleId)),
+      });
+      res.json(moduleQuestions);
+    } catch (error) {
+      console.error("Error fetching module questions:", error);
+      res.status(500).json({ message: "Failed to fetch questions" });
+    }
+  });
+
   // Drug calculation generation endpoint
   app.post("/api/generate-calculation", async (req, res) => {
     try {
@@ -292,24 +317,12 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.get("/api/questions/:moduleId", async (req, res) => {
-    try {
-      const moduleQuestions = await db.query.questions.findMany({
-        where: eq(questions.moduleId, parseInt(req.params.moduleId)),
-      });
-      res.json(moduleQuestions);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch questions" });
-    }
-  });
+
 
   // Quiz attempts routes with AI analysis
-  app.post("/api/quiz-attempts", async (req, res) => {
+   app.post("/api/quiz-attempts", async (req, res) => {
     try {
       const { userId, moduleId, type, answers } = req.body;
-
-      // Analyze performance using AI
-      const aiAnalysis = await analyzePerformance(answers);
 
       const newAttempt = await db.insert(quizAttempts).values({
         userId,
@@ -319,23 +332,20 @@ export function registerRoutes(app: Express): Server {
         score: answers.filter((a: any) => a.correct).length / answers.length * 100,
         totalQuestions: answers.length,
         startedAt: new Date(),
-        aiAnalysis,
-        strengthAreas: aiAnalysis?.strengths || [],
-        weaknessAreas: aiAnalysis?.weaknesses || []
       }).returning();
 
-      // Update user progress with AI insights
+      // Update user progress
       await db.update(userProgress)
         .set({
           completedQuestions: userProgress.completedQuestions + answers.length,
           correctAnswers: userProgress.correctAnswers + answers.filter((a: any) => a.correct).length,
           lastAttempt: new Date(),
-          performanceMetrics: aiAnalysis
         })
         .where(eq(userProgress.userId, userId));
 
       res.json(newAttempt[0]);
     } catch (error) {
+      console.error("Error saving quiz attempt:", error);
       res.status(500).json({ message: "Failed to save quiz attempt" });
     }
   });
@@ -903,7 +913,7 @@ export function registerRoutes(app: Express): Server {
         messages: [
           {
             role: "system",
-            content: "You are a nursing educator. Generate a realistic simulation scenario. Return response in valid JSON format only."
+            content: "You are a nursing educator. Generate a realistic simulation scenario. Returnresponse in valid JSON format only."
           },
           {
             role: "user",
@@ -1155,127 +1165,4 @@ export function registerRoutes(app: Express): Server {
     };
   }
   return httpServer;
-}
-
-async function analyzePerformance(answers: any[]) {
-  try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        {
-          role: "system",
-          content: "You are an expert nursing educator analyzing student performance on NCLEX-style questions. Provide detailed feedback on strengths and areas for improvement."
-        },
-        {
-          role: "user",
-          content: `Analyze these question responses: ${JSON.stringify(answers)}`
-        }
-      ]
-    });
-
-    const analysis = completion.choices[0]?.message?.content;
-    return {
-      strengths: ["Clinical reasoning", "Patient safety"],
-      weaknesses: ["Pharmacology calculations", "Priority setting"],
-      confidence: 0.75,
-      recommendedTopics: ["Medication administration", "Critical thinking"]
-    };
-  } catch (error) {
-    console.error("Error analyzing performance:", error);
-    return null;
-  }
-}
-
-async function getPharmacologyHelp(topic: string, context: string) {
-  try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        {
-          role: "system",
-          content: "You are an expert pharmacology educator helping nursing students understand medication classes, mechanisms of action, and clinical applications of drugs."
-        },
-        {
-          role: "user",
-          content: `Explain ${topic} in the context of ${context}`
-        }
-      ]
-    });
-
-    return {
-      content: completion.choices[0]?.message?.content,
-      relatedConcepts: ["Inflammation", "Cellular adaptation", "Tissue repair"],
-      clinicalCorrelations: ["Assessment findings", "Common complications", "Nursing interventions"]
-    };
-  } catch (error) {
-    console.error("Error getting pathophysiology help:", error);
-    return null;
-  }
-}
-
-async function getStudyRecommendations(performanceData: any[]) {
-  try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        {
-          role: "system",
-          content: "You are an expert nursing educator providing personalized study recommendations based on student performance data."
-        },
-        {
-          role: "user",
-          content: `Analyze this performance data and provide study recommendations: ${JSON.stringify(performanceData)}`
-        }
-      ]
-    });
-
-    return {
-      recommendations: completion.choices[0]?.message?.content,
-      priorityTopics: ["Critical thinking", "Clinical judgment", "Patient safety"],
-      studyStrategies: ["Case studies", "Practice questions", "Concept mapping"]
-    };
-  } catch (error) {
-    console.error("Error generating study recommendations:", error);
-    return null;
-  }
-}
-
-async function generateNewQuestions(userId: number, examType: string) {
-  try {
-    const availableQuestions = Object.values(practiceQuestions).flat();
-
-    if (availableQuestions.length === 0) {
-      throw new Error("No questions available");
-    }
-
-    if (examType === 'cat') {
-      const sortedQuestions = availableQuestions.sort((a, b) => {
-        const difficultyMap = { Easy: 1, Medium: 2, Hard: 3 };
-        return difficultyMap[a.difficulty as keyof typeof difficultyMap] -               difficultyMap[b.difficulty as keyof typeof difficultyMap];
-      });
-
-      const mediumQuestions = sortedQuestions.filter(q => q.difficulty === 'Medium');
-      if (mediumQuestions.length === 0) {
-        throw new Error("No medium difficulty questions available");
-      }
-
-      const selectedQuestion = mediumQuestions[Math.floor(Math.random() * mediumQuestions.length)];
-      return formatQuestion(selectedQuestion);
-    }
-
-    const randomQuestion = availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
-    return formatQuestion(randomQuestion);
-  } catch (error) {
-    console.error("Error generating questions:", error);
-    throw new Error("Failed to generate questions");
-  }
-}
-
-function formatQuestion(question: any) {
-  return {
-    id: 1,
-    text: question.text,
-    options: question.options,
-    correctAnswer: question.correctAnswer
-  };
 }
