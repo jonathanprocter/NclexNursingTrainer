@@ -10,13 +10,20 @@ export default function Dashboard() {
   const { data: analytics, isLoading, error } = useQuery({
     queryKey: ["/api/analytics/user/1"], // Replace with actual user ID
     queryFn: async () => {
-      const response = await fetch("/api/analytics/user/1");
-      if (!response.ok) {
-        throw new Error("Failed to fetch analytics");
+      try {
+        const response = await fetch("/api/analytics/user/1");
+        if (!response.ok) {
+          throw new Error("Failed to fetch analytics");
+        }
+        const data = await response.json();
+        return data;
+      } catch (err) {
+        console.error("Error fetching analytics:", err);
+        throw err;
       }
-      return response.json();
     },
-    retry: 2
+    retry: 2,
+    staleTime: 30000 // Cache for 30 seconds
   });
 
   if (isLoading) {
@@ -46,21 +53,21 @@ export default function Dashboard() {
       </div>
 
       <Tabs defaultValue="analytics" className="space-y-4">
-        <TabsList>
+        <TabsList className="grid grid-cols-3 w-full max-w-md mx-auto">
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="performance">Performance Metrics</TabsTrigger>
-          <TabsTrigger value="instructor">Instructor View</TabsTrigger>
+          <TabsTrigger value="performance">Performance</TabsTrigger>
+          <TabsTrigger value="instructor">Instructor</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="analytics">
+        <TabsContent value="analytics" className="mt-6">
           <Analytics data={analytics} />
         </TabsContent>
 
-        <TabsContent value="performance">
+        <TabsContent value="performance" className="mt-6">
           <PerformanceMetrics data={analytics} />
         </TabsContent>
 
-        <TabsContent value="instructor">
+        <TabsContent value="instructor" className="mt-6">
           <InstructorDashboard />
         </TabsContent>
       </Tabs>

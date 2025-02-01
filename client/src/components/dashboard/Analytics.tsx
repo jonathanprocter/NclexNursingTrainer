@@ -15,6 +15,11 @@ export default function Analytics({ data }: AnalyticsProps) {
     { module: "Med-Surg", score: 78 },
   ];
 
+  const analyticsData = data?.performanceData || mockPerformanceData;
+  const studyTime = data?.totalStudyTime || "45.5";
+  const questionsAttempted = data?.questionsAttempted || 428;
+  const averageScore = data?.averageScore || 82;
+
   return (
     <div className="grid gap-6 md:grid-cols-2">
       <Card>
@@ -24,12 +29,33 @@ export default function Analytics({ data }: AnalyticsProps) {
         <CardContent>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={mockPerformanceData}>
+              <BarChart data={analyticsData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="module" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="score" fill="hsl(var(--primary))" />
+                <XAxis 
+                  dataKey="module" 
+                  tick={{ fontSize: 12 }}
+                  angle={-30}
+                  textAnchor="end"
+                  height={60}
+                />
+                <YAxis 
+                  domain={[0, 100]}
+                  tickFormatter={(value) => `${value}%`}
+                />
+                <Tooltip 
+                  formatter={(value: number) => [`${value}%`, 'Score']}
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '6px',
+                  }}
+                />
+                <Bar
+                  dataKey="score"
+                  fill="hsl(var(--primary))"
+                  radius={[4, 4, 0, 0]}
+                  name="Score"
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -44,15 +70,15 @@ export default function Analytics({ data }: AnalyticsProps) {
           <div className="grid gap-4">
             <div className="bg-muted p-4 rounded-lg">
               <p className="text-sm text-muted-foreground">Total Study Time</p>
-              <p className="text-2xl font-bold">45.5 hours</p>
+              <p className="text-2xl font-bold">{studyTime} hours</p>
             </div>
             <div className="bg-muted p-4 rounded-lg">
               <p className="text-sm text-muted-foreground">Questions Attempted</p>
-              <p className="text-2xl font-bold">428</p>
+              <p className="text-2xl font-bold">{questionsAttempted}</p>
             </div>
             <div className="bg-muted p-4 rounded-lg">
               <p className="text-sm text-muted-foreground">Average Score</p>
-              <p className="text-2xl font-bold">82%</p>
+              <p className="text-2xl font-bold">{averageScore}%</p>
             </div>
           </div>
         </CardContent>
