@@ -63,6 +63,7 @@ interface CaseStudy {
   content: string;
   questions: CaseQuestion[];
   nextCaseHints?: string[];
+  aiAnalysis?: string; // Added AI analysis field
 }
 
 
@@ -288,10 +289,9 @@ const CaseStudiesSection = () => {
   // This is the only place where we start a new case
   const startNewCase = async (caseId: string) => {
     try {
-      const response = await fetch("/api/generate-case", {
-        method: "POST",
+      const response = await fetch(`/api/case/${caseId}/analysis`, { // Fetch case data and AI analysis together
+        method: "GET",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ caseId }),
       });
 
       if (!response.ok) {
@@ -556,6 +556,15 @@ const CaseStudiesSection = () => {
                                 </div>
                               </div>
                             )}
+                          </div>
+                        </div>
+                      )}
+                      {/* AI Analysis Display */}
+                      {currentCase.aiAnalysis && (
+                        <div className="mt-6">
+                          <h4 className="font-medium mb-2">AI Case Analysis</h4>
+                          <div className="bg-muted/30 p-4 rounded-md">
+                            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{currentCase.aiAnalysis}</p>
                           </div>
                         </div>
                       )}
@@ -949,8 +958,7 @@ const PracticeSection = () => {
                           <FormMessage />
                         </FormItem>
                       )}
-                    />
-                    <Button type="submit" disabled={isLoading}>
+                    />                    <Button type="submit" disabled={isLoading}>
                       Submit Response
                     </Button>
                   </form>

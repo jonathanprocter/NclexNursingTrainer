@@ -1235,3 +1235,34 @@ function formatQuestion(question: any) {
     correctAnswer: question.correctAnswer
   };
 }
+// AI case analysis endpoint
+app.post("/api/ai/analyze-case", async (req, res) => {
+  const { caseId, userAnswers, currentQuestion } = req.body;
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert nursing educator analyzing student performance in clinical cases. Provide detailed feedback on clinical reasoning and decision-making."
+        },
+        {
+          role: "user",
+          content: JSON.stringify({ caseId, userAnswers, currentQuestion })
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 500
+    });
+
+    const analysis = completion.choices[0]?.message?.content || "Unable to generate analysis";
+    res.json({ analysis });
+  } catch (error) {
+    console.error("Error in AI case analysis:", error);
+    res.status(500).json({
+      message: "Failed to analyze case",
+      error: error instanceof Error ? error.message : "Unknown error"
+    });
+  }
+});
