@@ -177,3 +177,5 @@ export default function Exam() {
     </div>
   );
 }
+
+export default Exam;
