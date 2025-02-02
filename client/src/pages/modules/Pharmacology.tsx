@@ -751,7 +751,7 @@ export default function Pharmacology() {
                       </ul>
                       <Button
                         className="mt-4"
-                        onClick={() => handleAIHelp("practice_basic_calculations", "tablet_calculations")}
+                        onClick={() => handleAIHelp("practice_basic_calculations", "Practice converting medication doses and calculating tablet quantities")}
                       >
                         Practice Scenarios
                       </Button>

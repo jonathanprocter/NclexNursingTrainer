@@ -2,7 +2,7 @@ import type { AIAnalysisResult } from './types';
 
 export async function getPharmacologyHelp(
   section: string,
-  context?: string
+  context: string = 'basic'
 ): Promise<{ content: string }> {
   try {
     const response = await fetch('/api/pharmacology-help', {
