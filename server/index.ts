@@ -81,8 +81,8 @@ const tryPort = async (port: number): Promise<number> => {
         }
       });
       
-      server.listen(port, HOST, () => {
-        log(`Server running on http://${HOST}:${port}`);
+      server.listen(port, '0.0.0.0', () => {
+        log(`Server running on http://0.0.0.0:${port}`);
         resolve(port);
       });
     });
