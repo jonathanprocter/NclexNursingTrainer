@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getPharmacokineticsCaseStudy } from "@/lib/ai-services";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -641,7 +642,25 @@ export default function Pharmacology() {
                           </ul>
                         </li>
                       </ul>
-                      <Button variant="outline" size="sm" className="mt-4" onClick={() => handleAIHelp("pharmacokinetics_case_studies")}>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="mt-4" 
+                        onClick={async () => {
+                          try {
+                            const result = await getPharmacokineticsCaseStudy('ADME');
+                            setAiContent(result.content);
+                            setCurrentSection('Pharmacokinetics Case Studies');
+                            setIsDialogOpen(true);
+                          } catch (error) {
+                            toast({
+                              title: "Error",
+                              description: "Failed to load case study. Please try again.",
+                              variant: "destructive",
+                            });
+                          }
+                        }}
+                      >
                         <Bot className="h-4 w-4 mr-2" />
                         Explore Clinical Cases
                       </Button>
