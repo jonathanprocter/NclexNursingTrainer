@@ -227,10 +227,24 @@ export async function getPharmacokineticsCaseStudy(topic: string): Promise<CaseS
       throw new Error('Failed to get case study');
     }
 
-    return await response.json();
+    const data = await response.json();
+    if (!data.content) {
+      throw new Error('No content received from AI');
+    }
+
+    return {
+      content: data.content,
+      caseType: data.caseType || topic,
+      learningPoints: data.learningPoints || [
+        'Drug absorption and distribution',
+        'Metabolism pathways',
+        'Excretion mechanisms',
+        'Clinical applications'
+      ]
+    };
   } catch (error) {
     console.error('Error getting case study:', error);
-    throw new Error('Failed to get case study');
+    throw error;
   }
 }
 

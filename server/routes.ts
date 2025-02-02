@@ -995,23 +995,46 @@ export function registerRoutes(app: Express): Server {
         messages: [
           {
             role: "system",
-            content: "You are an expert pharmacology educator specializing in pharmacokinetics case studies. Provide detailed analysis of drug absorption, distribution, metabolism, and excretion processes."
+            content: `You are an expert pharmacology educator specializing in pharmacokinetics case studies.
+            Provide a detailed clinical case study that demonstrates ${req.body.topic} principles.
+            Include specific examples of drug absorption, distribution, metabolism, and excretion processes.
+            Format your response with clear sections for:
+            - Patient Presentation
+            - Clinical Assessment
+            - Pharmacokinetic Principles
+            - Treatment Considerations
+            - Learning Points`
           },
           {
             role: "user",
-            content: `Generate a clinical case study demonstrating ${req.body.topic} principles in pharmacokinetics`
+            content: `Generate a comprehensive clinical case study focusing on ${req.body.topic} in pharmacokinetics`
           }
-        ]
+        ],
+        temperature: 0.7,
+        max_tokens: 1000
       });
 
+      const content = completion.choices[0]?.message?.content;
+      if (!content) {
+        throw new Error('No content generated from AI');
+      }
+
       res.json({ 
-        content: completion.choices[0]?.message?.content,
+        content,
         caseType: req.body.topic,
-        learningPoints: ["ADME processes", "Clinical implications", "Patient factors"]
+        learningPoints: [
+          "ADME processes and clinical implications",
+          "Patient-specific factors affecting drug therapy",
+          "Clinical decision-making in pharmacokinetics",
+          "Therapeutic monitoring and dose adjustments"
+        ]
       });
     } catch (error) {
       console.error("Error generating case study:", error);
-      res.status(500).json({ error: "Failed to generate case study" });
+      res.status(500).json({ 
+        error: "Failed to generate case study",
+        message: error instanceof Error ? error.message : "Unknown error occurred"
+      });
     }
   });
 
