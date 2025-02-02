@@ -56,6 +56,16 @@ export default function Exam() {
       if (!response.ok) {
         throw new Error('Failed to fetch question');
       }
+      
+      const question = await response.json();
+      setCurrentQuestion(question);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch the next question. Please try again.",
+      });
+    }
 
   useEffect(() => {
     const timer = setInterval(() => {
