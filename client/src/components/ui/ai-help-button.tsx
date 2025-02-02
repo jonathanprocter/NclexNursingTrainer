@@ -30,7 +30,16 @@ export function AIHelpButton({ title, description, topic, context }: AIHelpButto
   const handleAIHelp = async () => {
     setIsLoading(true);
     try {
-      const response = await getPharmacologyHelp(topic, context);
+      const learningContext = {
+        topic,
+        context,
+        userHistory: await getUserLearningHistory(),
+        currentProgress: await getCurrentTopicProgress(),
+        preferredStyle: localStorage.getItem('learningStyle') || 'visual',
+        recentMistakes: await getRecentMistakes(topic)
+      };
+      
+      const response = await getPharmacologyHelp(topic, JSON.stringify(learningContext));
       setContent(response.content);
       setOpen(true);
     } catch (error) {

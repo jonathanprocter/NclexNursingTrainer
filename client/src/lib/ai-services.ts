@@ -212,7 +212,20 @@ export async function getStudyRecommendations(
 export interface AIAnalysisResult {
   strengths: string[];
   weaknesses: string[];
-
+  recommendedTopics: string[];
+  confidence: number;
+  learningStyle: string;
+  conceptualUnderstanding: {
+    strong: string[];
+    needsImprovement: string[];
+  };
+  suggestedResources: {
+    topic: string;
+    type: 'video' | 'text' | 'practice';
+    priority: number;
+  }[];
+  predictedPerformance: number;
+}
 export async function generateStudyPath(
   performanceData: {
     topic: string;
@@ -243,9 +256,27 @@ export async function generateStudyPath(
   }
 }
 
-  recommendedTopics: string[];
-  confidence: number;
+export async function getPersonalizedLearningPath(
+  userId: string,
+  performance: { topic: string; score: number }[]
+): Promise<{
+  dailyGoals: string[];
+  focusAreas: string[];
+  estimatedTimeToMastery: number;
+  customizedPlan: {
+    morning: string[];
+    afternoon: string[];
+    evening: string[];
+  };
+}> {
+  const response = await fetch('/api/ai/learning-path', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, performance })
+  });
+  return response.json();
 }
+
 export async function startSkillPractice(
   level: 'basic' | 'advanced',
   skillName: string

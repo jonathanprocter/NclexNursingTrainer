@@ -30,6 +30,8 @@ export const StudyBuddyChat = forwardRef<StudyBuddyChatHandle, StudyBuddyChatPro
     const [input, setInput] = useState("");
     const [sessionId, setSessionId] = useState<string | null>(null);
     const [selectedTone, setSelectedTone] = useState<StudyBuddyTone>("professional");
+    const [currentStudyTopic, setCurrentStudyTopic] = useState("NCLEX preparation"); // Added state
+    const [messageHistory, setMessageHistory] = useState<Message[]>([]); // Added state
     const scrollRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const { toast } = useToast();
@@ -46,7 +48,7 @@ export const StudyBuddyChat = forwardRef<StudyBuddyChatHandle, StudyBuddyChatPro
             body: JSON.stringify({
               studentId,
               tone: selectedTone,
-              topic: "NCLEX preparation"
+              topic: currentStudyTopic // Use the state variable here
             }),
           });
           if (!response.ok) throw new Error("Failed to start session");
@@ -134,10 +136,35 @@ export const StudyBuddyChat = forwardRef<StudyBuddyChatHandle, StudyBuddyChatPro
       }
     });
 
+    const getUserPerformanceMetrics = async () => {
+      // Placeholder - replace with actual implementation
+      return {};
+    };
+
+    const calculateStudyDuration = () => {
+      // Placeholder - replace with actual implementation
+      return 0;
+    };
+
+    const analyzeUserEngagement = () => {
+      // Placeholder - replace with actual implementation
+      return {};
+    };
+
     useImperativeHandle(ref, () => ({
       handleVoiceInput: async (transcript: string) => {
         try {
           if (!transcript.trim()) return;
+
+          const enhancedContext = {
+            transcript,
+            currentTopic: currentStudyTopic,
+            recentInteractions: messageHistory.slice(-5),
+            userPerformance: await getUserPerformanceMetrics(),
+            timeOfDay: new Date().getHours(),
+            studyDuration: calculateStudyDuration(),
+            attentionMetrics: analyzeUserEngagement()
+          };
 
           const userMessage = {
             role: "user" as const,
@@ -146,6 +173,7 @@ export const StudyBuddyChat = forwardRef<StudyBuddyChatHandle, StudyBuddyChatPro
           };
 
           setMessages(prev => [...prev, userMessage]);
+          setMessageHistory(prev => [...prev, userMessage]); //update message history
           sendMessage.mutate(transcript);
         } catch (error) {
           console.error('Microphone error:', error);
@@ -165,6 +193,7 @@ export const StudyBuddyChat = forwardRef<StudyBuddyChatHandle, StudyBuddyChatPro
       };
 
       setMessages(prev => [...prev, userMessage]);
+      setMessageHistory(prev => [...prev, userMessage]); //update message history
       sendMessage.mutate(input);
       setInput("");
     };
