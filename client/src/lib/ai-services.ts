@@ -5,20 +5,34 @@ export async function getPharmacologyHelp(
   context?: string
 ): Promise<{ content: string }> {
   try {
-    const response = await fetch('/api/ai/pharmacology-help', {
+    const response = await fetch('/api/pharmacology-help', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ section, context })
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ 
+        topic: section,
+        context: context || '',
+        type: 'explanation'
+      })
     });
 
     if (!response.ok) {
-      throw new Error('Failed to get AI assistance');
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Server response:', errorData);
+      throw new Error(errorData.message || 'Failed to get AI assistance');
     }
 
-    return await response.json();
+    const data = await response.json();
+    if (!data.content) {
+      throw new Error('Invalid response format from AI service');
+    }
+
+    return { content: data.content };
   } catch (error) {
-    console.error('Error getting pathophysiology help:', error);
-    throw new Error('Failed to get AI assistance');
+    console.error('Error getting pharmacology help:', error);
+    throw error instanceof Error ? error : new Error('Failed to get AI assistance');
   }
 }
 

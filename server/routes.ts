@@ -943,6 +943,41 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  app.post("/api/pharmacology-help", async (req, res) => {
+    try {
+      const { topic, context, type } = req.body;
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [
+          {
+            role: "system",
+            content: "You are an expert pharmacology educator helping nursing students understand medication classes, mechanisms of action, and clinical applications."
+          },
+          {
+            role: "user",
+            content: `Explain ${topic} ${context ? `in the context of ${context}` : ''}`
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 1000
+      });
+
+      const content = completion.choices[0]?.message?.content;
+      if (!content) {
+        throw new Error('No content generated from AI');
+      }
+
+      res.json({ content });
+    } catch (error) {
+      console.error("Error in pharmacology help:", error);
+      res.status(500).json({ 
+        error: "Failed to get AI assistance",
+        message: error instanceof Error ? error.message : "Unknown error occurred"
+      });
+    }
+  });
+
   app.post("/api/ai/simulation-feedback", async (req, res) => {
     try {
       const { scenario, userActions } = req.body;
