@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
@@ -177,5 +178,3 @@ export default function Exam() {
     </div>
   );
 }
-
-export default Exam;
