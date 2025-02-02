@@ -217,14 +217,21 @@ export interface CaseStudyResponse {
 
 export async function getPharmacokineticsCaseStudy(topic: string): Promise<CaseStudyResponse> {
   try {
+    console.log('Generating case study for topic:', topic);
     const response = await fetch('/api/pharmacokinetics-cases', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ topic })
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ 
+        topic: topic || 'ADME principles'
+      })
     });
 
     if (!response.ok) {
-      throw new Error('Failed to get case study');
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to get case study');
     }
 
     const data = await response.json();

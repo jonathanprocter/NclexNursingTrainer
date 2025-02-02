@@ -990,28 +990,31 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/pharmacokinetics-cases", async (req, res) => {
     try {
+      if (!req.body.topic) {
+        throw new Error('Topic is required');
+      }
+
       const completion = await openai.chat.completions.create({
         model: "gpt-4",
         messages: [
           {
             role: "system",
-            content: `You are an expert pharmacology educator specializing in pharmacokinetics case studies.
-            Provide a detailed clinical case study that demonstrates ${req.body.topic} principles.
-            Include specific examples of drug absorption, distribution, metabolism, and excretion processes.
-            Format your response with clear sections for:
-            - Patient Presentation
-            - Clinical Assessment
-            - Pharmacokinetic Principles
-            - Treatment Considerations
-            - Learning Points`
+            content: `You are an expert pharmacology educator. Generate a detailed clinical case study about ${req.body.topic} that includes:
+            - Patient Presentation (demographics, symptoms, relevant history)
+            - Clinical Assessment (vital signs, lab values, physical findings)
+            - Pharmacokinetic Analysis (ADME principles specific to this case)
+            - Treatment Plan (medication selection, dosing considerations)
+            - Key Learning Points
+
+            Format with clear headings and concise paragraphs.`
           },
           {
             role: "user",
-            content: `Generate a comprehensive clinical case study focusing on ${req.body.topic} in pharmacokinetics`
+            content: `Create a realistic clinical case study demonstrating ${req.body.topic} principles in pharmacokinetics.`
           }
         ],
         temperature: 0.7,
-        max_tokens: 1000
+        max_tokens: 2000
       });
 
       const content = completion.choices[0]?.message?.content;
