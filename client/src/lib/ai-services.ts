@@ -209,6 +209,31 @@ export async function getStudyRecommendations(
   }
 }
 
+export interface CaseStudyResponse {
+  content: string;
+  caseType: string;
+  learningPoints: string[];
+}
+
+export async function getPharmacokineticsCaseStudy(topic: string): Promise<CaseStudyResponse> {
+  try {
+    const response = await fetch('/api/pharmacokinetics-cases', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ topic })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to get case study');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error getting case study:', error);
+    throw new Error('Failed to get case study');
+  }
+}
+
 export interface AIAnalysisResult {
   strengths: string[];
   weaknesses: string[];
