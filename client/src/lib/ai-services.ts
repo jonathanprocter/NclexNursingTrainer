@@ -25,11 +25,15 @@ export async function getPharmacologyHelp(
     }
 
     const data = await response.json();
-    if (!data.content) {
+    if (!data || !data.content) {
       throw new Error('Invalid response format from AI service');
     }
 
-    return { content: data.content };
+    return { 
+      content: data.content,
+      type: data.type || 'practice',
+      topic: data.topic || section
+    };
   } catch (error) {
     console.error('Error getting pharmacology help:', error);
     throw error instanceof Error ? error : new Error('Failed to get AI assistance');
