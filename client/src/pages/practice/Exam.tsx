@@ -52,11 +52,11 @@ export default function Exam() {
           previousPerformance: examScore / questionNumber
         }),
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch question');
       }
-      
+
       const question = await response.json();
       setCurrentQuestion(question);
     } catch (error) {
@@ -66,6 +66,7 @@ export default function Exam() {
         description: "Failed to fetch the next question. Please try again.",
       });
     }
+  };
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -82,35 +83,6 @@ export default function Exam() {
 
     return () => clearInterval(timer);
   }, [isPaused]);
-
-  // Fetch next question based on exam type
-  const fetchNextQuestion = async () => {
-    try {
-      const response = await fetch(`/api/exam/${type}/question`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          examType: type,
-          previousAnswer: null // Add answer tracking here
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch question');
-      }
-
-      const question = await response.json();
-      setCurrentQuestion(question);
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch the next question. Please try again.",
-      });
-    }
-  };
 
   useEffect(() => {
     fetchNextQuestion();
