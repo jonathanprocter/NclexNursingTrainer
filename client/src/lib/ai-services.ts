@@ -212,6 +212,37 @@ export async function getStudyRecommendations(
 export interface AIAnalysisResult {
   strengths: string[];
   weaknesses: string[];
+
+export async function generateStudyPath(
+  performanceData: {
+    topic: string;
+    confidence: number;
+    recentScores: number[];
+  }[]
+): Promise<{
+  recommendedTopics: string[];
+  estimatedStudyTime: number;
+  prerequisites: Record<string, string[]>;
+  learningObjectives: string[];
+}> {
+  try {
+    const response = await fetch('/api/ai/study-path', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ performanceData })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to generate study path');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error generating study path:', error);
+    throw new Error('Failed to generate study path');
+  }
+}
+
   recommendedTopics: string[];
   confidence: number;
 }

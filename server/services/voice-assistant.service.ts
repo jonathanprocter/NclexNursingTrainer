@@ -130,6 +130,8 @@ export class VoiceAssistantService {
     command: string,
     context: z.infer<typeof voiceCommandSchema>['context']
   ): Promise<VoiceResponse> {
+    const learningHistory = await this.getLearningHistory(context.studentId);
+    const adaptivePrompt = this.generateAdaptivePrompt(command, learningHistory);
     try {
       const completion = await this.openai.chat.completions.create({
         model: "gpt-4",
