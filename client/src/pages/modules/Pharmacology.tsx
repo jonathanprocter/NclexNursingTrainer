@@ -768,7 +768,7 @@ export default function Pharmacology() {
                             Learn to calculate precise doses based on patient weight, considering safe dosing ranges and maximum limits.
                           </p>
                         </li>
-                        <li>Body Surface Area (BSA) Calculations
+                        <li>Body SurfaceArea (BSA) Calculations
                           <p className="ml-6 mt-1">
                             Understand how to use BSA for medication dosing, particularly important in chemotherapy and pediatric medications.
                           </p>
@@ -829,9 +829,11 @@ export default function Pharmacology() {
                         <Button onClick={() => handleAIHelp("practice_IV_basic", "flow_rates")}>
                           Basic Scenarios
                         </Button>
-                        <Button onClick={() => handleAIHelp("practice_IV_advanced", "critical_care")}>
-                          Advanced Cases
-                        </Button>
+                        <Button 
+                        onClick={() => handleAIHelp("practice_IV_advanced", "Generate advanced IV medication scenarios including critical care drips, multiple concurrent infusions, and complex titration protocols with detailed explanations and step-by-step solutions")}
+                      >
+                        Advanced Cases
+                      </Button>
                       </div>
                     </div>
 
