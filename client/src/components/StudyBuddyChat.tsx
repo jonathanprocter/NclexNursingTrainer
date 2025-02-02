@@ -136,16 +136,17 @@ export const StudyBuddyChat = forwardRef<StudyBuddyChatHandle, StudyBuddyChatPro
 
     useImperativeHandle(ref, () => ({
       handleVoiceInput: async (transcript: string) => {
-        if (!transcript.trim()) return;
+        try {
+          if (!transcript.trim()) return;
 
-        const userMessage = {
-          role: "user" as const,
-          content: transcript,
-          timestamp: new Date()
-        };
+          const userMessage = {
+            role: "user" as const,
+            content: transcript,
+            timestamp: new Date()
+          };
 
-        setMessages(prev => [...prev, userMessage]);
-        sendMessage.mutate(transcript);
+          setMessages(prev => [...prev, userMessage]);
+          sendMessage.mutate(transcript);
         } catch (error) {
           console.error('Microphone error:', error);
           alert('Please enable microphone access to use voice input');
