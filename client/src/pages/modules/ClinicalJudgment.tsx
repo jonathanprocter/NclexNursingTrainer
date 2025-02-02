@@ -227,10 +227,12 @@ export default function ClinicalJudgment() {
 
   const AIButtons = ({ topic, context }: { topic: string; context?: string }) => (
     <div className="flex gap-2">
-      <Button variant="outline" size="sm" onClick={() => handleAIHelp(topic, context)}>
-        <Bot className="h-4 w-4 mr-2" />
-        AI Guide
-      </Button>
+      <AIHelpButton
+        title="AI Learning Guide"
+        description="Get personalized learning assistance"
+        topic={topic}
+        context={context}
+      />
       <Button 
         variant="outline" 
         size="sm" 

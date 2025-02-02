@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Brain, Send } from "lucide-react";
+import { Brain } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import {
   Dialog,
@@ -10,53 +10,33 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
-
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-}
+import { getPharmacologyHelp } from "@/lib/ai-services";
 
 interface AIHelpButtonProps {
   title: string;
   description: string;
   topic: string;
+  context?: string;
 }
 
-export function AIHelpButton({ title, description, topic }: AIHelpButtonProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
+export function AIHelpButton({ title, description, topic, context }: AIHelpButtonProps) {
+  const [open, setOpen] = useState(false);
+  const [content, setContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
-
-    const userMessage = input.trim();
-    setInput("");
-    setMessages(prev => [...prev, { role: "user", content: userMessage }]);
+  const handleAIHelp = async () => {
     setIsLoading(true);
-
     try {
-      const response = await fetch("/api/chat/risk-reduction", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic, question: userMessage }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to get AI response");
-      }
-
-      const data = await response.json();
-      setMessages(prev => [...prev, { role: "assistant", content: data.response }]);
+      const response = await getPharmacologyHelp(topic, context);
+      setContent(response.content);
+      setOpen(true);
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to get AI response. Please try again.",
+        description: "Failed to get AI assistance. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -65,9 +45,15 @@ export function AIHelpButton({ title, description, topic }: AIHelpButtonProps) {
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleAIHelp}
+          disabled={isLoading}
+          className="gap-2"
+        >
           <Brain className="h-4 w-4" />
           AI Help
         </Button>
@@ -77,46 +63,11 @@ export function AIHelpButton({ title, description, topic }: AIHelpButtonProps) {
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
-          <ScrollArea className="h-[400px] pr-4">
-            {messages.map((message, i) => (
-              <div
-                key={i}
-                className={`mb-4 ${
-                  message.role === "assistant"
-                    ? "bg-muted p-4 rounded-lg"
-                    : "border-l-4 border-primary pl-3"
-                }`}
-              >
-                <div className="prose prose-sm dark:prose-invert max-w-none">
-                  <ReactMarkdown>{message.content}</ReactMarkdown>
-                </div>
-              </div>
-            ))}
-            {messages.length === 0 && (
-              <div className="text-sm">
-                <p>Ask me anything about {topic}, such as:</p>
-                <ul className="list-disc list-inside mt-2 space-y-1">
-                  <li>Understanding evidence-based safety protocols</li>
-                  <li>Implementation strategies for safety measures</li>
-                  <li>Risk assessment techniques</li>
-                  <li>Best practices for patient safety</li>
-                </ul>
-              </div>
-            )}
-          </ScrollArea>
-          <form onSubmit={handleSubmit} className="flex gap-2">
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Type your question..."
-              disabled={isLoading}
-            />
-            <Button type="submit" size="icon" disabled={isLoading}>
-              <Send className="h-4 w-4" />
-            </Button>
-          </form>
-        </div>
+        <ScrollArea className="h-[400px] pr-4">
+          <div className="prose prose-sm dark:prose-invert max-w-none">
+            <ReactMarkdown>{content}</ReactMarkdown>
+          </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

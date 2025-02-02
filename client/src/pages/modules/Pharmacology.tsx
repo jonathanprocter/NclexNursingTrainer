@@ -63,6 +63,47 @@ const exportContent = (title: string, content: string) => {
   document.body.removeChild(element);
 };
 
+const AIHelpButton = ({ title, description, topic, context }: { title: string; description: string; topic: string; context?: string }) => {
+  const { toast } = useToast();
+  const aiHelpMutation = useMutation({
+    mutationFn: async ({ section, context }: { section: string; context?: string }) => {
+      const response = await fetch("/api/pharmacology-help", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ section, context }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to get AI help");
+      }
+
+      return response.json();
+    },
+  });
+
+  const handleClick = async () => {
+    try {
+      const result = await aiHelpMutation.mutateAsync({ section: topic, context });
+      // Handle the AI response here (e.g., display it in a modal)
+      console.log("AI response:", result); // Replace with your modal logic
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to get AI assistance. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  return (
+    <Button variant="outline" size="sm" onClick={handleClick}>
+      <Bot className="h-4 w-4 mr-2" />
+      {title}
+    </Button>
+  );
+};
+
+
 export default function Pharmacology() {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -719,12 +760,12 @@ export default function Pharmacology() {
                           </p>
                         </li>
                       </ul>
-                      <Button
-                        className="mt-4"
-                        onClick={() => handleAIHelp("practice_weight_based", "pediatric_calculations")}
-                      >
-                        Practice Cases
-                      </Button>
+                      <AIHelpButton 
+                        title="Practice Cases"
+                        description="Get AI assistance with pharmacology practice cases"
+                        topic="practice_weight_based"
+                        context="pediatric_calculations"
+                      />
                     </div>
                   </div>
                 </section>
