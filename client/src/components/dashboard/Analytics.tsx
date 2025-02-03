@@ -8,12 +8,66 @@ interface AnalyticsProps {
 
 export default function Analytics({ data }: AnalyticsProps) {
   const nclexDomains = data?.nclexDomains || [
-    { domain: "Basic Care and Comfort", score: 82 },
-    { domain: "Pharmacological and Parenteral Therapies", score: 78 },
-    { domain: "Reduction of Risk Potential", score: 85 },
-    { domain: "Physiological Adaptation", score: 76 },
-    { domain: "Psychosocial Integrity", score: 80 },
-    { domain: "Safe and Effective Care Environment", score: 88 }
+    { 
+      domain: "Basic Care and Comfort",
+      score: 82,
+      metrics: {
+        questions_attempted: 45,
+        accuracy: 82,
+        time_spent: 120,
+        confidence_level: "high"
+      }
+    },
+    { 
+      domain: "Pharmacological and Parenteral Therapies",
+      score: 78,
+      metrics: {
+        questions_attempted: 38,
+        accuracy: 78,
+        time_spent: 90,
+        confidence_level: "medium"
+      }
+    },
+    { 
+      domain: "Reduction of Risk Potential",
+      score: 85,
+      metrics: {
+        questions_attempted: 52,
+        accuracy: 85,
+        time_spent: 150,
+        confidence_level: "high"
+      }
+    },
+    { 
+      domain: "Physiological Adaptation",
+      score: 76,
+      metrics: {
+        questions_attempted: 42,
+        accuracy: 76,
+        time_spent: 110,
+        confidence_level: "medium"
+      }
+    },
+    { 
+      domain: "Psychosocial Integrity",
+      score: 80,
+      metrics: {
+        questions_attempted: 35,
+        accuracy: 80,
+        time_spent: 95,
+        confidence_level: "high"
+      }
+    },
+    { 
+      domain: "Safe and Effective Care Environment",
+      score: 88,
+      metrics: {
+        questions_attempted: 48,
+        accuracy: 88,
+        time_spent: 130,
+        confidence_level: "high"
+      }
+    }
   ];
 
   const clinicalJudgmentMetrics = data?.clinicalJudgmentMetrics || [

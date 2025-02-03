@@ -409,8 +409,15 @@ export interface BiancaProfile {
 const biancaProfile: BiancaProfile = {
   learningStyle: 'visual',
   preferredPaceMinutes: 45,
-  focusAreas: ['Clinical Judgment', 'Professional Standards', 'Healthcare Technology'],
-  strengthAreas: ['Communication & Documentation', 'Patient Care Management'],
+  nclexDomains: {
+    'Basic Care and Comfort': { confidence: 82, priority: 'medium' },
+    'Pharmacological and Parenteral Therapies': { confidence: 78, priority: 'high' },
+    'Reduction of Risk Potential': { confidence: 85, priority: 'low' },
+    'Physiological Adaptation': { confidence: 76, priority: 'high' },
+    'Psychosocial Integrity': { confidence: 80, priority: 'medium' },
+    'Safe and Effective Care Environment': { confidence: 88, priority: 'low' }
+  },
+  strengthAreas: ['Safe and Effective Care Environment', 'Reduction of Risk Potential'],
   studyPreferences: {
     timeOfDay: 'morning',
     sessionLength: 45,

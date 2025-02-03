@@ -68,12 +68,23 @@ export default function Home() {
             Good morning! Your personalized NCLEX prep awaits 💪
           </p>
           <div className="text-left max-w-2xl mx-auto bg-secondary/10 p-4 rounded-lg">
-            <h2 className="font-semibold mb-2">2024 NCLEX Domains Focus:</h2>
-            <ul className="list-disc list-inside space-y-1 text-sm">
-              <li>Basic Care and Comfort - Foundational nursing skills</li>
-              <li>Pharmacological Therapies - Medication administration</li>
-              <li>Safe and Effective Care Environment - Patient safety</li>
-            </ul>
+            <h2 className="font-semibold mb-2">2024 NCLEX Domains - Personalized Focus:</h2>
+            <div className="space-y-4">
+              {nclexDomains
+                .sort((a, b) => (b.metrics.accuracy - a.metrics.accuracy))
+                .slice(0, 3)
+                .map((domain) => (
+                  <div key={domain.domain} className="space-y-1">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">{domain.domain}</span>
+                      <Badge variant={domain.metrics.confidence_level === 'high' ? 'default' : 'secondary'}>
+                        {domain.metrics.accuracy}% accuracy
+                      </Badge>
+                    </div>
+                    <Progress value={domain.metrics.accuracy} className="h-2" />
+                  </div>
+                ))}
+            </div>
           </div>
           <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base">
             Your personalized study guide for the National Council Licensure Examination. 
