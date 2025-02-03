@@ -3,18 +3,19 @@ import { Progress } from "@/components/ui/progress";
 import { Check, ArrowRight } from "lucide-react";
 import { Link } from "wouter";
 
-const topics = [
-  { id: 1, name: "Safe and Effective Care Environment", progress: 80 },
-  { id: 2, name: "Health Promotion and Maintenance", progress: 65 },
-  { id: 3, name: "Psychosocial Integrity", progress: 45 },
-  { id: 4, name: "Physiological Integrity", progress: 30 },
-];
-
 export default function TopicList() {
+  const topics = [
+    { name: "Basic Care and Comfort", progress: 65 },
+    { name: "Pharmacological and Parenteral Therapies", progress: 70 },
+    { name: "Reduction of Risk Potential", progress: 45 },
+    { name: "Physiological Adaptation", progress: 55 },
+    { name: "Psychosocial Integrity", progress: 60 },
+    { name: "Safe and Effective Care Environment", progress: 50 },
+  ];
   return (
     <div className="grid md:grid-cols-2 gap-4">
       {topics.map((topic) => (
-        <Link key={topic.id} href={`/study-guide#${topic.id}`}>
+        <Link key={topic.name} href={`/study-guide#${topic.name}`}>
           <Card className="cursor-pointer hover:shadow-md transition-shadow">
             <CardContent className="p-4">
               <div className="flex items-start justify-between">

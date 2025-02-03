@@ -68,11 +68,11 @@ export default function Home() {
             Good morning! Your personalized NCLEX prep awaits 💪
           </p>
           <div className="text-left max-w-2xl mx-auto bg-secondary/10 p-4 rounded-lg">
-            <h2 className="font-semibold mb-2">Today's Personalized Focus:</h2>
+            <h2 className="font-semibold mb-2">2024 NCLEX Domains Focus:</h2>
             <ul className="list-disc list-inside space-y-1 text-sm">
-              <li>Clinical Judgment Module - Your current priority area</li>
-              <li>15-minute Pharmacology review session</li>
-              <li>Practice patient safety scenarios</li>
+              <li>Basic Care and Comfort - Foundational nursing skills</li>
+              <li>Pharmacological Therapies - Medication administration</li>
+              <li>Safe and Effective Care Environment - Patient safety</li>
             </ul>
           </div>
           <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base">
