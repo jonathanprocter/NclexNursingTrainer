@@ -1,70 +1,59 @@
-
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MessagesSquare, Plus } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ReactMarkdown from 'react-markdown';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+const topicContent = {
+  "clinical-judgment": {
+    title: "Clinical Judgment",
+    content: [
+      {
+        subtitle: "Assessment & Data Collection",
+        details: `
+# Assessment & Data Collection
+
+## Key Components
+- Systematic assessment techniques
+- Vital signs interpretation
+- Physical examination findings
+- Lab value analysis
+- Patient history gathering
+
+## Clinical Applications
+- Head-to-toe assessment
+- Focused assessments
+- Documentation requirements
+- Critical findings recognition
+`
+      },
+      {
+        subtitle: "Analysis & Care Planning",
+        details: `
+# Analysis & Care Planning
+
+## Decision Making Process
+- Prioritization of care
+- Evidence-based interventions
+- Risk assessment
+- Expected outcomes
+- Care plan development
+`
+      }
+    ]
+  },
+  // Add more topics as needed
+};
 
 export default function TopicDetail() {
-  const { topicId } = useParams();
+  const { id } = useParams();
   const [aiContent, setAiContent] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const topicContent = {
-    "clinical-judgment": {
-      title: "Clinical Judgment",
-      sections: [
-        {
-          subtitle: "Critical Thinking Framework",
-          content: `
-# Critical Thinking in Nursing Practice
-
-## Key Components
-- Assessment and Data Collection
-- Analysis of Clinical Manifestations
-- Care Planning and Interventions
-- Evaluation of Outcomes
-
-## Decision Making Process
-1. Identify the problem
-2. Gather relevant information
-3. Generate potential solutions
-4. Evaluate alternatives
-5. Implement the best solution
-6. Monitor outcomes
-
-## Clinical Applications
-- Patient assessment techniques
-- Diagnostic reasoning
-- Evidence-based interventions
-- Outcome evaluation methods`
-        },
-        {
-          subtitle: "Patient Care Planning",
-          content: `
-# Effective Care Planning
-
-## Essential Elements
-- Comprehensive assessment
-- SMART goals
-- Evidence-based interventions
-- Outcome measures
-
-## Implementation Strategies
-1. Prioritization of care
-2. Resource management
-3. Risk-benefit analysis
-4. Documentation requirements`
-        }
-      ]
-    }
-    // Add other topics as needed
-  };
-
-  const currentTopic = topicContent[topicId];
+  const topic = topicContent[id as keyof typeof topicContent];
 
   const handleAskAI = async () => {
     setIsLoading(true);
@@ -72,7 +61,7 @@ export default function TopicDetail() {
       const response = await fetch('/api/ai/topic-help', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic: topicId })
+        body: JSON.stringify({ topic: id })
       });
       const data = await response.json();
       setAiContent(data.content);
@@ -89,7 +78,7 @@ export default function TopicDetail() {
       const response = await fetch('/api/ai/generate-content', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic: topicId, existingContent: aiContent })
+        body: JSON.stringify({ topic: id })
       });
       const data = await response.json();
       setAiContent(prev => `${prev}\n\n${data.content}`);
@@ -100,15 +89,15 @@ export default function TopicDetail() {
     }
   };
 
-  if (!currentTopic) {
+  if (!topic) {
     return <div>Topic not found</div>;
   }
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto py-8 px-4">
       <Card>
         <CardHeader>
-          <CardTitle>{currentTopic.title}</CardTitle>
+          <CardTitle>{topic.title}</CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="content" className="w-full">
@@ -119,7 +108,7 @@ export default function TopicDetail() {
 
             <TabsContent value="content">
               <div className="space-y-6">
-                {currentTopic.sections.map((section, index) => (
+                {topic.content.map((section, index) => (
                   <Card key={index}>
                     <CardHeader>
                       <CardTitle className="text-lg">{section.subtitle}</CardTitle>
@@ -127,7 +116,7 @@ export default function TopicDetail() {
                     <CardContent>
                       <ScrollArea className="h-[400px]">
                         <div className="prose prose-sm dark:prose-invert">
-                          <ReactMarkdown>{section.content}</ReactMarkdown>
+                          <ReactMarkdown>{section.details}</ReactMarkdown>
                         </div>
                       </ScrollArea>
                     </CardContent>
@@ -138,6 +127,16 @@ export default function TopicDetail() {
 
             <TabsContent value="ai-help">
               <div className="space-y-4">
+                <div className="flex gap-2 mb-4">
+                  <Button onClick={handleAskAI} disabled={isLoading} className="flex-1">
+                    <MessagesSquare className="mr-2 h-4 w-4" />
+                    Ask AI
+                  </Button>
+                  <Button onClick={handleGenerateMore} disabled={isLoading} className="flex-1">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Generate More
+                  </Button>
+                </div>
                 <ScrollArea className="h-[400px] w-full rounded-md border p-4">
                   <div className="prose prose-sm dark:prose-invert">
                     {aiContent ? (
@@ -149,25 +148,6 @@ export default function TopicDetail() {
                     )}
                   </div>
                 </ScrollArea>
-
-                <div className="flex gap-2">
-                  <Button
-                    onClick={handleAskAI}
-                    disabled={isLoading}
-                    className="flex-1"
-                  >
-                    <MessagesSquare className="mr-2 h-4 w-4" />
-                    Ask AI
-                  </Button>
-                  <Button
-                    onClick={handleGenerateMore}
-                    disabled={isLoading || !aiContent}
-                    className="flex-1"
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Generate More
-                  </Button>
-                </div>
               </div>
             </TabsContent>
           </Tabs>
