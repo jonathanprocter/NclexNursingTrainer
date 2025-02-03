@@ -405,13 +405,33 @@ export interface BiancaProfile {
 const biancaProfile: BiancaProfile = {
   learningStyle: 'visual',
   preferredPaceMinutes: 45,
-  focusAreas: ['Clinical Judgment', 'Pharmacology', 'Patient Safety'],
-  strengthAreas: ['Basic Care', 'Health Assessment'],
+  focusAreas: ['Clinical Judgment', 'Professional Standards', 'Healthcare Technology'],
+  strengthAreas: ['Communication & Documentation', 'Patient Care Management'],
   studyPreferences: {
     timeOfDay: 'morning',
     sessionLength: 45,
     breakFrequency: 15
+  },
+  nclexDomains: {
+    'Clinical Judgment': { confidence: 65, priority: 'high' },
+    'Professional Standards': { confidence: 70, priority: 'high' },
+    'Patient Care Management': { confidence: 80, priority: 'medium' },
+    'Evidence-Based Practice': { confidence: 75, priority: 'medium' },
+    'Communication & Documentation': { confidence: 85, priority: 'low' },
+    'Healthcare Technology': { confidence: 72, priority: 'medium' }
   }
+};
+
+export const getPersonalizedContent = async (domain: string) => {
+  return await fetch('/api/ai/personalized-content', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      domain,
+      profile: biancaProfile,
+      preferredStyle: biancaProfile.learningStyle
+    })
+  }).then(res => res.json());
 };
 
 export async function getPersonalizedLearningPath(

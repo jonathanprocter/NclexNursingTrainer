@@ -52,7 +52,7 @@ const router = Router();
 // Get current study guide with enhanced error handling and learner feedback
 router.get("/current", async (req, res) => {
   try {
-    const userId = 1; // TODO: Replace with actual user ID from auth
+    const userId = 1; // TODO: Replace with actual user ID from auth, should be Bianca's ID
 
     // Get recent performance data for personalized recommendations
     const performance = await db.select()
@@ -80,18 +80,21 @@ router.get("/current", async (req, res) => {
         score: (p.correctAnswers / p.completedQuestions * 100).toFixed(1)
       }));
 
-    const nursingTopics: string[] = [
-      "Fundamentals of Nursing",
-      "Pharmacology",
-      "Medical-Surgical Nursing",
-      "Pediatric Nursing"
+    const nclex2024Domains: string[] = [
+      "Domain 1: Basic Care and Comfort",
+      "Domain 2: Pharmacological and Parenteral Therapies",
+      "Domain 3: Reduction of Risk Potential",
+      "Domain 4: Physiological Adaptation",
+      "Domain 5: Psychosocial Integrity",
+      "Domain 6: Safe and Effective Care Environment"
+
     ];
 
     // Transform data to learner-friendly format
     const guide: StudyGuide = {
       id: `sg-${Date.now()}`,
       createdAt: new Date().toISOString(),
-      topics: nursingTopics.map((domain: string, index: number) => ({
+      topics: nclex2024Domains.map((domain: string, index: number) => ({
         id: domain.toLowerCase().replace(/\s+/g, '-'),
         name: domain,
         priority: index === 0 ? 'high' : 'medium',
@@ -149,25 +152,27 @@ router.get("/current", async (req, res) => {
 // Generate new personalized study guide
 router.post("/generate", async (req, res) => {
   try {
-    const userId = 1; // TODO: Replace with actual user ID from auth
+    const userId = 1; // TODO: Replace with actual user ID from auth, should be Bianca's ID
     const { focusAreas = [], timeAvailable } = req.body as { focusAreas: string[], timeAvailable?: number };
 
-    const nursingTopics = [
-      "Fundamentals of Nursing",
-      "Pharmacology",
-      "Medical-Surgical Nursing",
-      "Pediatric Nursing"
+    const nclex2024Domains = [
+      "Domain 1: Basic Care and Comfort",
+      "Domain 2: Pharmacological and Parenteral Therapies",
+      "Domain 3: Reduction of Risk Potential",
+      "Domain 4: Physiological Adaptation",
+      "Domain 5: Psychosocial Integrity",
+      "Domain 6: Safe and Effective Care Environment"
     ];
 
     const guide: StudyGuide = {
       id: `sg-${Date.now()}`,
       createdAt: new Date().toISOString(),
-      topics: nursingTopics.map((domain: string, index: number) => ({
+      topics: nclex2024Domains.map((domain: string, index: number) => ({
         id: domain.toLowerCase().replace(/\s+/g, '-'),
         name: domain,
         priority: focusAreas.includes(domain) ? 'high' : 'medium',
         completed: false,
-        estimatedTime: timeAvailable ? Math.floor(timeAvailable / 4) : 30,
+        estimatedTime: timeAvailable ? Math.floor(timeAvailable / 6) : 30, // Adjusted for 6 domains
         learningObjectives: [
           `Understand key concepts in ${domain}`,
           "Apply knowledge in practice questions",
