@@ -163,12 +163,17 @@ export function registerRoutes(app: Express): Server {
 
       const response = completion.choices[0]?.message?.content;
 
-
       if (!response) {
         throw new Error("No response generated");
       }
 
-      res.json({ response });
+      const formattedResponse = {
+        content: response,
+        type: type || 'clinical_judgment',
+        topic: topic || 'general'
+      };
+
+      res.json(formattedResponse);
     } catch (error) {
       console.error("Error in Clinical Judgment AI endpoint:", error);
       res.status(500).json({
@@ -255,7 +260,13 @@ export function registerRoutes(app: Express): Server {
         throw new Error("No response generated");
       }
 
-      res.json({ response });
+      const formattedResponse = {
+        content: response,
+        type: 'risk_reduction',
+        topic: topic || 'general'
+      };
+
+      res.json(formattedResponse);
     } catch (error) {
       console.error("Error in AI chat endpoint:", error);
       res.status(500).json({
