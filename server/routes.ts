@@ -71,6 +71,12 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/study-buddy/chat", async (req, res) => {
     try {
+      if (!req.body || !req.body.message) {
+        return res.status(400).json({ 
+          error: "Missing required fields",
+          message: "Please provide a message" 
+        });
+      }
       const { studentId, sessionId, message, context } = req.body;
 
       // Store user message
@@ -542,7 +548,7 @@ export function registerRoutes(app: Express): Server {
         throw new Error("Failed to generate content");
       }
       console.log('Generated response from OpenAI');
-      
+
       const formattedResponse = {
         content: response,
         type: 'practice',
@@ -1358,13 +1364,11 @@ export function registerRoutes(app: Express): Server {
       correctAnswer: question.correctAnswer
     };
   }
-  return httpServer;
-}
   // AI Study Plan Generation
   app.post('/api/ai/study-plan', async (req, res) => {
     try {
       const { duration, performance, focusAreas } = req.body;
-      
+
       const completion = await openai.chat.completions.create({
         model: "gpt-4",
         messages: [
@@ -1395,3 +1399,6 @@ export function registerRoutes(app: Express): Server {
       res.status(500).json({ error: "Failed to generate study plan" });
     }
   });
+
+  return httpServer;
+}

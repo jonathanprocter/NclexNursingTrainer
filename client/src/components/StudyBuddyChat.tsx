@@ -97,22 +97,36 @@ export const StudyBuddyChat = forwardRef<StudyBuddyChatHandle, StudyBuddyChatPro
       mutationFn: async (message: string) => {
         if (!message.trim()) return null;
 
-        const response = await fetch("/api/study-buddy/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            studentId,
-            sessionId,
-            message,
-            context: {
-              tone: selectedTone,
-              recentMessages: messages.slice(-3)
-            }
-          }),
-        });
+        try {
+          const response = await fetch("/api/study-buddy/chat", {
+            method: "POST",
+            headers: { 
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            },
+            body: JSON.stringify({
+              studentId,
+              sessionId,
+              message,
+              context: {
+                tone: selectedTone,
+                recentMessages: messages.slice(-3) || []
+              }
+            }),
+          });
 
-        if (!response.ok) throw new Error("Failed to send message");
-        return response.json();
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || "Failed to send message");
+          }
+
+          const data = await response.json();
+          if (!data) throw new Error("Empty response from server");
+          return data;
+        } catch (error) {
+          console.error("Message sending error:", error);
+          throw error;
+        }
       },
       onSuccess: (data) => {
         if (!data) return;
@@ -131,7 +145,7 @@ export const StudyBuddyChat = forwardRef<StudyBuddyChatHandle, StudyBuddyChatPro
       onError: (error) => {
         toast({
           title: "Error",
-          description: "Failed to send message. Please try again.",
+          description: "Failed to send message. Please try again.  " + (error instanceof Error ? error.message : "Unknown error"),
           variant: "destructive",
         });
       }
