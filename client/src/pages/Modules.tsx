@@ -24,6 +24,13 @@ const moduleIcons = {
 
 const mockModules = [
   {
+    id: 7,
+    title: "Clinical Analysis",
+    description: "Master advanced clinical analysis skills through systematic assessment, diagnostic reasoning, and evidence-based decision making.",
+    type: "clinical",
+    orderIndex: 7,
+  },
+  {
     id: 1,
     title: "Pharmacology",
     description: "Master drug classifications, mechanisms of action, and nursing implications. Covers common medications, side effects, and patient education.",

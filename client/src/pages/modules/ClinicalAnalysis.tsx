@@ -34,8 +34,58 @@ export default function ClinicalAnalysis() {
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold mb-2">Clinical Analysis</h1>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          Develop critical analytical skills for complex patient care scenarios
+          Develop advanced clinical analysis skills through systematic patient assessment
         </p>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
+        <Card className="p-6">
+          <h3 className="font-semibold mb-4 flex items-center">
+            <Brain className="h-5 w-5 mr-2 text-primary" />
+            Clinical Decision Making
+          </h3>
+          <ul className="space-y-2 text-sm text-muted-foreground">
+            <li>• Systematic assessment approaches</li>
+            <li>• Evidence-based practice integration</li>
+            <li>• Priority setting frameworks</li>
+            <li>• Risk-benefit analysis</li>
+          </ul>
+          <Button variant="outline" size="sm" className="mt-4" onClick={() => handleGenerateCase("decision_making")}>
+            Practice Cases
+          </Button>
+        </Card>
+
+        <Card className="p-6">
+          <h3 className="font-semibold mb-4 flex items-center">
+            <FileCheck className="h-5 w-5 mr-2 text-primary" />
+            Diagnostic Reasoning
+          </h3>
+          <ul className="space-y-2 text-sm text-muted-foreground">
+            <li>• Pattern recognition</li>
+            <li>• Clinical manifestations analysis</li>
+            <li>• Differential diagnosis development</li>
+            <li>• Lab data interpretation</li>
+          </ul>
+          <Button variant="outline" size="sm" className="mt-4" onClick={() => handleGenerateCase("diagnostic_reasoning")}>
+            Analyze Cases
+          </Button>
+        </Card>
+
+        <Card className="p-6">
+          <h3 className="font-semibold mb-4 flex items-center">
+            <Users className="h-5 w-5 mr-2 text-primary" />
+            Patient Assessment
+          </h3>
+          <ul className="space-y-2 text-sm text-muted-foreground">
+            <li>• Comprehensive health assessment</li>
+            <li>• Systems-based evaluation</li>
+            <li>• Documentation standards</li>
+            <li>• Care planning integration</li>
+          </ul>
+          <Button variant="outline" size="sm" className="mt-4" onClick={() => handleGenerateCase("patient_assessment")}>
+            Practice Assessment
+          </Button>
+        </Card>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
