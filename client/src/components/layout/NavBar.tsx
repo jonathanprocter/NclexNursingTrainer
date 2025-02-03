@@ -80,6 +80,18 @@ const learningModules: NavItem[] = [
     description: "Learn safety protocols and infection prevention",
   },
   {
+    title: "Health Promotion",
+    href: "/modules/health-promotion",
+    icon: HeartPulse,
+    description: "Study preventive care and health maintenance",
+  },
+  {
+    title: "Psychosocial Integrity",
+    href: "/modules/psychosocial-integrity",
+    icon: Brain,
+    description: "Master mental health and therapeutic communication",
+  },
+  {
     title: "Pharmacology & Parenteral",
     href: "/modules/pharmacology",
     icon: Beaker,
