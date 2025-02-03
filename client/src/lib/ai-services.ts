@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 
 interface VoiceState {
@@ -29,10 +28,10 @@ export const useVoiceStore = create<VoiceState>((set) => ({
 export const speakResponse = (text: string, preferences: VoiceState['voicePreferences']) => {
   const utterance = new SpeechSynthesisUtterance(text);
   Object.assign(utterance, preferences);
-  
+
   utterance.onstart = () => useVoiceStore.getState().setSpeaking(true);
   utterance.onend = () => useVoiceStore.getState().setSpeaking(false);
-  
+
   window.speechSynthesis.speak(utterance);
 };
 
@@ -66,13 +65,13 @@ export async function getPharmacologyHelp(
     if (!data || (!data.content && !data.text)) {
       throw new Error('No response received from AI service');
     }
-    
+
     const formattedResponse = {
       content: data.content || data.text || 'Could not generate content. Please try again.',
       type: data.type || 'practice',
       topic: data.topic || section
     };
-    
+
     return formattedResponse;
   } catch (error) {
     console.error('Error getting pharmacology help:', error);

@@ -117,7 +117,13 @@ export function registerRoutes(app: Express): Server {
         tone: context.tone
       });
 
-      res.json({ message: response });
+      const formattedResponse = {
+        content: response,
+        type: 'study_buddy',
+        topic: context.topic || 'general'
+      };
+
+      res.json(formattedResponse);
     } catch (error) {
       console.error("Error in study buddy chat:", error);
       res.status(500).json({
@@ -1000,7 +1006,13 @@ export function registerRoutes(app: Express): Server {
         throw new Error('No content generated from AI');
       }
 
-      res.json({ content });
+      const formattedResponse = {
+        content: content,
+        type: type || 'pharmacology',
+        topic: topic || 'general'
+      };
+
+      res.json(formattedResponse);
     } catch (error) {
       console.error("Error in pharmacology help:", error);
       res.status(500).json({ 
@@ -1115,8 +1127,8 @@ export function registerRoutes(app: Express): Server {
         throw new Error('No content generated from AI');
       }
 
-      res.json({ 
-        content,
+      const formattedResponse = {
+        content: content,
         caseType: req.body.topic,
         learningPoints: [
           "ADME processes and clinical implications",
@@ -1124,7 +1136,9 @@ export function registerRoutes(app: Express): Server {
           "Clinical decision-making in pharmacokinetics",
           "Therapeutic monitoring and dose adjustments"
         ]
-      });
+      };
+
+      res.json(formattedResponse);
     } catch (error) {
       console.error("Error generating case study:", error);
       res.status(500).json({ 
@@ -1249,7 +1263,13 @@ export function registerRoutes(app: Express): Server {
       });
 
       const analysis = completion.choices[0]?.message?.content || "Unable to generate analysis";
-      res.json({ analysis });
+      const formattedResponse = {
+        analysis: analysis,
+        caseId: caseId,
+        currentQuestion: currentQuestion
+      };
+
+      res.json(formattedResponse);
     } catch (error) {
       console.error("Error in AI case analysis:", error);
       res.status(500).json({
@@ -1276,12 +1296,14 @@ export function registerRoutes(app: Express): Server {
       });
 
       const analysis = completion.choices[0]?.message?.content;
-      return {
+      const formattedResponse = {
         strengths: ["Clinical reasoning", "Patient safety"],
         weaknesses: ["Pharmacology calculations", "Priority setting"],
         confidence: 0.75,
         recommendedTopics: ["Medication administration", "Critical thinking"]
       };
+
+      return formattedResponse;
     } catch (error) {
       console.error("Error analyzing performance:", error);
       return null;
@@ -1304,11 +1326,13 @@ export function registerRoutes(app: Express): Server {
         ]
       });
 
-      return {
+      const formattedResponse = {
         content: completion.choices[0]?.message?.content,
         relatedConcepts: ["Inflammation", "Cellular adaptation", "Tissue repair"],
         clinicalCorrelations: ["Assessment findings", "Common complications", "Nursing interventions"]
       };
+
+      return formattedResponse;
     } catch (error) {
       console.error("Error getting pathophysiology help:", error);
       return null;
@@ -1331,11 +1355,13 @@ export function registerRoutes(app: Express): Server {
         ]
       });
 
-      return {
+      const formattedResponse = {
         recommendations: completion.choices[0]?.message?.content,
         priorityTopics: ["Critical thinking", "Clinical judgment", "Patient safety"],
         studyStrategies: ["Case studies", "Practice questions", "Concept mapping"]
       };
+
+      return formattedResponse;
     } catch (error) {
       console.error("Error generating study recommendations:", error);
       return null;
@@ -1410,7 +1436,13 @@ export function registerRoutes(app: Express): Server {
       });
 
       const plan = JSON.parse(completion.choices[0]?.message?.content || '{}');
-      res.json(plan);
+      const formattedResponse = {
+        studyPlan: plan,
+        duration: duration,
+        focusAreas: focusAreas
+      };
+
+      res.json(formattedResponse);
     } catch (error) {
       console.error("Error generating study plan:", error);
       res.status(500).json({ error: "Failed to generate study plan" });
