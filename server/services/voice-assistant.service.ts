@@ -156,8 +156,6 @@ export class VoiceAssistantService {
     command: string,
     context: z.infer<typeof voiceCommandSchema>['context']
   ): Promise<VoiceResponse> {
-    const learningHistory = await this.getLearningHistory(context.studentId);
-    const adaptivePrompt = this.generateAdaptivePrompt(command, learningHistory);
     try {
       const completion = await this.openai.chat.completions.create({
         model: "gpt-4",
@@ -176,30 +174,24 @@ export class VoiceAssistantService {
         ]
       });
 
-      const response = completion.choices[0]?.message?.content || "Could not generate response";
-
-      // Structure the response with learning aids
-      return {
-        text: response,
+      const formattedResponse: VoiceResponse = {
+        text: completion.choices[0]?.message?.content || "Could not generate response",
         confidence: 0.95,
+        suggestions: [
+          "Try practice questions",
+          "Review related topics",
+          "Use active recall"
+        ],
         learningTips: [
           "Use mnemonics for better retention",
           "Practice with similar scenarios",
           "Review related concepts"
         ],
-        practiceQuestions: [
-          {
-            question: "How would you apply this concept in a clinical setting?",
-            options: [
-              "A) Follow standard procedures",
-              "B) Assess patient needs first",
-              "C) Consult with senior staff",
-              "D) Document the situation"
-            ],
-            explanation: "Consider the nursing process and prioritize patient safety."
-          }
-        ]
+        emotionalSupport: true,
+        nextTopic: context.topic || "NCLEX fundamentals"
       };
+
+      return formattedResponse;
     } catch (error) {
       console.error('Error getting personalized response:', error);
       throw error;
