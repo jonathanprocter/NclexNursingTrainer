@@ -252,9 +252,44 @@ export default function ClinicalJudgment() {
   );
 
   const handleScenarioGeneration = async (type: string) => {
-    // Implementation for scenario generation (Placeholder -  Needs actual implementation)
-    console.log(`Generating ${type} scenario`);
-  };
+  try {
+    const result = await aiHelpMutation.mutateAsync({
+      topic: "scenario_generation",
+      context: type === "basic" ? "Generate a basic clinical scenario" : "Generate an advanced clinical scenario with multiple complications"
+    });
+    setAiContent(result.content);
+    setIsDialogOpen(true);
+  } catch (error) {
+    toast({
+      title: "Error",
+      description: "Failed to generate scenario. Please try again.",
+      variant: "destructive",
+    });
+  }
+};
+
+const practiceScenarios = [
+  {
+    title: "Acute Care Assessment",
+    type: "advanced",
+    description: "Complex patient with multiple comorbidities requiring immediate intervention"
+  },
+  {
+    title: "Medication Management",
+    type: "basic",
+    description: "Safe medication administration and monitoring"
+  },
+  {
+    title: "Emergency Response",
+    type: "advanced",
+    description: "Rapid assessment and intervention in critical situations"
+  },
+  {
+    title: "Patient Education",
+    type: "basic",
+    description: "Effective communication and teaching strategies"
+  }
+];
 
 
   return (
@@ -455,15 +490,36 @@ export default function ClinicalJudgment() {
           <Card>
             <CardHeader>
               <CardTitle>Practice Scenarios</CardTitle>
+              <CardDescription>Apply clinical judgment in realistic patient cases</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 md:grid-cols-2">
-                <Button onClick={() => handleScenarioGeneration('basic')} className="w-full">
-                  Generate Basic Scenario
-                </Button>
-                <Button onClick={() => handleScenarioGeneration('advanced')} className="w-full">
-                  Generate Advanced Scenario
-                </Button>
+              <div className="space-y-6">
+                <div className="grid gap-4 md:grid-cols-2">
+                  {practiceScenarios.map((scenario, index) => (
+                    <Card key={index} className="p-4">
+                      <h3 className="font-semibold mb-2">{scenario.title}</h3>
+                      <p className="text-sm text-muted-foreground mb-4">{scenario.description}</p>
+                      <Button 
+                        onClick={() => handleScenarioGeneration(scenario.type)} 
+                        variant="outline"
+                        className="w-full"
+                      >
+                        Start Scenario
+                      </Button>
+                    </Card>
+                  ))}
+                </div>
+                <div className="bg-muted/50 p-4 rounded-lg">
+                  <h4 className="font-medium mb-2">Assessment Tools</h4>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <Button onClick={() => handleAIHelp("clinical_rubrics")}>
+                      Clinical Judgment Rubrics
+                    </Button>
+                    <Button onClick={() => handleAIHelp("decision_trees")}>
+                      Decision-Making Trees
+                    </Button>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
