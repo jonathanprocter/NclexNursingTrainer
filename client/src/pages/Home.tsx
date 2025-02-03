@@ -98,18 +98,23 @@ export default function Home() {
           </CardContent>
         </Card>
 
-        <Card className="h-full">
+        <Card>
           <CardHeader>
             <CardTitle>Practice Questions 📝</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="mb-4 text-muted-foreground">
+            <p className="mb-4 text-muted-foreground text-sm sm:text-base">
               Test your knowledge with our extensive question bank covering all NCLEX topics.
               Keep pushing forward! 🎯
             </p>
-            <Link href="/questions">
-              <Button className="w-full">Start Practice ✨</Button>
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Link href="/questions" className="flex-1">
+                <Button className="w-full bg-primary hover:bg-primary/90">Start Practice ✨</Button>
+              </Link>
+              <Link href="/practice/mock-exams" className="flex-1">
+                <Button variant="outline" className="w-full">Mock Exam 📋</Button>
+              </Link>
+            </div>
           </CardContent>
         </Card>
       </div>
