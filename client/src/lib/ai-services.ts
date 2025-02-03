@@ -63,18 +63,17 @@ export async function getPharmacologyHelp(
     }
 
     const data = await response.json();
-    if (!data) {
+    if (!data || (!data.content && !data.text)) {
       throw new Error('No response received from AI service');
     }
     
-    // Provide default content if none exists
-    const content = data.content || 'Could not generate content. Please try again.';
-    
-    return { 
-      content,
+    const formattedResponse = {
+      content: data.content || data.text || 'Could not generate content. Please try again.',
       type: data.type || 'practice',
       topic: data.topic || section
     };
+    
+    return formattedResponse;
   } catch (error) {
     console.error('Error getting pharmacology help:', error);
     throw error instanceof Error ? error : new Error('Failed to get AI assistance');
