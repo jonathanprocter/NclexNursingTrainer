@@ -154,7 +154,63 @@ export default function SafetyInfectionControl() {
               <CardTitle>Safety Protocols</CardTitle>
             </CardHeader>
             <CardContent>
-              {/* Add Safety Protocols content here */}
+              <div className="space-y-6">
+                <div className="bg-muted/50 p-4 rounded-lg">
+                  <h3 className="font-semibold mb-3">Patient Safety Protocols</h3>
+                  <ul className="space-y-2 text-muted-foreground">
+                    <li>• Fall Prevention
+                      <ul className="ml-4 mt-1">
+                        <li>- Risk assessment tools</li>
+                        <li>- Environmental safety measures</li>
+                        <li>- Patient education</li>
+                        <li>- Documentation requirements</li>
+                      </ul>
+                    </li>
+                    <li>• Medication Safety
+                      <ul className="ml-4 mt-1">
+                        <li>- Rights of medication administration</li>
+                        <li>- High-alert medications</li>
+                        <li>- Double-check protocols</li>
+                        <li>- Safe medication storage</li>
+                      </ul>
+                    </li>
+                    <li>• Patient Identification
+                      <ul className="ml-4 mt-1">
+                        <li>- Two-identifier protocol</li>
+                        <li>- Wristband verification</li>
+                        <li>- Time-out procedures</li>
+                      </ul>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="bg-muted/50 p-4 rounded-lg">
+                  <h3 className="font-semibold mb-3">Clinical Safety Measures</h3>
+                  <ul className="space-y-2 text-muted-foreground">
+                    <li>• Equipment Safety
+                      <ul className="ml-4 mt-1">
+                        <li>- Proper operation procedures</li>
+                        <li>- Maintenance schedules</li>
+                        <li>- Safety checks documentation</li>
+                      </ul>
+                    </li>
+                    <li>• Body Mechanics
+                      <ul className="ml-4 mt-1">
+                        <li>- Proper lifting techniques</li>
+                        <li>- Transfer protocols</li>
+                        <li>- Equipment utilization</li>
+                      </ul>
+                    </li>
+                    <li>• Environmental Safety
+                      <ul className="ml-4 mt-1">
+                        <li>- Hazard identification</li>
+                        <li>- Spill management</li>
+                        <li>- Fire safety protocols</li>
+                      </ul>
+                    </li>
+                  </ul>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -164,7 +220,37 @@ export default function SafetyInfectionControl() {
               <CardTitle>Emergency Response</CardTitle>
             </CardHeader>
             <CardContent>
-              {/* Add Emergency Response content here */}
+              <div className="space-y-6">
+                <div className="bg-muted/50 p-4 rounded-lg">
+                  <h3 className="font-semibold mb-3">Emergency Response Protocols</h3>
+                  <ul className="space-y-2 text-muted-foreground">
+                    <li>• Code Response
+                      <ul className="ml-4 mt-1">
+                        <li>- Code Blue (cardiac/respiratory arrest)</li>
+                        <li>- Code Red (fire)</li>
+                        <li>- Code Gray (combative person)</li>
+                        <li>- Rapid Response Team activation</li>
+                      </ul>
+                    </li>
+                    <li>• Disaster Response
+                      <ul className="ml-4 mt-1">
+                        <li>- Evacuation procedures</li>
+                        <li>- Communication protocols</li>
+                        <li>- Resource management</li>
+                        <li>- Documentation requirements</li>
+                      </ul>
+                    </li>
+                    <li>• Medical Emergencies
+                      <ul className="ml-4 mt-1">
+                        <li>- Initial assessment protocols</li>
+                        <li>- Emergency equipment location</li>
+                        <li>- Documentation guidelines</li>
+                        <li>- Team roles and responsibilities</li>
+                      </ul>
+                    </li>
+                  </ul>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
