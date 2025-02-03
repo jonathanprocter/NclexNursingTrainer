@@ -56,10 +56,14 @@ export function registerRoutes(app: Express): Server {
         tone
       });
 
-      res.json({
+      const formattedResponse = {
         sessionId,
-        message
-      });
+        message,
+        type: 'study_buddy',
+        topic: topic || 'general'
+      };
+
+      res.json(formattedResponse);
     } catch (error) {
       console.error("Error starting study session:", error);
       res.status(500).json({
