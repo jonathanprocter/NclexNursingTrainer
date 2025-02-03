@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { AIHelpButton } from "@/components/ui/ai-help-button";
@@ -10,6 +10,24 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 export default function ClinicalAnalysis() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentCaseContent, setCurrentCaseContent] = useState("");
+  const cases = [
+    {
+      id: 1,
+      title: "Complex Patient Assessment",
+      description: "Analyze multiple comorbidities and develop care plans"
+    },
+    {
+      id: 2,
+      title: "Lab Data Interpretation",
+      description: "Evaluate laboratory results and identify abnormalities"
+    },
+    {
+      id: 3,
+      title: "Risk Factor Analysis",
+      description: "Identify and assess potential complications"
+    }
+  ];
+
 
   const handleGenerateCase = async () => {
     setIsDialogOpen(true);
@@ -29,66 +47,106 @@ export default function ClinicalAnalysis() {
     }
   };
 
+  const handleCaseAnalysis = (caseId) => {
+    //Implementation for handling case analysis
+    console.log("Analyzing case:", caseId);
+  };
+
+  const handleGenerateScenario = (scenarioType) => {
+    //Implementation for generating scenarios
+    console.log("Generating", scenarioType, "scenario");
+  };
+
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold mb-2">Clinical Analysis</h1>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          Develop advanced clinical analysis skills through systematic patient assessment
+          Develop advanced clinical analysis skills through systematic assessment and evidence-based practice
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
-        <Card className="p-6">
-          <h3 className="font-semibold mb-4 flex items-center">
-            <Brain className="h-5 w-5 mr-2 text-primary" />
-            Clinical Decision Making
-          </h3>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li>• Systematic assessment approaches</li>
-            <li>• Evidence-based practice integration</li>
-            <li>• Priority setting frameworks</li>
-            <li>• Risk-benefit analysis</li>
-          </ul>
-          <Button variant="outline" size="sm" className="mt-4" onClick={() => handleGenerateCase("decision_making")}>
-            Practice Cases
-          </Button>
-        </Card>
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="cases">Case Studies</TabsTrigger>
+          <TabsTrigger value="practice">Practice Analysis</TabsTrigger>
+        </TabsList>
 
-        <Card className="p-6">
-          <h3 className="font-semibold mb-4 flex items-center">
-            <FileCheck className="h-5 w-5 mr-2 text-primary" />
-            Diagnostic Reasoning
-          </h3>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li>• Pattern recognition</li>
-            <li>• Clinical manifestations analysis</li>
-            <li>• Differential diagnosis development</li>
-            <li>• Lab data interpretation</li>
-          </ul>
-          <Button variant="outline" size="sm" className="mt-4" onClick={() => handleGenerateCase("diagnostic_reasoning")}>
-            Analyze Cases
-          </Button>
-        </Card>
+        <TabsContent value="overview">
+          <Card>
+            <CardHeader>
+              <CardTitle>Clinical Analysis Framework</CardTitle>
+              <CardDescription>
+                Master the systematic approach to clinical analysis through evidence-based methods
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <Card className="p-4">
+                  <h3 className="font-semibold mb-2">Assessment Skills</h3>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li>• Systematic data collection</li>
+                    <li>• Clinical pattern recognition</li>
+                    <li>• Critical finding identification</li>
+                    <li>• Priority determination</li>
+                  </ul>
+                </Card>
+                <Card className="p-4">
+                  <h3 className="font-semibold mb-2">Clinical Reasoning</h3>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li>• Evidence interpretation</li>
+                    <li>• Clinical decision making</li>
+                    <li>• Outcome evaluation</li>
+                    <li>• Care plan development</li>
+                  </ul>
+                </Card>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-        <Card className="p-6">
-          <h3 className="font-semibold mb-4 flex items-center">
-            <Users className="h-5 w-5 mr-2 text-primary" />
-            Patient Assessment
-          </h3>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li>• Comprehensive health assessment</li>
-            <li>• Systems-based evaluation</li>
-            <li>• Documentation standards</li>
-            <li>• Care planning integration</li>
-          </ul>
-          <Button variant="outline" size="sm" className="mt-4" onClick={() => handleGenerateCase("patient_assessment")}>
-            Practice Assessment
-          </Button>
-        </Card>
-      </div>
+        <TabsContent value="cases">
+          <div className="grid gap-4">
+            {cases.map((caseStudy, index) => (
+              <Card key={index} className="p-4">
+                <CardHeader>
+                  <CardTitle>{caseStudy.title}</CardTitle>
+                  <CardDescription>{caseStudy.description}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button onClick={() => handleCaseAnalysis(caseStudy.id)}>
+                    Analyze Case
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
 
-      <div className="grid gap-6 md:grid-cols-3">
+        <TabsContent value="practice">
+          <Card>
+            <CardHeader>
+              <CardTitle>Practice Scenarios</CardTitle>
+              <CardDescription>
+                Apply clinical analysis skills to real-world scenarios
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <Button onClick={() => handleGenerateScenario('basic')}>
+                  Generate Basic Scenario
+                </Button>
+                <Button onClick={() => handleGenerateScenario('advanced')} className="ml-4">
+                  Generate Advanced Scenario
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      <div className="grid gap-6 md:grid-cols-3 mt-8">
         <Card className="p-4">
           <h3 className="font-semibold mb-2">Data Analysis</h3>
           <ul className="space-y-2 text-sm text-muted-foreground">
