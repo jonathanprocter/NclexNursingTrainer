@@ -272,24 +272,61 @@ const practiceScenarios = [
   {
     title: "Acute Care Assessment",
     type: "advanced",
-    description: "Complex patient with multiple comorbidities requiring immediate intervention"
+    description: "Complex patient with multiple comorbidities requiring immediate intervention",
+    skills: ["Assessment", "Prioritization", "Critical Thinking"]
   },
   {
     title: "Medication Management",
     type: "basic",
-    description: "Safe medication administration and monitoring"
+    description: "Safe medication administration and monitoring",
+    skills: ["Safety", "Pharmacology", "Documentation"]
   },
   {
     title: "Emergency Response",
     type: "advanced",
-    description: "Rapid assessment and intervention in critical situations"
+    description: "Rapid assessment and intervention in critical situations",
+    skills: ["Crisis Management", "Team Leadership", "Quick Decision Making"]
   },
   {
     title: "Patient Education",
     type: "basic",
-    description: "Effective communication and teaching strategies"
+    description: "Effective communication and teaching strategies",
+    skills: ["Communication", "Teaching", "Cultural Competency"]
+  },
+  {
+    title: "Complex Care Coordination",
+    type: "advanced",
+    description: "Managing care transitions and interdisciplinary collaboration",
+    skills: ["Care Planning", "Delegation", "Resource Management"]
+  },
+  {
+    title: "Risk Prevention",
+    type: "basic",
+    description: "Identifying and mitigating potential complications",
+    skills: ["Risk Assessment", "Prevention", "Safety Planning"]
   }
 ];
+
+const evaluationCriteria = {
+  clinicalReasoning: [
+    "Recognition of relevant clinical cues",
+    "Analysis of patient data",
+    "Hypothesis formation",
+    "Intervention planning"
+  ],
+  decisionMaking: [
+    "Prioritization of care",
+    "Resource utilization",
+    "Time management",
+    "Safety considerations"
+  ],
+  professionalJudgment: [
+    "Ethical considerations",
+    "Evidence-based practice",
+    "Cultural competency",
+    "Professional standards"
+  ]
+};
 
 
   return (
@@ -498,7 +535,14 @@ const practiceScenarios = [
                   {practiceScenarios.map((scenario, index) => (
                     <Card key={index} className="p-4">
                       <h3 className="font-semibold mb-2">{scenario.title}</h3>
-                      <p className="text-sm text-muted-foreground mb-4">{scenario.description}</p>
+                      <p className="text-sm text-muted-foreground mb-2">{scenario.description}</p>
+                      <div className="flex flex-wrap gap-1 mb-4">
+                        {scenario.skills.map((skill, skillIndex) => (
+                          <Badge key={skillIndex} variant="outline" className="text-xs">
+                            {skill}
+                          </Badge>
+                        ))}
+                      </div>
                       <Button 
                         onClick={() => handleScenarioGeneration(scenario.type)} 
                         variant="outline"
