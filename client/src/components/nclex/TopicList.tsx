@@ -4,7 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Brain, Activity, Shield, Heart, Users, Hospital, MessagesSquare, Plus, BookOpen } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import Link from "next/link";
+import { Link } from "wouter";
 
 export default function TopicList() {
   const { data: metrics } = useQuery({
