@@ -337,8 +337,31 @@ export async function generateStudyPath(
   }
 }
 
+export interface BiancaProfile {
+  learningStyle: 'visual' | 'auditory' | 'kinesthetic';
+  preferredPaceMinutes: number;
+  focusAreas: string[];
+  strengthAreas: string[];
+  studyPreferences: {
+    timeOfDay: string;
+    sessionLength: number;
+    breakFrequency: number;
+  };
+}
+
+const biancaProfile: BiancaProfile = {
+  learningStyle: 'visual',
+  preferredPaceMinutes: 45,
+  focusAreas: ['Clinical Judgment', 'Pharmacology', 'Patient Safety'],
+  strengthAreas: ['Basic Care', 'Health Assessment'],
+  studyPreferences: {
+    timeOfDay: 'morning',
+    sessionLength: 45,
+    breakFrequency: 15
+  }
+};
+
 export async function getPersonalizedLearningPath(
-  userId: string,
   performance: { topic: string; score: number }[]
 ): Promise<{
   dailyGoals: string[];

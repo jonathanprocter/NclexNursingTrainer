@@ -1,4 +1,3 @@
-
 import OpenAI from "openai";
 import { z } from "zod";
 
@@ -41,27 +40,35 @@ export class QuizGeneratorService {
     advanced: { range: [7, 8], weight: 0.3 }
   };
 
+  private readonly biancaPreferences = {
+    questionTypes: ['visual', 'case-based', 'calculation'],
+    difficultyAdjustment: 0.8,
+    topicWeights: {
+      'Clinical Judgment': 1.5,
+      'Pharmacology': 1.3,
+      'Patient Safety': 1.2
+    }
+  };
+
   constructor() {
     this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   }
 
-  async generateQuiz(
-    examType: 'cat' | 'standard',
+  async generateQuestions(
+    examType: string,
     currentPerformance: number,
     previousQuestions: string[] = [],
     previousMistakes: string[] = []
-  ): Promise<{
-    questions: Array<{
-      id: string;
-      question: string;
-      options: string[];
-      correctAnswer: string;
-      explanation: string;
-      domain: string;
-      difficulty: number;
-      itemType: string;
-    }>;
-  }> {
+  ): Promise<Array<{
+    id: string;
+    question: string;
+    options: string[];
+    correctAnswer: string;
+    explanation: string;
+    domain: string;
+    difficulty: number;
+    itemType: string;
+  }>> {
     try {
       const domainDistribution = this.calculateDomainDistribution(currentPerformance);
       const completion = await this.openai.chat.completions.create({
@@ -80,13 +87,14 @@ export class QuizGeneratorService {
             Domain distribution: ${JSON.stringify(domainDistribution)}
             - Exam type: ${examType.toUpperCase()}
             - Current performance level: ${currentPerformance}
-            - Include varied item types: multiple choice, multiple response, hot spots, drag and drop, cloze, etc.
+            - Include varied item types: ${this.biancaPreferences.questionTypes.join(', ')}
             - Ensure coverage across domains: ${this.nclexDomains.join(', ')}
             - Focus on clinical judgment and decision-making
             - Avoid previously used questions: ${previousQuestions.join(', ')}
             - Address previous weak areas: ${previousMistakes.join(', ')}
             - Include case studies and scenario-based questions
-            - Ensure proper difficulty progression based on performance
+            - Adjust difficulty based on performance with a modifier of ${this.biancaPreferences.difficultyAdjustment}
+            - Apply topic weights: ${JSON.stringify(this.biancaPreferences.topicWeights)}
             `
           }
         ],
@@ -100,15 +108,14 @@ export class QuizGeneratorService {
       throw error;
     }
   }
-}
 
-export const quizGeneratorService = new QuizGeneratorService();
-private calculateDomainDistribution(performance: number): Record<string, number> {
+
+  private calculateDomainDistribution(performance: number): Record<string, number> {
     const distribution: Record<string, number> = {};
     const baseWeight = 1 / this.nclexDomains.length;
-    
+
     this.nclexDomains.forEach(domain => {
-      // Adjust weights based on performance
+      // Adjust weights based on performance and Bianca's preferences
       let weight = baseWeight;
       if (performance < 0.7) {
         // Give more weight to foundational domains
@@ -117,6 +124,8 @@ private calculateDomainDistribution(performance: number): Record<string, number>
         // Give more weight to advanced domains
         weight *= domain.includes('Clinical') || domain.includes('Management') ? 1.3 : 0.9;
       }
+      //Apply Bianca's topic weights if available
+      weight *= this.biancaPreferences.topicWeights[domain] || 1;
       distribution[domain] = weight;
     });
 
@@ -128,3 +137,6 @@ private calculateDomainDistribution(performance: number): Record<string, number>
 
     return distribution;
   }
+}
+
+export const quizGeneratorService = new QuizGeneratorService();

@@ -65,8 +65,16 @@ export default function Home() {
             Welcome Back, Bianca! 👋
           </h1>
           <p className="text-xl sm:text-2xl text-primary mb-4">
-            Ready to ace your NCLEX? Let's do this! 💪
+            Good morning! Your personalized NCLEX prep awaits 💪
           </p>
+          <div className="text-left max-w-2xl mx-auto bg-secondary/10 p-4 rounded-lg">
+            <h2 className="font-semibold mb-2">Today's Personalized Focus:</h2>
+            <ul className="list-disc list-inside space-y-1 text-sm">
+              <li>Clinical Judgment Module - Your current priority area</li>
+              <li>15-minute Pharmacology review session</li>
+              <li>Practice patient safety scenarios</li>
+            </ul>
+          </div>
           <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base">
             Your personalized study guide for the National Council Licensure Examination. 
             Track your progress, practice with questions, and master key nursing concepts. 
