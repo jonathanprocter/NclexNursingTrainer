@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,77 +16,94 @@ interface Question {
   }>;
 }
 
+// Mock quiz generation service (replace with actual implementation)
+const quizGeneratorService = {
+  generateQuiz: async (type: 'cat' | 'standard', performance: number, previousQuestions: string[], previousMistakes: string[]) => {
+    // Replace this with your actual quiz generation logic
+    // This example simply returns a fixed set of questions for demonstration
+    const questions: Question[] = [
+      {
+        id: '1',
+        text: 'Question 1: What is the capital of France?',
+        options: [
+          { id: 'a', text: 'London' },
+          { id: 'b', text: 'Paris' },
+          { id: 'c', text: 'Rome' },
+          { id: 'd', text: 'Berlin' }
+        ]
+      },
+      {
+        id: '2',
+        text: 'Question 2: What is the highest mountain in the world?',
+        options: [
+          { id: 'a', text: 'K2' },
+          { id: 'b', text: 'Kangchenjunga' },
+          { id: 'c', text: 'Mount Everest' },
+          { id: 'd', text: 'Lhotse' }
+        ]
+      }
+      // Add more questions here based on type, performance, previous questions and mistakes.  This is a placeholder.
+    ];
+    return questions;
+  }
+};
+
+
+const getCurrentPerformance = async () => {
+  // Replace with actual implementation to fetch current performance
+  return 0.5; // Example: 50%
+};
+
+const getPreviousQuestions = async () => {
+  // Replace with actual implementation to fetch previous questions
+  return []; // Example: []
+};
+
+const getPreviousMistakes = async () => {
+  // Replace with actual implementation to fetch previous mistakes
+  return []; // Example: []
+};
+
+
 export default function Exam() {
   const { type } = useParams();
   const { toast } = useToast();
-  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
-  const [questionNumber, setQuestionNumber] = useState(1);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState(type === 'cat' ? 18000 : 10800); // 5 hours for CAT, 3 for standard
   const [isPaused, setIsPaused] = useState(false);
   const [examEnded, setExamEnded] = useState(false);
   const [examScore, setExamScore] = useState(0);
 
   useEffect(() => {
-    if (type === 'cat' && questionNumber >= 75) {
-      // CAT exam logic - can end between 75-145 questions based on performance
-      const performanceThreshold = 0.75; // 75% correct
-      if (examScore / questionNumber >= performanceThreshold || questionNumber >= 145) {
-        setExamEnded(true);
+      const start = async () => {
+          const currentPerformance = await getCurrentPerformance();
+          const previousQuestions = await getPreviousQuestions();
+          const previousMistakes = await getPreviousMistakes();
+
+          const questions = await quizGeneratorService.generateQuiz(
+            type,
+            currentPerformance,
+            previousQuestions,
+            previousMistakes
+          );
+
+          setQuestions(questions);
       }
-    } else if (type === 'standard' && questionNumber > 100) {
-      // Standard exam ends after exactly 100 questions
+      start();
+  }, [type]);
+
+
+  useEffect(() => {
+    if (questions.length > 0 && currentQuestionIndex >= questions.length) {
       setExamEnded(true);
     }
-  }, [questionNumber, examScore, type]);
+  }, [currentQuestionIndex, questions]);
 
-  const fetchNextQuestion = async () => {
-    try {
-      const response = await fetch(`/api/exam/${type}/question`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          examType: type,
-          questionNumber,
-          previousPerformance: examScore / questionNumber
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch question');
-      }
-
-      const question = await response.json();
-      setCurrentQuestion(question);
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch the next question. Please try again.",
-      });
-    }
+  const fetchNextQuestion = () => {
+    setCurrentQuestionIndex(prev => prev + 1);
   };
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      if (!isPaused) {
-        setTimeRemaining((prev) => {
-          if (prev <= 0) {
-            clearInterval(timer);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [isPaused]);
-
-  useEffect(() => {
-    fetchNextQuestion();
-  }, [type]);
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
@@ -96,9 +112,9 @@ export default function Exam() {
     return `${hours}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  const handleAnswer = (optionId: string) => {
+  const handleAnswer = (optionId: string, isCorrect: boolean) => {
     // Submit answer and get next question
-    setQuestionNumber(prev => prev + 1);
+    setExamScore(prev => isCorrect ? prev + 1 : prev);
     fetchNextQuestion();
   };
 
@@ -109,6 +125,8 @@ export default function Exam() {
       description: isPaused ? "Time is now running" : "Time has been paused",
     });
   };
+
+  const currentQuestion = questions[currentQuestionIndex];
 
   if (!currentQuestion) {
     return <div>Loading question...</div>;
@@ -122,7 +140,7 @@ export default function Exam() {
             {type === 'cat' ? 'CAT NCLEX Exam' : 'Standard NCLEX Exam'}
           </h2>
           <p className="text-muted-foreground">
-            Question {questionNumber} {type === 'cat' ? '(75-145 questions)' : '(100 questions)'}
+            Question {currentQuestionIndex + 1} of {questions.length}
           </p>
         </div>
         <div className="flex gap-4 items-center">
@@ -142,10 +160,7 @@ export default function Exam() {
         </div>
       </div>
 
-      <Progress 
-        value={type === 'cat' ? (questionNumber / 145) * 100 : questionNumber} 
-        className="h-2"
-      />
+      <Progress value={(currentQuestionIndex +1) / questions.length * 100} className="h-2" />
 
       <Card className="mt-6">
         <CardContent className="p-6">
@@ -156,7 +171,7 @@ export default function Exam() {
                 key={option.id}
                 variant="outline"
                 className="w-full justify-start gap-4 h-auto p-4"
-                onClick={() => handleAnswer(option.id)}
+                onClick={() => handleAnswer(option.id, option.id === 'b')} // Example: 'b' is correct
               >
                 <span className="font-bold">{option.id.toUpperCase()}.</span>
                 <span className="flex-1 text-left">{option.text}</span>
