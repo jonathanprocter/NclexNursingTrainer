@@ -7,7 +7,7 @@ interface AnalyticsProps {
 }
 
 export default function Analytics({ data }: AnalyticsProps) {
-  const nclexDomains = [
+  const nclexDomains = data?.nclexDomains || [
     { domain: "Management of Care", score: 82 },
     { domain: "Safety & Infection Control", score: 78 },
     { domain: "Clinical Judgment", score: 85 },
@@ -16,7 +16,7 @@ export default function Analytics({ data }: AnalyticsProps) {
     { domain: "Basic Care & Comfort", score: 88 }
   ];
 
-  const clinicalJudgmentMetrics = [
+  const clinicalJudgmentMetrics = data?.clinicalJudgmentMetrics || [
     { metric: "Recognize Cues", score: 85 },
     { metric: "Analyze Information", score: 78 },
     { metric: "Prioritize Hypotheses", score: 82 },
@@ -24,6 +24,10 @@ export default function Analytics({ data }: AnalyticsProps) {
     { metric: "Take Actions", score: 88 },
     { metric: "Evaluate Outcomes", score: 80 }
   ];
+
+  if (!data) {
+    return <div>Loading analytics...</div>;
+  }
 
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2"> {/* Added responsiveness */}

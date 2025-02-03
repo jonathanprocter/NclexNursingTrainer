@@ -88,8 +88,23 @@ export async function analyzePerformance(
     correctAnswer: string;
     topic: string;
     timestamp: string;
-  }>
+  }> | null
 ): Promise<AIAnalysisResult> {
+  if (!answers) {
+    return {
+      strengths: [],
+      weaknesses: [],
+      recommendedTopics: [],
+      confidence: 0,
+      learningStyle: 'visual',
+      conceptualUnderstanding: {
+        strong: [],
+        needsImprovement: []
+      },
+      suggestedResources: [],
+      predictedPerformance: 0
+    };
+  }
   try {
     const response = await fetch('/api/ai/analyze-performance', {
       method: 'POST',
