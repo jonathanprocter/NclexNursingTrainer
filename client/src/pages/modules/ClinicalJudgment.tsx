@@ -252,9 +252,52 @@ export default function ClinicalJudgment() {
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold mb-2">Clinical Judgment</h1>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          Master the critical thinking and decision-making skills essential for the Next Generation NCLEX® examination
+          Develop critical thinking and clinical reasoning skills through case-based learning
         </p>
       </div>
+
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="p-4">
+          <h3 className="font-semibold mb-2">Recognize Cues</h3>
+          <ul className="space-y-2 text-sm text-muted-foreground">
+            <li>• Patient assessment data</li>
+            <li>• Lab values interpretation</li>
+            <li>• Vital signs trends</li>
+            <li>• Clinical manifestations</li>
+          </ul>
+        </Card>
+
+        <Card className="p-4">
+          <h3 className="font-semibold mb-2">Analyze Information</h3>
+          <ul className="space-y-2 text-sm text-muted-foreground">
+            <li>• Pattern recognition</li>
+            <li>• Clinical reasoning</li>
+            <li>• Evidence evaluation</li>
+            <li>• Priority setting</li>
+          </ul>
+        </Card>
+
+        <Card className="p-4">
+          <h3 className="font-semibold mb-2">Form Hypotheses</h3>
+          <ul className="space-y-2 text-sm text-muted-foreground">
+            <li>• Differential diagnosis</li>
+            <li>• Risk prediction</li>
+            <li>• Outcome anticipation</li>
+            <li>• Care planning</li>
+          </ul>
+        </Card>
+
+        <Card className="p-4">
+          <h3 className="font-semibold mb-2">Take Action</h3>
+          <ul className="space-y-2 text-sm text-muted-foreground">
+            <li>• Interventions</li>
+            <li>• Delegation</li>
+            <li>• Care coordination</li>
+            <li>• Outcome evaluation</li>
+          </ul>
+        </Card>
+      </div>
+
 
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList className="grid grid-cols-2 lg:grid-cols-4 gap-4">

@@ -910,6 +910,42 @@ export default function RiskReduction() {
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold mb-2">Risk Reduction in Nursing Practice</h1>
         <p className="text-muted-foreground max-w-2xl mx-auto">
+          Master essential risk assessment and prevention strategies for safe patient care delivery
+        </p>
+      </div>
+      
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card className="p-4">
+          <h3 className="font-semibold mb-2">Risk Assessment Tools</h3>
+          <ul className="space-y-2 text-sm text-muted-foreground">
+            <li>• Braden Scale</li>
+            <li>• Morse Fall Scale</li>
+            <li>• LACE Index</li>
+            <li>• HEARTS3 Assessment</li>
+          </ul>
+        </Card>
+        
+        <Card className="p-4">
+          <h3 className="font-semibold mb-2">Environmental Safety</h3>
+          <ul className="space-y-2 text-sm text-muted-foreground">
+            <li>• Room safety checks</li>
+            <li>• Equipment inspection</li>
+            <li>• Infection control measures</li>
+            <li>• Emergency protocols</li>
+          </ul>
+        </Card>
+        
+        <Card className="p-4">
+          <h3 className="font-semibold mb-2">Documentation</h3>
+          <ul className="space-y-2 text-sm text-muted-foreground">
+            <li>• Risk assessment findings</li>
+            <li>• Intervention outcomes</li>
+            <li>• Care plan updates</li>
+            <li>• Incident reporting</li>
+          </ul>
+        </Card>
+      </div>
+        <p className="text-muted-foreground max-w-2xl mx-auto">
           Master essential risk reduction concepts and strategies for safe, high-quality patient care
         </p>
       </div>
