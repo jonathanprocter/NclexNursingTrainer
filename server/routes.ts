@@ -15,6 +15,8 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
+import { users, studyBuddyChats } from "../db/schema";
+
 export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
 
@@ -22,9 +24,6 @@ export function registerRoutes(app: Express): Server {
   app.use('/api/study-guide', studyGuideRouter);
 
   // Study buddy chat endpoints
-
-// Import users table
-import { users, studyBuddyChats } from "@db/schema";
 
 // Initialize default user if not exists
 async function initializeDefaultUser() {
