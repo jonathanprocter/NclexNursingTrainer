@@ -14,7 +14,7 @@ export default function InstructorDashboard() {
 
   const { data: aiAnalysis } = useQuery({
     queryKey: ["/api/analytics/ai/bianca"],
-    queryFn: () => analyzePerformance(biancaInteractions?.answers || null),
+    queryFn: () => analyzePerformance(biancaInteractions?.answers || []),
     enabled: !!biancaInteractions?.answers,
   });
 
@@ -25,12 +25,12 @@ export default function InstructorDashboard() {
   });
 
   const nclexDomains = [
-    { name: "Clinical Judgment", progress: aiAnalysis?.conceptualUnderstanding?.clinicalJudgment || 75 },
-    { name: "Professional Standards", progress: aiAnalysis?.conceptualUnderstanding?.professionalStandards || 70 },
-    { name: "Patient Care", progress: aiAnalysis?.conceptualUnderstanding?.patientCare || 80 },
-    { name: "Evidence-Based Practice", progress: aiAnalysis?.conceptualUnderstanding?.evidenceBased || 75 },
-    { name: "Communication", progress: aiAnalysis?.conceptualUnderstanding?.communication || 85 },
-    { name: "Technology", progress: aiAnalysis?.conceptualUnderstanding?.technology || 72 }
+    { name: "Clinical Judgment", progress: biancaInteractions?.domainScores?.clinicalJudgment || 0 },
+    { name: "Professional Standards", progress: biancaInteractions?.domainScores?.professionalStandards || 0 },
+    { name: "Patient Care", progress: biancaInteractions?.domainScores?.patientCare || 0 },
+    { name: "Evidence-Based Practice", progress: biancaInteractions?.domainScores?.evidenceBased || 0 },
+    { name: "Communication", progress: biancaInteractions?.domainScores?.communication || 0 },
+    { name: "Technology", progress: biancaInteractions?.domainScores?.technology || 0 }
   ];
 
   return (
@@ -44,17 +44,17 @@ export default function InstructorDashboard() {
             <TableHeader>
               <TableRow>
                 <TableHead>Learning Style</TableHead>
-                <TableHead>Engagement Level</TableHead>
-                <TableHead>Progress Rate</TableHead>
+                <TableHead>Platform Engagement</TableHead>
+                <TableHead>Course Progress</TableHead>
                 <TableHead>AI Predicted Success</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               <TableRow>
-                <TableCell className="capitalize">{aiAnalysis?.learningStyle || "visual"}</TableCell>
-                <TableCell>{biancaInteractions?.engagementScore || "85"}%</TableCell>
-                <TableCell>{biancaInteractions?.progressRate || "92"}%</TableCell>
-                <TableCell>{aiAnalysis?.predictedPerformance || 88}%</TableCell>
+                <TableCell className="capitalize">{aiAnalysis?.learningStyle || "Loading..."}</TableCell>
+                <TableCell>{biancaInteractions?.engagementMetrics?.weeklyActive || 0}%</TableCell>
+                <TableCell>{biancaInteractions?.courseProgress || 0}%</TableCell>
+                <TableCell>{aiAnalysis?.predictedSuccess || 0}%</TableCell>
               </TableRow>
             </TableBody>
           </Table>
@@ -63,13 +63,13 @@ export default function InstructorDashboard() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Current Focus Areas</CardTitle>
+          <CardTitle>Recent Focus Areas</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-2 flex-wrap">
-            {aiAnalysis?.weaknesses?.map((area) => (
-              <Badge key={area} variant="secondary">
-                {area}
+            {biancaInteractions?.recentTopics?.map((topic) => (
+              <Badge key={topic} variant="secondary">
+                {topic}
               </Badge>
             ))}
           </div>
@@ -97,7 +97,7 @@ export default function InstructorDashboard() {
 
       <Card>
         <CardHeader>
-          <CardTitle>AI-Recommended Study Path</CardTitle>
+          <CardTitle>AI Study Recommendations</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -117,7 +117,7 @@ export default function InstructorDashboard() {
         </CardHeader>
         <CardContent>
           <div className="flex gap-2 flex-wrap">
-            {aiAnalysis?.conceptualUnderstanding?.strong?.map((concept) => (
+            {biancaInteractions?.masteredConcepts?.map((concept) => (
               <Badge key={concept} variant="default">
                 {concept}
               </Badge>
