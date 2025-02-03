@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
+import { AIHelpButton } from "@/components/ui/ai-help-button"; // Added import
+
 
 export default function ClinicalJudgment() {
   const { toast } = useToast();
@@ -26,8 +28,10 @@ export default function ClinicalJudgment() {
   const [question, setQuestion] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+  const [currentSection, setCurrentSection] = useState('overview'); // Added state for tab selection
 
-  // Initialize speech recognition
+
+  // Initialize speech recognition (from original code)
   useEffect(() => {
     if (typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -82,7 +86,7 @@ export default function ClinicalJudgment() {
     }
   };
 
-  // Helper function to format topic names
+  // Helper function to format topic names (from original code)
   const formatTopicName = (topic: string): string => {
     return topic
       .split('_')
@@ -247,67 +251,63 @@ export default function ClinicalJudgment() {
     </div>
   );
 
+  const handleScenarioGeneration = async (type: string) => {
+    // Implementation for scenario generation (Placeholder -  Needs actual implementation)
+    console.log(`Generating ${type} scenario`);
+  };
+
+
   return (
-    <div className="space-y-6 max-w-7xl mx-auto px-4 py-8">
+    <div className="space-y-6 p-6 max-w-7xl mx-auto px-4 py-8"> {/* Kept original max-width */}
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold mb-2">Clinical Judgment</h1>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          Develop critical thinking and clinical reasoning skills through case-based learning
+          Develop advanced clinical reasoning and decision-making skills through evidence-based practice
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="p-4">
-          <h3 className="font-semibold mb-2">Recognize Cues</h3>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li>• Patient assessment data</li>
-            <li>• Lab values interpretation</li>
-            <li>• Vital signs trends</li>
-            <li>• Clinical manifestations</li>
-          </ul>
-        </Card>
-
-        <Card className="p-4">
-          <h3 className="font-semibold mb-2">Analyze Information</h3>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li>• Pattern recognition</li>
-            <li>• Clinical reasoning</li>
-            <li>• Evidence evaluation</li>
-            <li>• Priority setting</li>
-          </ul>
-        </Card>
-
-        <Card className="p-4">
-          <h3 className="font-semibold mb-2">Form Hypotheses</h3>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li>• Differential diagnosis</li>
-            <li>• Risk prediction</li>
-            <li>• Outcome anticipation</li>
-            <li>• Care planning</li>
-          </ul>
-        </Card>
-
-        <Card className="p-4">
-          <h3 className="font-semibold mb-2">Take Action</h3>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li>• Interventions</li>
-            <li>• Delegation</li>
-            <li>• Care coordination</li>
-            <li>• Outcome evaluation</li>
-          </ul>
-        </Card>
-      </div>
-
-
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="process">Nursing Process</TabsTrigger>
-          <TabsTrigger value="decision">Decision Making</TabsTrigger>
-          <TabsTrigger value="practice">Practice Cases</TabsTrigger>
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="overview">Framework</TabsTrigger>
+          <TabsTrigger value="practice">Practice</TabsTrigger>
+          <TabsTrigger value="evaluation">Evaluation</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
+          <Card>
+            <CardHeader>
+              <CardTitle>Clinical Judgment Framework</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4 md:grid-cols-2">
+              <Card className="p-4">
+                <h3 className="font-semibold mb-2 flex items-center">
+                  <Brain className="h-4 w-4 mr-2" />
+                  Decision Making Process
+                </h3>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li>• Clinical data interpretation</li>
+                  <li>• Priority setting</li>
+                  <li>• Intervention planning</li>
+                  <li>• Outcome evaluation</li>
+                </ul>
+              </Card>
+
+              <Card className="p-4">
+                <h3 className="font-semibold mb-2 flex items-center">
+                  <FileCheck className="h-4 w-4 mr-2" />
+                  Critical Thinking Skills
+                </h3>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li>• Pattern recognition</li>
+                  <li>• Clinical reasoning</li>
+                  <li>• Evidence analysis</li>
+                  <li>• Decision validation</li>
+                </ul>
+              </Card>
+            </CardContent>
+          </Card>
+
+          {/*Retained original Overview section content*/}
           <div className="grid gap-6">
             <Card>
               <CardHeader>
@@ -451,91 +451,72 @@ export default function ClinicalJudgment() {
           </div>
         </TabsContent>
 
-        <TabsContent value="process">
+        <TabsContent value="practice">
+          <Card>
+            <CardHeader>
+              <CardTitle>Practice Scenarios</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2">
+                <Button onClick={() => handleScenarioGeneration('basic')} className="w-full">
+                  Generate Basic Scenario
+                </Button>
+                <Button onClick={() => handleScenarioGeneration('advanced')} className="w-full">
+                  Generate Advanced Scenario
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+          {/*Retained original Practice Cases section content*/}
           <Card>
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div>
-                  <CardTitle>The Nursing Process & Clinical Judgment</CardTitle>
+                  <CardTitle>Practice Cases</CardTitle>
                   <p className="text-muted-foreground mt-2">
-                    Master the integration of the nursing process with clinical judgment skills
+                    Apply your clinical judgment skills to realistic patient scenarios
                   </p>
                 </div>
-                <AIButtons topic="nursing_process_overview" />
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => handleAIHelp("generate_case")}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Generate New Case
+                  </Button>
+                  <AIButtons topic="case_analysis" />
+                </div>
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                <div className="bg-muted/50 p-6 rounded-lg">
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-lg font-semibold">Assessment</h3>
-                    <AIButtons topic="assessment_challenges" />
-                  </div>
-                  <ul className="space-y-3 text-sm text-muted-foreground">
-                    <li>• Systematic data collection techniques</li>
-                    <li>• Recognition of significant findings</li>
-                    <li>• Cultural considerations in assessment</li>
-                    <li>• Documentation best practices</li>
-                  </ul>
-                </div>
-
-                <div className="bg-muted/50 p-6 rounded-lg">
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-lg font-semibold">Diagnosis</h3>
-                    <AIButtons topic="diagnosis_tips" />
-                  </div>
-                  <ul className="space-y-3 text-sm text-muted-foreground">
-                    <li>• Pattern recognition in clinical findings</li>
-                    <li>• Prioritizing nursing diagnoses</li>
-                    <li>• Risk versus actual diagnosis</li>
-                    <li>• Writing clear problem statements</li>
-                  </ul>
-                </div>
-
-                <div className="bg-muted/50 p-6 rounded-lg">
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-lg font-semibold">Planning</h3>
-                    <AIButtons topic="planning_strategies" />
-                  </div>
-                  <ul className="space-y-3 text-sm text-muted-foreground">
-                    <li>• Setting SMART goals</li>
-                    <li>• Prioritizing interventions</li>
-                    <li>• Evidence-based practice integration</li>
-                    <li>• Collaborative care planning</li>
-                  </ul>
-                </div>
-
-                <div className="bg-muted/50 p-6 rounded-lg">
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-lg font-semibold">Implementation</h3>
-                    <AIButtons topic="implementation_guidance" />
-                  </div>
-                  <ul className="space-y-3 text-sm text-muted-foreground">
-                    <li>• Safe intervention execution</li>
-                    <li>• Time management strategies</li>
-                    <li>• Delegation principles</li>
-                    <li>• Documentation requirements</li>
-                  </ul>
-                </div>
-
-                <div className="bg-muted/50 p-6 rounded-lg">
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-lg font-semibold">Evaluation</h3>
-                    <AIButtons topic="evaluation_methods" />
-                  </div>
-                  <ul className="space-y-3 text-sm text-muted-foreground">
-                    <li>• Measuring outcome achievement</li>
-                    <li>• Modifying care plans</li>
-                    <li>• Quality improvement integration</li>
-                    <li>• Communication of outcomes</li>
-                  </ul>
+                {/* Practice cases will be dynamically loaded here */}
+                <div className="text-center p-8 text-muted-foreground">
+                  <p>Click "Generate New Case" to start practicing with realistic scenarios</p>
                 </div>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="decision">
+        <TabsContent value="evaluation">
+          <Card>
+            <CardHeader>
+              <CardTitle>Clinical Competency Evaluation</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <Card className="p-4">
+                  <h3 className="font-semibold mb-2">Assessment Criteria</h3>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li>• Clinical reasoning process</li>
+                    <li>• Evidence-based practice application</li>
+                    <li>• Decision-making effectiveness</li>
+                    <li>• Outcome evaluation skills</li>
+                  </ul>
+                </Card>
+              </div>
+            </CardContent>
+          </Card>
+          {/*Retained original Decision Making section content*/}
           <Card>
             <CardHeader>
               <div className="flex justify-between items-start">
@@ -605,37 +586,15 @@ export default function ClinicalJudgment() {
             </CardContent>
           </Card>
         </TabsContent>
-
-        <TabsContent value="practice">
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle>Practice Cases</CardTitle>
-                  <p className="text-muted-foreground mt-2">
-                    Apply your clinical judgment skills to realistic patient scenarios
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => handleAIHelp("generate_case")}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Generate New Case
-                  </Button>
-                  <AIButtons topic="case_analysis" />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {/* Practice cases will be dynamically loaded here */}
-                <div className="text-center p-8 text-muted-foreground">
-                  <p>Click "Generate New Case" to start practicing with realistic scenarios</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
+
+      <div className="fixed bottom-4 right-4">
+        <AIHelpButton
+          title="Clinical Judgment Assistant"
+          description="Get AI assistance with clinical judgment scenarios"
+          topic="clinical_judgment"
+        />
+      </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
