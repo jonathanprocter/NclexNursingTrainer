@@ -33,6 +33,10 @@ export default function InstructorDashboard() {
     { name: "Technology", progress: biancaInteractions?.domainScores?.technology || 0 }
   ];
 
+  const recentTopics = biancaInteractions?.recentTopics || [];
+  const masteredConcepts = biancaInteractions?.masteredConcepts || [];
+  const recommendedTopics = studyPath?.recommendedTopics || [];
+
   return (
     <div className="space-y-6">
       <Card>
@@ -51,7 +55,7 @@ export default function InstructorDashboard() {
             </TableHeader>
             <TableBody>
               <TableRow>
-                <TableCell className="capitalize">{aiAnalysis?.learningStyle || "Loading..."}</TableCell>
+                <TableCell className="capitalize">{aiAnalysis?.learningStyle || "Analyzing..."}</TableCell>
                 <TableCell>{biancaInteractions?.engagementMetrics?.weeklyActive || 0}%</TableCell>
                 <TableCell>{biancaInteractions?.courseProgress || 0}%</TableCell>
                 <TableCell>{aiAnalysis?.predictedSuccess || 0}%</TableCell>
@@ -67,8 +71,8 @@ export default function InstructorDashboard() {
         </CardHeader>
         <CardContent>
           <div className="flex gap-2 flex-wrap">
-            {biancaInteractions?.recentTopics?.map((topic) => (
-              <Badge key={topic} variant="secondary">
+            {recentTopics.map((topic, index) => (
+              <Badge key={`${topic}-${index}`} variant="secondary">
                 {topic}
               </Badge>
             ))}
@@ -101,8 +105,8 @@ export default function InstructorDashboard() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {studyPath?.recommendedTopics?.map((topic, index) => (
-              <div key={topic} className="flex items-center gap-2">
+            {recommendedTopics.map((topic, index) => (
+              <div key={`${topic}-${index}`} className="flex items-center gap-2">
                 <Badge variant="outline">{index + 1}</Badge>
                 <span>{topic}</span>
               </div>
@@ -117,8 +121,8 @@ export default function InstructorDashboard() {
         </CardHeader>
         <CardContent>
           <div className="flex gap-2 flex-wrap">
-            {biancaInteractions?.masteredConcepts?.map((concept) => (
-              <Badge key={concept} variant="default">
+            {masteredConcepts.map((concept, index) => (
+              <Badge key={`${concept}-${index}`} variant="default">
                 {concept}
               </Badge>
             ))}
