@@ -23,6 +23,9 @@ export function registerRoutes(app: Express): Server {
 
   // Study buddy chat endpoints
 
+// Import users table
+import { users, studyBuddyChats } from "@db/schema";
+
 // Initialize default user if not exists
 async function initializeDefaultUser() {
   try {
