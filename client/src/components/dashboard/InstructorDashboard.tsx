@@ -4,56 +4,56 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { generateStudyPath, type BiancaProfile } from "@/lib/ai-services";
 
 export default function InstructorDashboard() {
-  const { data: biancaData } = useQuery({
-    queryKey: ["/api/analytics/student/bianca"],
-    staleTime: 1000 * 60 * 5, // 5 minutes
+  const { data: biancaProfile } = useQuery<BiancaProfile>({
+    queryKey: ["/api/analytics/student/bianca/profile"],
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const { data: performanceData } = useQuery({
+    queryKey: ["/api/analytics/student/bianca/performance"],
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const { data: studyPath } = useQuery({
+    queryKey: ["/api/analytics/student/bianca/study-path"],
+    queryFn: () => generateStudyPath(performanceData?.recentTopics || []),
+    enabled: !!performanceData?.recentTopics,
   });
 
   const nclexDomains = [
-    { name: "Clinical Judgment & Decision Making", progress: biancaData?.clinicalJudgment || 75 },
-    { name: "Professional Standards & Best Practices", progress: biancaData?.professionalStandards || 70 },
-    { name: "Patient Care Management & Safety", progress: biancaData?.patientCare || 80 },
-    { name: "Evidence-Based Practice", progress: biancaData?.evidenceBased || 75 },
-    { name: "Communication & Documentation", progress: biancaData?.communication || 85 },
-    { name: "Technology & Informatics", progress: biancaData?.technology || 72 }
+    { name: "Clinical Judgment & Decision Making", progress: performanceData?.clinicalJudgment || 75 },
+    { name: "Professional Standards", progress: performanceData?.professionalStandards || 70 },
+    { name: "Patient Care Management", progress: performanceData?.patientCare || 80 },
+    { name: "Evidence-Based Practice", progress: performanceData?.evidenceBased || 75 },
+    { name: "Communication & Documentation", progress: performanceData?.communication || 85 },
+    { name: "Technology & Informatics", progress: performanceData?.technology || 72 }
   ];
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Student Progress Overview - Bianca</CardTitle>
+          <CardTitle>Student Profile - Bianca</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Overall Progress</TableHead>
-                <TableHead>Last Active</TableHead>
-                <TableHead>Study Time Today</TableHead>
-                <TableHead>Focus Areas</TableHead>
+                <TableHead>Learning Style</TableHead>
+                <TableHead>Study Session Length</TableHead>
+                <TableHead>Break Frequency</TableHead>
+                <TableHead>Preferred Study Time</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               <TableRow>
-                <TableCell>{biancaData?.overallProgress || 75}%</TableCell>
-                <TableCell>{new Date().toLocaleDateString()}</TableCell>
-                <TableCell>{biancaData?.studyTimeToday || 2}h</TableCell>
-                <TableCell>
-                  <div className="flex gap-1 flex-wrap">
-                    {biancaData?.focusAreas?.map((area: string) => (
-                      <Badge key={area} variant="outline">
-                        {area}
-                      </Badge>
-                    )) || ["Clinical Judgment", "Professional Standards"].map(area => (
-                      <Badge key={area} variant="outline">
-                        {area}
-                      </Badge>
-                    ))}
-                  </div>
-                </TableCell>
+                <TableCell className="capitalize">{biancaProfile?.learningStyle || "visual"}</TableCell>
+                <TableCell>{biancaProfile?.studyPreferences.sessionLength || 45} minutes</TableCell>
+                <TableCell>Every {biancaProfile?.studyPreferences.breakFrequency || 25} minutes</TableCell>
+                <TableCell>{biancaProfile?.studyPreferences.timeOfDay || "Morning"}</TableCell>
               </TableRow>
             </TableBody>
           </Table>
@@ -62,7 +62,22 @@ export default function InstructorDashboard() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">NCLEX Next Gen Domain Progress</CardTitle>
+          <CardTitle>Current Focus Areas</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-2 flex-wrap">
+            {biancaProfile?.focusAreas?.map((area) => (
+              <Badge key={area} variant="secondary">
+                {area}
+              </Badge>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>NCLEX Domain Progress</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -72,12 +87,7 @@ export default function InstructorDashboard() {
                   <span>{domain.name}</span>
                   <span className="font-medium">{domain.progress}%</span>
                 </div>
-                <div className="h-2 bg-secondary rounded-full">
-                  <div 
-                    className="h-full bg-primary rounded-full transition-all"
-                    style={{ width: `${domain.progress}%` }}
-                  />
-                </div>
+                <Progress value={domain.progress} />
               </div>
             ))}
           </div>
@@ -86,25 +96,31 @@ export default function InstructorDashboard() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">AI-Generated Insights for Bianca</CardTitle>
+          <CardTitle>Recommended Study Path</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Based on Bianca's latest performance data and learning patterns:
-            </p>
-            <ul className="space-y-2 text-sm">
-              {biancaData?.aiInsights?.map((insight: string, index: number) => (
-                <li key={index}>• {insight}</li>
-              )) || [
-                "• Strong performance in patient care scenarios",
-                "• Recommended focus on clinical judgment exercises",
-                "• Consider more practice with prioritization questions",
-                "• Excellent progress in evidence-based practice topics"
-              ].map((insight, index) => (
-                <li key={index}>{insight}</li>
-              ))}
-            </ul>
+            {studyPath?.recommendedTopics.map((topic, index) => (
+              <div key={topic} className="flex items-center gap-2">
+                <Badge variant="outline">{index + 1}</Badge>
+                <span>{topic}</span>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Strength Areas</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-2 flex-wrap">
+            {biancaProfile?.strengthAreas?.map((area) => (
+              <Badge key={area} variant="default">
+                {area}
+              </Badge>
+            ))}
           </div>
         </CardContent>
       </Card>
