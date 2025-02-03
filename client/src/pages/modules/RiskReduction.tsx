@@ -458,16 +458,38 @@ export default function RiskReduction() {
                 <div className="space-y-4">
                   <h4 className="font-medium">Key Protocols</h4>
                   <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-                    <li>Hand hygiene protocols and monitoring
+                    <li>Hand Hygiene and Aseptic Technique
                       <ul className="ml-4 mt-1">
                         <li>• WHO's 5 moments of hand hygiene</li>
-                        <li>• Proper handwashing technique</li>
-                        <li>• Hand sanitizer use guidelines</li>
+                        <li>• Proper handwashing technique and duration</li>
+                        <li>• Hand sanitizer use and limitations</li>
+                        <li>• Surgical hand antisepsis protocols</li>
                       </ul>
                     </li>
-                    <li>Personal protective equipment (PPE)
+                    <li>Standard and Transmission-Based Precautions
                       <ul className="ml-4 mt-1">
-                        <li>• Proper sequence of donning/doffing</li>
+                        <li>• Contact precautions implementation</li>
+                        <li>• Droplet precaution measures</li>
+                        <li>• Airborne infection isolation</li>
+                        <li>• PPE selection and compliance</li>
+                      </ul>
+                    </li>
+                    <li>Environmental Cleaning and Disinfection
+                      <ul className="ml-4 mt-1">
+                        <li>• High-touch surface management</li>
+                        <li>• Terminal cleaning procedures</li>
+                        <li>• Equipment sterilization protocols</li>
+                        <li>• Waste management guidelines</li>
+                      </ul>
+                    </li>
+                    <li>Bundle Approaches to Prevention
+                      <ul className="ml-4 mt-1">
+                        <li>• Central line bundles</li>
+                        <li>• Ventilator-associated pneumonia prevention</li>
+                        <li>• Surgical site infection prevention</li>
+                        <li>• CAUTI prevention strategies</li>
+                      </ul>
+                    </li>
                         <li>• Situation-specific PPE selection</li>
                         <li>• Cross-contamination prevention</li>
                       </ul>
@@ -550,11 +572,32 @@ export default function RiskReduction() {
                     <li>Evacuation protocols</li>
                     <li>Communication chains</li>
                   </ul>
-                  <h4 className="font-medium">Training Requirements</h4>
+                  <h4 className="font-medium">Clinical Practice Scenarios</h4>
                   <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-                    <li>Regular emergency drills</li>
-                    <li>Equipment competency checks</li>
-                    <li>Documentation requirements</li>
+                    <li>Emergency Response Scenarios
+                      <ul className="ml-4 mt-1">
+                        <li>• Code Blue management</li>
+                        <li>• Mass casualty triage</li>
+                        <li>• Evacuation procedures</li>
+                        <li>• Rapid response activation</li>
+                      </ul>
+                    </li>
+                    <li>Patient Safety Scenarios
+                      <ul className="ml-4 mt-1">
+                        <li>• Fall risk management</li>
+                        <li>• Medication error prevention</li>
+                        <li>• Patient identification protocols</li>
+                        <li>• Care transitions safety</li>
+                      </ul>
+                    </li>
+                    <li>Documentation and Communication
+                      <ul className="ml-4 mt-1">
+                        <li>• Handoff procedures</li>
+                        <li>• Critical result reporting</li>
+                        <li>• Incident documentation</li>
+                        <li>• Risk assessment tools</li>
+                      </ul>
+                    </li>
                     <li>Team role assignments</li>
                   </ul>
                 </div>
