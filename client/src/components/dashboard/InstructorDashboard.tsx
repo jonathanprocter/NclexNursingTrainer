@@ -4,32 +4,33 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { generateStudyPath, type BiancaProfile } from "@/lib/ai-services";
+import { analyzePerformance, generateStudyPath } from "@/lib/ai-services";
 
 export default function InstructorDashboard() {
-  const { data: biancaProfile } = useQuery<BiancaProfile>({
-    queryKey: ["/api/analytics/student/bianca/profile"],
+  const { data: biancaInteractions } = useQuery({
+    queryKey: ["/api/analytics/interactions/bianca"],
     staleTime: 1000 * 60 * 5,
   });
 
-  const { data: performanceData } = useQuery({
-    queryKey: ["/api/analytics/student/bianca/performance"],
-    staleTime: 1000 * 60 * 5,
+  const { data: aiAnalysis } = useQuery({
+    queryKey: ["/api/analytics/ai/bianca"],
+    queryFn: () => analyzePerformance(biancaInteractions?.answers || null),
+    enabled: !!biancaInteractions?.answers,
   });
 
   const { data: studyPath } = useQuery({
-    queryKey: ["/api/analytics/student/bianca/study-path"],
-    queryFn: () => generateStudyPath(performanceData?.recentTopics || []),
-    enabled: !!performanceData?.recentTopics,
+    queryKey: ["/api/analytics/study-path/bianca"],
+    queryFn: () => generateStudyPath(biancaInteractions?.recentTopics || []),
+    enabled: !!biancaInteractions?.recentTopics,
   });
 
   const nclexDomains = [
-    { name: "Clinical Judgment & Decision Making", progress: performanceData?.clinicalJudgment || 75 },
-    { name: "Professional Standards", progress: performanceData?.professionalStandards || 70 },
-    { name: "Patient Care Management", progress: performanceData?.patientCare || 80 },
-    { name: "Evidence-Based Practice", progress: performanceData?.evidenceBased || 75 },
-    { name: "Communication & Documentation", progress: performanceData?.communication || 85 },
-    { name: "Technology & Informatics", progress: performanceData?.technology || 72 }
+    { name: "Clinical Judgment", progress: aiAnalysis?.conceptualUnderstanding?.clinicalJudgment || 75 },
+    { name: "Professional Standards", progress: aiAnalysis?.conceptualUnderstanding?.professionalStandards || 70 },
+    { name: "Patient Care", progress: aiAnalysis?.conceptualUnderstanding?.patientCare || 80 },
+    { name: "Evidence-Based Practice", progress: aiAnalysis?.conceptualUnderstanding?.evidenceBased || 75 },
+    { name: "Communication", progress: aiAnalysis?.conceptualUnderstanding?.communication || 85 },
+    { name: "Technology", progress: aiAnalysis?.conceptualUnderstanding?.technology || 72 }
   ];
 
   return (
@@ -43,17 +44,17 @@ export default function InstructorDashboard() {
             <TableHeader>
               <TableRow>
                 <TableHead>Learning Style</TableHead>
-                <TableHead>Study Session Length</TableHead>
-                <TableHead>Break Frequency</TableHead>
-                <TableHead>Preferred Study Time</TableHead>
+                <TableHead>Engagement Level</TableHead>
+                <TableHead>Progress Rate</TableHead>
+                <TableHead>AI Predicted Success</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               <TableRow>
-                <TableCell className="capitalize">{biancaProfile?.learningStyle || "visual"}</TableCell>
-                <TableCell>{biancaProfile?.studyPreferences.sessionLength || 45} minutes</TableCell>
-                <TableCell>Every {biancaProfile?.studyPreferences.breakFrequency || 25} minutes</TableCell>
-                <TableCell>{biancaProfile?.studyPreferences.timeOfDay || "Morning"}</TableCell>
+                <TableCell className="capitalize">{aiAnalysis?.learningStyle || "visual"}</TableCell>
+                <TableCell>{biancaInteractions?.engagementScore || "85"}%</TableCell>
+                <TableCell>{biancaInteractions?.progressRate || "92"}%</TableCell>
+                <TableCell>{aiAnalysis?.predictedPerformance || 88}%</TableCell>
               </TableRow>
             </TableBody>
           </Table>
@@ -66,7 +67,7 @@ export default function InstructorDashboard() {
         </CardHeader>
         <CardContent>
           <div className="flex gap-2 flex-wrap">
-            {biancaProfile?.focusAreas?.map((area) => (
+            {aiAnalysis?.weaknesses?.map((area) => (
               <Badge key={area} variant="secondary">
                 {area}
               </Badge>
@@ -96,11 +97,11 @@ export default function InstructorDashboard() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Recommended Study Path</CardTitle>
+          <CardTitle>AI-Recommended Study Path</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {studyPath?.recommendedTopics.map((topic, index) => (
+            {studyPath?.recommendedTopics?.map((topic, index) => (
               <div key={topic} className="flex items-center gap-2">
                 <Badge variant="outline">{index + 1}</Badge>
                 <span>{topic}</span>
@@ -112,13 +113,13 @@ export default function InstructorDashboard() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Strength Areas</CardTitle>
+          <CardTitle>Mastered Concepts</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-2 flex-wrap">
-            {biancaProfile?.strengthAreas?.map((area) => (
-              <Badge key={area} variant="default">
-                {area}
+            {aiAnalysis?.conceptualUnderstanding?.strong?.map((concept) => (
+              <Badge key={concept} variant="default">
+                {concept}
               </Badge>
             ))}
           </div>
