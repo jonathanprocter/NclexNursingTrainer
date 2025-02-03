@@ -1360,3 +1360,38 @@ export function registerRoutes(app: Express): Server {
   }
   return httpServer;
 }
+  // AI Study Plan Generation
+  app.post('/api/ai/study-plan', async (req, res) => {
+    try {
+      const { duration, performance, focusAreas } = req.body;
+      
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [
+          {
+            role: "system",
+            content: "Generate a personalized NCLEX study plan based on available time and performance data. Focus on Bianca's learning style (visual) and preferred session length (45 minutes)."
+          },
+          {
+            role: "user",
+            content: JSON.stringify({
+              duration,
+              performance,
+              focusAreas,
+              preferences: {
+                learningStyle: 'visual',
+                sessionLength: 45,
+                breakFrequency: 15
+              }
+            })
+          }
+        ]
+      });
+
+      const plan = JSON.parse(completion.choices[0]?.message?.content || '{}');
+      res.json(plan);
+    } catch (error) {
+      console.error("Error generating study plan:", error);
+      res.status(500).json({ error: "Failed to generate study plan" });
+    }
+  });
