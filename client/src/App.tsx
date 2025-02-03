@@ -24,8 +24,8 @@ function Router() {
           <Route path="/dashboard/analytics" component={Analytics} />
           <Route path="/dashboard/performance" component={PerformanceMetrics} />
           <Route path="/dashboard/instructor" component={InstructorDashboard} />
+          <Route path="/study-guide/topic/:id" component={TopicDetail} />
           <Route path="/study-guide" component={StudyGuide} />
-          <Route path="/study-guide/topic/:topicId" component={TopicDetail} />
           <Route path="/tools/ai-companion" component={AICompanion} />
           <Route path="/tools/spaced-repetition" component={SpacedRepetition} />
           <Route component={NotFound} />

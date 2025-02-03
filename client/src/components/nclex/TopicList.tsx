@@ -174,7 +174,7 @@ export default function TopicList() {
                   </Button>
                 </div>
 
-                <Link href={`/study-guide/topic/${topic.id}`} className="w-full">
+                <Link to={`/study-guide/topic/${topic.id}`} className="w-full">
                   <Button variant="default" size="sm" className="w-full">
                     <BookOpen className="h-4 w-4 mr-2" />
                     Study Topic
