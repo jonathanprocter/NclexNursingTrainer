@@ -66,10 +66,15 @@ function Router() {
 
           {/* Learning Module Routes */}
           <Route path="/modules" component={Modules} />
-          <Route path="/modules/pharmacology" component={Pharmacology} />
+          <Route path="/modules/management-of-care" component={ManagementOfCare} />
+          <Route path="/modules/safety-infection-control" component={SafetyInfectionControl} />
+          <Route path="/modules/health-promotion" component={HealthPromotion} />
+          <Route path="/modules/basic-care" component={BasicCare} />
+          <Route path="/modules/psychosocial-integrity" component={PsychosocialIntegrity} />
           <Route path="/modules/clinical-analysis" component={ClinicalAnalysis} />
           <Route path="/modules/risk-reduction" component={RiskReduction} />
           <Route path="/modules/clinical-judgment" component={ClinicalJudgment} />
+          <Route path="/modules/pharmacology" component={Pharmacology} />
           <Route path="/modules/calculations" component={Calculations} />
           <Route path="/modules/pathophysiology" component={Pathophysiology} />
 

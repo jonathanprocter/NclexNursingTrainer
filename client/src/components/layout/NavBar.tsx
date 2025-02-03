@@ -86,21 +86,21 @@ const learningModules: NavItem[] = [
     description: "Study preventive care and health maintenance",
   },
   {
+    title: "Basic Care & Comfort",
+    href: "/modules/basic-care",
+    icon: Heart,
+    description: "Master fundamental nursing skills and comfort measures",
+  },
+  {
     title: "Psychosocial Integrity",
     href: "/modules/psychosocial-integrity",
     icon: Brain,
     description: "Master mental health and therapeutic communication",
   },
   {
-    title: "Pharmacology & Parenteral",
-    href: "/modules/pharmacology",
-    icon: Beaker,
-    description: "Study medications, drug calculations, and administration",
-  },
-  {
-    title: "Analyze Cues & Hypotheses",
+    title: "Clinical Analysis",
     href: "/modules/clinical-analysis",
-    icon: Brain,
+    icon: Stethoscope,
     description: "Develop clinical reasoning and analytical skills",
   },
   {
@@ -116,17 +116,23 @@ const learningModules: NavItem[] = [
     description: "Master the nursing process and decision-making",
   },
   {
+    title: "Pharmacology",
+    href: "/modules/pharmacology",
+    icon: Beaker,
+    description: "Study medications and drug administration",
+  },
+  {
     title: "Drug Calculations",
     href: "/modules/calculations",
     icon: Calculator,
     description: "Practice medication dosage calculations",
   },
   {
-    title: "Advanced Pathophysiology",
+    title: "Pathophysiology",
     href: "/modules/pathophysiology",
-    icon: HeartPulse,
+    icon: Activity,
     description: "Study disease processes and body systems",
-  },
+  }
 ];
 
 const practiceItems: NavItem[] = [
