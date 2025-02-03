@@ -81,12 +81,12 @@ router.get("/current", async (req, res) => {
       }));
 
     const nclex2024Domains: string[] = [
-      "Domain 1: Basic Care and Comfort",
-      "Domain 2: Pharmacological and Parenteral Therapies",
-      "Domain 3: Reduction of Risk Potential",
-      "Domain 4: Physiological Adaptation",
-      "Domain 5: Psychosocial Integrity",
-      "Domain 6: Safe and Effective Care Environment"
+      "Basic Care and Comfort",
+      "Pharmacological and Parenteral Therapies",
+      "Reduction of Risk Potential",
+      "Physiological Adaptation",
+      "Psychosocial Integrity",
+      "Safe and Effective Care Environment"
 
     ];
 

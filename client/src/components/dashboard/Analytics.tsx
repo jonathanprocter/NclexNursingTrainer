@@ -8,12 +8,12 @@ interface AnalyticsProps {
 
 export default function Analytics({ data }: AnalyticsProps) {
   const nclexDomains = data?.nclexDomains || [
-    { domain: "Management of Care", score: 82 },
-    { domain: "Safety & Infection Control", score: 78 },
-    { domain: "Clinical Judgment", score: 85 },
-    { domain: "Health Promotion", score: 76 },
+    { domain: "Basic Care and Comfort", score: 82 },
+    { domain: "Pharmacological and Parenteral Therapies", score: 78 },
+    { domain: "Reduction of Risk Potential", score: 85 },
+    { domain: "Physiological Adaptation", score: 76 },
     { domain: "Psychosocial Integrity", score: 80 },
-    { domain: "Basic Care & Comfort", score: 88 }
+    { domain: "Safe and Effective Care Environment", score: 88 }
   ];
 
   const clinicalJudgmentMetrics = data?.clinicalJudgmentMetrics || [
