@@ -72,11 +72,17 @@ export default function AICompanion() {
         recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
           console.error('Speech recognition error:', event.error);
           setMicrophoneEnabled(false);
-          toast({
-            title: "Error",
-            description: "Failed to record speech. Please try again.",
-            variant: "destructive",
-          });
+          if (event.error !== 'aborted') {
+            toast({
+              title: "Error",
+              description: "Failed to record speech. Please try again.",
+              variant: "destructive",
+            });
+          }
+        };
+
+        recognition.onend = () => {
+          setMicrophoneEnabled(false);
         };
 
         recognition.onend = () => {
