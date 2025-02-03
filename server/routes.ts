@@ -180,7 +180,7 @@ export function registerRoutes(app: Express): Server {
 
   // Pathophysiology AI help endpoint
   app.post("/api/ai-help", async (req, res) => {
-    const { topic, context, question } = req.body;
+    const { topic, context, question, section } = req.body;
 
     try {
       const completion = await openai.chat.completions.create({
@@ -209,7 +209,7 @@ export function registerRoutes(app: Express): Server {
       const formattedResponse = {
         content: response,
         type: 'explanation',
-        topic: topic || 'general'
+        topic: section || 'general'
       };
 
       res.json(formattedResponse);
