@@ -8,10 +8,10 @@ import { Progress } from "@/components/ui/progress";
 
 export default function BasicCare() {
   return (
-    <div className="space-y-6">
-      <div className="text-center mb-4 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold mb-2">Basic Care and Comfort</h1>
-        <p className="text-muted-foreground max-w-2xl mx-auto px-2 sm:px-0">
+    <div className="space-y-4 sm:space-y-6 max-w-[100vw] overflow-x-hidden">
+      <div className="text-center mb-4 sm:mb-8 px-3">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">Basic Care and Comfort</h1>
+        <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base">
           Master foundational nursing care principles focusing on patient comfort, mobility, nutrition, and basic needs
         </p>
       </div>

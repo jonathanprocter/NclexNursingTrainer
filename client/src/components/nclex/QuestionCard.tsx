@@ -46,11 +46,11 @@ export default function QuestionCard({ question, onNext, userAnswer, showAnswer 
   };
 
   return (
-    <Card className="max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle className="text-lg">Question {question.id}</CardTitle>
+    <Card className="max-w-2xl mx-auto w-[95vw] sm:w-auto">
+      <CardHeader className="p-4 sm:p-6">
+        <CardTitle className="text-base sm:text-lg">Question {question.id}</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4 sm:space-y-6 p-3 sm:p-6">
         <p className="text-lg">{question.text}</p>
 
         <RadioGroup

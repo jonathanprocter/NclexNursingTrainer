@@ -265,7 +265,7 @@ function MobileMenu() {
             Access all NCLEX preparation resources
           </SheetDescription>
         </SheetHeader>
-        <nav className="flex flex-col gap-2 mt-4 overflow-y-auto max-h-[calc(100vh-120px)] px-1">
+        <nav className="flex flex-col gap-2 mt-4 overflow-y-auto max-h-[calc(100vh-120px)] px-1 pb-safe">
           {[
             { title: "Dashboards", items: dashboardItems },
             { title: "Learning Modules", items: learningModules },
