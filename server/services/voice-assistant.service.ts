@@ -187,6 +187,20 @@ export class VoiceAssistantService {
         throw new Error('Invalid student ID format');
       }
 
+      // Enhanced voice command processing
+      const command = input.command.toLowerCase();
+      const voiceContext = input.context;
+      
+      // Detect command type and intent
+      const commandType = this.detectCommandType(command);
+      const userIntent = await this.analyzeUserIntent(command, voiceContext);
+      
+      // Generate context-aware response
+      const response = await this.generateContextAwareResponse(command, commandType, userIntent, voiceContext);
+
+      // Add speech synthesis markers for better voice output
+      const enhancedResponse = this.addSpeechMarkers(response);
+
       // Generate a basic response when study path service is not available
       const defaultTopics = ['Fundamentals', 'Pharmacology', 'Medical-Surgical Nursing'];
       const nextTopic = input.context.focusAreas[0] || defaultTopics[0];

@@ -1,3 +1,41 @@
+
+import { create } from 'zustand';
+
+interface VoiceState {
+  speaking: boolean;
+  setSpeaking: (speaking: boolean) => void;
+  voicePreferences: {
+    rate: number;
+    pitch: number;
+    volume: number;
+  };
+  updatePreferences: (prefs: Partial<VoiceState['voicePreferences']>) => void;
+}
+
+export const useVoiceStore = create<VoiceState>((set) => ({
+  speaking: false,
+  setSpeaking: (speaking) => set({ speaking }),
+  voicePreferences: {
+    rate: 1.0,
+    pitch: 1.0,
+    volume: 1.0
+  },
+  updatePreferences: (prefs) => 
+    set((state) => ({
+      voicePreferences: { ...state.voicePreferences, ...prefs }
+    }))
+}));
+
+export const speakResponse = (text: string, preferences: VoiceState['voicePreferences']) => {
+  const utterance = new SpeechSynthesisUtterance(text);
+  Object.assign(utterance, preferences);
+  
+  utterance.onstart = () => useVoiceStore.getState().setSpeaking(true);
+  utterance.onend = () => useVoiceStore.getState().setSpeaking(false);
+  
+  window.speechSynthesis.speak(utterance);
+};
+
 import type { AIAnalysisResult } from './types';
 
 export async function getPharmacologyHelp(

@@ -18,6 +18,7 @@ interface Message {
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
+  isProcessing?: boolean;
 }
 
 export interface StudyBuddyChatHandle {
@@ -30,8 +31,8 @@ export const StudyBuddyChat = forwardRef<StudyBuddyChatHandle, StudyBuddyChatPro
     const [input, setInput] = useState("");
     const [sessionId, setSessionId] = useState<string | null>(null);
     const [selectedTone, setSelectedTone] = useState<StudyBuddyTone>("professional");
-    const [currentStudyTopic, setCurrentStudyTopic] = useState("NCLEX preparation"); // Added state
-    const [messageHistory, setMessageHistory] = useState<Message[]>([]); // Added state
+    const [currentStudyTopic, setCurrentStudyTopic] = useState("NCLEX preparation");
+    const [messageHistory, setMessageHistory] = useState<Message[]>([]);
     const scrollRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const { toast } = useToast();
@@ -48,7 +49,7 @@ export const StudyBuddyChat = forwardRef<StudyBuddyChatHandle, StudyBuddyChatPro
             body: JSON.stringify({
               studentId,
               tone: selectedTone,
-              topic: currentStudyTopic // Use the state variable here
+              topic: currentStudyTopic
             }),
           });
           if (!response.ok) throw new Error("Failed to start session");
@@ -156,6 +157,14 @@ export const StudyBuddyChat = forwardRef<StudyBuddyChatHandle, StudyBuddyChatPro
         try {
           if (!transcript.trim()) return;
 
+          // Provide visual feedback that voice is being processed
+          setMessages(prev => [...prev, {
+            role: "user",
+            content: transcript,
+            timestamp: new Date(),
+            isProcessing: true
+          }]);
+
           const enhancedContext = {
             transcript,
             currentTopic: currentStudyTopic,
@@ -163,18 +172,37 @@ export const StudyBuddyChat = forwardRef<StudyBuddyChatHandle, StudyBuddyChatPro
             userPerformance: await getUserPerformanceMetrics(),
             timeOfDay: new Date().getHours(),
             studyDuration: calculateStudyDuration(),
-            attentionMetrics: analyzeUserEngagement()
+            attentionMetrics: analyzeUserEngagement(),
+            voicePreferences: {
+              speechRate: 1.0,
+              pitch: 1.0,
+              volume: 1.0
+            },
+            isVoiceInteraction: true
           };
 
-          const userMessage = {
-            role: "user" as const,
+          // Enhance voice recognition with custom commands
+          const commandPatterns = {
+            explain: /^(explain|tell me about|what is|how does)/i,
+            quiz: /^(quiz me|test me|practice question)/i,
+            summarize: /^(summarize|give me a summary|recap)/i,
+            focus: /^(let's focus on|switch to|change topic to)/i
+          };
+
+          const matchedCommand = Object.entries(commandPatterns)
+            .find(([_, pattern]) => pattern.test(transcript));
+
+          if (matchedCommand) {
+            enhancedContext.commandType = matchedCommand[0];
+          }
+
+          sendMessage.mutate({message: transcript, enhancedContext});
+          setMessageHistory(prev => [...prev, {
+            role: "user",
             content: transcript,
             timestamp: new Date()
-          };
+          }]); //update message history
 
-          setMessages(prev => [...prev, userMessage]);
-          setMessageHistory(prev => [...prev, userMessage]); //update message history
-          sendMessage.mutate(transcript);
         } catch (error) {
           console.error('Microphone error:', error);
           alert('Please enable microphone access to use voice input');
@@ -193,7 +221,7 @@ export const StudyBuddyChat = forwardRef<StudyBuddyChatHandle, StudyBuddyChatPro
       };
 
       setMessages(prev => [...prev, userMessage]);
-      setMessageHistory(prev => [...prev, userMessage]); //update message history
+      setMessageHistory(prev => [...prev, userMessage]);
       sendMessage.mutate(input);
       setInput("");
     };
