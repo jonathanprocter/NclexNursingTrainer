@@ -284,8 +284,8 @@ export const StudyBuddyChat = forwardRef<StudyBuddyChatHandle, StudyBuddyChatPro
           </div>
         </ScrollArea>
 
-        <form onSubmit={handleSubmit} className="p-2 sm:p-4 border-t">
-          <div className="flex gap-1 sm:gap-2">
+        <form onSubmit={handleSubmit} className="p-2 sm:p-4 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="flex gap-1 sm:gap-2 items-center">
             <Input
               ref={inputRef}
               value={input}

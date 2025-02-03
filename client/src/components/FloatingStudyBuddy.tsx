@@ -222,7 +222,7 @@ export function FloatingStudyBuddy() {
       <Button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "rounded-full w-12 h-12 shadow-lg transition-colors duration-200",
+          "rounded-full w-10 h-10 sm:w-12 sm:h-12 shadow-lg transition-colors duration-200 fixed bottom-4 right-4 sm:static",
           isOpen ? "bg-yellow-500/10 hover:bg-yellow-500/20" : "bg-yellow-500 hover:bg-yellow-600"
         )}
         variant={isOpen ? "ghost" : "default"}

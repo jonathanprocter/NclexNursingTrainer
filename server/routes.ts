@@ -122,9 +122,10 @@ export function registerRoutes(app: Express): Server {
       });
 
       const formattedResponse = {
-        content: response,
-        type: 'study_buddy',
-        topic: context.topic || 'general'
+        message: response,
+        sessionId: sessionId,
+        type: 'ai_response',
+        timestamp: new Date().toISOString()
       };
 
       res.json(formattedResponse);
@@ -1168,11 +1169,13 @@ export function registerRoutes(app: Express): Server {
         ]
       });
 
-      return {
+      const formattedResponse = {
         content: completion.choices[0]?.message?.content,
         relatedConcepts: ["Inflammation", "Cellular adaptation", "Tissue repair"],
         clinicalCorrelations: ["Assessment findings", "Common complications", "Nursing interventions"]
       };
+
+      return formattedResponse;
     } catch (error) {
       console.error("Error getting pathophysiology help:", error);
       return null;
@@ -1195,11 +1198,13 @@ export function registerRoutes(app: Express): Server {
         ]
       });
 
-      return {
+      const formattedResponse = {
         recommendations: completion.choices[0]?.message?.content,
         priorityTopics: ["Critical thinking", "Clinical judgment", "Patient safety"],
         studyStrategies: ["Case studies", "Practice questions", "Concept mapping"]
       };
+
+      return formattedResponse;
     } catch (error) {
       console.error("Error generating study recommendations:", error);
       return null;
