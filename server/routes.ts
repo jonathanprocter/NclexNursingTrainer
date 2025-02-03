@@ -22,9 +22,45 @@ export function registerRoutes(app: Express): Server {
   app.use('/api/study-guide', studyGuideRouter);
 
   // Study buddy chat endpoints
+
+// Initialize default user if not exists
+async function initializeDefaultUser() {
+  try {
+    const existingUser = await db.query.users.findFirst({
+      where: eq(users.id, 1)
+    });
+
+    if (!existingUser) {
+      await db.insert(users).values({
+        id: 1,
+        username: "student",
+        password: "defaultpass", // In production, use hashed password
+        role: "student"
+      });
+    }
+  } catch (error) {
+    console.error("Error initializing default user:", error);
+  }
+}
+
+// Call initialization
+initializeDefaultUser();
+
   app.post("/api/study-buddy/start", async (req, res) => {
     try {
       const { studentId, tone, topic } = req.body;
+
+      // Verify user exists
+      const user = await db.query.users.findFirst({
+        where: eq(users.id, studentId)
+      });
+
+      if (!user) {
+        return res.status(404).json({ 
+          message: "User not found",
+          error: "Invalid user ID"
+        });
+      }
 
       const completion = await openai.chat.completions.create({
         model: "gpt-4",
