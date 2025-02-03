@@ -1426,7 +1426,7 @@ export function registerRoutes(app: Express): Server {
         messages: [
           {
             role: "system",
-            content: "Generate a personalized NCLEX study plan based on available time and performance data. Focus on Bianca's learning style (visual) and preferred session length (45 minutes)."
+            content: "Generate a personalized NCLEX study plan based on performance metrics and available time. Provide specific topic recommendations and time allocations."
           },
           {
             role: "user",
@@ -1436,8 +1436,8 @@ export function registerRoutes(app: Express): Server {
               focusAreas,
               preferences: {
                 learningStyle: 'visual',
-                sessionLength: 45,
-                breakFrequency: 15
+                sessionLength: Math.min(duration, 45),
+                breakFrequency: Math.max(15, Math.floor(duration * 0.2))
               }
             })
           }

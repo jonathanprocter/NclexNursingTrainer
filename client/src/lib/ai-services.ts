@@ -398,6 +398,12 @@ export interface BiancaProfile {
     sessionLength: number;
     breakFrequency: number;
   };
+  nclexDomains: {
+    [key: string]: {
+      confidence: number;
+      priority: 'high' | 'medium' | 'low';
+    };
+  };
 }
 
 const biancaProfile: BiancaProfile = {
@@ -479,5 +485,34 @@ export async function startSkillPractice(
   } catch (error) {
     console.error('Error starting skill practice:', error);
     throw new Error('Failed to start skill practice');
+  }
+}
+
+export interface StudyPlanRequest {
+  duration: number;
+  performance: {
+    topic: string;
+    score: number;
+    timeSpent: number;
+  }[];
+  focusAreas: string[];
+}
+
+export async function generateStudyPlan(params: StudyPlanRequest) {
+  try {
+    const response = await fetch('/api/ai/study-plan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params)
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to generate study plan');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error generating study plan:', error);
+    throw error;
   }
 }

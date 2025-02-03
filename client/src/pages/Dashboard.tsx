@@ -26,14 +26,22 @@ export default function Dashboard() {
 
   const generatePersonalizedPlan = async (duration: number) => {
     try {
-      const response = await fetch('/api/ai/study-plan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          duration,
-          performance: analytics?.performance,
-          focusAreas: analytics?.weakAreas || []
-        })
+      const performanceMetrics = analytics?.performance?.map(p => ({
+        topic: p.topic,
+        score: p.score,
+        timeSpent: p.timeSpent
+      })) || [];
+
+      const studyPlan = await generateStudyPlan({
+        duration,
+        performance: performanceMetrics,
+        focusAreas: analytics?.weakAreas || []
+      });
+
+      setStudyPlan({
+        topics: studyPlan.topics,
+        timeAllocation: studyPlan.timeAllocation,
+        recommendations: studyPlan.recommendations
       });
 
       const plan = await response.json();
