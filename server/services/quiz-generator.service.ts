@@ -13,8 +13,33 @@ export class QuizGeneratorService {
     'Basic Care & Comfort',
     'Pharmacological & Parenteral Therapies',
     'Risk Reduction',
-    'Management of Care'
+    'Management of Care',
+    'Emergency Care & Crisis Management',
+    'Cultural Competence & Ethics',
+    'Evidence-Based Practice',
+    'Quality Improvement',
+    'Leadership & Delegation',
+    'Technology in Healthcare'
   ];
+
+  private readonly questionTypes = [
+    'multiple-choice',
+    'multiple-response',
+    'hot-spot',
+    'drag-and-drop',
+    'ordered-response',
+    'fill-in-blank',
+    'chart-exhibit',
+    'case-study',
+    'audio-item',
+    'graphic-item'
+  ];
+
+  private readonly difficultyLevels = {
+    entry: { range: [1, 3], weight: 0.3 },
+    intermediate: { range: [4, 6], weight: 0.4 },
+    advanced: { range: [7, 8], weight: 0.3 }
+  };
 
   constructor() {
     this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -38,12 +63,21 @@ export class QuizGeneratorService {
     }>;
   }> {
     try {
+      const domainDistribution = this.calculateDomainDistribution(currentPerformance);
       const completion = await this.openai.chat.completions.create({
         model: "gpt-4",
         messages: [
           {
             role: "system",
             content: `Generate Next Gen NCLEX 2024 questions with the following parameters:
+            - Follow clinical judgment measurement model
+            - Layer 1: Recognize Cues (20%)
+            - Layer 2: Analyze Cues (20%)
+            - Layer 3: Prioritize Hypotheses (20%)
+            - Layer 4: Generate Solutions (20%)
+            - Layer 5: Take Actions (10%)
+            - Layer 6: Evaluate Outcomes (10%)
+            Domain distribution: ${JSON.stringify(domainDistribution)}
             - Exam type: ${examType.toUpperCase()}
             - Current performance level: ${currentPerformance}
             - Include varied item types: multiple choice, multiple response, hot spots, drag and drop, cloze, etc.
@@ -69,3 +103,28 @@ export class QuizGeneratorService {
 }
 
 export const quizGeneratorService = new QuizGeneratorService();
+private calculateDomainDistribution(performance: number): Record<string, number> {
+    const distribution: Record<string, number> = {};
+    const baseWeight = 1 / this.nclexDomains.length;
+    
+    this.nclexDomains.forEach(domain => {
+      // Adjust weights based on performance
+      let weight = baseWeight;
+      if (performance < 0.7) {
+        // Give more weight to foundational domains
+        weight *= domain.includes('Basic') || domain.includes('Safety') ? 1.5 : 0.8;
+      } else {
+        // Give more weight to advanced domains
+        weight *= domain.includes('Clinical') || domain.includes('Management') ? 1.3 : 0.9;
+      }
+      distribution[domain] = weight;
+    });
+
+    // Normalize weights
+    const total = Object.values(distribution).reduce((a, b) => a + b, 0);
+    Object.keys(distribution).forEach(key => {
+      distribution[key] = distribution[key] / total;
+    });
+
+    return distribution;
+  }

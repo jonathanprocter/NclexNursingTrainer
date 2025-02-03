@@ -51,6 +51,36 @@ const basicSkillsQuestions: Question[] = [
 
 const advancedSkillsQuestions: Question[] = [
   {
+    id: "adv-3",
+    text: "A patient presents with acute respiratory distress. Analyze the following arterial blood gas results:\npH: 7.31\nPaCO2: 52 mmHg\nHCO3: 24 mEq/L\nPaO2: 58 mmHg\nWhat is your interpretation and next action?",
+    options: [
+      { id: "a", text: "Respiratory acidosis, initiate BiPAP" },
+      { id: "b", text: "Metabolic acidosis, administer sodium bicarbonate" },
+      { id: "c", text: "Respiratory alkalosis, monitor closely" },
+      { id: "d", text: "Mixed acid-base disorder, obtain chest x-ray" }
+    ],
+    correctAnswer: "a",
+    explanation: "The decreased pH with elevated PaCO2 indicates respiratory acidosis. BiPAP would help correct the underlying respiratory issue.",
+    domain: "Advanced Skills",
+    topics: ["Critical Care", "ABG Interpretation"],
+    difficulty: "Hard"
+  },
+  {
+    id: "adv-4",
+    text: "During a code situation, the patient has been receiving chest compressions for 2 minutes. The rhythm shows Ventricular Fibrillation. What is the most appropriate next step?",
+    options: [
+      { id: "a", text: "Continue chest compressions" },
+      { id: "b", text: "Administer 1mg epinephrine" },
+      { id: "c", text: "Deliver shock at 200 joules" },
+      { id: "d", text: "Check pulse" }
+    ],
+    correctAnswer: "c",
+    explanation: "For VF, after 2 minutes of CPR, the next step is to deliver a shock, following the ACLS algorithm for shockable rhythms.",
+    domain: "Advanced Skills",
+    topics: ["Emergency Response", "ACLS Protocol"],
+    difficulty: "Hard"
+  }
+  {
     id: "adv-1",
     text: "In a code situation, what is the first priority for the team leader?",
     options: [
