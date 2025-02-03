@@ -56,6 +56,101 @@ export default function PsychosocialIntegrity() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="mental-health">
+          <Card>
+            <CardHeader>
+              <CardTitle>Mental Health Concepts</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <Progress value={0} className="w-full" />
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Card className="p-4">
+                    <h3 className="font-semibold mb-2">Assessment</h3>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      <li>• Mental Status Evaluation</li>
+                      <li>• Risk Assessment</li>
+                      <li>• Behavioral Analysis</li>
+                      <li>• Crisis Management</li>
+                    </ul>
+                  </Card>
+                  <Card className="p-4">
+                    <h3 className="font-semibold mb-2">Interventions</h3>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      <li>• Crisis Prevention</li>
+                      <li>• De-escalation Techniques</li>
+                      <li>• Support Resources</li>
+                      <li>• Treatment Planning</li>
+                    </ul>
+                  </Card>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="communication">
+          <Card>
+            <CardHeader>
+              <CardTitle>Therapeutic Communication</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <Progress value={0} className="w-full" />
+                <div className="grid gap-4">
+                  <div className="space-y-4">
+                    <h3 className="font-semibold">Communication Skills</h3>
+                    <p className="text-muted-foreground">Essential techniques for effective therapeutic communication</p>
+                    <div className="grid gap-2">
+                      <Button variant="outline" className="justify-start">
+                        <MessageSquare className="mr-2 h-4 w-4" />
+                        Communication Techniques
+                      </Button>
+                      <Button variant="outline" className="justify-start">
+                        <Users className="mr-2 h-4 w-4" />
+                        Cultural Competency
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="support">
+          <Card>
+            <CardHeader>
+              <CardTitle>Support Systems</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <Progress value={0} className="w-full" />
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Card className="p-4">
+                    <h3 className="font-semibold mb-2">Family Support</h3>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      <li>• Family Dynamics</li>
+                      <li>• Caregiver Support</li>
+                      <li>• Resource Navigation</li>
+                      <li>• Education Planning</li>
+                    </ul>
+                  </Card>
+                  <Card className="p-4">
+                    <h3 className="font-semibold mb-2">Community Resources</h3>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      <li>• Support Groups</li>
+                      <li>• Crisis Services</li>
+                      <li>• Advocacy Programs</li>
+                      <li>• Social Services</li>
+                    </ul>
+                  </Card>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   );

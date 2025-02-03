@@ -56,6 +56,97 @@ export default function HealthPromotion() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="prevention">
+          <Card>
+            <CardHeader>
+              <CardTitle>Prevention Strategies</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <Progress value={0} className="w-full" />
+                <div className="grid gap-4">
+                  <div className="space-y-4">
+                    <h3 className="font-semibold">Primary Prevention</h3>
+                    <p className="text-muted-foreground">Health education, immunizations, and lifestyle counseling</p>
+                    <div className="grid gap-2">
+                      <Button variant="outline" className="justify-start">
+                        <BookOpen className="mr-2 h-4 w-4" />
+                        Immunization Schedules
+                      </Button>
+                      <Button variant="outline" className="justify-start">
+                        <HeartPulse className="mr-2 h-4 w-4" />
+                        Health Screening Guidelines
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="development">
+          <Card>
+            <CardHeader>
+              <CardTitle>Growth & Development</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <Progress value={0} className="w-full" />
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Card className="p-4">
+                    <h3 className="font-semibold mb-2">Life Stages</h3>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      <li>• Infant & Child Development</li>
+                      <li>• Adolescent Health</li>
+                      <li>• Adult Wellness</li>
+                      <li>• Geriatric Care</li>
+                    </ul>
+                  </Card>
+                  <Card className="p-4">
+                    <h3 className="font-semibold mb-2">Assessment Skills</h3>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      <li>• Developmental Milestones</li>
+                      <li>• Growth Parameters</li>
+                      <li>• Nutritional Status</li>
+                      <li>• Physical Assessment</li>
+                    </ul>
+                  </Card>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="screening">
+          <Card>
+            <CardHeader>
+              <CardTitle>Health Screening</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <Progress value={0} className="w-full" />
+                <div className="grid gap-4">
+                  <div className="space-y-4">
+                    <h3 className="font-semibold">Screening Guidelines</h3>
+                    <p className="text-muted-foreground">Evidence-based screening recommendations across the lifespan</p>
+                    <div className="grid gap-2">
+                      <Button variant="outline" className="justify-start">
+                        <Activity className="mr-2 h-4 w-4" />
+                        Preventive Services
+                      </Button>
+                      <Button variant="outline" className="justify-start">
+                        <TestTube className="mr-2 h-4 w-4" />
+                        Diagnostic Tests
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   );
