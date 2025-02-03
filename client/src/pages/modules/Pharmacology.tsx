@@ -827,7 +827,7 @@ export default function Pharmacology() {
                       </ul>
                       <div className="flex gap-2 mt-4">
                         <Button 
-                          onClick={() => handleAIHelp("practice_IV_basic", "Generate basic IV medication scenarios including flow rate calculations, drip rates, and solution concentrations with step-by-step solutions")}
+                          onClick={() => handleAIHelp("practice_IV_basic", "Generate basic IV medication scenarios including drip rate calculations, solution concentrations, and flow rate problems with step-by-step explanations")}
                         >
                           Basic Scenarios
                         </Button>
