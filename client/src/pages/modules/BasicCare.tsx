@@ -1,5 +1,3 @@
-
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -9,11 +7,11 @@ import { Heart, Brain, Activity, UserCheck } from "lucide-react";
 
 export default function BasicCare() {
   return (
-    <div className="space-y-4 sm:space-y-6 max-w-[100vw] overflow-x-hidden">
-      <div className="text-center mb-4 sm:mb-8 px-3">
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">Basic Care and Comfort</h1>
-        <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base">
-          Master foundational nursing care principles focusing on patient comfort, mobility, nutrition, and basic needs
+    <div className="space-y-6">
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold mb-2">Basic Care and Comfort</h1>
+        <p className="text-muted-foreground max-w-2xl mx-auto">
+          Master essential nursing interventions and comfort measures for optimal patient care
         </p>
       </div>
 
@@ -22,16 +20,37 @@ export default function BasicCare() {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="nutrition">Nutrition</TabsTrigger>
           <TabsTrigger value="mobility">Mobility</TabsTrigger>
-          <TabsTrigger value="hygiene">Personal Care</TabsTrigger>
+           <TabsTrigger value="hygiene">Personal Care</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
           <Card>
             <CardHeader>
-              <CardTitle>Core Principles of Basic Care</CardTitle>
+              <CardTitle>Essential Care Components</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
+              <div className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                   <Card className="p-4">
+                    <h3 className="font-semibold mb-2">Activities of Daily Living</h3>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      <li>• Bathing and personal hygiene</li>
+                      <li>• Dressing and grooming</li>
+                      <li>• Mobility assistance</li>
+                      <li>• Toileting support</li>
+                    </ul>
+                  </Card>
+                  <Card className="p-4">
+                    <h3 className="font-semibold mb-2">Comfort Measures</h3>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      <li>• Pain management techniques</li>
+                      <li>• Position changes</li>
+                      <li>• Rest and sleep promotion</li>
+                      <li>• Environmental adjustments</li>
+                    </ul>
+                  </Card>
+                </div>
+                 <div className="space-y-6">
                 <div className="grid gap-6 md:grid-cols-2">
                   <Card className="p-4">
                     <Heart className="h-6 w-6 text-primary mb-2" />
@@ -113,11 +132,12 @@ export default function BasicCare() {
                   </div>
                 </Card>
               </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="nutrition">
+         <TabsContent value="nutrition">
           <Card>
             <CardHeader>
               <div className="flex justify-between items-start">
@@ -185,69 +205,81 @@ export default function BasicCare() {
         <TabsContent value="mobility">
           <Card>
             <CardHeader>
-              <div className="flex justify-between items-start">
-                <CardTitle>Mobility and Exercise</CardTitle>
-                <AIHelpButton
-                  title="Mobility Support"
-                  description="Get AI assistance with mobility assessment and interventions"
-                  topic="mobility_support"
-                />
-              </div>
+              <CardTitle>Mobility and Positioning</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
-                <div className="grid gap-6 md:grid-cols-2">
+              <div className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
                   <Card className="p-4">
-                    <h3 className="font-medium mb-2">Activity Assessment</h3>
+                    <h3 className="font-semibold mb-2">Transfer Techniques</h3>
                     <ul className="space-y-2 text-sm text-muted-foreground">
-                      <li>• Mobility level evaluation</li>
-                      <li>• Balance assessment</li>
-                      <li>• Strength testing</li>
-                      <li>• Gait analysis</li>
+                      <li>• Bed to chair transfers</li>
+                      <li>• Mechanical lift usage</li>
+                      <li>• Gait belt application</li>
+                      <li>• Safe patient handling</li>
                     </ul>
                   </Card>
-
                   <Card className="p-4">
-                    <h3 className="font-medium mb-2">Exercise Programs</h3>
+                    <h3 className="font-semibold mb-2">Range of Motion</h3>
                     <ul className="space-y-2 text-sm text-muted-foreground">
-                      <li>• Range of motion exercises</li>
-                      <li>• Strengthening activities</li>
-                      <li>• Endurance building</li>
-                      <li>• Balance training</li>
+                      <li>• Passive exercises</li>
+                      <li>• Active exercises</li>
+                      <li>• Joint mobility</li>
+                      <li>• Exercise progression</li>
                     </ul>
                   </Card>
-                </div>
-
-                <Card className="p-6">
-                  <h3 className="font-semibold mb-4">Safe Patient Handling</h3>
-                  <div className="space-y-4">
-                    <div className="bg-muted/50 p-4 rounded-lg">
-                      <h4 className="font-medium mb-2">Transfer Techniques</h4>
-                      <ul className="space-y-2 text-sm text-muted-foreground">
-                        <li>• Bed to chair transfers</li>
-                        <li>• Stand pivot technique</li>
-                        <li>• Mechanical lift use</li>
-                        <li>• Team lifting protocols</li>
-                      </ul>
-                    </div>
-
-                    <div className="bg-muted/50 p-4 rounded-lg">
-                      <h4 className="font-medium mb-2">Fall Prevention</h4>
-                      <ul className="space-y-2 text-sm text-muted-foreground">
-                        <li>• Risk assessment tools</li>
-                        <li>• Environmental modifications</li>
-                        <li>• Patient education</li>
-                        <li>• Safety equipment use</li>
-                      </ul>
-                    </div>
                   </div>
-                </Card>
+                    <div className="space-y-6">
+                      <div className="grid gap-6 md:grid-cols-2">
+                        <Card className="p-4">
+                          <h3 className="font-medium mb-2">Activity Assessment</h3>
+                          <ul className="space-y-2 text-sm text-muted-foreground">
+                            <li>• Mobility level evaluation</li>
+                            <li>• Balance assessment</li>
+                            <li>• Strength testing</li>
+                            <li>• Gait analysis</li>
+                          </ul>
+                        </Card>
+                        <Card className="p-4">
+                          <h3 className="font-medium mb-2">Exercise Programs</h3>
+                          <ul className="space-y-2 text-sm text-muted-foreground">
+                            <li>• Range of motion exercises</li>
+                            <li>• Strengthening activities</li>
+                            <li>• Endurance building</li>
+                            <li>• Balance training</li>
+                          </ul>
+                        </Card>
+                      </div>
+                        <Card className="p-6">
+                          <h3 className="font-semibold mb-4">Safe Patient Handling</h3>
+                          <div className="space-y-4">
+                            <div className="bg-muted/50 p-4 rounded-lg">
+                              <h4 className="font-medium mb-2">Transfer Techniques</h4>
+                              <ul className="space-y-2 text-sm text-muted-foreground">
+                                <li>• Bed to chair transfers</li>
+                                <li>• Stand pivot technique</li>
+                                <li>• Mechanical lift use</li>
+                                <li>• Team lifting protocols</li>
+                              </ul>
+                            </div>
+                            <div className="bg-muted/50 p-4 rounded-lg">
+                              <h4 className="font-medium mb-2">Fall Prevention</h4>
+                              <ul className="space-y-2 text-sm text-muted-foreground">
+                                <li>• Risk assessment tools</li>
+                                <li>• Environmental modifications</li>
+                                <li>• Patient education</li>
+                                <li>• Safety equipment use</li>
+                              </ul>
+                            </div>
+                          </div>
+                      </Card>
+                  </div>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="hygiene">
+         <TabsContent value="hygiene">
           <Card>
             <CardHeader>
               <div className="flex justify-between items-start">
@@ -312,6 +344,14 @@ export default function BasicCare() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <div className="mt-8">
+        <AIHelpButton 
+          title="Basic Care Assistance"
+          description="Get AI guidance on basic care procedures and techniques"
+          topic="basic_care"
+        />
+      </div>
     </div>
   );
 }
