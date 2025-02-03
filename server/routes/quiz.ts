@@ -11,7 +11,9 @@ router.post('/generate', async (req, res) => {
     const questions = await quizGeneratorService.generateQuestions(
       examType,
       userPerformance,
-      userId
+      userId,
+      [],
+      []
     );
     const quiz = await quizGeneratorService.generateQuiz(topic, difficulty, previousMistakes);
     res.json(quiz);

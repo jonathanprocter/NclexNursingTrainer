@@ -52,6 +52,31 @@ export class QuizGeneratorService {
 
   constructor() {
     this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    this.initializeQuestionBank();
+  }
+
+  private initializeQuestionBank() {
+    Object.values(practiceQuestions).forEach(category => {
+      this.questionBank.push(...category);
+    });
+  }
+
+  private getUniqueQuestion(userId: string): any {
+    if (!this.usedQuestions.has(userId)) {
+      this.usedQuestions.set(userId, new Set());
+    }
+    
+    const userQuestions = this.usedQuestions.get(userId)!;
+    const availableQuestions = this.questionBank.filter(q => !userQuestions.has(q.id));
+    
+    if (availableQuestions.length === 0) {
+      this.usedQuestions.get(userId)!.clear();
+      return this.questionBank[Math.floor(Math.random() * this.questionBank.length)];
+    }
+    
+    const question = availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
+    userQuestions.add(question.id);
+    return question;
   }
 
   const NCLEX_2024_DOMAINS = [
@@ -64,6 +89,7 @@ export class QuizGeneratorService {
 ];
 
 private usedQuestions: Map<string, Set<string>> = new Map();
+private questionBank: Array<any> = [];
 
 async generateQuestions(
     examType: string,
