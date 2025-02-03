@@ -83,10 +83,13 @@ export function registerRoutes(app: Express): Server {
       }
       const { studentId, sessionId, message, context } = req.body;
 
+      // Generate new session if none provided
+      const chatSessionId = sessionId || `session_${Date.now()}`;
+
       // Store user message
       await db.insert(studyBuddyChats).values({
         userId: studentId,
-        sessionId,
+        sessionId: chatSessionId,
         role: 'user',
         content: message,
         tone: context.tone
