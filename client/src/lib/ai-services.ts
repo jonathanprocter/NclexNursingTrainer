@@ -210,6 +210,8 @@ export async function getStudyRecommendations(
     topic: string;
     score: number;
     timeSpent: number;
+    itemType: string;
+    confidenceLevel: number;
   }[]
 ) {
   try {

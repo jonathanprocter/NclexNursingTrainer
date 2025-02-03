@@ -9,29 +9,35 @@ interface PerformanceMetricsProps {
 export default function PerformanceMetrics({ data }: PerformanceMetricsProps) {
   const mockMetrics = [
     {
-      category: "Critical Thinking",
+      category: "Clinical Judgment",
       score: 85,
       status: "Strong",
-      details: ["Excellent problem solving", "Good clinical reasoning"],
+      details: ["Strong cue recognition", "Effective hypothesis generation"],
     },
     {
-      category: "Content Knowledge",
+      category: "Practice Readiness",
       score: 78,
       status: "Good",
-      details: ["Strong in fundamentals", "Needs review in pharmacology"],
+      details: ["Safe medication practices", "Strong patient advocacy"],
     },
     {
-      category: "Test-Taking Strategy",
-      score: 90,
-      status: "Excellent",
-      details: ["Effective time management", "Strong question analysis"],
-    },
-    {
-      category: "Clinical Judgment",
+      category: "Next-Gen Item Types",
       score: 82,
       status: "Good",
-      details: ["Good prioritization", "Solid assessment skills"],
+      details: ["Excels in case studies", "Strong in extended multiple choice"],
     },
+    {
+      category: "Decision Making",
+      score: 88,
+      status: "Excellent",
+      details: ["Strong prioritization", "Effective care planning"],
+    },
+    {
+      category: "Time Management",
+      score: 75,
+      status: "Needs Work",
+      details: ["Average question pace", "Review timing strategies"],
+    }
   ];
 
   return (
