@@ -32,7 +32,7 @@ export default function BasicCare() {
             <CardContent>
               <div className="space-y-4">
                 <Progress value={0} className="w-full" />
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
                   {/* Add content here */}
                 </div>
               </div>
