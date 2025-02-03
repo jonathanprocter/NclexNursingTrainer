@@ -38,10 +38,17 @@ export class VoiceAssistantService {
 
   constructor() {
     const openaiApiKey = process.env.OPENAI_API_KEY;
-    if (!openaiApiKey) {
-      throw new Error('OpenAI API key is required for personalized learning assistance');
+    if (!openaiApiKey || openaiApiKey.trim() === '') {
+      throw new Error('Valid OpenAI API key is required for personalized learning assistance');
     }
-    this.openai = new OpenAI({ apiKey: openaiApiKey });
+    if (!openaiApiKey.startsWith('sk-')) {
+      throw new Error('Invalid OpenAI API key format');
+    }
+    this.openai = new OpenAI({ 
+      apiKey: openaiApiKey,
+      maxRetries: 3,
+      timeout: 30000
+    });
   }
 
   async processCommand(input: z.infer<typeof voiceCommandSchema>): Promise<VoiceResponse> {

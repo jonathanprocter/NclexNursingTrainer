@@ -11,13 +11,15 @@ const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false }));
 
-// CORS configuration for development
-if (process.env.NODE_ENV === 'development') {
-  app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5000',
-    credentials: true
-  }));
-}
+// CORS configuration for development and production
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? 'https://nclex-prep.repl.co' 
+    : true,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -70,7 +72,7 @@ const tryPort = async (port: number): Promise<number> => {
     } else {
       serveStatic(app);
     }
-    
+
     await new Promise((resolve, reject) => {
       server.once('error', (err: any) => {
         if (err.code === 'EADDRINUSE') {
@@ -80,7 +82,7 @@ const tryPort = async (port: number): Promise<number> => {
           reject(err);
         }
       });
-      
+
       server.listen(port, '0.0.0.0', () => {
         log(`Server running on http://0.0.0.0:${port}`);
         resolve(port);
