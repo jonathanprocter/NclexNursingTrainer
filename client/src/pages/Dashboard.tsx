@@ -3,6 +3,11 @@ import Analytics from "@/components/dashboard/Analytics";
 import PerformanceMetrics from "@/components/dashboard/PerformanceMetrics";
 import InstructorDashboard from "@/components/dashboard/InstructorDashboard";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from 'react';
+import { useForm, FormField, FormItem, FormLabel, FormControl } from 'react-hook-form';
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+
 
 export default function Dashboard() {
   const [studyPlan, setStudyPlan] = useState<{
@@ -10,7 +15,7 @@ export default function Dashboard() {
     timeAllocation: Record<string, number>;
     recommendations: string[];
   } | null>(null);
-  
+
   const form = useForm<{ duration: string }>({
     defaultValues: { duration: "" }
   });
@@ -30,13 +35,19 @@ export default function Dashboard() {
           focusAreas: analytics?.weakAreas || []
         })
       });
-      
+
       const plan = await response.json();
       setStudyPlan(plan);
     } catch (error) {
       console.error('Error generating study plan:', error);
     }
   };
+
+  const onSubmit = (data: { duration: string }) => {
+    // Handle form submission
+    console.log("Form submitted:", data);
+  };
+
 
   return (
     <div className="space-y-6">
@@ -47,7 +58,7 @@ export default function Dashboard() {
             Let's make the most of your study session today
           </p>
         </div>
-        
+
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>Study Session Setup</CardTitle>
@@ -98,5 +109,6 @@ export default function Dashboard() {
         </TabsContent>
       </Tabs>
     </div>
+  </div>
   );
 }

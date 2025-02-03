@@ -27,6 +27,12 @@ import {
   Bot,
   Clock,
   Menu,
+  Users,
+  Heart,
+  Home,
+  Pill,
+  AlertTriangle,
+  Microscope,
 } from "lucide-react";
 import { 
   Sheet, 
@@ -242,10 +248,53 @@ interface MobileNavItemProps {
   onClick?: () => void;
 }
 
-export default function NavBar() {
-  const [location] = useLocation();
+function MobileMenu() {
   const [isOpen, setIsOpen] = useState(false);
 
+  return (
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <SheetTrigger asChild>
+        <Button variant="ghost" size="icon">
+          <Menu className="h-6 w-6" />
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+        <SheetHeader>
+          <SheetTitle>Navigation Menu</SheetTitle>
+          <SheetDescription>
+            Access all NCLEX preparation resources
+          </SheetDescription>
+        </SheetHeader>
+        <nav className="flex flex-col gap-4 mt-6 overflow-y-auto max-h-[calc(100vh-200px)]">
+          {[
+            { title: "Dashboards", items: dashboardItems },
+            { title: "Learning Modules", items: learningModules },
+            { title: "Practice & Simulation", items: practiceItems },
+            { title: "Study Tools", items: studyTools }
+          ].map(({ title, items }) => (
+            <div key={title} className="px-4 py-2">
+              <h3 className="mb-2 text-sm font-semibold">{title}</h3>
+              {items.map((item) => (
+                <MobileNavItem
+                  key={item.title}
+                  href={item.href}
+                  onClick={() => setIsOpen(false)}
+                >
+                  <div className="flex items-center gap-2">
+                    <item.icon className="h-4 w-4" />
+                    <span>{item.title}</span>
+                  </div>
+                </MobileNavItem>
+              ))}
+            </div>
+          ))}
+        </nav>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+function DesktopMenu() {
   const MenuContent = ({ items, className = "" }: MenuContentProps) => (
     <ul className={cn(
       "grid gap-3 p-4 w-[400px] md:w-[500px] md:grid-cols-2 lg:w-[600px]",
@@ -267,102 +316,56 @@ export default function NavBar() {
     </ul>
   );
 
-  const MobileNavItem = ({ href, children, onClick }: MobileNavItemProps) => (
-    <Link href={href}>
-      <div
-        className="block px-4 py-2 text-sm hover:bg-accent rounded-md cursor-pointer"
-        onClick={onClick}
-      >
-        {children}
-      </div>
-    </Link>
+  return (
+    <div className="hidden md:block">
+      <NavigationMenu>
+        <NavigationMenuList>
+          <NavigationMenuItem>
+            <NavigationMenuTrigger>Dashboards</NavigationMenuTrigger>
+            <NavigationMenuContent>
+              <MenuContent items={dashboardItems} />
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+
+          <NavigationMenuItem>
+            <NavigationMenuTrigger>Learning Modules</NavigationMenuTrigger>
+            <NavigationMenuContent>
+              <MenuContent items={learningModules} />
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+
+          <NavigationMenuItem>
+            <NavigationMenuTrigger>Practice & Simulation</NavigationMenuTrigger>
+            <NavigationMenuContent>
+              <MenuContent items={practiceItems} />
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+
+          <NavigationMenuItem>
+            <NavigationMenuTrigger>Study Tools</NavigationMenuTrigger>
+            <NavigationMenuContent>
+              <MenuContent items={studyTools} />
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+        </NavigationMenuList>
+      </NavigationMenu>
+    </div>
   );
+}
+
+
+export default function NavBar() {
+  const [location] = useLocation();
 
   return (
-    <nav className="border-b bg-white">
-      <div className="container mx-auto px-4">
+    <nav className="border-b relative w-full">
+      <div className="px-4 sm:px-6 lg:px-8 mx-auto">
         <div className="flex h-16 items-center justify-between">
           <Link href="/">
             <h1 className="text-xl font-bold text-primary cursor-pointer">NCLEX Prep</h1>
           </Link>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:block">
-            <NavigationMenu>
-              <NavigationMenuList>
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger>Dashboards</NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <MenuContent items={dashboardItems} />
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger>Learning Modules</NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <MenuContent items={learningModules} />
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger>Practice & Simulation</NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <MenuContent items={practiceItems} />
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger>Study Tools</NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <MenuContent items={studyTools} />
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-              </NavigationMenuList>
-            </NavigationMenu>
-          </div>
-
-          {/* Mobile Navigation */}
-          <div className="md:hidden">
-            <Sheet open={isOpen} onOpenChange={setIsOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Menu className="h-6 w-6" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-                <SheetHeader>
-                  <SheetTitle>Navigation Menu</SheetTitle>
-                  <SheetDescription>
-                    Access all NCLEX preparation resources
-                  </SheetDescription>
-                </SheetHeader>
-                <nav className="flex flex-col gap-4 mt-6 overflow-y-auto max-h-[calc(100vh-200px)]">
-                  {[
-                    { title: "Dashboards", items: dashboardItems },
-                    { title: "Learning Modules", items: learningModules },
-                    { title: "Practice & Simulation", items: practiceItems },
-                    { title: "Study Tools", items: studyTools }
-                  ].map(({ title, items }) => (
-                    <div key={title} className="px-4 py-2">
-                      <h3 className="mb-2 text-sm font-semibold">{title}</h3>
-                      {items.map((item) => (
-                        <MobileNavItem
-                          key={item.title}
-                          href={item.href}
-                          onClick={() => setIsOpen(false)}
-                        >
-                          <div className="flex items-center gap-2">
-                            <item.icon className="h-4 w-4" />
-                            <span>{item.title}</span>
-                          </div>
-                        </MobileNavItem>
-                      ))}
-                    </div>
-                  ))}
-                </nav>
-              </SheetContent>
-            </Sheet>
-          </div>
+          <MobileMenu />
+          <DesktopMenu />
         </div>
       </div>
     </nav>

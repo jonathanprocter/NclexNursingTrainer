@@ -48,7 +48,7 @@ interface PerformanceMetricsProps extends RouteProps {
 
 function Router() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen w-full max-w-[100vw] overflow-x-hidden">
       <NavBar />
       <main className="container mx-auto px-4 py-8">
         <Switch>

@@ -63,7 +63,7 @@ export default function QuestionCard({ question, onNext, userAnswer, showAnswer 
             <div
               key={option.id}
               className={cn(
-                "flex items-center space-x-3 p-3 rounded-lg border",
+                "flex items-center space-x-3 p-3 rounded-lg border touch-manipulation", // Added touch-manipulation class here
                 getOptionClass(option.id)
               )}
             >

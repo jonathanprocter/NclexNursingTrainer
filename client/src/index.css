@@ -5,6 +5,16 @@
 @layer base {
   * {
     @apply border-border;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html, body {
+    @apply overflow-x-hidden touch-manipulation antialiased;
+    min-height: -webkit-fill-available;
+  }
+
+  input, textarea {
+    @apply max-w-[100vw];
   }
 
   body {

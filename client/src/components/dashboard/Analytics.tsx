@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -27,7 +26,7 @@ export default function Analytics({ data }: AnalyticsProps) {
   ];
 
   return (
-    <div className="grid gap-6 md:grid-cols-2">
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2"> {/* Added responsiveness */}
       <Card>
         <CardHeader>
           <CardTitle>NCLEX Domain Performance</CardTitle>
@@ -35,7 +34,7 @@ export default function Analytics({ data }: AnalyticsProps) {
         <CardContent>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={nclexDomains}>
+              <BarChart data={nclexDomains} width={500} height={300}> {/* Added width and height for better responsiveness */}
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="domain" angle={-45} textAnchor="end" height={100} />
                 <YAxis />
