@@ -63,11 +63,12 @@ export class QuizGeneratorService {
   "Safe and Effective Care Environment"
 ];
 
-private usedQuestions: Set<string> = new Set();
+private usedQuestions: Map<string, Set<string>> = new Map();
 
 async generateQuestions(
     examType: string,
     currentPerformance: number,
+    userId: string = 'default',
     previousQuestions: string[] = [],
     previousMistakes: string[] = []
   ): Promise<Array<{
@@ -84,12 +85,24 @@ async generateQuestions(
   }>> {
     try {
       const domainDistribution = this.calculateDomainDistribution(currentPerformance);
+      // Initialize user's question set if not exists
+      if (!this.usedQuestions.has(userId)) {
+        this.usedQuestions.set(userId, new Set());
+      }
+      
+      const userQuestions = this.usedQuestions.get(userId)!;
+      const difficultyLevel = this.calculateDifficulty(currentPerformance, examType);
+      
       const completion = await this.openai.chat.completions.create({
         model: "gpt-4",
         messages: [
           {
             role: "system",
-            content: `Generate unique Next Gen NCLEX 2024 questions following:
+            content: `Generate unique Next Gen NCLEX 2024 questions following these strict rules:
+            - Each question must have a unique identifier
+            - Questions must align with ${examType.toUpperCase()} exam format
+            - Target difficulty level: ${difficultyLevel}
+            - Avoid previously used questions: ${Array.from(userQuestions).join(', ')}
             - Clinical judgment measurement model
             - ${this.clinicalJudgmentLayers.join('\n- ')}
             - Domain distribution: ${JSON.stringify(domainDistribution)}
