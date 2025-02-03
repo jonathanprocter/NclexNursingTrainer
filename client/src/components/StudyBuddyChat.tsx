@@ -97,6 +97,26 @@ export const StudyBuddyChat = forwardRef<StudyBuddyChatHandle, StudyBuddyChatPro
       mutationFn: async (message: string) => {
         if (!message.trim()) return null;
 
+        // Ensure we have a session before sending message
+        if (!sessionId) {
+          const sessionResponse = await fetch("/api/study-buddy/start", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              studentId,
+              tone: selectedTone,
+              topic: "NCLEX preparation"
+            }),
+          });
+          
+          if (!sessionResponse.ok) {
+            throw new Error("Failed to start new session");
+          }
+          
+          const sessionData = await sessionResponse.json();
+          setSessionId(sessionData.sessionId);
+        }
+
         try {
           const response = await fetch("/api/study-buddy/chat", {
             method: "POST",
@@ -106,7 +126,7 @@ export const StudyBuddyChat = forwardRef<StudyBuddyChatHandle, StudyBuddyChatPro
             },
             body: JSON.stringify({
               studentId,
-              sessionId,
+              sessionId: sessionId,
               message,
               context: {
                 tone: selectedTone,
