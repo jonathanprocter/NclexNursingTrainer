@@ -4,14 +4,12 @@ import { z } from "zod";
 export class QuizGeneratorService {
   private readonly openai: OpenAI;
   private readonly nclexDomains = [
-    'Management of Care (20%)',
-    'Safety and Infection Control (15%)',
-    'Health Promotion and Maintenance (15%)',
-    'Psychosocial Integrity (15%)',
-    'Basic Care and Comfort (12%)',
-    'Pharmacological and Parenteral Therapies (12%)',
-    'Reduction of Risk Potential (6%)',
-    'Physiological Adaptation (5%)'
+    'Basic Care and Comfort',
+    'Pharmacological and Parenteral Therapies',
+    'Reduction of Risk Potential',
+    'Physiological Adaptation',
+    'Psychosocial Integrity',
+    'Safe and Effective Care Environment'
   ];
 
   private readonly clinicalJudgmentLayers = [
@@ -65,6 +63,8 @@ export class QuizGeneratorService {
   "Safe and Effective Care Environment"
 ];
 
+private usedQuestions: Set<string> = new Set();
+
 async generateQuestions(
     examType: string,
     currentPerformance: number,
@@ -89,13 +89,17 @@ async generateQuestions(
         messages: [
           {
             role: "system",
-            content: `Generate Next Gen NCLEX 2024 questions following:
+            content: `Generate unique Next Gen NCLEX 2024 questions following:
             - Clinical judgment measurement model
             - ${this.clinicalJudgmentLayers.join('\n- ')}
             - Domain distribution: ${JSON.stringify(domainDistribution)}
             - Question types: multiple-choice, multiple-response, hot-spot, drag-and-drop, ordered-response
             - Include clinical scenarios, lab values, and medication calculations
-            - Ensure coverage of all 2024 NCLEX domains`
+            - Ensure coverage of all 2024 NCLEX domains
+            - Each question must be unique and not previously used
+            - Generate questions based on realistic clinical scenarios
+            - Include rationales for correct and incorrect answers
+            - Align with 2024 NCLEX test plan content`
           },
           {
             role: "user",
