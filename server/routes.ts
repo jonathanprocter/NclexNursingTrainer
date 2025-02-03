@@ -206,6 +206,12 @@ export function registerRoutes(app: Express): Server {
         throw new Error("No response generated");
       }
 
+      const formattedResponse = {
+        content: response,
+        type: 'explanation',
+        topic: topic || 'general'
+      };
+
       res.json(formattedResponse);
     } catch (error) {
       console.error("Error in AI help endpoint:", error);
