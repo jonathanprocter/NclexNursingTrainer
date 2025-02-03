@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { AIHelpButton } from "@/components/ui/ai-help-button"; // Added import
+import { Badge } from "@/components/ui/badge"; // Added import for Badge
 
 
 export default function ClinicalJudgment() {
@@ -543,13 +544,33 @@ const evaluationCriteria = {
                           </Badge>
                         ))}
                       </div>
-                      <Button 
-                        onClick={() => handleScenarioGeneration(scenario.type)} 
-                        variant="outline"
-                        className="w-full"
-                      >
-                        Start Scenario
-                      </Button>
+                      <div className="space-y-2">
+                        <Button 
+                          onClick={() => handleScenarioGeneration(scenario.type)} 
+                          variant="outline"
+                          className="w-full"
+                        >
+                          Start Scenario
+                        </Button>
+                        <div className="flex gap-2 justify-end">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleAIHelp(`${scenario.title.toLowerCase().replace(/\s+/g, '_')}_tips`)}
+                          >
+                            <Brain className="h-4 w-4 mr-2" />
+                            Learning Tips
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleAIHelp(`${scenario.title.toLowerCase().replace(/\s+/g, '_')}_rationale`)}
+                          >
+                            <FileCheck className="h-4 w-4 mr-2" />
+                            Review Rationale
+                          </Button>
+                        </div>
+                      </div>
                     </Card>
                   ))}
                 </div>
