@@ -56,18 +56,37 @@ export class VoiceAssistantService {
       const validatedInput = voiceCommandSchema.parse(input);
       const emotionalState = this.detectEmotionalState(validatedInput.command);
 
-      if (emotionalState) {
-        return this.generateEmotionalResponse(emotionalState);
-      }
+      let response: VoiceResponse;
 
-      if (validatedInput.context.tutorPersonality) {
-        return await this.getPersonalizedResponse(validatedInput.command, validatedInput.context);
-      }
+      try {
+        if (emotionalState) {
+          response = this.generateEmotionalResponse(emotionalState);
+        } else if (validatedInput.context.tutorPersonality) {
+          response = await this.getPersonalizedResponse(validatedInput.command, validatedInput.context);
+        } else {
+          response = await this.handleDefaultCommand(validatedInput);
+        }
 
-      return await this.handleDefaultCommand(validatedInput);
+        return {
+          text: response.text || "I'm here to help with your NCLEX preparation.",
+          confidence: response.confidence || 0.8,
+          suggestions: response.suggestions || [],
+          emotionalSupport: response.emotionalSupport || false,
+          nextTopic: response.nextTopic,
+          learningTips: response.learningTips || []
+        };
+      } catch (error) {
+        console.error('Error processing voice command:', error);
+        return {
+          text: "I apologize, but I'm having trouble processing your request. Could you please try again?",
+          confidence: 0.5,
+          suggestions: ['Try rephrasing your question', 'Ask about a specific topic', 'Request a practice question'],
+          emotionalSupport: true
+        };
+      }
     } catch (error) {
-      console.error('Error processing voice command:', error);
-      throw error;
+      console.error('Error validating input:', error);
+      throw new Error('Invalid input format');
     }
   }
 
