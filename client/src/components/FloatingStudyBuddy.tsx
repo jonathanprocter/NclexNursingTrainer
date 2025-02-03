@@ -88,6 +88,11 @@ export function FloatingStudyBuddy() {
       setIsListening(false);
       setTranscriptBuffer("");
 
+      if (event.error === 'aborted') {
+        // Clean abort - don't show error toast
+        return;
+      }
+
       const errorMessages: Record<string, string> = {
         'not-allowed': "Microphone access denied. Please check your browser permissions.",
         'network': "Network error occurred. Please check your internet connection.",
@@ -96,8 +101,8 @@ export function FloatingStudyBuddy() {
       };
 
       toast({
-        title: "Error",
-        description: errorMessages[event.error] || `Speech recognition error: ${event.message || event.error}`,
+        title: "Speech Recognition Error",
+        description: errorMessages[event.error] || `Unable to process speech: ${event.message || event.error}`,
         variant: "destructive",
       });
     };
