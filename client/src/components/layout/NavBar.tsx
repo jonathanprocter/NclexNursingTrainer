@@ -265,7 +265,7 @@ function MobileMenu() {
             Access all NCLEX preparation resources
           </SheetDescription>
         </SheetHeader>
-        <nav className="flex flex-col gap-4 mt-6 overflow-y-auto max-h-[calc(100vh-200px)]">
+        <nav className="flex flex-col gap-2 mt-4 overflow-y-auto max-h-[calc(100vh-120px)] px-1">
           {[
             { title: "Dashboards", items: dashboardItems },
             { title: "Learning Modules", items: learningModules },
@@ -358,9 +358,9 @@ export default function NavBar() {
   const [location] = useLocation();
 
   return (
-    <nav className="border-b relative w-full">
-      <div className="px-4 sm:px-6 lg:px-8 mx-auto">
-        <div className="flex h-16 items-center justify-between">
+    <nav className="border-b relative w-full sticky top-0 z-50 bg-background">
+      <div className="px-2 sm:px-6 lg:px-8 mx-auto">
+        <div className="flex h-14 sm:h-16 items-center justify-between">
           <Link href="/">
             <h1 className="text-xl font-bold text-primary cursor-pointer">NCLEX Prep</h1>
           </Link>

@@ -131,9 +131,9 @@ export default function AICompanion() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold mb-2">AI Voice Study Companion</h1>
+    <div className="space-y-4 p-2 sm:p-4">
+      <div className="text-center mb-4 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">AI Voice Study Companion</h1>
         <p className="text-muted-foreground max-w-2xl mx-auto">
           Your interactive voice-based learning assistant
         </p>
