@@ -21,6 +21,21 @@ interface Question {
   difficulty?: string;
 }
 
+const AIFeedbackButton = ({ topic, buttonText, variant }: { topic: string; buttonText: string; variant: "secondary" | "outline" }) => {
+  // Placeholder for AI feedback functionality.  Replace with actual API call.
+  const handleAIFeedback = () => {
+    console.log(`Fetching AI feedback for topic: ${topic}`);
+    // Add your AI feedback API call here
+  };
+
+  return (
+    <Button variant={variant} onClick={handleAIFeedback}>
+      {buttonText}
+    </Button>
+  );
+};
+
+
 export default function Quizzes() {
   const { toast } = useToast();
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -74,17 +89,17 @@ export default function Quizzes() {
             userPerformance 
           }),
         });
-        
+
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.message || 'Failed to generate questions');
         }
-        
+
         const data = await response.json();
         if (!Array.isArray(data) || data.length === 0) {
           throw new Error('No questions received');
         }
-        
+
         return data;
       } catch (error) {
         console.error('Question generation error:', error);
@@ -144,10 +159,10 @@ export default function Quizzes() {
 
     const currentQ = questions[currentQuestion];
     const correct = selectedAnswer === currentQ.correctAnswer;
-    
+
     // Update user answers
     setUserAnswers(prev => ({...prev, [questionId]: selectedAnswer}));
-    
+
     // Update score
     setScore(prev => ({
       ...prev,
@@ -190,7 +205,7 @@ export default function Quizzes() {
       setIsLoading(true);
       setSelectedTopic(topic);
       await generateQuestionsMutation.mutateAsync(topic);
-      
+
       // Switch to questions tab after questions are loaded
       const questionsTab = document.querySelector('[value="questions"]') as HTMLElement;
       if (questionsTab) questionsTab.click();
@@ -309,6 +324,7 @@ Would you like me to elaborate on any of these points?`);
                         <HelpCircle className="h-4 w-4" />
                         AI Help
                       </Button>
+                      <AIFeedbackButton topic="question_analysis" buttonText="Get AI Feedback" variant="outline"/>
                     </div>
                   </div>
 
@@ -487,8 +503,9 @@ Would you like me to elaborate on any of these points?`);
 
       <Dialog open={showAIHelp} onOpenChange={setShowAIHelp}>
         <DialogContent>
-          <DialogHeader>
+          <DialogHeader className="flex flex-row items-center justify-between">
             <DialogTitle>AI Learning Assistant</DialogTitle>
+            <AIFeedbackButton topic="ai_help_analysis" buttonText="AI Analysis" variant="secondary" />
           </DialogHeader>
           <div className="space-y-4">
             <Alert>

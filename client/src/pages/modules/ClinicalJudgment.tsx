@@ -18,6 +18,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { AIHelpButton } from "@/components/ui/ai-help-button"; // Added import
 import { Badge } from "@/components/ui/badge"; // Added import for Badge
+import { AIFeedbackButton } from "@/components/ui/ai-feedback-button"; //Import AIFeedbackButton
 
 
 export default function ClinicalJudgment() {
@@ -653,9 +654,9 @@ const evaluationCriteria = {
             <CardContent>
               <div className="space-y-6">
                 <div className="bg-muted/50 p-6 rounded-lg">
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-lg font-semibold">Critical Thinking Framework</h3>
-                    <AIButtons topic="critical_thinking" />
+                  <div className="flex justify-between items-start mb-4 gap-2">
+                    <AIFeedbackButton topic="clinical_judgment" buttonText="Get AI Analysis" />
+                    <AIFeedbackButton topic="clinical_reasoning" buttonText="Practice with AI" variant="secondary" />
                   </div>
                   <ul className="space-y-3 text-sm text-muted-foreground">
                     <li>• Information gathering and analysis</li>
@@ -669,6 +670,7 @@ const evaluationCriteria = {
                   <div className="flex justify-between items-start mb-4">
                     <h3 className="text-lg font-semibold">Priority Setting</h3>
                     <AIButtons topic="priority_setting" />
+                    <AIFeedbackButton topic="priority_setting" buttonText="Get AI Feedback" />
                   </div>
                   <ul className="space-y-3 text-sm text-muted-foreground">
                     <li>• ABC (Airway, Breathing, Circulation) approach</li>
@@ -682,6 +684,7 @@ const evaluationCriteria = {
                   <div className="flex justify-between items-start mb-4">
                     <h3 className="text-lg font-semibold">Risk Assessment</h3>
                     <AIButtons topic="risk_assessment" />
+                    <AIFeedbackButton topic="risk_assessment" buttonText="Get AI Feedback" />
                   </div>
                   <ul className="space-y-3 text-sm text-muted-foreground">
                     <li>• Identifying potential complications</li>
@@ -695,6 +698,7 @@ const evaluationCriteria = {
                   <div className="flex justify-between items-start mb-4">
                     <h3 className="text-lg font-semibold">Clinical Reasoning</h3>
                     <AIButtons topic="clinical_reasoning" />
+                    <AIFeedbackButton topic="clinical_reasoning" buttonText="Get AI Feedback" />
                   </div>
                   <ul className="space-y-3 text-sm text-muted-foreground">
                     <li>• Hypothesis generation</li>

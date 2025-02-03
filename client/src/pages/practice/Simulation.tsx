@@ -47,6 +47,15 @@ type UserAction = {
   response?: string;
 };
 
+const AIFeedbackButton = ({ topic, buttonText }: { topic: string; buttonText: string }) => {
+  const { toast } = useToast();
+  const handleClick = () => {
+    toast({ title: `AI Feedback for ${topic}`, description: "This is a placeholder for AI feedback." });
+  };
+  return <Button onClick={handleClick}>{buttonText}</Button>;
+};
+
+
 export default function Simulation() {
   const { toast } = useToast();
   const [activeScenario, setActiveScenario] = useState<SimulationScenario | null>(null);
@@ -215,22 +224,19 @@ export default function Simulation() {
         <TabsContent value="scenarios">
           <div className="grid gap-6">
             <Card>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-lg mb-2">Critical Care Simulation</CardTitle>
-                    <div className="flex gap-2">
-                      <Badge variant="secondary">Advanced</Badge>
-                      <Badge variant="outline">60 minutes</Badge>
-                    </div>
-                  </div>
-                  <Button 
-                    onClick={() => handleStartSimulation('advanced')}
-                    disabled={isSimulationActive || startSimulationMutation.isPending}
-                  >
-                    {startSimulationMutation.isPending ? "Generating..." : "Start Simulation"}
-                  </Button>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-lg mb-2">Critical Care Simulation</CardTitle>
+                <div className="flex gap-2">
+                  <Badge variant="secondary">Advanced</Badge>
+                  <Badge variant="outline">60 minutes</Badge>
                 </div>
+                <Button 
+                  onClick={() => handleStartSimulation('advanced')}
+                  disabled={isSimulationActive || startSimulationMutation.isPending}
+                >
+                  {startSimulationMutation.isPending ? "Generating..." : "Start Simulation"}
+                </Button>
+                <AIFeedbackButton topic="simulation_feedback" buttonText="AI Guidance" />
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground mb-4">
@@ -252,6 +258,7 @@ export default function Simulation() {
           <Card>
             <CardHeader>
               <CardTitle>Virtual Skills Lab</CardTitle>
+              <AIFeedbackButton topic="skills_lab_feedback" buttonText="AI Guidance" />
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-6">
@@ -283,6 +290,7 @@ export default function Simulation() {
                         >
                           {skill.icon}
                           {skill.name}
+                          <AIFeedbackButton topic={`${skill.name}_feedback`} buttonText="AI Help" />
                         </Button>
                       ))}
                     </div>
@@ -312,6 +320,7 @@ export default function Simulation() {
                         >
                           {skill.icon}
                           {skill.name}
+                          <AIFeedbackButton topic={`${skill.name}_feedback`} buttonText="AI Help" />
                         </Button>
                       ))}
                     </div>
@@ -326,6 +335,7 @@ export default function Simulation() {
           <Card>
             <CardHeader>
               <CardTitle>Simulation Progress</CardTitle>
+              <AIFeedbackButton topic="progress_feedback" buttonText="AI Guidance" />
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -392,6 +402,7 @@ export default function Simulation() {
                       <Stethoscope className="h-5 w-5" />
                       Critical Care Assessment
                     </CardTitle>
+                    <AIFeedbackButton topic="initial_assessment_feedback" buttonText="AI Guidance" />
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-6">
@@ -493,6 +504,7 @@ export default function Simulation() {
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">Available Actions</CardTitle>
+                  <AIFeedbackButton topic="actions_feedback" buttonText="AI Guidance" />
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-2">
