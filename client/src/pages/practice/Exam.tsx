@@ -19,8 +19,15 @@ interface Question {
 // Mock quiz generation service (replace with actual implementation)
 const quizGeneratorService = {
   generateQuiz: async (type: 'cat' | 'standard', performance: number, previousQuestions: string[], previousMistakes: string[]) => {
-    // Replace this with your actual quiz generation logic
-    // This example simply returns a fixed set of questions for demonstration
+    const domains = [
+      "Basic Care and Comfort",
+      "Pharmacological and Parenteral Therapies",
+      "Reduction of Risk Potential",
+      "Physiological Adaptation",
+      "Psychosocial Integrity",
+      "Safe and Effective Care Environment"
+    ];
+
     const questions: Question[] = [
       {
         id: '1',

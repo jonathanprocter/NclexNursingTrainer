@@ -50,7 +50,15 @@ export default function MockExams() {
                 <Alert>
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
-                    AI-powered CAT exam aligned with 2024 NCLEX domains. Questions are dynamically generated and adapt to your performance level.
+                    AI-powered CAT exam aligned with 2024 NCLEX domains:
+                    • Basic Care and Comfort
+                    • Pharmacological and Parenteral Therapies
+                    • Reduction of Risk Potential
+                    • Physiological Adaptation
+                    • Psychosocial Integrity
+                    • Safe and Effective Care Environment
+                    
+                    Questions adapt to your performance level across all domains.
                   </AlertDescription>
                 </Alert>
 

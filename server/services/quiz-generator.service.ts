@@ -56,7 +56,16 @@ export class QuizGeneratorService {
     this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   }
 
-  async generateQuestions(
+  const NCLEX_2024_DOMAINS = [
+  "Basic Care and Comfort",
+  "Pharmacological and Parenteral Therapies", 
+  "Reduction of Risk Potential",
+  "Physiological Adaptation",
+  "Psychosocial Integrity",
+  "Safe and Effective Care Environment"
+];
+
+async generateQuestions(
     examType: string,
     currentPerformance: number,
     previousQuestions: string[] = [],
