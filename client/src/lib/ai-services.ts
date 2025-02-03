@@ -75,6 +75,18 @@ export interface SimulationFeedback {
   areas_for_improvement: string[];
   recommendations: string[];
   clinical_reasoning_score: number;
+  critical_thinking_metrics: {
+    cue_recognition: number;
+    hypothesis_generation: number;
+    clinical_decision_making: number;
+    outcome_evaluation: number;
+  };
+  next_focus_areas: string[];
+  personalized_resources: {
+    topic: string;
+    type: 'video' | 'case_study' | 'practice_questions';
+    priority: 'high' | 'medium' | 'low';
+  }[];
 }
 
 export interface SimulationScenario {

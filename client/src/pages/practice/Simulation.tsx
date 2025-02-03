@@ -550,7 +550,7 @@ export default function Simulation() {
           </DialogHeader>
           <ScrollArea className="h-[60vh] mt-4">
             <div className="space-y-4 p-4">
-              {getFeedbackMutation.data && getFeedbackMutation.data.strengths && getFeedbackMutation.data.areas_for_improvement && (
+              {getFeedbackMutation.data && (
                 <>
                   <div>
                     <h3 className="font-medium mb-2">Strengths</h3>
@@ -576,6 +576,40 @@ export default function Simulation() {
                       ))}
                     </ul>
                   </div>
+                  {getFeedbackMutation.data.critical_thinking_metrics && (
+                    <div>
+                      <h3 className="font-medium mb-2">Clinical Judgment Metrics</h3>
+                      <div className="grid gap-2">
+                        {Object.entries(getFeedbackMutation.data.critical_thinking_metrics).map(([key, value]) => (
+                          <div key={key} className="bg-muted p-2 rounded">
+                            <div className="flex justify-between mb-1">
+                              <span className="text-sm capitalize">{key.replace(/_/g, ' ')}</span>
+                              <span className="text-sm font-medium">{value}%</span>
+                            </div>
+                            <Progress value={value} className="h-2" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {getFeedbackMutation.data.personalized_resources && (
+                    <div>
+                      <h3 className="font-medium mb-2">Recommended Resources</h3>
+                      <div className="space-y-2">
+                        {getFeedbackMutation.data.personalized_resources.map((resource, index) => (
+                          <div key={index} className="flex items-center justify-between bg-muted p-2 rounded">
+                            <div>
+                              <p className="font-medium">{resource.topic}</p>
+                              <p className="text-sm text-muted-foreground capitalize">{resource.type.replace(/_/g, ' ')}</p>
+                            </div>
+                            <Badge variant={resource.priority === 'high' ? 'destructive' : 'secondary'}>
+                              {resource.priority}
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
             </div>
