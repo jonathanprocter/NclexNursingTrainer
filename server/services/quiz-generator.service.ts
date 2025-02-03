@@ -4,21 +4,23 @@ import { z } from "zod";
 export class QuizGeneratorService {
   private readonly openai: OpenAI;
   private readonly nclexDomains = [
-    'Clinical Judgment & Decision Making',
-    'Safety & Infection Control',
-    'Physiological Adaptation',
-    'Health Promotion & Disease Prevention',
-    'Psychosocial Integrity',
-    'Basic Care & Comfort',
-    'Pharmacological & Parenteral Therapies',
-    'Risk Reduction',
-    'Management of Care',
-    'Emergency Care & Crisis Management',
-    'Cultural Competence & Ethics',
-    'Evidence-Based Practice',
-    'Quality Improvement',
-    'Leadership & Delegation',
-    'Technology in Healthcare'
+    'Management of Care (20%)',
+    'Safety and Infection Control (15%)',
+    'Health Promotion and Maintenance (15%)',
+    'Psychosocial Integrity (15%)',
+    'Basic Care and Comfort (12%)',
+    'Pharmacological and Parenteral Therapies (12%)',
+    'Reduction of Risk Potential (6%)',
+    'Physiological Adaptation (5%)'
+  ];
+
+  private readonly clinicalJudgmentLayers = [
+    'Recognize Cues (20%)',
+    'Analyze Cues (20%)',
+    'Prioritize Hypotheses (20%)',
+    'Generate Solutions (20%)',
+    'Take Actions (10%)',
+    'Evaluate Outcomes (10%)'
   ];
 
   private readonly questionTypes = [
@@ -60,6 +62,39 @@ export class QuizGeneratorService {
     previousQuestions: string[] = [],
     previousMistakes: string[] = []
   ): Promise<Array<{
+    id: string;
+    question: string;
+    options: string[];
+    correctAnswer: string;
+    explanation: string;
+    domain: string;
+    clinicalJudgmentLayer: string;
+    difficulty: number;
+    itemType: string;
+    nextGenFormat: boolean;
+  }>> {
+    try {
+      const domainDistribution = this.calculateDomainDistribution(currentPerformance);
+      const completion = await this.openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [
+          {
+            role: "system",
+            content: `Generate Next Gen NCLEX 2024 questions following:
+            - Clinical judgment measurement model
+            - ${this.clinicalJudgmentLayers.join('\n- ')}
+            - Domain distribution: ${JSON.stringify(domainDistribution)}
+            - Question types: multiple-choice, multiple-response, hot-spot, drag-and-drop, ordered-response
+            - Include clinical scenarios, lab values, and medication calculations
+            - Ensure coverage of all 2024 NCLEX domains`
+          },
+          {
+            role: "user",
+            content: `Generate a unique ${examType} question avoiding IDs: ${previousQuestions.join(', ')}`
+          }
+        ],
+        temperature: 0.8
+      });
     id: string;
     question: string;
     options: string[];

@@ -50,7 +50,7 @@ export default function MockExams() {
                 <Alert>
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
-                    CAT adapts to your performance level - questions become harder or easier based on your answers.
+                    AI-powered CAT exam aligned with 2024 NCLEX domains. Questions are dynamically generated and adapt to your performance level.
                   </AlertDescription>
                 </Alert>
 
