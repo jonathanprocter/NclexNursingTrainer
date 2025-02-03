@@ -7,12 +7,12 @@ interface AnalyticsProps {
 
 export default function Analytics({ data }: AnalyticsProps) {
   const mockPerformanceData = [
-    { module: "Pharmacology", score: 85 },
-    { module: "Pathophysiology", score: 75 },
-    { module: "Assessment", score: 90 },
-    { module: "Fundamentals", score: 82 },
-    { module: "Psychiatric", score: 88 },
-    { module: "Med-Surg", score: 78 },
+    { module: "Recognize Cues", score: 85 },
+    { module: "Analyze Cues", score: 78 },
+    { module: "Prioritize Hypotheses", score: 82 },
+    { module: "Generate Solutions", score: 75 },
+    { module: "Take Actions", score: 88 },
+    { module: "Evaluate Outcomes", score: 80 },
   ];
 
   return (
