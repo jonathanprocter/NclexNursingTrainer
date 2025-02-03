@@ -11,6 +11,7 @@ export function FloatingStudyBuddy() {
   const [isListening, setIsListening] = useState(false);
   const [transcriptBuffer, setTranscriptBuffer] = useState("");
   const [isBrowserSupported, setIsBrowserSupported] = useState(false);
+  const [microphoneEnabled, setMicrophoneEnabled] = useState(false); // Added state for microphone
   const { toast } = useToast();
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const chatComponentRef = useRef<StudyBuddyChatHandle>(null);
@@ -39,7 +40,7 @@ export function FloatingStudyBuddy() {
       console.error('Speech recognition not supported');
       return;
     }
-    
+
     const recognition = new SpeechRecognition();
 
     recognition.continuous = true;
@@ -58,6 +59,7 @@ export function FloatingStudyBuddy() {
     recognition.onend = () => {
       setIsListening(false);
       setTranscriptBuffer("");
+      setMicrophoneEnabled(false); // added to ensure microphone is disabled after recognition ends
     };
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
@@ -87,6 +89,7 @@ export function FloatingStudyBuddy() {
       console.error('Speech recognition error:', event.error);
       setIsListening(false);
       setTranscriptBuffer("");
+      setMicrophoneEnabled(false); // added to ensure microphone is disabled after error
 
       if (event.error === 'aborted') {
         // Clean abort - don't show error toast
@@ -127,26 +130,56 @@ export function FloatingStudyBuddy() {
     }
 
     try {
-      if (!isListening) {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        stream.getTracks().forEach(track => track.stop());
+      if (!microphoneEnabled) {
+        // Request microphone access and keep the stream reference
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          }
+        });
 
-        if (recognitionRef.current) {
-          recognitionRef.current.start();
-        }
+        // Create audio context for monitoring audio levels
+        const audioContext = new AudioContext();
+        const source = audioContext.createMediaStreamSource(stream);
+        const analyzer = audioContext.createAnalyser();
+        source.connect(analyzer);
+
+        recognitionRef.current!.continuous = true;
+        recognitionRef.current!.interimResults = true;
+        recognitionRef.current!.start();
+        setMicrophoneEnabled(true);
+
+        // Clean up on stop
+        recognitionRef.current!.onend = () => {
+          stream.getTracks().forEach(track => track.stop());
+          audioContext.close();
+          setMicrophoneEnabled(false);
+        };
+
+        recognitionRef.current!.onerror = (event) => {
+          console.error("Speech recognition error:", event.error);
+          stream.getTracks().forEach(track => track.stop());
+          audioContext.close();
+          setMicrophoneEnabled(false);
+          toast({
+            title: "Voice Recognition Error",
+            description: `Error: ${event.error}. Please try again.`,
+            variant: "destructive",
+          });
+        };
       } else {
-        if (recognitionRef.current) {
-          recognitionRef.current.stop();
-        }
+        recognitionRef.current!.stop();
       }
     } catch (error) {
-      console.error("Microphone access error:", error);
+      console.error("Microphone access denied:", error);
+      setMicrophoneEnabled(false);
       toast({
         title: "Microphone Access Required",
         description: "Please allow microphone access to use voice features.",
         variant: "destructive",
       });
-      setIsListening(false);
     }
   };
 
