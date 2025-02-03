@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -53,6 +52,119 @@ export default function SafetyInfectionControl() {
                   </Card>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="infection">
+          <Card>
+            <CardHeader>
+              <CardTitle>Infection Prevention</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div className="bg-muted/50 p-4 rounded-lg">
+                  <h3 className="font-semibold mb-3">Standard Precautions</h3>
+                  <ul className="space-y-2 text-muted-foreground">
+                    <li>• Hand Hygiene
+                      <ul className="ml-4 mt-1">
+                        <li>- Before and after patient contact</li>
+                        <li>- Before aseptic procedures</li>
+                        <li>- After body fluid exposure</li>
+                        <li>- After touching patient surroundings</li>
+                      </ul>
+                    </li>
+                    <li>• Personal Protective Equipment (PPE)
+                      <ul className="ml-4 mt-1">
+                        <li>- Proper sequence of donning/doffing</li>
+                        <li>- Glove usage guidelines</li>
+                        <li>- Mask and respirator indications</li>
+                        <li>- Eye protection requirements</li>
+                      </ul>
+                    </li>
+                    <li>• Sharps Safety
+                      <ul className="ml-4 mt-1">
+                        <li>- Proper disposal techniques</li>
+                        <li>- Prevention of needlestick injuries</li>
+                        <li>- Safety device activation</li>
+                      </ul>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="bg-muted/50 p-4 rounded-lg">
+                  <h3 className="font-semibold mb-3">Transmission-Based Precautions</h3>
+                  <ul className="space-y-2 text-muted-foreground">
+                    <li>• Contact Precautions
+                      <ul className="ml-4 mt-1">
+                        <li>- MRSA protocols</li>
+                        <li>- C. difficile management</li>
+                        <li>- Environmental cleaning</li>
+                      </ul>
+                    </li>
+                    <li>• Droplet Precautions
+                      <ul className="ml-4 mt-1">
+                        <li>- Influenza guidelines</li>
+                        <li>- Mask requirements</li>
+                        <li>- Patient placement</li>
+                      </ul>
+                    </li>
+                    <li>• Airborne Precautions
+                      <ul className="ml-4 mt-1">
+                        <li>- TB isolation requirements</li>
+                        <li>- Negative pressure rooms</li>
+                        <li>- Respirator fit testing</li>
+                      </ul>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="bg-muted/50 p-4 rounded-lg">
+                  <h3 className="font-semibold mb-3">Healthcare-Associated Infections</h3>
+                  <ul className="space-y-2 text-muted-foreground">
+                    <li>• Central Line-Associated Bloodstream Infections
+                      <ul className="ml-4 mt-1">
+                        <li>- Bundle compliance</li>
+                        <li>- Sterile technique</li>
+                        <li>- Site care protocols</li>
+                      </ul>
+                    </li>
+                    <li>• Catheter-Associated Urinary Tract Infections
+                      <ul className="ml-4 mt-1">
+                        <li>- Insertion guidelines</li>
+                        <li>- Maintenance care</li>
+                        <li>- Early removal protocols</li>
+                      </ul>
+                    </li>
+                    <li>• Surgical Site Infections
+                      <ul className="ml-4 mt-1">
+                        <li>- Pre-operative preparation</li>
+                        <li>- Post-operative care</li>
+                        <li>- Wound management</li>
+                      </ul>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="safety">
+          <Card>
+            <CardHeader>
+              <CardTitle>Safety Protocols</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {/* Add Safety Protocols content here */}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="emergency">
+          <Card>
+            <CardHeader>
+              <CardTitle>Emergency Response</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {/* Add Emergency Response content here */}
             </CardContent>
           </Card>
         </TabsContent>
