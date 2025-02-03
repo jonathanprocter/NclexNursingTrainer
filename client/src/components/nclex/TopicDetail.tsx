@@ -49,11 +49,12 @@ const topicContent = {
 };
 
 export default function TopicDetail() {
-  const { id } = useParams();
+  const params = useParams();
+  const id = params.id || '';
   const [aiContent, setAiContent] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const topic = topicContent[id as keyof typeof topicContent];
+  const topic = id ? topicContent[id as keyof typeof topicContent] : null;
 
   const handleAskAI = async () => {
     setIsLoading(true);

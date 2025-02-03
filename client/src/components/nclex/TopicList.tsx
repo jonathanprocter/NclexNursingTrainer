@@ -174,8 +174,13 @@ export default function TopicList() {
                   </Button>
                 </div>
 
-                <Link to={`/study-guide/topic/${topic.id}`} className="w-full">
-                  <Button variant="default" size="sm" className="w-full">
+                <Link href={`/study-guide/topic/${topic.id}`} className="w-full" onClick={(e) => e.preventDefault()}>
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    className="w-full"
+                    onClick={() => window.location.href = `/study-guide/topic/${topic.id}`}
+                  >
                     <BookOpen className="h-4 w-4 mr-2" />
                     Study Topic
                   </Button>
