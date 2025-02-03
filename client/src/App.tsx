@@ -91,7 +91,7 @@ function Router() {
           {/* Study Tools Routes */}
           <Route path="/tools/ai-companion" component={AICompanion} />
           <Route path="/tools/spaced-repetition" component={SpacedRepetition} />
-          <Route path="/study-guide/topics/:topicId" component={TopicDetail} />
+          <Route path="/study-guide/topics/:id" component={TopicDetail} />
 
           {/* Fallback to 404 */}
           <Route component={NotFound} />

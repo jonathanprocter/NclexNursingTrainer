@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -124,7 +123,7 @@ export default function TopicList() {
                 </div>
                 <Progress value={topic.progress} className="w-20 h-2" />
               </div>
-              
+
               <Accordion type="single" collapsible>
                 {topic.content.map((section, index) => (
                   <AccordionItem key={index} value={`section-${index}`}>
@@ -147,7 +146,7 @@ export default function TopicList() {
                   <span>Strength: {topic.strength}</span>
                   <span>Priority: {topic.priority}</span>
                 </div>
-                
+
                 <div className="flex gap-2">
                   <Button 
                     variant="outline" 
@@ -174,7 +173,7 @@ export default function TopicList() {
                     Generate More
                   </Button>
                 </div>
-                
+
                 <Link href={`/study-guide/topics/${topic.id}`} className="w-full">
                   <Button variant="default" size="sm" className="w-full">
                     <BookOpen className="h-4 w-4 mr-2" />
