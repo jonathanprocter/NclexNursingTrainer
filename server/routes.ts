@@ -547,7 +547,7 @@ export function registerRoutes(app: Express): Server {
         content: response,
         type: 'practice',
         topic: req.body.section
-      };);
+      };
 
       if (!response) {
         throw new Error("Failed to generate questions");

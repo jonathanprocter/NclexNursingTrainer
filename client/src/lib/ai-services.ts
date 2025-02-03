@@ -25,12 +25,15 @@ export async function getPharmacologyHelp(
     }
 
     const data = await response.json();
-    if (!data || !data.content) {
-      throw new Error('Invalid response format from AI service');
+    if (!data) {
+      throw new Error('No response received from AI service');
     }
-
+    
+    // Provide default content if none exists
+    const content = data.content || 'Could not generate content. Please try again.';
+    
     return { 
-      content: data.content,
+      content,
       type: data.type || 'practice',
       topic: data.topic || section
     };
