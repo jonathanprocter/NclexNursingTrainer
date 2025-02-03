@@ -70,7 +70,14 @@ export default function Home() {
           <div className="text-left max-w-2xl mx-auto bg-secondary/10 p-4 rounded-lg">
             <h2 className="font-semibold mb-2">2024 NCLEX Domains - Personalized Focus:</h2>
             <div className="space-y-4">
-              {nclexDomains
+              {[
+                { domain: "Basic Care and Comfort", metrics: { accuracy: 82, confidence_level: 'high' } },
+                { domain: "Pharmacological and Parenteral Therapies", metrics: { accuracy: 78, confidence_level: 'medium' } },
+                { domain: "Reduction of Risk Potential", metrics: { accuracy: 85, confidence_level: 'high' } },
+                { domain: "Physiological Adaptation", metrics: { accuracy: 76, confidence_level: 'medium' } },
+                { domain: "Psychosocial Integrity", metrics: { accuracy: 80, confidence_level: 'high' } },
+                { domain: "Safe and Effective Care Environment", metrics: { accuracy: 88, confidence_level: 'high' } }
+              ]
                 .sort((a, b) => (b.metrics.accuracy - a.metrics.accuracy))
                 .slice(0, 3)
                 .map((domain) => (
