@@ -577,9 +577,10 @@ export default function Simulation() {
                     </ul>
                   </div>
                   {getFeedbackMutation.data.critical_thinking_metrics && (
-                    <div>
-                      <h3 className="font-medium mb-2">Clinical Judgment Metrics</h3>
-                      <div className="grid gap-2">
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="font-medium mb-2">Clinical Judgment Process</h3>
+                        <div className="grid gap-2">
                         {Object.entries(getFeedbackMutation.data.critical_thinking_metrics).map(([key, value]) => (
                           <div key={key} className="bg-muted p-2 rounded">
                             <div className="flex justify-between mb-1">
