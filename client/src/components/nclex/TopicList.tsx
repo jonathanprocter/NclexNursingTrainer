@@ -1,9 +1,8 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Brain, Activity, Shield, Heart, Users, Hospital } from "lucide-react";
+import { ArrowRight, Brain, Activity, Shield, Heart, Users, Hospital, MessagesSquare, Plus } from "lucide-react";
 import Link from "next/link";
 
 export default function TopicList() {
@@ -66,6 +65,16 @@ export default function TopicList() {
     }
   ];
 
+  const handleAIHelp = (topicId) => {
+    // Implement AI help logic here
+    console.log("AI help requested for topic:", topicId);
+  };
+
+  const handleGenerateContent = (topicId) => {
+    // Implement content generation logic here
+    console.log("Content generation requested for topic:", topicId);
+  };
+
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {topics.map((topic) => (
@@ -84,7 +93,23 @@ export default function TopicList() {
                     <span>Priority: {topic.priority}</span>
                   </div>
                 </div>
-                <ArrowRight className="h-5 w-5 text-muted-foreground" />
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={(e) => {
+                    e.preventDefault();
+                    handleAIHelp(topic.id);
+                  }}>
+                    <MessagesSquare className="h-4 w-4 mr-2" />
+                    Ask AI
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={(e) => {
+                    e.preventDefault();
+                    handleGenerateContent(topic.id);
+                  }}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Generate More
+                  </Button>
+                  <ArrowRight className="h-5 w-5 text-muted-foreground ml-2" />
+                </div>
               </div>
             </CardContent>
           </Card>
