@@ -68,6 +68,18 @@ const dashboardItems: NavItem[] = [
 
 const learningModules: NavItem[] = [
   {
+    title: "Management of Care",
+    href: "/modules/management-of-care",
+    icon: Users,
+    description: "Master care coordination and delegation skills",
+  },
+  {
+    title: "Safety & Infection Control",
+    href: "/modules/safety-infection-control",
+    icon: Shield,
+    description: "Learn safety protocols and infection prevention",
+  },
+  {
     title: "Pharmacology & Parenteral",
     href: "/modules/pharmacology",
     icon: Beaker,
