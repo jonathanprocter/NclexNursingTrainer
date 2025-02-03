@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Brain, Activity, Shield, Heart, Users, Hospital, MessagesSquare, Plus, BookOpen } from "lucide-react";
+import { ArrowRight, Brain, Activity, Shield, MessagesSquare, Plus, BookOpen } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Link } from "wouter";
 
@@ -32,74 +32,65 @@ export default function TopicList() {
             "Care planning and interventions",
             "Evaluation of outcomes"
           ]
-        },
-        {
-          subtitle: "Decision Making Process",
-          points: [
-            "Prioritization of care",
-            "Resource management",
-            "Risk-benefit analysis",
-            "Evidence-based practice integration"
-          ]
         }
       ]
     },
     {
-      id: "patient-care",
-      title: "Patient Care Management",
-      icon: Activity,
-      progress: metrics?.patientCare?.progress || 0,
-      strength: metrics?.patientCare?.strength || "Good",
-      priority: metrics?.patientCare?.priority || "Medium",
-      content: [
-        {
-          subtitle: "Care Coordination",
-          points: [
-            "Interdisciplinary collaboration",
-            "Care transitions management",
-            "Patient advocacy",
-            "Resource utilization"
-          ]
-        },
-        {
-          subtitle: "Treatment Planning",
-          points: [
-            "Individualized care approaches",
-            "Cultural competency",
-            "Family-centered care",
-            "Documentation requirements"
-          ]
-        }
-      ]
-    },
-    {
-      id: "safety",
-      title: "Safety & Infection Control",
-      icon: Shield,
-      progress: metrics?.safety?.progress || 0,
-      strength: metrics?.safety?.strength || "Strong",
-      priority: metrics?.safety?.priority || "Low",
-      content: [
-        {
-          subtitle: "Infection Prevention",
-          points: [
-            "Standard precautions",
-            "Transmission-based precautions",
-            "Sterile technique",
-            "Healthcare-associated infections"
-          ]
-        },
-        {
-          subtitle: "Patient Safety",
-          points: [
-            "Fall prevention",
-            "Medication safety",
-            "Environmental safety",
-            "Emergency preparedness"
-          ]
-        }
-      ]
-    }
+        id: "patient-care",
+        title: "Patient Care Management",
+        icon: Activity,
+        progress: metrics?.patientCare?.progress || 0,
+        strength: metrics?.patientCare?.strength || "Good",
+        priority: metrics?.patientCare?.priority || "Medium",
+        content: [
+          {
+            subtitle: "Care Coordination",
+            points: [
+              "Interdisciplinary collaboration",
+              "Care transitions management",
+              "Patient advocacy",
+              "Resource utilization"
+            ]
+          },
+          {
+            subtitle: "Treatment Planning",
+            points: [
+              "Individualized care approaches",
+              "Cultural competency",
+              "Family-centered care",
+              "Documentation requirements"
+            ]
+          }
+        ]
+      },
+      {
+        id: "safety",
+        title: "Safety & Infection Control",
+        icon: Shield,
+        progress: metrics?.safety?.progress || 0,
+        strength: metrics?.safety?.strength || "Strong",
+        priority: metrics?.safety?.priority || "Low",
+        content: [
+          {
+            subtitle: "Infection Prevention",
+            points: [
+              "Standard precautions",
+              "Transmission-based precautions",
+              "Sterile technique",
+              "Healthcare-associated infections"
+            ]
+          },
+          {
+            subtitle: "Patient Safety",
+            points: [
+              "Fall prevention",
+              "Medication safety",
+              "Environmental safety",
+              "Emergency preparedness"
+            ]
+          }
+        ]
+      }
   ];
 
   const handleAIHelp = (topicId: string) => {
@@ -146,16 +137,13 @@ export default function TopicList() {
                   <span>Strength: {topic.strength}</span>
                   <span>Priority: {topic.priority}</span>
                 </div>
-
+                
                 <div className="flex gap-2">
                   <Button 
                     variant="outline" 
                     size="sm" 
                     className="flex-1"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleAIHelp(topic.id);
-                    }}
+                    onClick={() => handleAIHelp(topic.id)}
                   >
                     <MessagesSquare className="h-4 w-4 mr-2" />
                     Ask AI
@@ -164,23 +152,15 @@ export default function TopicList() {
                     variant="outline" 
                     size="sm"
                     className="flex-1"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleGenerateContent(topic.id);
-                    }}
+                    onClick={() => handleGenerateContent(topic.id)}
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Generate More
                   </Button>
                 </div>
 
-                <Link href={`/study-guide/topic/${topic.id}`} className="w-full" onClick={(e) => e.preventDefault()}>
-                  <Button 
-                    variant="default" 
-                    size="sm" 
-                    className="w-full"
-                    onClick={() => window.location.href = `/study-guide/topic/${topic.id}`}
-                  >
+                <Link href={`/study-guide/topic/${topic.id}`}>
+                  <Button variant="default" size="sm" className="w-full">
                     <BookOpen className="h-4 w-4 mr-2" />
                     Study Topic
                   </Button>
