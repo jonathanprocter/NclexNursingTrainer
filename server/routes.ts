@@ -200,7 +200,7 @@ export function registerRoutes(app: Express): Server {
         throw new Error("No response generated");
       }
 
-      res.json({ content: response });
+      res.json(formattedResponse);
     } catch (error) {
       console.error("Error in AI help endpoint:", error);
       res.status(500).json({
@@ -538,7 +538,16 @@ export function registerRoutes(app: Express): Server {
       });
 
       const response = completion.choices[0]?.message?.content;
+      if (!response) {
+        throw new Error("Failed to generate content");
+      }
       console.log('Generated response from OpenAI');
+      
+      const formattedResponse = {
+        content: response,
+        type: 'practice',
+        topic: req.body.section
+      };);
 
       if (!response) {
         throw new Error("Failed to generate questions");
