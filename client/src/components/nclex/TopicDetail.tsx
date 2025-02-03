@@ -1,20 +1,26 @@
 
-import { useState } from "react";
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessagesSquare, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { MessagesSquare, Plus, Bot } from "lucide-react";
+import ReactMarkdown from 'react-markdown';
 
 interface TopicDetailProps {
   topicId: string;
   title: string;
+  content: {
+    subtitle: string;
+    points: string[];
+  }[];
 }
 
-export default function TopicDetail({ topicId, title }: TopicDetailProps) {
-  const [content, setContent] = useState<string>("");
+export default function TopicDetail({ topicId, title, content }: TopicDetailProps) {
+  const [aiContent, setAiContent] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const askAI = async () => {
+  const handleAIHelp = async () => {
     setIsLoading(true);
     try {
       const response = await fetch("/api/ai/topic-help", {
@@ -23,7 +29,7 @@ export default function TopicDetail({ topicId, title }: TopicDetailProps) {
         body: JSON.stringify({ topic: topicId })
       });
       const data = await response.json();
-      setContent(data.content);
+      setAiContent(data.content);
     } catch (error) {
       console.error("Error asking AI:", error);
     } finally {
@@ -31,16 +37,16 @@ export default function TopicDetail({ topicId, title }: TopicDetailProps) {
     }
   };
 
-  const generateMore = async () => {
+  const generateMoreContent = async () => {
     setIsLoading(true);
     try {
       const response = await fetch("/api/ai/generate-content", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic: topicId, existingContent: content })
+        body: JSON.stringify({ topic: topicId, existingContent: aiContent })
       });
       const data = await response.json();
-      setContent(prev => `${prev}\n\n${data.content}`);
+      setAiContent(prev => `${prev}\n\n${data.content}`);
     } catch (error) {
       console.error("Error generating content:", error);
     } finally {
@@ -49,44 +55,64 @@ export default function TopicDetail({ topicId, title }: TopicDetailProps) {
   };
 
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="content">
+        <Tabs defaultValue="content" className="space-y-4">
           <TabsList>
             <TabsTrigger value="content">Content</TabsTrigger>
-            <TabsTrigger value="practice">Practice</TabsTrigger>
-            <TabsTrigger value="resources">Resources</TabsTrigger>
+            <TabsTrigger value="ai-help">AI Help</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="content" className="space-y-4">
-            <div className="prose dark:prose-invert">
-              {content || "Click 'Ask AI' to start learning about this topic"}
-            </div>
-            
+            {content.map((section, idx) => (
+              <Card key={idx} className="w-full">
+                <CardHeader>
+                  <CardTitle className="text-lg">{section.subtitle}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="list-disc pl-6 space-y-2">
+                    {section.points.map((point, pointIdx) => (
+                      <li key={pointIdx} className="text-muted-foreground">{point}</li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            ))}
+          </TabsContent>
+
+          <TabsContent value="ai-help" className="space-y-4">
+            <ScrollArea className="h-[400px] w-full rounded-md border p-4">
+              <div className="prose prose-sm dark:prose-invert max-w-none">
+                {aiContent ? (
+                  <ReactMarkdown>{aiContent}</ReactMarkdown>
+                ) : (
+                  <p className="text-center text-muted-foreground">
+                    Click 'Ask AI' to get detailed explanations about this topic
+                  </p>
+                )}
+              </div>
+            </ScrollArea>
+
             <div className="flex gap-2">
-              <Button onClick={askAI} disabled={isLoading}>
+              <Button 
+                onClick={handleAIHelp} 
+                disabled={isLoading}
+                className="flex-1"
+              >
                 <MessagesSquare className="mr-2 h-4 w-4" />
                 Ask AI
               </Button>
-              <Button onClick={generateMore} disabled={isLoading || !content}>
+              <Button 
+                onClick={generateMoreContent} 
+                disabled={isLoading || !aiContent}
+                className="flex-1"
+              >
                 <Plus className="mr-2 h-4 w-4" />
                 Generate More
               </Button>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="practice">
-            <div className="text-center py-8">
-              Practice questions for this topic will appear here
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="resources">
-            <div className="text-center py-8">
-              Additional learning resources will appear here
             </div>
           </TabsContent>
         </Tabs>
