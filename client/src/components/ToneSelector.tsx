@@ -56,7 +56,7 @@ export function ToneSelector({ selectedTone, onToneChange }: ToneSelectorProps) 
           size="sm"
           role="combobox"
           aria-expanded={false}
-          className="gap-2 w-[180px] justify-start"
+          className="gap-2 w-full sm:w-[180px] justify-start" // Added w-full for mobile
           aria-label="Select chat tone"
         >
           <MessageSquare className="h-4 w-4" />
@@ -65,7 +65,7 @@ export function ToneSelector({ selectedTone, onToneChange }: ToneSelectorProps) 
           </span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[280px] p-2" align="start">
+      <PopoverContent className="w-full sm:w-[280px] p-2" align="start"> {/* Added w-full for mobile */}
         <div className="space-y-1">
           {toneOptions.map((tone) => (
             <button

@@ -159,9 +159,9 @@ export function FloatingStudyBuddy() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 300 }}
             transition={{ type: "spring", damping: 20 }}
-            className="mr-4"
+            className="mr-2 sm:mr-4 fixed inset-4 sm:inset-auto sm:relative"
           >
-            <div className="bg-card border rounded-lg shadow-lg w-[400px] h-[600px] flex flex-col">
+            <div className="bg-card border rounded-lg shadow-lg w-[calc(100vw-16px)] h-[calc(100vh-32px)] sm:w-[400px] sm:h-[600px] flex flex-col">
               <div className="p-4 border-b flex justify-between items-center">
                 <h2 className="font-semibold flex items-center gap-2">
                   <span className="text-xl" role="img" aria-label="bee">🐝</span>

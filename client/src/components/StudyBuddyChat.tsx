@@ -284,8 +284,8 @@ export const StudyBuddyChat = forwardRef<StudyBuddyChatHandle, StudyBuddyChatPro
           </div>
         </ScrollArea>
 
-        <form onSubmit={handleSubmit} className="p-4 border-t">
-          <div className="flex gap-2">
+        <form onSubmit={handleSubmit} className="p-2 sm:p-4 border-t">
+          <div className="flex gap-1 sm:gap-2">
             <Input
               ref={inputRef}
               value={input}
@@ -293,6 +293,7 @@ export const StudyBuddyChat = forwardRef<StudyBuddyChatHandle, StudyBuddyChatPro
               placeholder="Ask anything about NCLEX..."
               disabled={isListening || startSession.isPending || sendMessage.isPending}
               aria-label="Type your message"
+              className="text-sm sm:text-base"
             />
             <Button
               type="submit"
