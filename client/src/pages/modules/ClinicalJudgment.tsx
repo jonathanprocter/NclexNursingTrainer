@@ -9,6 +9,40 @@ import { Bot } from 'lucide-react';
 export default function ClinicalJudgment() {
   const { handleAIHelp } = useAIHelp();
   const [selectedDomain, setSelectedDomain] = useState<string>('');
+  const [currentCase, setCurrentCase] = useState<SimulationScenario | null>(null);
+  const [userChoices, setUserChoices] = useState<string[]>([]);
+  const [feedback, setFeedback] = useState<string>('');
+  const [caseStep, setCaseStep] = useState<number>(0);
+
+  const handleGenerateCase = async () => {
+    try {
+      const scenario = await generateSimulationScenario('intermediate', ['clinical_judgment']);
+      setCurrentCase(scenario);
+      setUserChoices([]);
+      setCaseStep(0);
+      setFeedback('');
+    } catch (error) {
+      console.error('Error generating case:', error);
+    }
+  };
+
+  const handleDecision = async (action: string) => {
+    const expectedAction = currentCase?.expected_actions[caseStep];
+    if (!expectedAction) return;
+
+    const newChoices = [...userChoices, action];
+    setUserChoices(newChoices);
+
+    const isCorrect = action === expectedAction.action;
+    setFeedback(isCorrect ? 
+      `Correct! ${expectedAction.rationale}` : 
+      `Consider this: ${expectedAction.rationale}`
+    );
+
+    if (caseStep < (currentCase?.expected_actions.length || 0) - 1) {
+      setCaseStep(prev => prev + 1);
+    }
+  };
 
   const clinicalJudgmentMetrics = [
     { domain: "Recognize Cues", score: 85, description: "Identify relevant patient data and clinical patterns" },
@@ -65,6 +99,68 @@ export default function ClinicalJudgment() {
       </section>
 
       <section className="pt-6 border-t">
+        <h2 className="text-2xl font-semibold mb-4">Interactive Case Study</h2>
+        <Button 
+          onClick={handleGenerateCase}
+          className="mb-6"
+        >
+          Generate New Case
+        </Button>
+
+        {currentCase && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>{currentCase.title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-semibold mb-2">Patient Information</h3>
+                  <p>{currentCase.description}</p>
+                </div>
+                {currentCase.initial_state.vital_signs && (
+                  <div>
+                    <h3 className="font-semibold mb-2">Vital Signs</h3>
+                    <ul className="list-disc pl-4">
+                      <li>BP: {currentCase.initial_state.vital_signs.blood_pressure}</li>
+                      <li>HR: {currentCase.initial_state.vital_signs.heart_rate}</li>
+                      <li>RR: {currentCase.initial_state.vital_signs.respiratory_rate}</li>
+                      <li>Temp: {currentCase.initial_state.vital_signs.temperature}</li>
+                      <li>O2 Sat: {currentCase.initial_state.vital_signs.oxygen_saturation}%</li>
+                    </ul>
+                  </div>
+                )}
+                
+                {currentCase.expected_actions[caseStep] && (
+                  <div className="mt-4">
+                    <h3 className="font-semibold mb-2">What would you do next?</h3>
+                    <div className="grid grid-cols-1 gap-2">
+                      {currentCase.expected_actions.map((action, index) => (
+                        <Button
+                          key={index}
+                          variant={userChoices.includes(action.action) ? "secondary" : "outline"}
+                          onClick={() => handleDecision(action.action)}
+                          disabled={userChoices.includes(action.action)}
+                          className="text-left"
+                        >
+                          {action.action}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {feedback && (
+                  <Alert>
+                    <AlertTitle>Feedback</AlertTitle>
+                    <AlertDescription>{feedback}</AlertDescription>
+                  </Alert>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <h2 className="text-2xl font-semibold mb-4">NCLEX 2024 Domain Integration</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {nclexDomains.map((domain) => (
