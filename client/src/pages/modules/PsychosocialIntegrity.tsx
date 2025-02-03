@@ -101,16 +101,36 @@ export default function PsychosocialIntegrity() {
                 <div className="grid gap-4">
                   <div className="space-y-4">
                     <h3 className="font-semibold">Communication Skills</h3>
-                    <p className="text-muted-foreground">Essential techniques for effective therapeutic communication</p>
-                    <div className="grid gap-2">
-                      <Button variant="outline" className="justify-start">
-                        <MessageSquare className="mr-2 h-4 w-4" />
-                        Communication Techniques
-                      </Button>
-                      <Button variant="outline" className="justify-start">
-                        <Users className="mr-2 h-4 w-4" />
-                        Cultural Competency
-                      </Button>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <Card className="p-4">
+                        <h4 className="font-medium mb-2">Therapeutic Techniques</h4>
+                        <ul className="space-y-2 text-sm text-muted-foreground">
+                          <li>• Active listening</li>
+                          <li>• Open-ended questions</li>
+                          <li>• Reflection & clarification</li>
+                          <li>• Empathetic responses</li>
+                        </ul>
+                      </Card>
+                      <Card className="p-4">
+                        <h4 className="font-medium mb-2">Cultural Competency</h4>
+                        <ul className="space-y-2 text-sm text-muted-foreground">
+                          <li>• Cultural awareness</li>
+                          <li>• Language considerations</li>
+                          <li>• Religious beliefs</li>
+                          <li>• Family dynamics</li>
+                        </ul>
+                      </Card>
+                    </div>
+                    <div className="mt-4">
+                      <Card className="p-4">
+                        <h4 className="font-medium mb-2">Communication Barriers</h4>
+                        <ul className="space-y-2 text-sm text-muted-foreground">
+                          <li>• Language differences</li>
+                          <li>• Cultural misunderstandings</li>
+                          <li>• Physical limitations</li>
+                          <li>• Emotional barriers</li>
+                        </ul>
+                      </Card>
                     </div>
                   </div>
                 </div>

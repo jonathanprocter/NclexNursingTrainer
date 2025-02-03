@@ -67,17 +67,35 @@ export default function HealthPromotion() {
                 <Progress value={0} className="w-full" />
                 <div className="grid gap-4">
                   <div className="space-y-4">
-                    <h3 className="font-semibold">Primary Prevention</h3>
-                    <p className="text-muted-foreground">Health education, immunizations, and lifestyle counseling</p>
-                    <div className="grid gap-2">
-                      <Button variant="outline" className="justify-start">
-                        <BookOpen className="mr-2 h-4 w-4" />
-                        Immunization Schedules
-                      </Button>
-                      <Button variant="outline" className="justify-start">
-                        <HeartPulse className="mr-2 h-4 w-4" />
-                        Health Screening Guidelines
-                      </Button>
+                    <h3 className="font-semibold">Prevention Levels</h3>
+                    <div className="grid gap-4 md:grid-cols-3">
+                      <Card className="p-4">
+                        <h4 className="font-medium mb-2">Primary Prevention</h4>
+                        <ul className="space-y-2 text-sm text-muted-foreground">
+                          <li>• Health education programs</li>
+                          <li>• Immunization schedules</li>
+                          <li>• Lifestyle counseling</li>
+                          <li>• Risk factor reduction</li>
+                        </ul>
+                      </Card>
+                      <Card className="p-4">
+                        <h4 className="font-medium mb-2">Secondary Prevention</h4>
+                        <ul className="space-y-2 text-sm text-muted-foreground">
+                          <li>• Screening tests</li>
+                          <li>• Early detection</li>
+                          <li>• Regular check-ups</li>
+                          <li>• Health monitoring</li>
+                        </ul>
+                      </Card>
+                      <Card className="p-4">
+                        <h4 className="font-medium mb-2">Tertiary Prevention</h4>
+                        <ul className="space-y-2 text-sm text-muted-foreground">
+                          <li>• Disease management</li>
+                          <li>• Rehabilitation</li>
+                          <li>• Support groups</li>
+                          <li>• Lifestyle adaptation</li>
+                        </ul>
+                      </Card>
                     </div>
                   </div>
                 </div>
